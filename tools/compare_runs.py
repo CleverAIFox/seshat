@@ -17,7 +17,7 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 # seshat/terms.py 의 SLOT_FORMS 와 같다. 도구가 패키지 없이도 돌게 여기에 둔다 — 테스트가 둘을 대조한다
-RESIDUE = re.compile(r"(?:⟦T(\d+)⟧|\\?\[T(\d+)\\?\]|【T(\d+)】)")
+RESIDUE = re.compile(r"(?:⟦T(\d+)⟧|\\?\[T(\d+)\\?\]|【T(\d+)】|`T(\d+)`)")
 
 
 def read(path: str) -> tuple[dict, dict[str, dict]]:
@@ -80,6 +80,28 @@ def terms_by_construction(a_rows: dict, b_rows: dict, spec: dict[str, dict]) -> 
     return dict(out)
 
 
+def term_misses(rows: dict, spec: dict[str, dict]) -> tuple[Counter, list[tuple]]:
+    """개념이 번역에 없다고 센 자리를 줄로 본다(H-020). 모델이 버렸나, 온톨로지가 모르는 표기인가를 눈으로 가른다.
+
+    돌려주는 것 — (개념별 누락 수, [(구문, 원문의 표면, 기대한 한국어들, 번역)])
+    """
+    import sys as _s
+    root = Path(__file__).resolve().parent.parent
+    _s.path.insert(0, str(root))
+    from seshat import ontology
+    onto = ontology.load()
+    count, lines = Counter(), []
+    for i, r in rows.items():
+        for _, _, s in ontology.find(onto, r["src"]):
+            if s.node["keep"]:
+                continue
+            names = [s.node["ko"], *s.node.get("alt_ko", [])]
+            if not any(k in r["out"] for k in names):
+                count[s.node["id"]] += 1
+                lines.append((spec.get(i, {}).get("construction", "?"), s.text, names, r["out"]))
+    return count, lines
+
+
 def compare(a_rows: dict, b_rows: dict, spec: dict[str, dict]) -> dict:
     ids = [i for i in a_rows if i in b_rows]
     lost_a, lost_b, only_b_worse, only_b_better, residue = Counter(), Counter(), [], [], []
@@ -138,6 +160,12 @@ def main(argv=None) -> int:
     print(f"\n  합쇼체가 B 에서만 깨진 줄 {len(sf['flips'])} — 마지막 이름 뒤 낱말 수 평균: 깨진 줄 {sf['after_flip']} · 나머지 {sf['after_rest']}  [H-017]")
     for i in sf["flips"][: a.show]:
         print(f"    [{spec.get(i, {}).get('construction', '?')}] {ra[i]['src']}\n      A: {ra[i]['out']}\n      B: {rb[i]['out']}")
+    mc, ml = term_misses(ra, spec)
+    print(f"\n  A 에서 개념이 없다고 센 자리 {len(ml)} — 모델이 버렸나 · 온톨로지가 모르는 표기인가  [H-020]")
+    for k, c in mc.most_common(8):
+        print(f"    {c:>3} · {k}")
+    for cons, surf, names, out in ml[: a.show * 2]:
+        print(f"    [{cons}] {surf} → 기대 {' / '.join(names)}\n      A: {out}")
     print("\n  B 가 가장 많이 잃은 이름")
     for k, c in r["lost_b"].most_common(8):
         print(f"    {c:>3} · A 도 잃음 {r['lost_a'].get(k, 0):>3} · {k}")

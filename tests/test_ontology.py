@@ -86,7 +86,7 @@ def test_사라진_자리표시를_센다():
     assert missing == ["T2"]
 
 
-@pytest.mark.parametrize("form", ["⟦T1⟧", "[T1]", "\\[T1]", "\\[T1\\]", "【T1】"])
+@pytest.mark.parametrize("form", ["⟦T1⟧", "[T1]", "\\[T1]", "\\[T1\\]", "【T1】", "`T1`"])
 def test_모델이_바꾼_자리표시도_되돌린다(form):
     # ★ H-001 의 관계절에서 `⟦T1⟧` 이 `\[T1]` 로 돌아왔다(DECISIONS §16)
     slots = {"T1": {"text": "Amazon S3", "coda": "none", "id": "svc.s3"}}
@@ -102,3 +102,12 @@ def test_대조_도구와_되돌리기가_같은_모양을_본다():
     cr = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(cr)
     assert cr.RESIDUE.pattern == terms.RESIDUE.pattern
+
+
+def test_백틱으로_싼_자리표시를_되돌린다():
+    """H-001 처치군이 마지막으로 잃은 줄이다 — 모델이 `⟦T1⟧` 을 마크다운 코드로 바꿨다(DECISIONS §24)."""
+    slots = {"T1": {"text": "AWS CloudFormation", "coda": "none", "id": "svc.cfn"},
+             "T2": {"text": "Amazon Simple Storage Service", "coda": "none", "id": "svc.s3"}}
+    ko, missing = terms.unmask("`T1`에서 크로스 계정 데이터를 가져와 `T2`에 저장합니다.", slots)
+    assert ko == "AWS CloudFormation에서 크로스 계정 데이터를 가져와 Amazon Simple Storage Service에 저장합니다."
+    assert missing == []
