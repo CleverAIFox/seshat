@@ -102,7 +102,7 @@ AWS_PROFILE=<프로파일> uv run --group eval --group aws python -m seshat.eval
 | `translategemma-4b` | `google/translategemma-4b-it` · ollama Q4_K_M 3.3GB | 후보 1호. ollama 가 GPU 를 맡는다 · `temperature 0` · `seed 42` |
 | `translategemma-4b+ph` | 같다 | H-001 처치군 — 용어 자리표시를 두른다 |
 
-두 결과 파일은 `tools/compare_runs.py` 로 줄 단위로 대조한다 — 이긴 줄 · 진 줄 · 남은 자리표시 · 구문별 keep ·
+결과 파일은 `tools/rescore.py` 로 모델을 다시 부르지 않고 다시 채점한다 — 되돌리기를 바꿨을 때. 두 결과 파일은 `tools/compare_runs.py` 로 줄 단위로 대조한다 — 이긴 줄 · 진 줄 · 남은 자리표시 · 구문별 keep ·
 가장 많이 잃은 이름. 평가셋 해시가 다르면 멈춘다. ollama 백엔드의 결과 파일은 머리줄에 `ollama`(GPU 적재 비율)를 싣는다.
 
 탐침은 `tools/make_probes.py` 가 만든다 — 문형 템플릿 14 × 온톨로지 어휘, 결정적(`--seed`). 의미가 어색한 문장도

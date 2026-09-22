@@ -4,15 +4,20 @@
 
 ★ **평균 하나로 판정하지 않는다.** 어느 줄에서 이기고 어느 줄에서 졌는지, 어느 구문에서 몰리는지를 본다.
 ★ 평가셋(`--set`)을 주면 줄마다 `keep` 과 `construction` 을 붙인다. 결과 파일에는 원문 · 출력만 있다.
-★ 처치군 출력에 `⟦` 가 남았으면 자리표시가 되돌아오지 못한 것이다 — 모델이 자리표시를 바꾼 흔적이다.
+★ 처치군 출력에 자리표시 모양(`⟦T1⟧` · `[T1]` · `\\[T1]` · `【T1】`)이 남았으면 되돌아오지 못한 것이다.
+  **처음에는 `⟦` 만 셌고 0 이 나왔다** — 모델이 모양을 바꾼 `\\[T1]` 26 개를 못 봤다(DECISIONS §16).
 """
 from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from collections import Counter, defaultdict
 from pathlib import Path
+
+# seshat/terms.py 의 SLOT_FORMS 와 같다. 도구가 패키지 없이도 돌게 여기에 둔다 — 테스트가 둘을 대조한다
+RESIDUE = re.compile(r"(?:⟦T(\d+)⟧|\\?\[T(\d+)\\?\]|【T(\d+)】)")
 
 
 def read(path: str) -> tuple[dict, dict[str, dict]]:
@@ -45,7 +50,7 @@ def compare(a_rows: dict, b_rows: dict, spec: dict[str, dict]) -> dict:
             only_b_worse.append(i)
         elif len(mb) < len(ma):
             only_b_better.append(i)
-        if "⟦" in b_rows[i]["out"] or "⟧" in b_rows[i]["out"]:
+        if RESIDUE.search(b_rows[i]["out"]):
             residue.append(i)
     return {"lines": len(ids), "b_worse": only_b_worse, "b_better": only_b_better, "residue": residue,
             "lost_a": lost_a, "lost_b": lost_b, "by_construction": dict(by_cons)}
