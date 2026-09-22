@@ -13,6 +13,9 @@ from __future__ import annotations
 
 # 이름 → (라이선스, 상업 가부, 확인한 곳 · 날짜)
 LEDGER: dict[str, tuple[str, str, str]] = {
+    # ★ Gemma 약관은 상업 이용을 허락하고 금지 용도 목록을 둔다. ollama 는 Q4_K_M 양자화판을 준다.
+    "google/translategemma-4b-it": ("Gemma Terms of Use", "yes",
+                                    "huggingface.co/google/translategemma-4b-it · ollama.com/library/translategemma · 2026-09-22"),
 }
 
 VALID_COMMERCIAL = {"yes", "no", "unknown"}

@@ -22,7 +22,14 @@
   chrf    chrF++ (sacrebleu). `ref` 가 있는 줄만. 없으면 건너뛴다
   ms      문장당 지연
 
+  josa    `keep` 이름 바로 뒤 조사가 그 이름의 끝소리와 맞는 비율(온톨로지 `coda`, H-001)
+
   COMET 같은 신경망 지표는 torch 를 요구하므로 여기 넣지 않는다(PLAN #3).
+
+★ **가설 없이 재지 않는다**(DECISIONS §12 · §14). echo 가 아닌 백엔드와 서버는 `--hypothesis H-NNN` 을
+  요구하고, 그 가설은 대장에서 `실험` 상태여야 한다. 배선만 보는 실행은 `--smoke` 다.
+★ **결과 파일 머리줄이 재현 조건을 든다** — 가설 · 커밋 · 평가셋 해시 · 백엔드 · 가중치 · 디코딩 ·
+  원문 문자 수 · 비용(아는 경우). 조건을 적지 않은 측정은 재현되지 않는다(thoth DECISIONS §57 · §65).
 
 ★ 결과는 `runs/` 에 한 줄씩 남는다. 저장소에 들어가지 않는다.
 """
@@ -64,6 +71,26 @@ def load(path: str) -> list[dict]:
     return rows
 
 
+_JOSA = re.compile(r"^(으로|이나|이라|을|를|이|가|은|는|과|와|나|라|로)(?![가-힣])")
+
+
+def josa(rows: list[dict], outs: list[str]) -> float | None:
+    """`keep` 이름 뒤에 붙은 조사가 끝소리와 맞는 비율. 조사가 붙지 않은 자리는 세지 않는다."""
+    from . import ontology, terms
+    codas = {x.text: x.coda for x in ontology.surfaces(ontology.load()) if x.coda}
+    ok = total = 0
+    for r, o in zip(rows, outs):
+        for k in r.get("keep", []):
+            if k not in codas:
+                continue
+            for m in re.finditer(re.escape(k), o):
+                j = _JOSA.match(o[m.end():])
+                if j:
+                    total += 1
+                    ok += terms.particle(codas[k], j.group(1)) == j.group(1)
+    return ok / total if total else None
+
+
 def score(rows: list[dict], outs: list[str]) -> dict:
     n = len(rows)
     style = sum(is_hapsyo(o) for o in outs) / n if n else None
@@ -72,7 +99,8 @@ def score(rows: list[dict], outs: list[str]) -> dict:
         for k in r.get("keep", []):
             total += 1
             kept += k in o
-    res = {"n": n, "style": style, "keep": kept / total if total else None, "chrf": None}
+    res = {"n": n, "style": style, "keep": kept / total if total else None, "chrf": None,
+           "josa": josa(rows, outs) if total else None}
     pairs = [(o, r["ref"]) for r, o in zip(rows, outs) if r.get("ref")]
     if pairs:
         try:
@@ -122,6 +150,48 @@ def via_backend(name: str):
     return (lambda texts: fn(texts, {})), model
 
 
+def door(h: str) -> None:
+    """가설 대장의 문. 실험 상태의 가설이 아니면 재지 않는다."""
+    import importlib.util
+    root = pathlib.Path(__file__).resolve().parent.parent
+    spec = importlib.util.spec_from_file_location("ch", root / "tools/check_hypotheses.py")
+    ch = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(ch)
+    rows = {hid: cells for _, hid, cells in ch.rows(ch.LEDGER.read_text(encoding="utf-8"))}
+    if not h:
+        raise SystemExit("가설이 없다 — --hypothesis H-NNN. 무엇을 확인하려는지 없이 재지 않는다(DECISIONS §12)")
+    if h not in rows:
+        raise SystemExit(f"{h} 가 가설 대장에 없다 — docs/hypotheses.md")
+    if rows[h][0] != "실험":
+        raise SystemExit(f"{h} 는 '{rows[h][0]}' 상태다 — 실험 상태여야 잰다(검증 방법 · 비용 상한)")
+
+
+def conditions(a, rows: list[dict]) -> dict:
+    """재현 조건. 결과 파일 머리줄에 싣는다."""
+    import hashlib
+    import subprocess
+    from . import backends
+    root = pathlib.Path(__file__).resolve().parent.parent
+
+    def git(*args):
+        try:
+            return subprocess.run(["git", *args], cwd=root, capture_output=True, text=True, timeout=10).stdout.strip()
+        except OSError:
+            return ""
+    chars = sum(len(r["src"]) for r in rows)
+    out = {"hypothesis": a.hypothesis or None,
+           "commit": git("rev-parse", "--short", "HEAD") or None,
+           "dirty": bool(git("status", "--porcelain")),
+           "set_sha256": hashlib.sha256(pathlib.Path(a.set).read_bytes()).hexdigest()[:16],
+           "chars": chars,
+           "backend": a.backend or None,
+           "weights": backends.WEIGHTS.get(a.backend or ""),
+           "decoding": backends.DECODING_OF.get(a.backend or "")}
+    if a.backend == "aws-translate":
+        out["cost_usd"] = round(chars * 15 / 1_000_000, 4)   # 100만 자에 USD 15 — 인용(2026-09)
+    return out
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     where = ap.add_mutually_exclusive_group(required=True)
@@ -132,7 +202,11 @@ def main(argv=None) -> int:
     ap.add_argument("--thoth", action="store_true", help="thoth 워커를 잰다")
     ap.add_argument("--thoth-token", default="")
     ap.add_argument("--name", default="")
+    ap.add_argument("--hypothesis", default="", help="H-NNN — 대장에서 실험 상태여야 한다")
+    ap.add_argument("--smoke", action="store_true", help="배선만 본다. 가설을 요구하지 않는다")
     a = ap.parse_args(argv)
+    if not (a.smoke or a.backend == "echo"):
+        door(a.hypothesis)
 
     rows = load(a.set)
     if a.backend:
@@ -153,6 +227,7 @@ def main(argv=None) -> int:
     res["url"] = a.url or f"backend:{a.backend}"
     if model:
         res["model"] = model
+    res.update(conditions(a, rows))
 
     runs = pathlib.Path("runs")
     runs.mkdir(exist_ok=True)

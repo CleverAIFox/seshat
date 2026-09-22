@@ -37,11 +37,67 @@ def aws_translate(texts: list[str], terms: dict[str, str], client=None) -> list[
     return out
 
 
+# ── 로컬 모델 — ollama ───────────────────────────────────────
+# ★ **표준 라이브러리로 부른다.** ollama 가 양자화 · GPU 적재를 맡으므로 이 저장소에 torch 가 들어오지
+#   않는다. 1660 Ti(6GB)에 TranslateGemma 4B Q4_K_M(3.3GB)이 온전히 올라간다.
+# ★ 프롬프트는 ollama 의 모델 페이지가 적은 틀을 그대로 쓴다(2026-09-22 확인). 틀을 바꾸면 다른 실험이다.
+OLLAMA_URL = "http://127.0.0.1:11434"
+TRANSLATEGEMMA_PROMPT = (
+    "You are a professional English (en) to Korean (ko) translator. Your goal is to accurately convey the "
+    "meaning and nuances of the original English text while adhering to Korean grammar, vocabulary, and "
+    "cultural sensitivities.\nProduce only the Korean translation, without any additional explanations or "
+    "commentary. Please translate the following English text into Korean:\n\n\n{text}")
+# 결정성 — thoth 에서 temperature 0 만으로는 모자랐다(thoth DECISIONS §35 · §65). seed 를 함께 준다.
+DECODING = {"temperature": 0, "seed": 42, "num_predict": 512}
+
+
+def ollama(model: str, prompt: str):
+    def call(texts: list[str], terms: dict[str, str]) -> list[str]:
+        import json as _json
+        import os
+        import urllib.request
+        url = os.environ.get("OLLAMA_URL", OLLAMA_URL).rstrip("/") + "/api/generate"
+        out = []
+        for t in texts:
+            body = _json.dumps({"model": model, "prompt": prompt.format(text=t), "stream": False,
+                                "options": DECODING}).encode("utf-8")
+            req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"})
+            with urllib.request.urlopen(req, timeout=300) as r:
+                out.append(_json.loads(r.read())["response"].strip())
+        return out
+    return call
+
+
+def with_placeholders(inner: Backend) -> Backend:
+    """H-001 의 처치군 — 영어로 남을 이름을 `⟦Tn⟧` 로 빼고 번역한 뒤 되돌린다(`seshat/terms.py`)."""
+    def call(texts: list[str], terms_: dict[str, str]) -> list[str]:
+        from . import ontology, terms
+        onto = ontology.load()
+        masked = [terms.mask(onto, t) for t in texts]
+        outs = inner([m for m, _ in masked], terms_)
+        return [terms.unmask(o, slots)[0] for o, (_, slots) in zip(outs, masked)]
+    return call
+
+
+_tg = ollama("translategemma:4b", TRANSLATEGEMMA_PROMPT)
+
 REGISTRY: dict[str, tuple[Backend, str]] = {
     # 이름 → (함수, /health 가 말할 모델명)
     "echo": (echo, "seshat-echo"),
     "aws-translate": (aws_translate, "aws-translate"),
+    "translategemma-4b": (_tg, "translategemma:4b"),
+    "translategemma-4b+ph": (with_placeholders(_tg), "translategemma:4b+ph"),
 }
+
+# ★ **백엔드가 어떤 가중치를 부르는지 선언한다.** `from_pretrained` 를 거치지 않는 호출(ollama)은
+#   라이선스 검사의 정규식이 보지 못한다. 선언을 검사가 대장과 대조한다(DECISIONS §14).
+WEIGHTS: dict[str, str] = {
+    "translategemma-4b": "google/translategemma-4b-it",
+    "translategemma-4b+ph": "google/translategemma-4b-it",
+}
+
+# 결과 파일 머리줄에 싣는 디코딩 조건
+DECODING_OF: dict[str, dict] = {"translategemma-4b": DECODING, "translategemma-4b+ph": DECODING}
 
 # ★ 서빙하지 않는 백엔드. 기준선으로만 잰다 — thoth 에 끼우는 자리가 아니다.
 BASELINE_ONLY = {"aws-translate"}

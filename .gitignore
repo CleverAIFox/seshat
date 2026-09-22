@@ -16,3 +16,5 @@ checkpoints/
 *.gguf
 # 공개 벤치마크(FLORES+ 등)도 받는 도구만 커밋한다(DECISIONS §11)
 data/bench/
+# 문형 탐침 — 결정적이라 다시 만든다(tools/make_probes.py)
+data/probes/

@@ -53,3 +53,41 @@ def test_FLORES_id_가_어긋나면_멈춘다():
 ])
 def test_split_을_경로에서_읽는다(path, want):
     assert ff.split_of(pathlib.Path(path)) == want
+
+
+def test_ollama_백엔드는_틀과_결정성을_싣는다(monkeypatch):
+    # ★ 가짜 ollama — 받은 요청을 적고, 자리표시가 있으면 그대로 돌려준다
+    import json
+    import threading
+    from http.server import BaseHTTPRequestHandler, HTTPServer
+    got = []
+
+    class H(BaseHTTPRequestHandler):
+        def do_POST(self):
+            body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
+            got.append(body)
+            text = body["prompt"].rsplit("\n\n\n", 1)[1]
+            reply = text.replace("Use ", "").replace(".", "를 씁니다.")
+            data = json.dumps({"response": reply}).encode()
+            self.send_response(200)
+            self.send_header("Content-Length", str(len(data)))
+            self.end_headers()
+            self.wfile.write(data)
+
+        def log_message(self, *a):
+            pass
+
+    srv = HTTPServer(("127.0.0.1", 0), H)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    monkeypatch.setenv("OLLAMA_URL", f"http://127.0.0.1:{srv.server_address[1]}")
+    try:
+        fn, model = backends.get("translategemma-4b+ph")
+        out = fn(["Use Amazon EMR."], {})
+    finally:
+        srv.shutdown()
+    assert model == "translategemma:4b+ph"
+    assert got[0]["model"] == "translategemma:4b"
+    assert got[0]["options"]["seed"] == 42 and got[0]["options"]["temperature"] == 0
+    assert "⟦T1⟧" in got[0]["prompt"] and "Amazon EMR" not in got[0]["prompt"]
+    # ★ 모델은 ⟦T1⟧를 썼지만 EMR 은 ㄹ로 끝난다 — 되돌리며 '을' 로 고친다
+    assert out == ["Amazon EMR을 씁니다."]

@@ -1,0 +1,53 @@
+# GPU 평가 — 셀프 호스티드 러너에서 가설 하나를 잰다(DECISIONS §14 · PLAN #28).
+#
+# ★ 러너는 `gpu` 라벨을 단 기계다. 지금은 GTX 1660 Ti 노트북(WSL2)이고, 새 장비가 오면 같은 라벨로
+#   갈아 끼운다 — 이 파일은 바뀌지 않는다.
+# ★ **손으로만 돈다**(workflow_dispatch). 가설 번호가 입력이고, evaluate 가 대장에서 `실험` 상태인지
+#   확인한다. 푸시마다 GPU 를 돌리지 않는다 — 가설 없이 재지 않는다(DECISIONS §12).
+# ★ 비공개 저장소라 셀프 호스티드 러너가 안전하다. 공개 저장소면 남의 PR 이 이 기계에서 돈다.
+# ★ 결과(runs/)는 커밋하지 않고 아티팩트로 남긴다.
+name: GPU 평가
+
+on:
+  workflow_dispatch:
+    inputs:
+      hypothesis:
+        description: "가설 번호 (H-NNN) — 대장에서 실험 상태"
+        required: true
+      probes:
+        description: "문형 탐침 줄 수"
+        default: "200"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gpu
+  cancel-in-progress: false
+
+jobs:
+  h001:
+    runs-on: [self-hosted, gpu]
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v7
+      - name: GPU 와 ollama
+        run: |
+          nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv
+          curl -sf http://127.0.0.1:11434/api/version || { echo "ollama 가 떠 있지 않다 — ollama serve"; exit 1; }
+          ollama pull translategemma:4b
+      - run: uv sync --group eval
+      - run: python3 tools/check_hypotheses.py
+      - name: 탐침을 만든다
+        run: uv run python tools/make_probes.py --name h001 --n "${{ inputs.probes }}"
+      - name: 대조군 · 처치군
+        env:
+          H: ${{ inputs.hypothesis }}
+        run: |
+          uv run python -m seshat.evaluate --backend translategemma-4b --set data/probes/h001.jsonl --hypothesis "$H" --name "$H-base"
+          uv run python -m seshat.evaluate --backend translategemma-4b+ph --set data/probes/h001.jsonl --hypothesis "$H" --name "$H-ph"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: runs-${{ inputs.hypothesis }}-${{ github.run_id }}
+          path: runs/

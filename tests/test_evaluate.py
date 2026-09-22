@@ -38,7 +38,7 @@ def test_끝까지_돈다(server, tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     import pathlib
     seed = pathlib.Path(__file__).resolve().parents[1] / "data/eval/seed.jsonl"
-    assert ev.main(["--url", server(), "--set", str(seed), "--name", "t"]) == 0
+    assert ev.main(["--url", server(), "--set", str(seed), "--name", "t", "--smoke"]) == 0
     assert len(list((tmp_path / "runs").glob("t-*.jsonl"))) == 1
 
 
@@ -49,3 +49,32 @@ def test_백엔드를_서버_없이_부른다(tmp_path, monkeypatch):
     assert ev.main(["--backend", "echo", "--set", str(p)]) == 0
     head = (tmp_path / "runs").glob("*.jsonl").__next__().read_text(encoding="utf-8").splitlines()[0]
     assert '"backend:echo"' in head and '"seshat-echo"' in head
+
+
+def test_가설_없이는_재지_않는다(tmp_path):
+    p = tmp_path / "s.jsonl"
+    p.write_text('{"id": "a", "src": "Hello."}\n', encoding="utf-8")
+    with pytest.raises(SystemExit, match="가설"):
+        ev.main(["--backend", "aws-translate", "--set", str(p)])
+    with pytest.raises(SystemExit, match="대장에 없다"):
+        ev.main(["--backend", "aws-translate", "--set", str(p), "--hypothesis", "H-999"])
+    with pytest.raises(SystemExit, match="실험 상태"):
+        ev.main(["--backend", "aws-translate", "--set", str(p), "--hypothesis", "H-002"])
+
+
+def test_머리줄이_재현_조건을_든다(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    p = tmp_path / "s.jsonl"
+    p.write_text('{"id": "a", "src": "Hello."}\n', encoding="utf-8")
+    ev.main(["--backend", "echo", "--set", str(p)])
+    import json
+    head = json.loads(next((tmp_path / "runs").glob("*.jsonl")).read_text(encoding="utf-8").splitlines()[0])
+    for k in ("commit", "set_sha256", "chars", "backend", "weights", "decoding", "hypothesis"):
+        assert k in head
+
+
+@pytest.mark.parametrize("out,want", [
+    ("Amazon S3를 씁니다.", 1.0), ("Amazon S3을 씁니다.", 0.0), ("Amazon S3에 둡니다.", None),
+])
+def test_조사를_끝소리로_잰다(out, want):
+    assert ev.josa([{"src": "x", "keep": ["Amazon S3"]}], [out]) == want

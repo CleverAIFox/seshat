@@ -44,8 +44,19 @@ def scan(root: Path) -> list[tuple[str, int, str]]:
     return out
 
 
-def check(root: Path, ledger: dict) -> list[str]:
+def declared() -> dict[str, str]:
+    """백엔드가 선언한 가중치(`seshat/backends.py::WEIGHTS`). 정규식이 못 보는 호출을 덮는다."""
+    from seshat import backends
+    return dict(backends.WEIGHTS)
+
+
+def check(root: Path, ledger: dict, weights: dict[str, str] | None = None) -> list[str]:
     fails = []
+    for backend, name in (declared() if weights is None else weights).items():
+        if excluded(name):
+            fails.append(f"백엔드 {backend} 가 쓸 수 없는 가중치 {name} 를 선언한다 — {excluded(name)}")
+        elif name not in ledger:
+            fails.append(f"백엔드 {backend} 가 선언한 가중치 {name} 가 대장에 없다 — seshat/licenses.py")
     for name, (lic, com, src) in ledger.items():
         if com not in VALID_COMMERCIAL:
             fails.append(f"대장 {name} 의 상업 가부 '{com}' 가 어휘 밖이다 — {sorted(VALID_COMMERCIAL)}")

@@ -87,6 +87,23 @@ AWS_PROFILE=<프로파일> uv run --group eval --group aws python -m seshat.eval
 | `keep` | 아니다 | `keep` 의 영어 이름이 그대로 남은 비율 |
 | `chrf` | 그렇다 | chrF++ (sacrebleu, `word_order=2`) |
 | `ms` | — | 문장당 지연. 9건씩 묶어 보낸다 |
+| `josa` | 아니다 | `keep` 이름 바로 뒤 조사가 그 이름의 끝소리(온톨로지 `coda`)와 맞는 비율. 조사가 붙지 않은 자리는 세지 않는다 |
+
+★ **가설 없이 재지 않는다.** echo 가 아닌 백엔드 · 서버는 `--hypothesis H-NNN` 을 요구하고 그 가설은 대장에서
+`실험` 상태여야 한다(DECISIONS §14). 배선만 보는 실행은 `--smoke` 다.
+
+★ **결과 파일 머리줄이 재현 조건을 든다** — `hypothesis` · `commit` · `dirty` · `set_sha256` · `chars` ·
+`backend` · `weights` · `decoding` · `cost_usd`(AWS Translate). 가설을 채택 · 기각할 때 이 파일이 근거다.
+
+| 백엔드 | 가중치 | 쓰임 |
+|---|---|---|
+| `echo` | — | 배선 |
+| `aws-translate` | — | 이길 대상. 서빙하지 않는다(`BASELINE_ONLY`) |
+| `translategemma-4b` | `google/translategemma-4b-it` · ollama Q4_K_M 3.3GB | 후보 1호. ollama 가 GPU 를 맡는다 · `temperature 0` · `seed 42` |
+| `translategemma-4b+ph` | 같다 | H-001 처치군 — 용어 자리표시를 두른다 |
+
+탐침은 `tools/make_probes.py` 가 만든다 — 문형 템플릿 14 × 온톨로지 어휘, 결정적(`--seed`). 의미가 어색한 문장도
+나온다(`move the encryption at rest from …`). 탐침은 이름 · 조사 · 구문을 보고 뜻의 그럴듯함은 보지 않는다.
 
 결과는 `runs/<이름>-<시각>.jsonl` 에 머리줄(지표)과 줄마다의 출력으로 남는다.
 
@@ -164,8 +181,9 @@ CI(`.github/workflows/ci.yml`)가 같은 다섯을 돈다.
 |---|---|---|
 | 앞단 | **없다.** 화면 · 확장은 thoth 다 | — |
 | thoth 와의 경계 | HTTP JSON — `POST /translate` · `GET /health`(§2). thoth 워커(Lambda)가 서버 대 서버로 부른다 | 스트리밍이 필요하면 같은 경로에 SSE(thoth PLAN #38) |
-| 서빙 | `serve.py` · 표준 라이브러리 · echo | CTranslate2 · llama.cpp 백엔드. 자리는 CPU Lambda 컨테이너 · 새 장비 자가 호스팅 중에서 잰다(PLAN #8) |
-| 실험 | `evaluate.py` → `runs/`(커밋 밖) | 가설 번호를 결과 파일 이름에 싣는다 · 비용 장부 |
+| 서빙 | `serve.py` · 표준 라이브러리 · echo | 이미지 → ECR → Lambda 컨테이너(PLAN #27). 집의 장비로 서빙하지 않는다 — 꺼지면 thoth 번역이 죽는다 |
+| 환경 | uv · ollama | 컨테이너(PLAN #26) — torch 가 들어올 때 |
+| 실험 | `evaluate.py` → `runs/`(커밋 밖) · 머리줄에 재현 조건 · GPU 러너(§10) | 평가 게이트(PLAN #28) · 비용 장부 |
 | 학습 | 없다 | ② 원격 T4 · 스팟 → ③ 학습용 데스크탑 |
 | 데이터 | `data/eval/` · `data/bench/`(받아 쓴다) · `data/private/` | thoth 쌍(원문만) · 교사 공장 산출 · 온톨로지 |
 
@@ -205,3 +223,28 @@ ko, missing = terms.unmask(model_output, slots)                                 
 ★ **서술격은 건드리지 않는다.** `⟦T1⟧이다` 의 `이` 는 조사가 아니다 — 조사 뒤에 한글이 이어지면 고치지 않는다.
 ★ **공식 한국어 표기와 대조하지 않았다.** 개념의 `ko` 는 thoth 용어집(배포본에서 쓰는 중)과 이 저장소가 적은
 값이다. 대조는 PLAN #22 에 남았다.
+
+## 10. GPU 러너
+
+**지금의 GTX 1660 Ti 도 러너다**(DECISIONS §14). Turing(sm_75)은 현행 CUDA 가 지원하고, TranslateGemma 4B
+Q4_K_M(3.3GB)이 6GB 에 온전히 올라간다. 러너는 `gpu` 라벨로 묶고, 새 장비가 오면 같은 라벨로 갈아 끼운다 —
+워크플로(`.github/workflows/gpu-eval.yml`)는 바뀌지 않는다.
+
+```bash
+# GitHub → seshat → Settings → Actions → Runners → New self-hosted runner → Linux x64 가 주는 명령으로 받는다
+mkdir -p ~/actions-runner && cd ~/actions-runner      # 저장소 밖 · 한 번
+./config.sh --url https://github.com/CleverAIFox/seshat --token <화면의 토큰> \
+  --labels gpu,wsl,gtx1660ti --name fox-laptop --unattended
+./run.sh                                               # 켜 둘 동안만 받는다
+```
+
+| 전제 | 확인 |
+|---|---|
+| GPU 가 WSL 에 보인다 | `nvidia-smi` |
+| ollama 가 떠 있다 | `curl -s 127.0.0.1:11434/api/version` |
+| uv 가 있다 | 워크플로가 `setup-uv` 로도 깐다 |
+
+★ **손으로만 돈다.** Actions → GPU 평가 → Run workflow 에 가설 번호를 넣는다. 푸시마다 GPU 를 돌리지 않는다.
+★ **노트북이 꺼져 있으면 작업이 줄을 선다.** 켜고 `./run.sh` 를 띄우면 받아 간다.
+★ **비공개 저장소라서 안전하다.** 셀프 호스티드 러너는 공개 저장소에서 남의 PR 을 이 기계에서 돌린다.
+★ 러너 폴더(`~/actions-runner`)는 저장소 밖이다. 러너 토큰을 커밋하지 않는다.
