@@ -19,10 +19,32 @@ def echo(texts: list[str], terms: dict[str, str]) -> list[str]:
     return [f"[KO] {t}" for t in texts]
 
 
+def aws_translate(texts: list[str], terms: dict[str, str], client=None) -> list[str]:
+    """AWS Translate — **이길 대상 1호다**(DECISIONS §11). 서빙하지 않는다. 기준선만 잰다.
+
+    ★ `terms` 를 쓰지 않는다. Custom Terminology 는 미리 등록해야 하고 AWS 전용이다 —
+      기준선은 AWS Translate 를 **있는 그대로** 잰다.
+    ★ 자격증명은 boto3 가 찾는다(`AWS_PROFILE` 등). 이 저장소는 키를 들지 않는다.
+    ★ 과금이다 — 100만 자에 USD 15(2026-09 인용, thoth MASTER §7). FLORES+ devtest 한 판이 약 13만 자다.
+    """
+    if client is None:
+        import boto3  # 무거운 의존성은 함수 안에서(모듈 머리말)
+        client = boto3.client("translate")
+    out = []
+    for t in texts:
+        r = client.translate_text(Text=t, SourceLanguageCode="en", TargetLanguageCode="ko")
+        out.append(r["TranslatedText"])
+    return out
+
+
 REGISTRY: dict[str, tuple[Backend, str]] = {
     # 이름 → (함수, /health 가 말할 모델명)
     "echo": (echo, "seshat-echo"),
+    "aws-translate": (aws_translate, "aws-translate"),
 }
+
+# ★ 서빙하지 않는 백엔드. 기준선으로만 잰다 — thoth 에 끼우는 자리가 아니다.
+BASELINE_ONLY = {"aws-translate"}
 
 
 def get(name: str) -> tuple[Backend, str]:

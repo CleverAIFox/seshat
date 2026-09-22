@@ -14,3 +14,5 @@ checkpoints/
 *.safetensors
 *.bin
 *.gguf
+# 공개 벤치마크(FLORES+ 등)도 받는 도구만 커밋한다(DECISIONS §11)
+data/bench/

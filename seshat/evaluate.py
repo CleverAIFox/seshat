@@ -2,6 +2,13 @@
 
   python -m seshat.evaluate --url http://127.0.0.1:8100 --set data/eval/seed.jsonl
   python -m seshat.evaluate --url https://<thoth 워커> --thoth --thoth-token T --set ...   # Nova Lite 기준선
+  python -m seshat.evaluate --backend aws-translate --set data/bench/flores_plus.devtest.jsonl      # AWS Translate
+
+★ **`--backend` 는 서버 없이 백엔드를 바로 부른다.** 기준선(AWS Translate)은 서빙하지 않으므로
+  서버를 띄울 이유가 없다. 계약 검사는 `--url` 쪽이 맡는다.
+
+★ **FLORES+ 의 정답은 평어체(`-다`)다.** 합쇼체를 강제한 출력(thoth 워커)은 어미마다 chrF 가
+  깎인다. 범용 비교는 문체를 강제하지 않은 출력끼리 하고, 합쇼체는 `style` 로 따로 잰다(DECISIONS §11).
 
 ★ **thoth 워커도 같은 계약이다.** 워커의 `POST /translate` 는 `{"texts": [...]}` 를 받아
   `{"translations": [...]}` 를 돌려준다. 그래서 배포본(Nova Lite)이 곧 기준선이다 —
@@ -108,9 +115,18 @@ def translate(url: str, texts: list[str], token: str = "", thoth: bool = False,
     return [t if isinstance(t, str) else "" for t in tr]
 
 
+def via_backend(name: str):
+    """이름으로 백엔드를 불러 `translate` 와 같은 모양의 함수를 돌려준다."""
+    from . import backends
+    fn, model = backends.get(name)
+    return (lambda texts: fn(texts, {})), model
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--url", required=True)
+    where = ap.add_mutually_exclusive_group(required=True)
+    where.add_argument("--url")
+    where.add_argument("--backend", help="서버 없이 백엔드를 바로 부른다")
     ap.add_argument("--set", required=True)
     ap.add_argument("--token", default="")
     ap.add_argument("--thoth", action="store_true", help="thoth 워커를 잰다")
@@ -119,17 +135,24 @@ def main(argv=None) -> int:
     a = ap.parse_args(argv)
 
     rows = load(a.set)
+    if a.backend:
+        call, model = via_backend(a.backend)
+    else:
+        model = ""
+        def call(texts):
+            return translate(a.url, texts, a.token, a.thoth or bool(a.thoth_token), a.thoth_token)
     outs: list[str] = []
     t = time.monotonic()
     for i in range(0, len(rows), BATCH):
-        outs += translate(a.url, [r["src"] for r in rows[i:i + BATCH]], a.token,
-                          a.thoth or bool(a.thoth_token), a.thoth_token)
+        outs += call([r["src"] for r in rows[i:i + BATCH]])
     ms = (time.monotonic() - t) * 1000 / max(len(rows), 1)
 
     res = score(rows, outs)
     res["ms"] = round(ms)
     res["set"] = a.set
-    res["url"] = a.url
+    res["url"] = a.url or f"backend:{a.backend}"
+    if model:
+        res["model"] = model
 
     runs = pathlib.Path("runs")
     runs.mkdir(exist_ok=True)

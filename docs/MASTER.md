@@ -31,17 +31,19 @@ python3 tools/check_model_licenses.py    # 코드 ↔ 라이선스 대장
 
 ## 1. 무엇인가
 
-thoth 가 `ENGINE=http` 로 부를 영한 번역 서버와, 그 서버에 올릴 모델을 고르고 좁히는
-도구다. **모델은 아직 없다.** `echo` 백엔드가 자리를 채우고 있다.
+thoth 가 `ENGINE=http` 로 부를 영한 번역 서버와, 그 서버에 올릴 모델을 만드는 도구다.
+**목표는 영→한 범용에서 AWS Translate 를 넘는 것이고**(DECISIONS §11), thoth 의 도메인은 그 위의
+특화다. **모델은 아직 없다.** `echo` 백엔드가 자리를 채우고 `aws-translate` 가 이길 대상을 잰다.
 
 ```
 seshat/
-  backends.py   (texts, terms) → translations. 모델이 들어갈 자리
+  backends.py   (texts, terms) → translations. 모델이 들어갈 자리 · 기준선(aws-translate)
   serve.py      thoth 계약을 말하는 HTTP 서버. 표준 라이브러리
   evaluate.py   계약을 말하는 서버면 무엇이든 평가셋으로 잰다
 tests/
   thoth_conformance.py   thoth 의 적합성 검사 사본. 여기서 고치지 않는다
 data/eval/seed.jsonl     평가셋 0판 12줄
+tools/fetch_flores.py    FLORES+ 영→한을 data/bench/ 에 받는다 (커밋하지 않는다)
 ```
 
 ## 2. thoth 와의 계약
@@ -64,7 +66,16 @@ data/eval/seed.jsonl     평가셋 0판 12줄
 
 ```bash
 uv run --group eval python -m seshat.evaluate --url <서버> --set data/eval/seed.jsonl
+HF_TOKEN=<토큰> uv run --group data python tools/fetch_flores.py            # 처음 한 번
+AWS_PROFILE=<프로파일> uv run --group eval --group aws python -m seshat.evaluate \
+  --backend aws-translate --set data/bench/flores_plus.devtest.jsonl --name aws-translate
 ```
+
+★ **`--backend` 는 서버 없이 백엔드를 부른다.** 기준선은 서빙하지 않으므로 서버를 띄우지 않는다.
+`aws-translate` 는 `BASELINE_ONLY` 이고 용어집을 싣지 않는다 — 있는 그대로가 기준선이다.
+
+★ **FLORES+ 의 정답은 평어체다.** 합쇼체를 강제한 출력은 어미마다 chrF 가 깎인다. 범용 비교는 문체를
+강제하지 않은 출력끼리 하고, 합쇼체는 `style` 로 따로 본다.
 
 | 지표 | 정답 필요 | 뜻 |
 |---|---|---|
@@ -80,15 +91,16 @@ uv run --group eval python -m seshat.evaluate --url <서버> --set data/eval/see
 
 | 평가셋 | 줄 | 정답 |
 |---|---|---|
-| `data/eval/seed.jsonl` | 12 | 초안. 검수 전 |
+| `data/eval/seed.jsonl` | 12 | 초안. 사람이 쓰지 않는다 — 교사 합의 + 검사기로 만든다(PLAN #1) |
+| `data/bench/flores_plus.dev.jsonl` · `.devtest.jsonl` | 997 · 1,012 | FLORES+ 정답(평어체) · CC BY-SA 4.0 · 받아서 쓴다 |
 
 ## 4. 기계
 
 | | |
 |---|---|
-| GPU | GTX 1660 Ti · 6GB · Turing(sm_75). fp16 · int8 가능, bf16 · FlashAttention 2 불가 |
+| GPU | GTX 1660 Ti · 6GB · Turing(sm_75). fp16 · int8 가능, bf16 · FlashAttention 2 불가. **연말에 학습용 데스크탑으로 바뀐다**(PLAN #21) |
 | 파이썬 | 3.12 이상. 기본 의존성 0 |
-| 의존성 그룹 | `dev`(pytest · ruff) · `eval`(sacrebleu) |
+| 의존성 그룹 | `dev`(pytest · ruff) · `eval`(sacrebleu) · `aws`(boto3 — 기준선) · `data`(huggingface_hub · pyarrow) |
 | 저장소 | **비공개**(DECISIONS §8). 데이터는 그래도 커밋하지 않는다 |
 
 ## 5. 점검

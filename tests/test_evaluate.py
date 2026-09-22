@@ -40,3 +40,12 @@ def test_끝까지_돈다(server, tmp_path, monkeypatch):
     seed = pathlib.Path(__file__).resolve().parents[1] / "data/eval/seed.jsonl"
     assert ev.main(["--url", server(), "--set", str(seed), "--name", "t"]) == 0
     assert len(list((tmp_path / "runs").glob("t-*.jsonl"))) == 1
+
+
+def test_백엔드를_서버_없이_부른다(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    p = tmp_path / "s.jsonl"
+    p.write_text('{"id": "a", "src": "Hello.", "ref": "안녕하세요."}\n', encoding="utf-8")
+    assert ev.main(["--backend", "echo", "--set", str(p)]) == 0
+    head = (tmp_path / "runs").glob("*.jsonl").__next__().read_text(encoding="utf-8").splitlines()[0]
+    assert '"backend:echo"' in head and '"seshat-echo"' in head

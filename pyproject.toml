@@ -1,6 +1,6 @@
 [project]
 name = "seshat"
-version = "0.0.2"
+version = "0.0.3"
 description = "thoth 에 끼울 영한 번역 모델 — 사전학습 모델을 고르고 좁힌다"
 requires-python = ">=3.12"
 # ★ **기본 의존성은 0 이다.** 서버 · 평가 · 계약 검사가 표준 라이브러리로 선다.
@@ -11,6 +11,10 @@ dependencies = []
 dev = ["pytest>=8", "ruff>=0.6"]
 # chrF++. 가볍다 — CPU 만 쓴다
 eval = ["sacrebleu>=2.4"]
+# AWS Translate 기준선(DECISIONS §11). 서빙에는 쓰지 않는다
+aws = ["boto3>=1.34"]
+# FLORES+ 를 받는다 — tools/fetch_flores.py
+data = ["huggingface_hub>=0.24", "pyarrow>=15"]
 
 [tool.uv]
 default-groups = ["dev"]
