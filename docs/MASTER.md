@@ -15,6 +15,7 @@
 python3 tools/check_docs.py              # 문서 ↔ 문서 — 문체 · 절 · PLAN 표 · 참조 · DECISIONS
 python3 tools/doc_fsck.py                # 문서 ↔ 실물 — 경로 · 테스트 · 죽은 도구
 python3 tools/check_model_licenses.py    # 코드 ↔ 라이선스 대장
+python3 tools/check_hypotheses.py        # 가설 대장 — 실험의 문
 ```
 
 | 규칙 | 강제자 |
@@ -26,6 +27,7 @@ python3 tools/check_model_licenses.py    # 코드 ↔ 라이선스 대장
 | DECISIONS 는 추가만 한다. 절마다 날짜 · 강제자 · `### 배운 것` | `tools/check_docs.py::check_decisions` |
 | 문서가 적은 경로 · 테스트가 실재하고 도구는 어딘가에서 불린다 | `tools/doc_fsck.py::check_paths` · `tools/doc_fsck.py::check_tools` |
 | 정규식 검사는 카나리아를 든다 | `tests/test_doc_enforcers.py` |
+| 실험에 드는 가설은 검증 방법 · 비용 상한을, 판정은 근거를 든다 | `tools/check_hypotheses.py::check` |
 
 ---
 
@@ -132,3 +134,39 @@ CI(`.github/workflows/ci.yml`)가 같은 다섯을 돈다.
 | 제외 | 사유 |
 |---|---|
 | `tencent/hunyuan-mt*` · `tencent/hy-mt*` | Tencent HY Community License — EU · 영국 · 대한민국 제외 |
+
+---
+
+## 7. 연구 트랙
+
+**seshat 은 개발이 아니라 연구다**(DECISIONS §12). 화면은 thoth 가 맡고, 이 저장소는 번역의 뇌 — 모델 ·
+데이터 · 평가 · 서빙 백엔드 — 만 든다. 가설은 `docs/hypotheses.md` 에, 남의 연구는 `docs/papers.md` 에 쌓는다.
+비공개 저장소라 쌓는 지식은 공개하지 않는다. 데이터 · 가중치는 그래도 커밋하지 않는다(§2).
+
+| 트랙 | 무엇 | 쌓이는 것 |
+|---|---|---|
+| R1 한 · 영 문법 대조 | 어순(SVO · SOV) · 조사 · 높임법 · 관형절 · 피동 · 부정 · 최상급 | 대조 항목별 오류 슬라이스 |
+| R2 도메인 지식 · 온톨로지 | AWS 서비스 · 기능 · API · 파라미터 · 공식 한국어 표기의 그래프 | 용어 자리표시 · 참조(RAG) · 용어 보상의 원천 |
+| R3 모델 · 구조 | 2026 년 흐름 — 디코더 LLM + 추론 시점 연산 · 검증 가능한 보상의 강화학습 · 소형 번역 특화 · SSM 혼합 · 증류 · 병합 | 후보 표 · 구조 대결 |
+| R4 에이전트 교사 공장 | 초안 → 문법 · 용어 검토 → 수정의 그래프. **오프라인에서만** 돈다 — 실시간은 단일 모델 | 증류용 최고 품질 데이터 |
+| R5 문형 커리큘럼 · 탐침 | 5형식 템플릿 × 도메인 어휘. 번역 방식이 아니라 약점을 찌르는 탐침 · 학습 순서 · 증강 | 구문별 약점 지도 |
+| R6 강화학습 · 보상 | thoth 검사기 + QE 보상 · 보상마다 반대 추 · 해킹 카나리아 | 보상 함수 · 해킹 사례 |
+| R7 평가 · EDA | FLORES+ · 도메인셋 · 오류 분류(MQM 류) · 구문 슬라이스 · 지표 편향 | 이길 대상의 숫자 · 판정 근거 |
+
+★ **AI 는 직관이고 검증은 EDA 다.** 직관은 공짜로 대장에 오르고, 실험에 들어갈 때 검증 방법과 비용
+상한이 문을 연다.
+
+## 8. 인프라
+
+| 층 | 지금 | 다음 |
+|---|---|---|
+| 앞단 | **없다.** 화면 · 확장은 thoth 다 | — |
+| thoth 와의 경계 | HTTP JSON — `POST /translate` · `GET /health`(§2). thoth 워커(Lambda)가 서버 대 서버로 부른다 | 스트리밍이 필요하면 같은 경로에 SSE(thoth PLAN #38) |
+| 서빙 | `serve.py` · 표준 라이브러리 · echo | CTranslate2 · llama.cpp 백엔드. 자리는 CPU Lambda 컨테이너 · 새 장비 자가 호스팅 중에서 잰다(PLAN #8) |
+| 실험 | `evaluate.py` → `runs/`(커밋 밖) | 가설 번호를 결과 파일 이름에 싣는다 · 비용 장부 |
+| 학습 | 없다 | ② 원격 T4 · 스팟 → ③ 학습용 데스크탑 |
+| 데이터 | `data/eval/` · `data/bench/`(받아 쓴다) · `data/private/` | thoth 쌍(원문만) · 교사 공장 산출 · 온톨로지 |
+
+★ **HTTP 가 맞는 이유는 웹 도구라서가 아니다.** 브라우저는 thoth 워커만 부르고, seshat 을 부르는 것은
+워커다. 둘이 다른 곳(Lambda 와 모델 서버)에 살기 때문에 서버 대 서버 HTTP 가 가장 단순한 경계다. 자원
+설계(REST)가 아니라 함수 호출 두 개(RPC 풍 JSON)이고, 그것으로 충분하다.

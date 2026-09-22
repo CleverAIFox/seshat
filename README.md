@@ -8,25 +8,28 @@ thoth 는 영어 자격증 문제 화면에 한글 번역을 겹쳐 보여주는
 
 ## 방향
 
-**사전학습 모델을 고르고 좁힌다. 처음부터 만들지 않는다.** 전 세계가 갈고 닦는
-모델과 도구(transformers · PEFT · CTranslate2 · llama.cpp · sacrebleu)를 그대로 쓰고,
-이 저장소가 더하는 것은 셋이다.
+**목표는 영→한 범용에서 AWS Translate 를 넘는 것이다**(DECISIONS §11). 1년 · 1인. thoth 의 도메인
+(AWS 자격증 문항 · 합쇼체)은 그 위의 특화다.
 
-1. **좁은 과제** — 범용 번역이 아니라 "영어 자격증 문제 → 한국어 합쇼체". 서비스명 ·
-   API 명은 영어로 남기고 조사를 붙인다
-2. **자기 데이터** — thoth 배포본이 쌓는 쌍(원문 · 모델 출력 · 후처리 결과)
-3. **자** — 평가셋과 지표. 모델을 바꾸기 전에 잰다
+**이 저장소는 연구다**(DECISIONS §12). 화면은 thoth 가 맡고 여기는 번역의 뇌 — 모델 · 데이터 · 평가 ·
+서빙 백엔드 — 만 든다. 직관 → 가설 → 가장 싼 검증 → 채택 · 기각. 측정은 가설이 부를 때만 한다.
 
-목표는 Nova Lite 와 **같거나 나은 품질을, 더 싸고 빠르게**다. 범용 번역에서 최신
-대형 모델을 이기는 것은 목표가 아니다.
+| 쌓는 곳 | 무엇 |
+|---|---|
+| `docs/hypotheses.md` | 가설 대장 — 실험의 문. 검증 방법과 비용 상한 없이는 실험에 못 들어간다 |
+| `docs/papers.md` | 논문 대장 — 남이 이미 한 학습을 파싱한다 |
+| `docs/MASTER.md` §7 · §8 | 연구 트랙 일곱 · 인프라 |
+
+사전학습 모델과 공개 연구를 최대한 쓰고, 학습은 장비가 허락하는 만큼만 한다 — 지금은 학습 없이, 연말 전에는
+원격 GPU, 새 장비부터 강화학습 · 구조 실험.
 
 ## 기계
 
 | | |
 |---|---|
 | 로컬 GPU | GTX 1660 Ti · VRAM 6GB · Turing — fp16 은 되고 bf16 · FlashAttention 2 는 안 된다 |
-| 로컬에서 하는 것 | 평가 · 추론 확인 · 1B 급 QLoRA |
-| 학습 | Kaggle · Colab 의 무료 T4, 부족하면 EC2 스팟(AWS 크레딧) |
+| 로컬에서 하는 것 | 평가 · 추론 확인 · 1B 급 QLoRA · 모델 병합(CPU) |
+| 학습 | Kaggle · Colab 의 무료 T4, 부족하면 EC2 스팟(AWS 크레딧). 연말에 학습용 데스크탑(PLAN #21) |
 
 ## thoth 와의 계약
 
@@ -52,6 +55,7 @@ uv run --group eval python -m seshat.evaluate \
 python3 tools/check_docs.py                       # 문서 ↔ 문서 (규약은 docs/MASTER.md §0)
 python3 tools/doc_fsck.py                         # 문서 ↔ 실물
 python3 tools/check_model_licenses.py --list      # 가중치 라이선스 대장
+python3 tools/check_hypotheses.py                 # 가설 대장 — 실험의 문
 ```
 
 thoth 배포본(Nova Lite)을 기준선으로 잴 때는 워커를 그대로 부른다. 평가 문장은
