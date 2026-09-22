@@ -113,3 +113,10 @@ CI(`.github/workflows/ci.yml`)가 같은 다섯을 돈다.
 | `yes` | 모델 카드가 상업 이용을 허용한다. 서빙 백엔드가 부를 수 있다 |
 | `no` | 비상업. 비교 실험에서만 부른다 |
 | `unknown` | 가중치의 라이선스가 따로 적혀 있지 않다. 서빙에 쓰지 않는다 |
+
+★ **쓸 수 없는 가중치가 따로 있다**(DECISIONS §9). `EXCLUDED` 는 사용 허락 지역이 이 기계가 있는 곳을
+빼는 라이선스다 — 비상업과 달리 비교 실험에서도 부르지 못하고, 대장에 올려도 실패다.
+
+| 제외 | 사유 |
+|---|---|
+| `tencent/hunyuan-mt*` · `tencent/hy-mt*` | Tencent HY Community License — EU · 영국 · 대한민국 제외 |

@@ -68,17 +68,19 @@ thoth 후처리를 건 것이다. 막혀 있으면 쌍은 원문(영어) 수집�
 ★ **#4 는 거의 공짜다.** 워커 캐시가 같은 원문을 한 번만 과금하고, 45유닛 한 판이 $0.003
 이었다(thoth MASTER §7-0-2).
 
-★ **#5 후보는 라이선스로 먼저 거른다.** 2026-05 기준 알려진 후보이고 **전부 붙이기 전에 다시
-확인한다** — 이 표는 #9 가 갱신하고, 붙이는 순간 `seshat/licenses.py` 에 오른다.
+★ **#5 후보는 라이선스로 먼저 거른다.** 2026-09-22 에 한 번 폴링했다(DECISIONS §9). **전부 붙이기
+전에 다시 확인한다** — 이 표는 #9 가 갱신하고, 붙이는 순간 `seshat/licenses.py` 에 오른다.
 
 | 후보 | 종류 | 라이선스(확인 전) | 이 기계에서 |
 |---|---|---|---|
 | `Helsinki-NLP/opus-mt-tc-big-en-ko` 계열 | Marian seq2seq | CC-BY 4.0 | CPU 로도 빠르다. 하한선 |
 | MADLAD-400 3B | T5 seq2seq | Apache-2.0 | CTranslate2 int8 로 CPU 서빙 후보 |
+| TranslateGemma 4B | Gemma 3 기반 번역 전용 · 2026-01 · 55개 언어 | Gemma 약관 | 양자화판이 있다. **한국어 성능 확인 전** |
 | Qwen 계열 1.5B–4B | 디코더 LLM | Apache-2.0 | QLoRA 가능한 크기 |
 | Gemma 계열 1B–4B | 디코더 LLM | Gemma 약관 | 같다 |
 | NLLB-200 | seq2seq | CC-BY-NC | **비교용만.** 비상업 조항 |
 | EXAONE | 디코더 LLM | 비상업 | **비교용만** |
+| HY-MT1.5 · Hunyuan-MT | 번역 전용 · WMT25 | Tencent HY Community | **쓰지 않는다.** 사용 허락 지역이 대한민국을 뺀다 — `EXCLUDED` |
 
 ★ **#7 은 로컬에서 하지 않는다.** 6GB 에서 1B 급 QLoRA 가 한계이고 느리다. Kaggle · Colab 의
 T4 로 돌리고, 모자라면 EC2 스팟을 몇 시간 쓰고 끈다.

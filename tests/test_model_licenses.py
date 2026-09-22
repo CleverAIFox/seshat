@@ -41,3 +41,19 @@ def test_서빙이_비상업을_부르면_걸린다(tmp_path):
 def test_어휘_밖의_상업_가부가_걸린다(tmp_path):
     root = _tree(tmp_path, "")
     assert any("어휘 밖" in f for f in cml.check(root, {"a/b": ("MIT", "maybe", "x")}))
+
+
+def test_쓸_수_없는_가중치는_비교에서도_걸린다(tmp_path):
+    # ★ 비상업(센다)과 다르다. 사용 허락 지역 밖이면 서빙 밖에서도 실패다(DECISIONS §9).
+    root = _tree(tmp_path, 'm = AutoModel.from_pretrained("tencent/HY-MT1.5-1.8B")\n', "seshat/bench.py")
+    led = {"tencent/HY-MT1.5-1.8B": ("Tencent HY Community", "no", "모델 카드 2026-09-22")}
+    fails = cml.check(root, led)
+    assert any("쓸 수 없는 가중치" in f and "bench.py" in f for f in fails)
+    assert any(f.startswith("대장에 쓸 수 없는") for f in fails)
+
+
+def test_제외는_접두사로_대소문자를_가리지_않는다():
+    from seshat.licenses import excluded
+    assert excluded("Tencent/Hunyuan-MT-7B")
+    assert excluded("tencent/hy-mt1.5-7b")
+    assert excluded("google/translategemma-4b-it") is None

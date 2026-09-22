@@ -16,3 +16,19 @@ LEDGER: dict[str, tuple[str, str, str]] = {
 }
 
 VALID_COMMERCIAL = {"yes", "no", "unknown"}
+
+# ★ **쓸 수 없는 가중치.** 상업 가부 이전에 **이 기계가 있는 곳에서 사용 허락이 없다.** 비상업은
+#   비교 실험에 쓸 수 있지만(센다), 여기 있는 것은 비교에도 부르지 않는다(DECISIONS §9).
+#   접두사 → 사유. 대소문자를 가리지 않는다.
+EXCLUDED: dict[str, str] = {
+    "tencent/hunyuan-mt": "Tencent HY Community License — 사용 허락 지역이 EU · 영국 · 대한민국을 뺀다 "
+                          "(github.com/Tencent-Hunyuan/HY-MT License.txt · 2026-09-22)",
+    "tencent/hy-mt": "Tencent HY Community License — 사용 허락 지역이 EU · 영국 · 대한민국을 뺀다 "
+                     "(github.com/Tencent-Hunyuan/HY-MT License.txt · 2026-09-22)",
+}
+
+
+def excluded(name: str) -> str | None:
+    """쓸 수 없는 가중치면 사유를, 아니면 None 을 돌려준다."""
+    low = name.lower()
+    return next((why for pre, why in EXCLUDED.items() if low.startswith(pre)), None)

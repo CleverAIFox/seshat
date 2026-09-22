@@ -10,6 +10,9 @@
 ★ **비상업을 막지 않는다. 센다.** 비교용으로 비상업 모델을 재는 것은 정당하다(seshat PLAN #5).
   상업 불가가 몇 개인지 매번 찍고, 서빙 백엔드가 그것을 부르면 실패한다.
 
+★ **쓸 수 없는 가중치는 어디서도 부르지 못한다**(`seshat/licenses.py` 의 `EXCLUDED`). 사용 허락
+  지역이 이 기계가 있는 곳을 빼는 라이선스는 비상업과 다르다 — 비교 실험도 허락 밖이다(DECISIONS §9).
+
 ★ 찾는 자리는 가중치를 받는 호출의 첫 문자열 인자다 — `from_pretrained` · `snapshot_download` ·
   `hf_hub_download` · `ctranslate2.Translator` · `Llama.from_pretrained`. 오탐이 많은 검사는
   꺼진다(하토르 D-0126) — 모든 `org/name` 꼴 문자열을 보지 않는다.
@@ -22,7 +25,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
-from seshat.licenses import LEDGER, VALID_COMMERCIAL  # noqa: E402
+from seshat.licenses import EXCLUDED, LEDGER, VALID_COMMERCIAL, excluded  # noqa: E402
 
 CALL = re.compile(
     r"(?:from_pretrained|snapshot_download|hf_hub_download|Translator)\(\s*(?:repo_id\s*=\s*)?[\"']([^\"']+)[\"']")
@@ -48,8 +51,13 @@ def check(root: Path, ledger: dict) -> list[str]:
             fails.append(f"대장 {name} 의 상업 가부 '{com}' 가 어휘 밖이다 — {sorted(VALID_COMMERCIAL)}")
         if not lic.strip() or not src.strip():
             fails.append(f"대장 {name} 에 라이선스나 출처가 비었다")
+    for name in ledger:
+        if excluded(name):
+            fails.append(f"대장에 쓸 수 없는 가중치 {name} 가 있다 — {excluded(name)}")
     for rel, n, name in scan(root):
-        if name not in ledger:
+        if excluded(name):
+            fails.append(f"{rel}:{n} 가 쓸 수 없는 가중치 {name} 를 부른다 — {excluded(name)}")
+        elif name not in ledger:
             fails.append(f"{rel}:{n} 가 대장에 없는 가중치 {name} 를 부른다 — seshat/licenses.py")
         elif rel in SERVING and ledger[name][1] != "yes":
             fails.append(f"{rel}:{n} 서빙 백엔드가 상업 가부 '{ledger[name][1]}' 인 {name} 를 부른다")
@@ -70,6 +78,8 @@ def main(argv=None) -> int:
     if "--list" in args:
         for name, (lic, com, src) in sorted(LEDGER.items()):
             print(f"  {com:<8} {lic:<14} {name}  ({src})")
+        for pre, why in sorted(EXCLUDED.items()):
+            print(f"  제외     {pre}*  — {why}")
         print(f"  상업 불가 {sum(1 for v in LEDGER.values() if v[1] == 'no')} · 모름 "
               f"{sum(1 for v in LEDGER.values() if v[1] == 'unknown')} · 전체 {len(LEDGER)}")
         return 0
