@@ -189,7 +189,25 @@ def conditions(a, rows: list[dict]) -> dict:
            "decoding": backends.DECODING_OF.get(a.backend or "")}
     if a.backend == "aws-translate":
         out["cost_usd"] = round(chars * 15 / 1_000_000, 4)   # 100만 자에 USD 15 — 인용(2026-09)
+    if (a.backend or "").startswith("translategemma"):
+        out["ollama"] = ollama_placement()
     return out
+
+
+def ollama_placement() -> dict | None:
+    """ollama 가 모델을 GPU 에 얼마나 올렸는가. **오프로딩되면 결과가 바뀐다**(thoth DECISIONS §35).
+    런이 끝난 직후에 묻는다 — `keep_alive` 동안 모델이 남아 있다."""
+    import os
+    import urllib.request
+    url = os.environ.get("OLLAMA_URL", "http://127.0.0.1:11434").rstrip("/") + "/api/ps"
+    try:
+        with urllib.request.urlopen(url, timeout=5) as r:
+            models = json.loads(r.read()).get("models", [])
+    except OSError:
+        return None
+    return {m.get("name", "?"): {"size": m.get("size"), "size_vram": m.get("size_vram"),
+                                 "gpu_share": round(m["size_vram"] / m["size"], 3) if m.get("size") else None}
+            for m in models}
 
 
 def main(argv=None) -> int:

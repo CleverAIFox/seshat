@@ -57,6 +57,7 @@ python3 tools/doc_fsck.py                         # 문서 ↔ 실물
 python3 tools/check_model_licenses.py --list      # 가중치 라이선스 대장
 python3 tools/check_hypotheses.py                 # 가설 대장 — 실험의 문
 python3 tools/make_probes.py --name h001          # 문형 탐침 200줄 → data/probes/
+python3 tools/compare_runs.py <A> <B> --set <셋>   # 두 결과를 줄 단위로 대조
 ```
 
 thoth 배포본(Nova Lite)을 기준선으로 잴 때는 워커를 그대로 부른다. 평가 문장은

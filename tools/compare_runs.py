@@ -1,0 +1,87 @@
+"""두 결과 파일을 줄 단위로 대조한다 — 가설 판정의 EDA(MASTER §7 R7).
+
+  python3 tools/compare_runs.py runs/H-001-base-*.jsonl runs/H-001-ph-*.jsonl --set data/probes/h001.jsonl
+
+★ **평균 하나로 판정하지 않는다.** 어느 줄에서 이기고 어느 줄에서 졌는지, 어느 구문에서 몰리는지를 본다.
+★ 평가셋(`--set`)을 주면 줄마다 `keep` 과 `construction` 을 붙인다. 결과 파일에는 원문 · 출력만 있다.
+★ 처치군 출력에 `⟦` 가 남았으면 자리표시가 되돌아오지 못한 것이다 — 모델이 자리표시를 바꾼 흔적이다.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from collections import Counter, defaultdict
+from pathlib import Path
+
+
+def read(path: str) -> tuple[dict, dict[str, dict]]:
+    lines = [json.loads(x) for x in Path(path).read_text(encoding="utf-8").splitlines() if x.strip()]
+    head = next(x for x in lines if x.get("meta"))
+    return head, {x["id"]: x for x in lines if not x.get("meta")}
+
+
+def kept(keep: list[str], out: str) -> list[str]:
+    return [k for k in keep if k not in out]
+
+
+def compare(a_rows: dict, b_rows: dict, spec: dict[str, dict]) -> dict:
+    ids = [i for i in a_rows if i in b_rows]
+    lost_a, lost_b, only_b_worse, only_b_better, residue = Counter(), Counter(), [], [], []
+    by_cons = defaultdict(lambda: [0, 0, 0])   # 이름 수 · 대조군 유지 · 처치군 유지
+    for i in ids:
+        keep = spec.get(i, {}).get("keep", [])
+        cons = spec.get(i, {}).get("construction", "?")
+        ma, mb = kept(keep, a_rows[i]["out"]), kept(keep, b_rows[i]["out"])
+        for k in ma:
+            lost_a[k] += 1
+        for k in mb:
+            lost_b[k] += 1
+        c = by_cons[cons]
+        c[0] += len(keep)
+        c[1] += len(keep) - len(ma)
+        c[2] += len(keep) - len(mb)
+        if len(mb) > len(ma):
+            only_b_worse.append(i)
+        elif len(mb) < len(ma):
+            only_b_better.append(i)
+        if "⟦" in b_rows[i]["out"] or "⟧" in b_rows[i]["out"]:
+            residue.append(i)
+    return {"lines": len(ids), "b_worse": only_b_worse, "b_better": only_b_better, "residue": residue,
+            "lost_a": lost_a, "lost_b": lost_b, "by_construction": dict(by_cons)}
+
+
+def main(argv=None) -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("a")
+    ap.add_argument("b")
+    ap.add_argument("--set", default="")
+    ap.add_argument("--show", type=int, default=6)
+    a = ap.parse_args(argv)
+    ha, ra = read(a.a)
+    hb, rb = read(a.b)
+    spec = {}
+    if a.set:
+        spec = {x["id"]: x for x in (json.loads(y) for y in Path(a.set).read_text(encoding="utf-8").splitlines() if y.strip())
+                if not x.get("meta")}
+    if ha.get("set_sha256") != hb.get("set_sha256"):
+        print("    ★ 두 파일의 평가셋 해시가 다르다 — 같은 셋이 아니면 줄 대조는 뜻이 없다")
+        return 1
+    r = compare(ra, rb, spec)
+    for name, h in (("A", ha), ("B", hb)):
+        print(f"  {name} {h.get('backend') or h.get('url')}: keep {h['keep']:.3f} · josa {h.get('josa')} · style {h['style']:.2f} · {h['ms']}ms")
+    print(f"\n  줄 {r['lines']} — B 가 이긴 줄 {len(r['b_better'])} · 진 줄 {len(r['b_worse'])} · B 에 자리표시가 남은 줄 {len(r['residue'])}")
+    print("\n  구문별 keep (이름 수 · A · B)")
+    for cons, (n, ka, kb) in sorted(r["by_construction"].items(), key=lambda x: (x[1][2] - x[1][0])):
+        print(f"    {cons:<13} {n:>4} · {ka / n:.2f} · {kb / n:.2f}" if n else f"    {cons:<13} 0")
+    print("\n  B 가 가장 많이 잃은 이름")
+    for k, c in r["lost_b"].most_common(8):
+        print(f"    {c:>3} · A 도 잃음 {r['lost_a'].get(k, 0):>3} · {k}")
+    print("\n  B 가 진 줄")
+    for i in (r["b_worse"] + r["residue"])[: a.show]:
+        print(f"    [{spec.get(i, {}).get('construction', '?')}] {ra[i]['src']}\n      A: {ra[i]['out']}\n      B: {rb[i]['out']}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

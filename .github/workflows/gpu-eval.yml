@@ -47,7 +47,9 @@ jobs:
         run: |
           uv run python -m seshat.evaluate --backend translategemma-4b --set data/probes/h001.jsonl --hypothesis "$H" --name "$H-base"
           uv run python -m seshat.evaluate --backend translategemma-4b+ph --set data/probes/h001.jsonl --hypothesis "$H" --name "$H-ph"
-      - uses: actions/upload-artifact@v4
+      - name: 탐침을 결과와 함께 남긴다 — 대조 도구가 구문을 붙인다
+        run: cp data/probes/h001.jsonl runs/
+      - uses: actions/upload-artifact@v5
         with:
           name: runs-${{ inputs.hypothesis }}-${{ github.run_id }}
           path: runs/
