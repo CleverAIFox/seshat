@@ -1,0 +1,149 @@
+"""번역 서버를 평가셋으로 잰다. **thoth 계약을 말하는 서버면 무엇이든 잰다.**
+
+  python -m seshat.evaluate --url http://127.0.0.1:8100 --set data/eval/seed.jsonl
+  python -m seshat.evaluate --url https://<thoth 워커> --thoth --thoth-token T --set ...   # Nova Lite 기준선
+
+★ **thoth 워커도 같은 계약이다.** 워커의 `POST /translate` 는 `{"texts": [...]}` 를 받아
+  `{"translations": [...]}` 를 돌려준다. 그래서 배포본(Nova Lite)이 곧 기준선이다 —
+  기준선을 재려고 Bedrock 호출 코드를 이 저장소에 다시 쓰지 않는다(DECISIONS §3).
+  워커 캐시가 먼저 답하므로 같은 원문은 과금이 한 번이다.
+
+★ **지표는 싼 것부터 쌓는다.**
+
+  style   마지막 문장이 합쇼체로 끝나는 비율. 정답 없이 잰다
+  keep    `keep` 에 적은 영어 이름이 번역에 그대로 남은 비율. 정답 없이 잰다
+  chrf    chrF++ (sacrebleu). `ref` 가 있는 줄만. 없으면 건너뛴다
+  ms      문장당 지연
+
+  COMET 같은 신경망 지표는 torch 를 요구하므로 여기 넣지 않는다(PLAN #3).
+
+★ 결과는 `runs/` 에 한 줄씩 남는다. 저장소에 들어가지 않는다.
+"""
+from __future__ import annotations
+
+import argparse
+import datetime as dt
+import json
+import pathlib
+import re
+import sys
+import time
+import urllib.request
+
+BATCH = 9
+
+# 합쇼체 종결. 마지막 문장부호 앞을 본다.
+_HAPSYO = re.compile(r"(습니다|ㅂ니다|[가-힣]니다|습니까|[가-힣]니까|십시오|시오)\s*[.?!]?\s*$")
+_SENT_END = re.compile(r"[.?!]\s*$")
+
+
+def is_hapsyo(ko: str) -> bool:
+    """마지막 줄의 끝이 합쇼체인가. 문장부호가 없는 명사구(보기 `S3 버킷`)는 **판정
+    밖**이다 — None 이 아니라 True 로 센다. 어미가 없는 것을 틀렸다고 세면 짧은 보기가
+    많은 평가셋에서 style 이 거짓으로 낮아진다."""
+    last = ko.strip().splitlines()[-1] if ko.strip() else ""
+    if not _SENT_END.search(last):
+        return True
+    return bool(_HAPSYO.search(last))
+
+
+def load(path: str) -> list[dict]:
+    rows = []
+    for line in pathlib.Path(path).read_text(encoding="utf-8").splitlines():
+        if line.strip() and not line.lstrip().startswith("//"):
+            r = json.loads(line)
+            if not r.get("meta"):
+                rows.append(r)
+    return rows
+
+
+def score(rows: list[dict], outs: list[str]) -> dict:
+    n = len(rows)
+    style = sum(is_hapsyo(o) for o in outs) / n if n else None
+    kept = total = 0
+    for r, o in zip(rows, outs):
+        for k in r.get("keep", []):
+            total += 1
+            kept += k in o
+    res = {"n": n, "style": style, "keep": kept / total if total else None, "chrf": None}
+    pairs = [(o, r["ref"]) for r, o in zip(rows, outs) if r.get("ref")]
+    if pairs:
+        try:
+            import sacrebleu
+        except ImportError:
+            res["chrf"] = "sacrebleu 없음 — uv sync --group eval"
+        else:
+            hyp, ref = zip(*pairs)
+            res["chrf"] = round(sacrebleu.corpus_chrf(list(hyp), [list(ref)], word_order=2).score, 2)
+    return res
+
+
+# ★ **평가 문장이 학습 쌍에 섞이면 안 된다.** thoth 워커는 캐시 미스를 쌍으로 남기되
+#   `.local` 로 끝나는 사이트는 거른다(thoth DECISIONS §104). 워커를 잴 때는 이 출처를
+#   싣는다 — 평가셋으로 학습하면 평가가 거짓말을 한다.
+EVAL_SOURCE = {"site": "eval.seshat.local", "adapter": "eval"}
+
+
+def request_body(texts: list[str], thoth: bool) -> dict:
+    """thoth 워커와 모델 서버는 응답이 같고 요청이 조금 다르다. 워커의 `source` 는
+    출처 객체이고 `terms` 는 워커가 스스로 고른다."""
+    if thoth:
+        return {"texts": texts, "target": "ko", "source": EVAL_SOURCE}
+    return {"texts": texts, "source": "en", "target": "ko", "terms": {}}
+
+
+def translate(url: str, texts: list[str], token: str = "", thoth: bool = False,
+              thoth_token: str = "", timeout: float = 60) -> list[str]:
+    headers = {"Content-Type": "application/json"}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    if thoth_token:
+        headers["X-Thoth-Token"] = thoth_token
+    body = json.dumps(request_body(texts, thoth), ensure_ascii=False).encode("utf-8")
+    req = urllib.request.Request(url.rstrip("/") + "/translate", data=body, headers=headers)
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        tr = json.loads(r.read())["translations"]
+    # thoth 워커는 상한에 걸린 자리를 null 로 돌려준다(부분 응답). 빈 문자열로 세고
+    # 지표가 그만큼 떨어지게 둔다 — 조용히 빼면 표본이 몰래 줄어든다.
+    return [t if isinstance(t, str) else "" for t in tr]
+
+
+def main(argv=None) -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--url", required=True)
+    ap.add_argument("--set", required=True)
+    ap.add_argument("--token", default="")
+    ap.add_argument("--thoth", action="store_true", help="thoth 워커를 잰다")
+    ap.add_argument("--thoth-token", default="")
+    ap.add_argument("--name", default="")
+    a = ap.parse_args(argv)
+
+    rows = load(a.set)
+    outs: list[str] = []
+    t = time.monotonic()
+    for i in range(0, len(rows), BATCH):
+        outs += translate(a.url, [r["src"] for r in rows[i:i + BATCH]], a.token,
+                          a.thoth or bool(a.thoth_token), a.thoth_token)
+    ms = (time.monotonic() - t) * 1000 / max(len(rows), 1)
+
+    res = score(rows, outs)
+    res["ms"] = round(ms)
+    res["set"] = a.set
+    res["url"] = a.url
+
+    runs = pathlib.Path("runs")
+    runs.mkdir(exist_ok=True)
+    stamp = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
+    out = runs / f"{a.name or 'eval'}-{stamp}.jsonl"
+    with out.open("w", encoding="utf-8") as f:
+        f.write(json.dumps({"meta": True, **res}, ensure_ascii=False) + "\n")
+        for r, o in zip(rows, outs):
+            f.write(json.dumps({"id": r.get("id"), "src": r["src"], "out": o,
+                                "ref": r.get("ref")}, ensure_ascii=False) + "\n")
+    print(json.dumps(res, ensure_ascii=False, indent=1))
+    print(f"→ {out}", file=sys.stderr)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

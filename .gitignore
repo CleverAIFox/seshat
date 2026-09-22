@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+.cache/
+
+# ★ 학습 데이터 · 모델 · 실행 결과는 저장소에 들어오지 않는다(DECISIONS §2).
+#   쌍 로그는 thoth 배포본의 사용자 화면에서 나온 원문이다 — 사이트의 저작물이다.
+data/private/
+runs/
+models/
+checkpoints/
+*.parquet
+*.safetensors
+*.bin
+*.gguf
