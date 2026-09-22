@@ -16,6 +16,7 @@ python3 tools/check_docs.py              # 문서 ↔ 문서 — 문체 · 절 �
 python3 tools/doc_fsck.py                # 문서 ↔ 실물 — 경로 · 테스트 · 죽은 도구
 python3 tools/check_model_licenses.py    # 코드 ↔ 라이선스 대장
 python3 tools/check_hypotheses.py        # 가설 대장 — 실험의 문
+python3 tools/check_ontology.py          # 온톨로지 — 표기 유일 · 부모 · 끝소리
 ```
 
 | 규칙 | 강제자 |
@@ -28,6 +29,7 @@ python3 tools/check_hypotheses.py        # 가설 대장 — 실험의 문
 | 문서가 적은 경로 · 테스트가 실재하고 도구는 어딘가에서 불린다 | `tools/doc_fsck.py::check_paths` · `tools/doc_fsck.py::check_tools` |
 | 정규식 검사는 카나리아를 든다 | `tests/test_doc_enforcers.py` |
 | 실험에 드는 가설은 검증 방법 · 비용 상한을, 판정은 근거를 든다 | `tools/check_hypotheses.py::check` |
+| 온톨로지의 표기는 유일하고 영어로 남는 노드는 끝소리를 든다 | `tools/check_ontology.py` · `seshat/ontology.py::validate` |
 
 ---
 
@@ -170,3 +172,36 @@ CI(`.github/workflows/ci.yml`)가 같은 다섯을 돈다.
 ★ **HTTP 가 맞는 이유는 웹 도구라서가 아니다.** 브라우저는 thoth 워커만 부르고, seshat 을 부르는 것은
 워커다. 둘이 다른 곳(Lambda 와 모델 서버)에 살기 때문에 서버 대 서버 HTTP 가 가장 단순한 경계다. 자원
 설계(REST)가 아니라 함수 호출 두 개(RPC 풍 JSON)이고, 그것으로 충분하다.
+
+## 9. AWS 온톨로지
+
+`data/ontology/aws.jsonl` 이 도메인 지식의 원천이다(DECISIONS §13). **한 그래프를 세 곳에 쓴다** — 용어
+자리표시(H-001) · 참조 번역(H-006) · 강화학습의 용어 보상(H-010).
+
+| 종류 | 수 | 번역 | 예 |
+|---|---|---|---|
+| `service` | 41 | 영어로 남는다 | `Amazon Kinesis Data Streams` · 별칭 `Kinesis Data Streams` · `KDS` |
+| `feature` | 20 | 영어로 남는다 · 부모가 서비스 | `AWS Glue Data Catalog` · `DynamoDB Streams` · S3 스토리지 클래스 |
+| `api` | 12 | 영어로 남는다 · 부모가 서비스 | `PutRecord` · `BatchWriteItem` · `StartQueryExecution` |
+| `concept` | 60 | 한국어로 옮긴다 | `partition key → 파티션 키` · `dead-letter queue → 배달 못한 편지 대기열` |
+
+표기(이름 + 별칭)는 227 이고 전체에서 유일하다.
+
+| 필드 | 뜻 |
+|---|---|
+| `coda` | 한국어로 읽은 끝소리 — `none`(모음) · `closed`(받침) · `rieul`(ㄹ). 자리표시 뒤 조사를 고른다. 약어 별칭은 마지막 글자의 영어 읽기로 센다(`IAM` 받침 · `KPL` ㄹ) |
+| `src` | `thoth-glossary`(배포본에서 쓰는 값) · `author`(이 저장소가 적은 값) |
+| `alt_ko` | 다른 표기 후보. `queue` 는 thoth 가 `큐` 를 쓰고 AWS 문서는 `대기열` 을 쓰는 것으로 안다 — 대조 전이다 |
+
+```python
+from seshat import ontology, terms
+onto = ontology.load()
+masked, slots = terms.mask(onto, "Load records into Amazon S3 with AWS Glue.")   # ⟦T1⟧ · ⟦T2⟧
+ko, missing = terms.unmask(model_output, slots)                                  # 조사를 끝소리로 고친다
+```
+
+★ **긴 표기가 이긴다.** `Amazon Kinesis Data Streams` 가 `Kinesis Data Streams` 보다 먼저 잡힌다.
+★ **약어는 대소문자를 지킨다.** 영어 본문의 소문자 조각(`dms`)을 서비스로 읽지 않는다.
+★ **서술격은 건드리지 않는다.** `⟦T1⟧이다` 의 `이` 는 조사가 아니다 — 조사 뒤에 한글이 이어지면 고치지 않는다.
+★ **공식 한국어 표기와 대조하지 않았다.** 개념의 `ko` 는 thoth 용어집(배포본에서 쓰는 중)과 이 저장소가 적은
+값이다. 대조는 PLAN #22 에 남았다.

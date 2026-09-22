@@ -1,0 +1,134 @@
+{"meta": true, "about": "AWS 온톨로지 1판 — 서비스 · 기능 · API(영어 유지)와 개념(한국어). thoth 용어집 37항목이 씨앗이다(seshat PLAN #22 · DECISIONS §13)", "coda": "고유명을 한국어로 읽을 때의 끝소리 — none(모음) · closed(받침) · rieul(ㄹ). 자리표시 뒤 조사를 고른다 · 약어(KPL · IAM 처럼 대문자 · 숫자만인 별칭)는 마지막 글자의 영어 읽기로 센다 — L · R 은 ㄹ, M · N 은 받침", "verified": "공식 한국어 표기와 대조하지 않았다. src=thoth-glossary 는 배포본에서 쓰는 값이고 author 는 이 저장소가 적은 값이다"}
+{"id": "svc.s3", "kind": "service", "en": "Amazon S3", "keep": true, "coda": "none", "aliases": ["S3", "Simple Storage Service", "Amazon Simple Storage Service"], "parent": null, "category": "storage", "src": "author"}
+{"id": "feat.s3-glacier", "kind": "feature", "en": "Amazon S3 Glacier", "keep": true, "coda": "none", "aliases": ["S3 Glacier", "Glacier"], "parent": "svc.s3", "src": "author"}
+{"id": "feat.s3-standard", "kind": "feature", "en": "S3 Standard", "keep": true, "coda": "none", "aliases": [], "parent": "svc.s3", "src": "author"}
+{"id": "feat.s3-intelligent-tiering", "kind": "feature", "en": "S3 Intelligent-Tiering", "keep": true, "coda": "closed", "aliases": [], "parent": "svc.s3", "src": "author"}
+{"id": "feat.s3-standard-ia", "kind": "feature", "en": "S3 Standard-IA", "keep": true, "coda": "none", "aliases": [], "parent": "svc.s3", "src": "author"}
+{"id": "feat.s3-one-zone-ia", "kind": "feature", "en": "S3 One Zone-IA", "keep": true, "coda": "none", "aliases": [], "parent": "svc.s3", "src": "author"}
+{"id": "feat.s3-glacier-flexible-retrieval", "kind": "feature", "en": "S3 Glacier Flexible Retrieval", "keep": true, "coda": "rieul", "aliases": [], "parent": "svc.s3", "src": "author"}
+{"id": "feat.s3-glacier-deep-archive", "kind": "feature", "en": "S3 Glacier Deep Archive", "keep": true, "coda": "none", "aliases": [], "parent": "svc.s3", "src": "author"}
+{"id": "feat.s3-glacier-instant-retrieval", "kind": "feature", "en": "S3 Glacier Instant Retrieval", "keep": true, "coda": "rieul", "aliases": [], "parent": "svc.s3", "src": "author"}
+{"id": "svc.dynamodb", "kind": "service", "en": "Amazon DynamoDB", "keep": true, "coda": "none", "aliases": ["DynamoDB"], "parent": null, "category": "database", "src": "author"}
+{"id": "feat.dynamodb-streams", "kind": "feature", "en": "DynamoDB Streams", "keep": true, "coda": "none", "aliases": ["Amazon DynamoDB Streams"], "parent": "svc.dynamodb", "src": "author"}
+{"id": "feat.dax", "kind": "feature", "en": "DynamoDB Accelerator", "keep": true, "coda": "none", "aliases": ["DAX", "Amazon DynamoDB Accelerator"], "parent": "svc.dynamodb", "src": "author"}
+{"id": "svc.rds", "kind": "service", "en": "Amazon RDS", "keep": true, "coda": "none", "aliases": ["RDS", "Amazon Relational Database Service"], "parent": null, "category": "database", "src": "author"}
+{"id": "svc.aurora", "kind": "service", "en": "Amazon Aurora", "keep": true, "coda": "none", "aliases": ["Aurora"], "parent": null, "category": "database", "src": "author"}
+{"id": "svc.documentdb", "kind": "service", "en": "Amazon DocumentDB", "keep": true, "coda": "none", "aliases": ["DocumentDB"], "parent": null, "category": "database", "src": "author"}
+{"id": "svc.keyspaces", "kind": "service", "en": "Amazon Keyspaces", "keep": true, "coda": "none", "aliases": ["Keyspaces"], "parent": null, "category": "database", "src": "author"}
+{"id": "svc.neptune", "kind": "service", "en": "Amazon Neptune", "keep": true, "coda": "closed", "aliases": ["Neptune"], "parent": null, "category": "database", "src": "author"}
+{"id": "svc.elasticache", "kind": "service", "en": "Amazon ElastiCache", "keep": true, "coda": "none", "aliases": ["ElastiCache"], "parent": null, "category": "database", "src": "author"}
+{"id": "svc.kinesis-data-streams", "kind": "service", "en": "Amazon Kinesis Data Streams", "keep": true, "coda": "none", "aliases": ["Kinesis Data Streams", "KDS"], "parent": null, "category": "streaming", "src": "author"}
+{"id": "feat.kpl", "kind": "feature", "en": "Kinesis Producer Library", "keep": true, "coda": "none", "aliases": ["KPL"], "parent": "svc.kinesis-data-streams", "src": "author"}
+{"id": "feat.kcl", "kind": "feature", "en": "Kinesis Client Library", "keep": true, "coda": "none", "aliases": ["KCL"], "parent": "svc.kinesis-data-streams", "src": "author"}
+{"id": "svc.data-firehose", "kind": "service", "en": "Amazon Data Firehose", "keep": true, "coda": "none", "aliases": ["Amazon Kinesis Data Firehose", "Kinesis Data Firehose", "Data Firehose", "Firehose"], "parent": null, "category": "streaming", "src": "author"}
+{"id": "svc.flink", "kind": "service", "en": "Amazon Managed Service for Apache Flink", "keep": true, "coda": "none", "aliases": ["Managed Service for Apache Flink", "Amazon Kinesis Data Analytics", "Kinesis Data Analytics"], "parent": null, "category": "streaming", "src": "author"}
+{"id": "svc.msk", "kind": "service", "en": "Amazon MSK", "keep": true, "coda": "none", "aliases": ["MSK", "Amazon Managed Streaming for Apache Kafka", "Managed Streaming for Apache Kafka"], "parent": null, "category": "streaming", "src": "author"}
+{"id": "svc.appflow", "kind": "service", "en": "Amazon AppFlow", "keep": true, "coda": "none", "aliases": ["AppFlow"], "parent": null, "category": "ingestion", "src": "author"}
+{"id": "svc.dms", "kind": "service", "en": "AWS DMS", "keep": true, "coda": "none", "aliases": ["DMS", "AWS Database Migration Service", "Database Migration Service"], "parent": null, "category": "ingestion", "src": "author"}
+{"id": "svc.datasync", "kind": "service", "en": "AWS DataSync", "keep": true, "coda": "none", "aliases": ["DataSync"], "parent": null, "category": "ingestion", "src": "author"}
+{"id": "svc.transfer-family", "kind": "service", "en": "AWS Transfer Family", "keep": true, "coda": "none", "aliases": ["Transfer Family"], "parent": null, "category": "ingestion", "src": "author"}
+{"id": "svc.snowball", "kind": "service", "en": "AWS Snowball", "keep": true, "coda": "rieul", "aliases": ["Snowball"], "parent": null, "category": "ingestion", "src": "author"}
+{"id": "svc.glue", "kind": "service", "en": "AWS Glue", "keep": true, "coda": "none", "aliases": ["Glue"], "parent": null, "category": "etl", "src": "author"}
+{"id": "feat.glue-data-catalog", "kind": "feature", "en": "AWS Glue Data Catalog", "keep": true, "coda": "none", "aliases": ["Glue Data Catalog", "Data Catalog"], "parent": "svc.glue", "src": "author"}
+{"id": "feat.glue-databrew", "kind": "feature", "en": "AWS Glue DataBrew", "keep": true, "coda": "none", "aliases": ["Glue DataBrew", "DataBrew"], "parent": "svc.glue", "src": "author"}
+{"id": "feat.glue-studio", "kind": "feature", "en": "AWS Glue Studio", "keep": true, "coda": "none", "aliases": ["Glue Studio"], "parent": "svc.glue", "src": "author"}
+{"id": "feat.glue-schema-registry", "kind": "feature", "en": "AWS Glue Schema Registry", "keep": true, "coda": "none", "aliases": ["Glue Schema Registry", "Schema Registry"], "parent": "svc.glue", "src": "author"}
+{"id": "feat.glue-data-quality", "kind": "feature", "en": "AWS Glue Data Quality", "keep": true, "coda": "none", "aliases": ["Glue Data Quality"], "parent": "svc.glue", "src": "author"}
+{"id": "svc.athena", "kind": "service", "en": "Amazon Athena", "keep": true, "coda": "none", "aliases": ["Athena"], "parent": null, "category": "analytics", "src": "author"}
+{"id": "svc.redshift", "kind": "service", "en": "Amazon Redshift", "keep": true, "coda": "none", "aliases": ["Redshift"], "parent": null, "category": "analytics", "src": "author"}
+{"id": "feat.redshift-spectrum", "kind": "feature", "en": "Amazon Redshift Spectrum", "keep": true, "coda": "closed", "aliases": ["Redshift Spectrum"], "parent": "svc.redshift", "src": "author"}
+{"id": "feat.redshift-serverless", "kind": "feature", "en": "Amazon Redshift Serverless", "keep": true, "coda": "none", "aliases": ["Redshift Serverless"], "parent": "svc.redshift", "src": "author"}
+{"id": "svc.emr", "kind": "service", "en": "Amazon EMR", "keep": true, "coda": "rieul", "aliases": ["EMR", "Amazon Elastic MapReduce", "Elastic MapReduce"], "parent": null, "category": "analytics", "src": "author"}
+{"id": "svc.lake-formation", "kind": "service", "en": "AWS Lake Formation", "keep": true, "coda": "closed", "aliases": ["Lake Formation"], "parent": null, "category": "governance", "src": "author"}
+{"id": "svc.quicksight", "kind": "service", "en": "Amazon QuickSight", "keep": true, "coda": "none", "aliases": ["QuickSight"], "parent": null, "category": "analytics", "src": "author"}
+{"id": "svc.opensearch", "kind": "service", "en": "Amazon OpenSearch Service", "keep": true, "coda": "none", "aliases": ["OpenSearch Service", "Amazon OpenSearch", "OpenSearch"], "parent": null, "category": "analytics", "src": "author"}
+{"id": "svc.sagemaker", "kind": "service", "en": "Amazon SageMaker", "keep": true, "coda": "none", "aliases": ["SageMaker"], "parent": null, "category": "ml", "src": "author"}
+{"id": "svc.lambda", "kind": "service", "en": "AWS Lambda", "keep": true, "coda": "none", "aliases": ["Lambda"], "parent": null, "category": "compute", "src": "author"}
+{"id": "svc.step-functions", "kind": "service", "en": "AWS Step Functions", "keep": true, "coda": "none", "aliases": ["Step Functions"], "parent": null, "category": "orchestration", "src": "author"}
+{"id": "svc.mwaa", "kind": "service", "en": "Amazon MWAA", "keep": true, "coda": "none", "aliases": ["MWAA", "Amazon Managed Workflows for Apache Airflow", "Managed Workflows for Apache Airflow"], "parent": null, "category": "orchestration", "src": "author"}
+{"id": "svc.eventbridge", "kind": "service", "en": "Amazon EventBridge", "keep": true, "coda": "none", "aliases": ["EventBridge"], "parent": null, "category": "orchestration", "src": "author"}
+{"id": "svc.sqs", "kind": "service", "en": "Amazon SQS", "keep": true, "coda": "none", "aliases": ["SQS", "Amazon Simple Queue Service", "Simple Queue Service"], "parent": null, "category": "messaging", "src": "author"}
+{"id": "svc.sns", "kind": "service", "en": "Amazon SNS", "keep": true, "coda": "none", "aliases": ["SNS", "Amazon Simple Notification Service", "Simple Notification Service"], "parent": null, "category": "messaging", "src": "author"}
+{"id": "svc.batch", "kind": "service", "en": "AWS Batch", "keep": true, "coda": "none", "aliases": [], "parent": null, "category": "compute", "src": "author"}
+{"id": "svc.ec2", "kind": "service", "en": "Amazon EC2", "keep": true, "coda": "none", "aliases": ["EC2", "Amazon Elastic Compute Cloud"], "parent": null, "category": "compute", "src": "author"}
+{"id": "svc.vpc", "kind": "service", "en": "Amazon VPC", "keep": true, "coda": "none", "aliases": ["VPC", "Amazon Virtual Private Cloud"], "parent": null, "category": "network", "src": "author"}
+{"id": "svc.iam", "kind": "service", "en": "AWS IAM", "keep": true, "coda": "closed", "aliases": ["IAM", "AWS Identity and Access Management", "Identity and Access Management"], "parent": null, "category": "security", "src": "author"}
+{"id": "svc.kms", "kind": "service", "en": "AWS KMS", "keep": true, "coda": "none", "aliases": ["KMS", "AWS Key Management Service", "Key Management Service"], "parent": null, "category": "security", "src": "author"}
+{"id": "svc.secrets-manager", "kind": "service", "en": "AWS Secrets Manager", "keep": true, "coda": "none", "aliases": ["Secrets Manager"], "parent": null, "category": "security", "src": "author"}
+{"id": "svc.macie", "kind": "service", "en": "Amazon Macie", "keep": true, "coda": "none", "aliases": ["Macie"], "parent": null, "category": "security", "src": "author"}
+{"id": "svc.cloudtrail", "kind": "service", "en": "AWS CloudTrail", "keep": true, "coda": "rieul", "aliases": ["CloudTrail"], "parent": null, "category": "operations", "src": "author"}
+{"id": "svc.cloudwatch", "kind": "service", "en": "Amazon CloudWatch", "keep": true, "coda": "none", "aliases": ["CloudWatch"], "parent": null, "category": "operations", "src": "author"}
+{"id": "feat.cloudwatch-logs", "kind": "feature", "en": "Amazon CloudWatch Logs", "keep": true, "coda": "none", "aliases": ["CloudWatch Logs"], "parent": "svc.cloudwatch", "src": "author"}
+{"id": "svc.cloudformation", "kind": "service", "en": "AWS CloudFormation", "keep": true, "coda": "closed", "aliases": ["CloudFormation"], "parent": null, "category": "operations", "src": "author"}
+{"id": "api.putrecord", "kind": "api", "en": "PutRecord", "keep": true, "coda": "none", "aliases": [], "parent": "svc.kinesis-data-streams", "src": "author"}
+{"id": "api.putrecords", "kind": "api", "en": "PutRecords", "keep": true, "coda": "none", "aliases": [], "parent": "svc.kinesis-data-streams", "src": "author"}
+{"id": "api.getrecords", "kind": "api", "en": "GetRecords", "keep": true, "coda": "none", "aliases": [], "parent": "svc.kinesis-data-streams", "src": "author"}
+{"id": "api.getsharditerator", "kind": "api", "en": "GetShardIterator", "keep": true, "coda": "none", "aliases": [], "parent": "svc.kinesis-data-streams", "src": "author"}
+{"id": "api.putitem", "kind": "api", "en": "PutItem", "keep": true, "coda": "closed", "aliases": [], "parent": "svc.dynamodb", "src": "author"}
+{"id": "api.getitem", "kind": "api", "en": "GetItem", "keep": true, "coda": "closed", "aliases": [], "parent": "svc.dynamodb", "src": "author"}
+{"id": "api.batchwriteitem", "kind": "api", "en": "BatchWriteItem", "keep": true, "coda": "closed", "aliases": [], "parent": "svc.dynamodb", "src": "author"}
+{"id": "api.updateitem", "kind": "api", "en": "UpdateItem", "keep": true, "coda": "closed", "aliases": [], "parent": "svc.dynamodb", "src": "author"}
+{"id": "api.putobject", "kind": "api", "en": "PutObject", "keep": true, "coda": "none", "aliases": [], "parent": "svc.s3", "src": "author"}
+{"id": "api.getobject", "kind": "api", "en": "GetObject", "keep": true, "coda": "none", "aliases": [], "parent": "svc.s3", "src": "author"}
+{"id": "api.startjobrun", "kind": "api", "en": "StartJobRun", "keep": true, "coda": "closed", "aliases": [], "parent": "svc.glue", "src": "author"}
+{"id": "api.startqueryexecution", "kind": "api", "en": "StartQueryExecution", "keep": true, "coda": "closed", "aliases": [], "parent": "svc.athena", "src": "author"}
+{"id": "con.record", "kind": "concept", "en": "record", "keep": false, "ko": "레코드", "aliases": [], "parent": null, "src": "thoth-glossary"}
+{"id": "con.shard", "kind": "concept", "en": "shard", "keep": false, "ko": "샤드", "aliases": [], "parent": null, "src": "thoth-glossary"}
+{"id": "con.retention-period", "kind": "concept", "en": "retention period", "keep": false, "ko": "보존 기간", "aliases": [], "parent": null, "src": "thoth-glossary"}
+{"id": "con.throughput", "kind": "concept", "en": "throughput", "keep": false, "ko": "처리량", "aliases": [], "parent": null, "src": "thoth-glossary"}
+{"id": "con.partition-key", "kind": "concept", "en": "partition key", "keep": false, "ko": "파티션 키", "aliases": [], "parent": null, "src": "thoth-glossary"}
+{"id": "con.consumer-application", "kind": "concept", "en": "consumer application", "keep": false, "ko": "컨슈머 애플리케이션", "aliases": [], "parent": null, "src": "thoth-glossary"}
+{"id": "con.producer", "kind": "concept", "en": "producer", "keep": false, "ko": "프로듀서", "aliases": [], "parent": null, "src": "thoth-glossary"}
+{"id": "con.consumer", "kind": "concept", "en": "consumer", "keep": false, "ko": "컨슈머", "aliases": [], "parent": null, "src": "thoth-glossary"}
+{"id": "con.bucket", "kind": "concept", "en": "bucket", "keep": false, "ko": "버킷", "aliases": [], "parent": null, "src": "thoth-glossary"}
+{"id": "con.object", "kind": "concept", "en": "object", "keep": false, "ko": "객체", "aliases": [], "parent": null, "src": "thoth-glossary"}
+{"id": "con.queue", "kind": "concept", "en": "queue", "keep": false, "ko": "큐", "aliases": [], "parent": null, "src": "thoth-glossary", "alt_ko": ["대기열"]}
+{"id": "con.topic", "kind": "concept", "en": "topic", "keep": false, "ko": "토픽", "aliases": [], "parent": null, "src": "thoth-glossary"}
+{"id": "con.stream", "kind": "concept", "en": "stream", "keep": false, "ko": "스트림", "aliases": [], "parent": null, "src": "thoth-glossary"}
+{"id": "con.cluster", "kind": "concept", "en": "cluster", "keep": false, "ko": "클러스터", "aliases": [], "parent": null, "src": "thoth-glossary"}
+{"id": "con.node", "kind": "concept", "en": "node", "keep": false, "ko": "노드", "aliases": [], "parent": null, "src": "thoth-glossary"}
+{"id": "con.instance", "kind": "concept", "en": "instance", "keep": false, "ko": "인스턴스", "aliases": [], "parent": null, "src": "thoth-glossary"}
+{"id": "con.endpoint", "kind": "concept", "en": "endpoint", "keep": false, "ko": "엔드포인트", "aliases": [], "parent": null, "src": "thoth-glossary"}
+{"id": "con.workflow", "kind": "concept", "en": "workflow", "keep": false, "ko": "워크플로", "aliases": [], "parent": null, "src": "thoth-glossary"}
+{"id": "con.crawler", "kind": "concept", "en": "crawler", "keep": false, "ko": "크롤러", "aliases": [], "parent": null, "src": "thoth-glossary"}
+{"id": "con.trigger", "kind": "concept", "en": "trigger", "keep": false, "ko": "트리거", "aliases": [], "parent": null, "src": "thoth-glossary"}
+{"id": "con.predicate", "kind": "concept", "en": "predicate", "keep": false, "ko": "조건자", "aliases": [], "parent": null, "src": "thoth-glossary"}
+{"id": "con.partition", "kind": "concept", "en": "partition", "keep": false, "ko": "파티션", "aliases": [], "parent": null, "src": "thoth-glossary"}
+{"id": "con.schema", "kind": "concept", "en": "schema", "keep": false, "ko": "스키마", "aliases": [], "parent": null, "src": "thoth-glossary"}
+{"id": "con.catalog", "kind": "concept", "en": "catalog", "keep": false, "ko": "카탈로그", "aliases": [], "parent": null, "src": "thoth-glossary"}
+{"id": "con.ingestion", "kind": "concept", "en": "ingestion", "keep": false, "ko": "수집", "aliases": [], "parent": null, "src": "thoth-glossary"}
+{"id": "con.latency", "kind": "concept", "en": "latency", "keep": false, "ko": "지연 시간", "aliases": [], "parent": null, "src": "thoth-glossary"}
+{"id": "con.failover", "kind": "concept", "en": "failover", "keep": false, "ko": "장애 조치", "aliases": [], "parent": null, "src": "thoth-glossary"}
+{"id": "con.replica", "kind": "concept", "en": "replica", "keep": false, "ko": "복제본", "aliases": [], "parent": null, "src": "thoth-glossary"}
+{"id": "con.snapshot", "kind": "concept", "en": "snapshot", "keep": false, "ko": "스냅샷", "aliases": [], "parent": null, "src": "thoth-glossary"}
+{"id": "con.encryption", "kind": "concept", "en": "encryption", "keep": false, "ko": "암호화", "aliases": [], "parent": null, "src": "thoth-glossary"}
+{"id": "con.policy", "kind": "concept", "en": "policy", "keep": false, "ko": "정책", "aliases": [], "parent": null, "src": "thoth-glossary"}
+{"id": "con.role", "kind": "concept", "en": "role", "keep": false, "ko": "역할", "aliases": [], "parent": null, "src": "thoth-glossary"}
+{"id": "con.permission", "kind": "concept", "en": "permission", "keep": false, "ko": "권한", "aliases": [], "parent": null, "src": "thoth-glossary"}
+{"id": "con.quota", "kind": "concept", "en": "quota", "keep": false, "ko": "할당량", "aliases": [], "parent": null, "src": "thoth-glossary"}
+{"id": "con.throttling", "kind": "concept", "en": "throttling", "keep": false, "ko": "제한", "aliases": [], "parent": null, "src": "thoth-glossary"}
+{"id": "con.sort-key", "kind": "concept", "en": "sort key", "keep": false, "ko": "정렬 키", "aliases": [], "parent": null, "src": "author"}
+{"id": "con.global-secondary-index", "kind": "concept", "en": "global secondary index", "keep": false, "ko": "글로벌 보조 인덱스", "aliases": ["GSI"], "parent": null, "src": "author"}
+{"id": "con.local-secondary-index", "kind": "concept", "en": "local secondary index", "keep": false, "ko": "로컬 보조 인덱스", "aliases": ["LSI"], "parent": null, "src": "author"}
+{"id": "con.read-capacity-unit", "kind": "concept", "en": "read capacity unit", "keep": false, "ko": "읽기 용량 단위", "aliases": ["RCU"], "parent": null, "src": "author"}
+{"id": "con.write-capacity-unit", "kind": "concept", "en": "write capacity unit", "keep": false, "ko": "쓰기 용량 단위", "aliases": ["WCU"], "parent": null, "src": "author"}
+{"id": "con.data-lake", "kind": "concept", "en": "data lake", "keep": false, "ko": "데이터 레이크", "aliases": [], "parent": null, "src": "author"}
+{"id": "con.data-warehouse", "kind": "concept", "en": "data warehouse", "keep": false, "ko": "데이터 웨어하우스", "aliases": [], "parent": null, "src": "author"}
+{"id": "con.lifecycle-policy", "kind": "concept", "en": "lifecycle policy", "keep": false, "ko": "수명 주기 정책", "aliases": ["lifecycle configuration"], "parent": null, "src": "author"}
+{"id": "con.storage-class", "kind": "concept", "en": "storage class", "keep": false, "ko": "스토리지 클래스", "aliases": [], "parent": null, "src": "author"}
+{"id": "con.job-bookmark", "kind": "concept", "en": "job bookmark", "keep": false, "ko": "작업 북마크", "aliases": [], "parent": null, "src": "author"}
+{"id": "con.change-data-capture", "kind": "concept", "en": "change data capture", "keep": false, "ko": "변경 데이터 캡처", "aliases": ["CDC"], "parent": null, "src": "author"}
+{"id": "con.dead-letter-queue", "kind": "concept", "en": "dead-letter queue", "keep": false, "ko": "배달 못한 편지 대기열", "aliases": ["DLQ"], "parent": null, "src": "author"}
+{"id": "con.visibility-timeout", "kind": "concept", "en": "visibility timeout", "keep": false, "ko": "표시 제한 시간", "aliases": [], "parent": null, "src": "author"}
+{"id": "con.encryption-at-rest", "kind": "concept", "en": "encryption at rest", "keep": false, "ko": "저장 시 암호화", "aliases": [], "parent": null, "src": "author"}
+{"id": "con.encryption-in-transit", "kind": "concept", "en": "encryption in transit", "keep": false, "ko": "전송 중 암호화", "aliases": [], "parent": null, "src": "author"}
+{"id": "con.least-privilege", "kind": "concept", "en": "least privilege", "keep": false, "ko": "최소 권한", "aliases": [], "parent": null, "src": "author"}
+{"id": "con.resource-based-policy", "kind": "concept", "en": "resource-based policy", "keep": false, "ko": "리소스 기반 정책", "aliases": [], "parent": null, "src": "author"}
+{"id": "con.cross-account", "kind": "concept", "en": "cross-account", "keep": false, "ko": "교차 계정", "aliases": [], "parent": null, "src": "author"}
+{"id": "con.serverless", "kind": "concept", "en": "serverless", "keep": false, "ko": "서버리스", "aliases": [], "parent": null, "src": "author"}
+{"id": "con.operational-overhead", "kind": "concept", "en": "operational overhead", "keep": false, "ko": "운영 오버헤드", "aliases": [], "parent": null, "src": "author"}
+{"id": "con.columnar-format", "kind": "concept", "en": "columnar format", "keep": false, "ko": "열 형식", "aliases": [], "parent": null, "src": "author"}
+{"id": "con.compression", "kind": "concept", "en": "compression", "keep": false, "ko": "압축", "aliases": [], "parent": null, "src": "author"}
+{"id": "con.schema-evolution", "kind": "concept", "en": "schema evolution", "keep": false, "ko": "스키마 진화", "aliases": [], "parent": null, "src": "author"}
+{"id": "con.provisioned-capacity", "kind": "concept", "en": "provisioned capacity", "keep": false, "ko": "프로비저닝된 용량", "aliases": [], "parent": null, "src": "author"}
+{"id": "con.on-demand-capacity", "kind": "concept", "en": "on-demand capacity", "keep": false, "ko": "온디맨드 용량", "aliases": [], "parent": null, "src": "author"}
