@@ -17,7 +17,7 @@ jobs:
   gitleaks:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with: { fetch-depth: 0 }
       - uses: gitleaks/gitleaks-action@v3
         env:
@@ -26,9 +26,9 @@ jobs:
   verify:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v7
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with: { python-version: "3.12" }
       - run: uv sync --group eval
       # ★ 점검 목록은 verify.sh 하나에 산다. 여기에 단계를 늘어놓지 않는다(DECISIONS §20)

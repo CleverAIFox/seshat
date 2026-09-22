@@ -30,7 +30,7 @@ jobs:
     runs-on: [self-hosted, gpu]
     timeout-minutes: 180
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v7
       - name: GPU 와 ollama
         run: |
@@ -55,7 +55,7 @@ jobs:
         run: |
           [ -n "${SESHAT_DATA:-}" ] || { echo "러너에 SESHAT_DATA 가 없다 — ~/actions-runner/.env 에 적고 러너를 다시 띄운다"; exit 1; }
           python3 tools/lake.py put runs runs/*.jsonl
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         with:
           name: runs-${{ inputs.hypothesis }}-${{ github.run_id }}
           path: runs/
