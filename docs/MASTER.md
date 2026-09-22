@@ -17,6 +17,7 @@ python3 tools/doc_fsck.py                # 문서 ↔ 실물 — 경로 · 테�
 python3 tools/check_model_licenses.py    # 코드 ↔ 라이선스 대장
 python3 tools/check_hypotheses.py        # 가설 대장 — 실험의 문
 python3 tools/check_ontology.py          # 온톨로지 — 표기 유일 · 부모 · 끝소리
+bash tools/deps.sh --merge               # 의존성 봇(Actions 만) — 초록만 합치고 가지를 지운다
 ```
 
 | 규칙 | 강제자 |

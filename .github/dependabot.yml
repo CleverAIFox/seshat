@@ -1,0 +1,11 @@
+# 의존성 갱신 — GitHub Actions 만(DECISIONS §18). 러너 쪽 변경(Node 20 강제 전환 같은 것)을 PR 로 먼저 알린다.
+# ★ 열린 PR 은 하나 · 치우는 것은 tools/deps.sh(thoth 의 사본).
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 1
+    commit-message: { prefix: deps }
+    groups:
+      actions: { patterns: ["*"] }
