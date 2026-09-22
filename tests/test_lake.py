@@ -49,11 +49,11 @@ def test_같은_이름에_다른_내용은_거절한다(tmp_path):
 
 def test_바뀐_파일과_대장_밖_파일을_짚고_지우지_않는다(tmp_path):
     d = _lake(tmp_path)
-    lake.put(d, "raw", [_f(tmp_path, "glossary.html", "원본")])
-    (d / "raw/glossary.html").write_text("고침", encoding="utf-8")
+    lake.put(d, "raw", [_f(tmp_path, "glossary.html", "원본")], into="aws-docs")
+    (d / "raw/aws-docs/glossary.html").write_text("고침", encoding="utf-8")
     (d / "runs/몰래.jsonl").write_text("?", encoding="utf-8")
     fails = lake.check(d, ledger=tmp_path / "없음.md")
-    assert any(f.startswith("바뀌었다 raw/glossary.html") for f in fails)
+    assert any(f.startswith("바뀌었다 raw/aws-docs/glossary.html") for f in fails)
     assert any(f.startswith("대장 밖  runs/몰래.jsonl") for f in fails)
     assert (d / "runs/몰래.jsonl").exists()
 
@@ -66,10 +66,20 @@ def test_가설_대장의_근거가_레이크에_없으면_실패한다(tmp_path
     assert lake.check(d, ledger=led) == []
 
 
-def test_캐시는_대장_밖이다(tmp_path):
+def test_캐시는_해시_대장_밖이지만_카탈로그_안이다(tmp_path):
     d = _lake(tmp_path)
+    (d / "cache/papers").mkdir()
+    (d / "cache/papers/x.pdf").write_text("x", encoding="utf-8")
     (d / "cache/flores.jsonl").write_text("x", encoding="utf-8")
-    assert lake.check(d, ledger=tmp_path / "없음.md") == []
+    assert lake.check(d, ledger=tmp_path / "없음.md") == [
+        "카탈로그 밖 cache/flores.jsonl — data/catalog.toml 에 자리를 적거나 치운다"]
+
+
+def test_카탈로그에_없는_자리에는_못_넣는다(tmp_path):
+    d = _lake(tmp_path)
+    assert lake.put(d, "raw", [_f(tmp_path, "pairs.jsonl", "p")]) == 1          # raw/ 바로 아래는 자리가 없다
+    assert lake.put(d, "raw", [_f(tmp_path, "pairs.jsonl", "p")], into="thoth-pairs") == 0
+    assert (d / "raw/thoth-pairs/pairs.jsonl").exists()
 
 
 def test_실제_가설_대장에서_근거를_찾는다():

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # ★ **thoth 의 `tools/deps.sh` 사본이다**(DECISIONS §5 · §18). 고칠 것이 있으면 thoth 에서 고치고 다시 복사한다.
+#   이 저장소에 맞춘 차이는 `# seshat:` 표시 줄뿐이다 — seshat 에는 doctor 가 없고 verify 가 있다.
 # 의존성 봇의 PR 을 치운다(thoth DECISIONS §122).
 #   bash tools/deps.sh          본다. 초록인 PR 과 빨간 PR 을 가른다
 #   bash tools/deps.sh --merge  초록인 것만 squash 로 합치고 가지를 지운 뒤 main 을 당긴다
@@ -40,7 +41,7 @@ fi
 
 git fetch --prune --quiet
 if [ "$MERGE" = 1 ]; then
-  git pull --ff-only --quiet && echo "  main 을 당겼다 — 다음: bash tools/doctor.sh"
+  git pull --ff-only --quiet && echo "  main 을 당겼다 — 다음: bash tools/verify.sh"  # seshat:
 else
   echo "  합치려면: bash tools/deps.sh --merge"
 fi

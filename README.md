@@ -52,6 +52,8 @@ uv sync
 bash tools/verify.sh                              # 점검 전부 — CI 도 이것만 부른다
 bash tools/apply_patch.sh                         # INBOX 의 최신 seshat-*.patch 를 커밋째 붙인다
 python3 tools/lake.py check                       # SSD 레이크 대장 · 가설 근거
+python3 tools/check_catalog.py --list             # 데이터 카탈로그 — 출처 · 라이선스 · 쓰임
+python3 tools/sweep.py [--fix]                    # WSL 위생 — seshat 이 남긴 흔적만
 uv run pytest                                     # 계약 · 평가 · 평가셋 불변식
 uv run python -m seshat.serve                     # echo 백엔드 · 127.0.0.1:8100
 uv run --group eval python -m seshat.evaluate \

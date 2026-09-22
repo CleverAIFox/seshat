@@ -34,15 +34,8 @@ trap 'rm -f "$TMP"' EXIT
 sed 's/\r$//' "$SRC" > "$TMP"
 cmp -s "$SRC" "$TMP" || echo "       줄끝 CRLF 를 LF 로 벗겼다"
 
-# 커밋 제목들. ★ format-patch 는 한글 제목을 RFC 2047(`=?UTF-8?q?…?=`)로 싼다 — 풀어서 이력과 맞춘다
-SUBJECTS="$(python3 - "$TMP" <<'PY'
-import mailbox, re, sys
-from email.header import decode_header, make_header
-for m in mailbox.mbox(sys.argv[1]):
-    s = str(make_header(decode_header(m.get("Subject", "")))).replace("\n", "")
-    print(re.sub(r"\s+", " ", re.sub(r"^\[PATCH[^]]*\]\s*", "", s)).strip())
-PY
-)"
+# 커밋 제목들. 판정 규칙은 tools/patch_subjects.py 하나다 — sweep.py 가 같은 것을 쓴다
+SUBJECTS="$(python3 tools/patch_subjects.py "$TMP")"
 [ -n "$SUBJECTS" ] || { echo "커밋 패치가 아니다 — git format-patch 산출물만 받는다" >&2; exit 1; }
 LOG="$(git log --format=%s -n 500)"
 MISSING="$(printf '%s\n' "$SUBJECTS" | while IFS= read -r s; do grep -qxF -- "$s" <<<"$LOG" || printf '%s\n' "$s"; done)"

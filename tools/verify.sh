@@ -40,6 +40,7 @@ step doc_fsck           uv run python tools/doc_fsck.py
 step model_licenses     uv run python tools/check_model_licenses.py
 step hypotheses         uv run python tools/check_hypotheses.py
 step ontology           uv run python tools/check_ontology.py
+step catalog            uv run python tools/check_catalog.py
 if [ "${CI:-}" = "true" ]; then NAMES+=("lake"); MARKS+=("CI 밖 — SSD 는 이 기계에만 있다")
 else step lake          uv run python tools/lake.py check; fi
 

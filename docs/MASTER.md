@@ -18,6 +18,8 @@ python3 tools/doc_fsck.py                # 문서 ↔ 실물 — 경로 · 테�
 python3 tools/check_model_licenses.py    # 코드 ↔ 라이선스 대장
 python3 tools/check_hypotheses.py        # 가설 대장 — 실험의 문
 python3 tools/check_ontology.py          # 온톨로지 — 표기 유일 · 부모 · 끝소리
+python3 tools/check_catalog.py           # 데이터 카탈로그 — 칸 · 쓰임 · data/ 의 카탈로그 밖 파일(§11)
+python3 tools/sweep.py [--fix]           # WSL 위생 — seshat 이 남긴 흔적만(§12)
 bash tools/deps.sh --merge               # 의존성 봇(Actions 만) — 초록만 합치고 가지를 지운다
 bash tools/apply_patch.sh                # INBOX 의 최신 seshat-*.patch 를 커밋째 붙인다(§11)
 ```
@@ -36,6 +38,8 @@ bash tools/apply_patch.sh                # INBOX 의 최신 seshat-*.patch 를 �
 | 점검 목록은 verify.sh 하나에 산다. CI 는 그것을 부르기만 하고 검사기는 빠짐없이 올라 있다 | `tests/test_workflows.py::test_CI_는_verify_를_부르기만_한다` · `tests/test_workflows.py::test_verify_가_검사기를_빠뜨리지_않는다` |
 | 워크플로는 권한을 적는다. gitleaks 가 있는 곳은 PR 을 읽는다 | `tests/test_workflows.py::test_워크플로마다_권한을_적는다` · `tests/test_workflows.py::test_gitleaks_는_PR_을_읽을_수_있다` |
 | 레이크는 넣기만 한다 · 대장 밖을 짚는다 · 가설의 근거가 레이크에 있다 | `tools/lake.py::check` · `tests/test_lake.py` |
+| 데이터는 전부 카탈로그에 있다 · 미확인 라이선스는 학습에 못 쓴다 | `tools/check_catalog.py` · `seshat/catalog.py::validate` · `tests/test_catalog.py` |
+| 위생 도구는 근거가 있을 때만 지운다 | `tools/sweep.py` · `tests/test_sweep.py` |
 
 ---
 
@@ -145,7 +149,7 @@ bash tools/verify.sh --only=pytest  # 부분 실행 — 마지막에 일부러 �
 |---|---|---|
 | ruff · pytest | 코드 | 돈다 |
 | check_docs · doc_fsck | 문서 ↔ 문서 · 문서 ↔ 실물 | 돈다 |
-| model_licenses · hypotheses · ontology | 대장 셋 | 돈다 |
+| model_licenses · hypotheses · ontology · catalog | 대장 넷 | 돈다 |
 | lake | SSD 레이크 대장 · 가설 근거(§11) | **CI 밖** — SSD 는 이 기계에만 있다 |
 
 ★ CI(`.github/workflows/ci.yml`)는 `bash tools/verify.sh` 한 줄이다. 목록을 늘어놓지 않는다(DECISIONS §20).
@@ -294,5 +298,39 @@ python3 tools/lake.py check                  # 해시 · 대장 밖 파일 · �
 ★ **INBOX 는 브라우저 다운로드 폴더다**(`SESHAT_INBOX` = thoth 의 `WIN_DOWNLOADS`). 패치가 그리로 온다.
   `tools/apply_patch.sh` 가 거기서 최신 `seshat-*.patch` 를 골라 CRLF 를 벗기고 `git am` 으로 붙인다. 이미 붙은
   패치(커밋 제목이 이력에 있다)는 아무것도 안 한다.
-★ 파이어레인의 데이터 관리 체계(sources.yaml · 매니페스트 봉인 · norm 층)는 옮기지 않았다. seshat 의 원본은 아직
-  작고 사람이 손으로 모으지 않는다. 옮긴 것은 층 · 넣기만 하는 해시 대장 · 경로 정본 · 셸 우선 세 가지다.
+### 11-1. 카탈로그
+
+**`data/catalog.toml` 이 데이터의 대장이다**(DECISIONS §22). 파이어레인 `sources.yaml` 의 규칙을 옮겼다 —
+**카탈로그에 없는 파일은 레이크에 못 들어오고, 레이크나 `data/` 에 있으면 실패다.**
+
+| 칸 | 뜻 |
+|---|---|
+| `where` | `repo:<glob>` · `lake:<glob>`. 레이크의 자리도 카탈로그가 정한다(`put raw --into thoth-pairs`) |
+| `license` | 모르면 `미확인` 이다. 비워 두지 않는다 |
+| `uses` | `eval` · `evidence` · `train` · `ontology` · `reference` · `serve`. **학습 로더는 `seshat.catalog.allowed(id, "train")` 을 묻는다** |
+| `how` | 얻는 도구 또는 `사람`. 도구 경로는 실재해야 한다 |
+
+★ **쓰임이 문이다.** 평가셋(FLORES+ · 탐침)은 `train` 이 없다 — 학습에 새면 이길 대상의 숫자가 거짓말을 한다.
+  라이선스가 `미확인` 인 출처(AWS 문서 스냅숏)는 `train` 을 달 수 없다.
+★ 가중치의 라이선스는 `seshat/licenses.py` 가 정본이다(§6). 카탈로그는 자리만 든다.
+★ 파이어레인에서 옮기지 않은 것 — norm 층 · 봉인 · 획득 게이트. 원본이 작고 손으로 모으지 않는다.
+
+## 12. WSL 위생
+
+```bash
+python3 tools/sweep.py          # 센다
+python3 tools/sweep.py --fix    # 근거가 확실한 것만 지운다
+```
+
+**seshat 이 싼 것만 친다**(DECISIONS §23). 기계 하나에 하나인 것 — uv 캐시 · ollama 모델 · WSL 디스크 — 은
+thoth 의 sweep · doctor(`OLLAMA_KEEP_ALSO`)가 본다. 두 저장소가 같은 자리를 치지 않는다.
+
+| 자리 | 지우는 근거 | 없으면 |
+|---|---|---|
+| INBOX 의 `seshat-*.patch` | 커밋 제목이 전부 이력에 있다. 제목 없는 옛 패치(seshat-017 까지)는 역적용 · 파일 이름의 번호 | 판정 못함 — 남긴다 |
+| 작업대 결과 `runs/` · `/tmp/hNNN/` | 레이크에 **같은 해시로** 있다 | 레이크 밖 — `lake.py put` 이 먼저다 |
+| `/tmp/seshat-*` | seshat 도구의 임시 이름 | — |
+| 러너 `_diag` 로그 | 지우지 않는다. 14일 넘은 것을 나열만 한다 | — |
+
+★ 판정 규칙은 `tools/patch_subjects.py` 하나다. `apply_patch.sh`(붙었으면 안 한다)와 `sweep.py`(붙었으면 지운다)가
+  같은 것을 쓴다. 레이크가 안 붙었으면 작업대 결과는 **못 잼**이다 — 0건이 아니다.
