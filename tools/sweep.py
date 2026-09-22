@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import argparse
 import os
-import shutil
 import sys
 import time
 from pathlib import Path
@@ -73,6 +72,22 @@ def tmp_bench_dirs() -> list[Path]:
     return sorted(p for p in TMP.glob("h[0-9][0-9][0-9]") if p.is_dir())
 
 
+def prune_empty(d: Path) -> list[Path]:
+    """**정말 빈** 디렉터리만 아래에서부터 지운다. 결과 파일을 치운 뒤 남은 껍데기다.
+
+    ★ 2026-09-22 첫판은 `.jsonl` 이 안 남았으면 `rmtree` 했다. 아티팩트에 다른 파일(로그 · 압축)이 있었다면
+      근거 없이 같이 지웠다. 지우는 근거가 있는 것은 파일 하나하나고, 디렉터리는 비었다는 사실뿐이다.
+    """
+    gone = []
+    for x in sorted((p for p in d.rglob("*") if p.is_dir()), key=lambda p: len(p.parts), reverse=True) + [d]:
+        try:
+            x.rmdir()
+            gone.append(x)
+        except OSError:
+            pass
+    return gone
+
+
 def scan_tmp():
     return [(p, "seshat 임시") for p in sorted(TMP.glob("seshat-patch.*")) + sorted(TMP.glob("seshat-subjects-*"))]
 
@@ -112,10 +127,9 @@ def main(argv: list[str] | None = None) -> int:
     show("작업대 결과 — 레이크에 있다", k, a.fix, True)
     show("작업대 결과 — 레이크 밖", keep, a.fix, False)
     if a.fix:
-        for d in tmp_bench_dirs():            # 결과 파일을 다 치운 아티팩트 자리는 비었으면 지운다
-            if not any(d.rglob("*.jsonl")):
-                shutil.rmtree(d, ignore_errors=True)
-                print(f"  지움   {d}/ (빈 아티팩트 자리)")
+        for d in tmp_bench_dirs():
+            for x in prune_empty(d):
+                print(f"  지움   {x}/ (빈 디렉터리)")
     show("임시 파일", scan_tmp(), a.fix, True)
     show(f"러너 진단 로그 — {OLD_DAYS}일 넘은 것", scan_runner(), a.fix, False)
     for u in unmeasured:

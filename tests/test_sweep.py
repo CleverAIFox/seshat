@@ -86,3 +86,15 @@ def test_제목_없는_옛_패치는_번호로_가른다(tmp_path):
     new = tmp_path / "seshat-120-x.patch"
     new.write_text("diff --git a/x b/x\n", encoding="utf-8")
     assert ps.state(new, r) == "판정 못함"
+
+
+def test_빈_디렉터리만_지운다(tmp_path):
+    d = tmp_path / "h001"
+    (d / "runs-1").mkdir(parents=True)
+    (d / "runs-2").mkdir()
+    (d / "runs-2/runner.log").write_text("x")          # 근거 없는 파일이 남은 자리는 그대로다
+    gone = sweep.prune_empty(d)
+    assert gone == [d / "runs-1"]
+    assert (d / "runs-2/runner.log").exists()
+    (d / "runs-2/runner.log").unlink()
+    assert sweep.prune_empty(d) == [d / "runs-2", d]

@@ -662,7 +662,10 @@ H-001 처치군 결과(`H-001-ph-20260922-162419.jsonl`)를 `tools/rescore.py` �
 - `tools/deps.sh` 사본이 합친 뒤 `bash tools/doctor.sh` 를 안내했다. seshat 에는 doctor 가 없다. `# seshat:` 표시 줄로
   `verify.sh` 를 안내한다
 
-강제자 — `tests/test_sweep.py::test_작업대_결과는_레이크에_같은_해시일_때만_지운다` · `tests/test_sweep.py::test_붙음_안_붙음_판정_못함` · `tests/test_sweep.py::test_제목_없는_옛_패치는_번호로_가른다`
+- 첫 실행(2026-09-22)에서 아티팩트 자리(`/tmp/h001`)를 `.jsonl` 이 안 남았다는 이유로 통째로 지웠다. 그 자리에 다른
+  파일은 없었지만 있었다면 근거 없이 지웠다. 디렉터리는 **정말 비었을 때만** 지운다(`prune_empty`)
+
+강제자 — `tests/test_sweep.py::test_빈_디렉터리만_지운다` · `tests/test_sweep.py::test_작업대_결과는_레이크에_같은_해시일_때만_지운다` · `tests/test_sweep.py::test_붙음_안_붙음_판정_못함` · `tests/test_sweep.py::test_제목_없는_옛_패치는_번호로_가른다`
 
 ### 배운 것
 
