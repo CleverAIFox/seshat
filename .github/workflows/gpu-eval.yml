@@ -5,7 +5,7 @@
 # ★ **손으로만 돈다**(workflow_dispatch). 가설 번호가 입력이고, evaluate 가 대장에서 `실험` 상태인지
 #   확인한다. 푸시마다 GPU 를 돌리지 않는다 — 가설 없이 재지 않는다(DECISIONS §12).
 # ★ 비공개 저장소라 셀프 호스티드 러너가 안전하다. 공개 저장소면 남의 PR 이 이 기계에서 돈다.
-# ★ 결과(runs/)는 커밋하지 않고 아티팩트로 남긴다.
+# ★ 결과(runs/)는 커밋하지 않는다. SSD 레이크에 넣고(DECISIONS §21) 아티팩트로도 남긴다.
 name: GPU 평가
 
 on:
@@ -48,7 +48,13 @@ jobs:
           uv run python -m seshat.evaluate --backend translategemma-4b --set data/probes/h001.jsonl --hypothesis "$H" --name "$H-base"
           uv run python -m seshat.evaluate --backend translategemma-4b+ph --set data/probes/h001.jsonl --hypothesis "$H" --name "$H-ph"
       - name: 탐침을 결과와 함께 남긴다 — 대조 도구가 구문을 붙인다
-        run: cp data/probes/h001.jsonl runs/
+        run: cp data/probes/h001.jsonl "runs/${{ inputs.hypothesis }}-probes-${{ github.run_id }}.jsonl"
+      # ★ 러너가 이 기계라서 SSD 레이크에 바로 넣는다(DECISIONS §21). 러너는 `~/actions-runner/.env` 의
+      #   SESHAT_DATA 를 받는다. 없으면 이 단계는 실패한다 — 아티팩트만 남기고 조용히 지나가지 않는다
+      - name: 레이크에 넣는다
+        run: |
+          [ -n "${SESHAT_DATA:-}" ] || { echo "러너에 SESHAT_DATA 가 없다 — ~/actions-runner/.env 에 적고 러너를 다시 띄운다"; exit 1; }
+          python3 tools/lake.py put runs runs/*.jsonl
       - uses: actions/upload-artifact@v5
         with:
           name: runs-${{ inputs.hypothesis }}-${{ github.run_id }}

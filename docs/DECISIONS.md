@@ -582,3 +582,47 @@ H-001 처치군 결과(`H-001-ph-20260922-162419.jsonl`)를 `tools/rescore.py` �
 
 **지표가 보는 것만 보인다.** keep 은 영어 이름을 지키는지만 봐서, 이름은 지키고 뜻을 버린 번역이 만점을 받았다. 눈으로
 본 실패(§16)는 지표로 옮겨야 다음 판부터 센다.
+
+## §20. CI 는 권한을 적고 verify.sh 하나를 부른다
+
+**2026-09-22**
+
+### 결정
+
+- 의존성 봇의 첫 PR 에서 gitleaks 가 `pulls/1/commits` 403 으로 죽었다. 비공개 저장소의 GITHUB_TOKEN 은 워크플로가
+  적지 않은 권한이 없다. `ci.yml` 에 `permissions: contents: read · pull-requests: read` 를 적었다. thoth 는 공개
+  저장소라 같은 줄 없이도 읽혔다 — 같은 파일이 저장소의 공개 여부로 갈렸다
+- 점검 목록을 `tools/verify.sh` 로 모았다. CI 는 그것을 부르기만 한다. MASTER §5 는 「CI 가 같은 다섯을 돈다」 고
+  적었는데 CI 는 일곱을 돌고 있었다
+- 실패해도 끝까지 돌고 표로 보인다. `--only` 는 부분 실행이라 마지막에 실패한다(파이어레인 tools/verify.sh 의 규율)
+
+강제자 — `tests/test_workflows.py::test_워크플로마다_권한을_적는다` · `tests/test_workflows.py::test_gitleaks_는_PR_을_읽을_수_있다` · `tests/test_workflows.py::test_CI_는_verify_를_부르기만_한다` · `tests/test_workflows.py::test_verify_가_검사기를_빠뜨리지_않는다`
+
+### 배운 것
+
+**사본은 그 저장소의 조건까지 옮겨 오지 않는다.** ci.yml 은 thoth 에서 왔고 thoth 에서는 맞았다. 권한의 기본값이 공개
+저장소에서 넉넉해서 빠진 줄이 보이지 않았다. 옮길 때는 줄이 아니라 그 줄이 기대는 조건을 본다.
+
+## §21. SSD 레이크 · .env · INBOX
+
+**2026-09-22**
+
+### 결정
+
+- 원본(`raw`)과 실험 결과(`runs`)를 SSD 레이크 `SESHAT_DATA` 에 둔다. 넣기만 하는 해시 대장(`MANIFEST.tsv`)이 지킨다.
+  다시 받는 것(`cache`)은 대장 밖이다(MASTER §11)
+- H-016 을 채택한 근거 `runs/H-016-rescore-….jsonl` 이 노트북 저장소의 `runs/`(커밋 밖)에만 있었고, H-001 결과는
+  `/tmp/h001` 에 있었다. WSL 이 재시작하면 `/tmp` 가 비고 가설 대장이 없는 파일을 가리킨다. `lake.py check` 가 대장의
+  근거를 레이크에서 찾는다
+- `.env` 와 경로 정본 `seshat/paths.py` 를 들였다. 셸이 이긴다. `tools/lib/env.sh` 는 thoth 사본이다
+- `git am ~/Downloads/…` 가 파일이 없다며 죽었다. 브라우저는 윈도우 다운로드 폴더에 받는다. `SESHAT_INBOX` 와
+  `tools/apply_patch.sh` 를 들였다
+- 파이어레인의 체계 전부(sources.yaml · 봉인 · norm)는 옮기지 않는다. 원본이 작고 손으로 모으지 않는다. 온톨로지 2판이
+  공식 용어집을 긁어 올 때(PLAN #22) raw 의 첫 입주자가 생긴다
+
+강제자 — `tests/test_lake.py::test_같은_이름에_다른_내용은_거절한다` · `tests/test_lake.py::test_가설_대장의_근거가_레이크에_없으면_실패한다` · `tests/test_lake.py::test_셸이_env_를_이긴다` · `tests/test_lake.py::test_붙지_않은_드라이브는_종료코드_2다`
+
+### 배운 것
+
+**다시 만들 수 없는 것을 먼저 센다.** 데이터 관리가 필요한가는 데이터의 크기가 아니라 잃었을 때 다시 만들 수 있느냐로
+갈린다. 벤치마크 · 가중치 · 논문은 다시 받는다. 실험 결과는 그날의 모델 · 서버 · GPU 가 다시 오지 않는다.

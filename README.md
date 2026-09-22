@@ -47,7 +47,11 @@ thoth 에 그대로 끼워진다.
 ## 실행
 
 ```bash
+cp .env.example .env                              # SESHAT_DATA(SSD 레이크) · SESHAT_INBOX(다운로드 폴더)
 uv sync
+bash tools/verify.sh                              # 점검 전부 — CI 도 이것만 부른다
+bash tools/apply_patch.sh                         # INBOX 의 최신 seshat-*.patch 를 커밋째 붙인다
+python3 tools/lake.py check                       # SSD 레이크 대장 · 가설 근거
 uv run pytest                                     # 계약 · 평가 · 평가셋 불변식
 uv run python -m seshat.serve                     # echo 백엔드 · 127.0.0.1:8100
 uv run --group eval python -m seshat.evaluate \

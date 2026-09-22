@@ -12,12 +12,14 @@
 **thoth 와 같은 규약이다**(DECISIONS §5 · thoth MASTER §0). 규약마다 강제자가 있다.
 
 ```bash
+bash tools/verify.sh                     # ★ 아래 전부 + 레이크 — 점검 목록의 정본이다. CI 도 이것만 부른다
 python3 tools/check_docs.py              # 문서 ↔ 문서 — 문체 · 절 · PLAN 표 · 참조 · DECISIONS
 python3 tools/doc_fsck.py                # 문서 ↔ 실물 — 경로 · 테스트 · 죽은 도구
 python3 tools/check_model_licenses.py    # 코드 ↔ 라이선스 대장
 python3 tools/check_hypotheses.py        # 가설 대장 — 실험의 문
 python3 tools/check_ontology.py          # 온톨로지 — 표기 유일 · 부모 · 끝소리
 bash tools/deps.sh --merge               # 의존성 봇(Actions 만) — 초록만 합치고 가지를 지운다
+bash tools/apply_patch.sh                # INBOX 의 최신 seshat-*.patch 를 커밋째 붙인다(§11)
 ```
 
 | 규칙 | 강제자 |
@@ -31,6 +33,9 @@ bash tools/deps.sh --merge               # 의존성 봇(Actions 만) — 초록
 | 정규식 검사는 카나리아를 든다 | `tests/test_doc_enforcers.py` |
 | 실험에 드는 가설은 검증 방법 · 비용 상한을, 판정은 근거를 든다 | `tools/check_hypotheses.py::check` |
 | 온톨로지의 표기는 유일하고 영어로 남는 노드는 끝소리를 든다 | `tools/check_ontology.py` · `seshat/ontology.py::validate` |
+| 점검 목록은 verify.sh 하나에 산다. CI 는 그것을 부르기만 하고 검사기는 빠짐없이 올라 있다 | `tests/test_workflows.py::test_CI_는_verify_를_부르기만_한다` · `tests/test_workflows.py::test_verify_가_검사기를_빠뜨리지_않는다` |
+| 워크플로는 권한을 적는다. gitleaks 가 있는 곳은 PR 을 읽는다 | `tests/test_workflows.py::test_워크플로마다_권한을_적는다` · `tests/test_workflows.py::test_gitleaks_는_PR_을_읽을_수_있다` |
+| 레이크는 넣기만 한다 · 대장 밖을 짚는다 · 가설의 근거가 레이크에 있다 | `tools/lake.py::check` · `tests/test_lake.py` |
 
 ---
 
@@ -132,14 +137,19 @@ AWS_PROFILE=<프로파일> uv run --group eval --group aws python -m seshat.eval
 ## 5. 점검
 
 ```bash
-uv run pytest
-uv run ruff check .
-python3 tools/check_docs.py
-python3 tools/doc_fsck.py
-python3 tools/check_model_licenses.py
+bash tools/verify.sh              # 전부. 실패해도 끝까지 돌고 표로 보인다
+bash tools/verify.sh --only=pytest  # 부분 실행 — 마지막에 일부러 실패한다
 ```
 
-CI(`.github/workflows/ci.yml`)가 같은 다섯을 돈다.
+| 단계 | 무엇 | CI |
+|---|---|---|
+| ruff · pytest | 코드 | 돈다 |
+| check_docs · doc_fsck | 문서 ↔ 문서 · 문서 ↔ 실물 | 돈다 |
+| model_licenses · hypotheses · ontology | 대장 셋 | 돈다 |
+| lake | SSD 레이크 대장 · 가설 근거(§11) | **CI 밖** — SSD 는 이 기계에만 있다 |
+
+★ CI(`.github/workflows/ci.yml`)는 `bash tools/verify.sh` 한 줄이다. 목록을 늘어놓지 않는다(DECISIONS §20).
+★ 이 기계에서 `SESHAT_DATA` 가 비었거나 드라이브가 안 붙었으면 `lake` 가 실패한다 — 조용히 건너뛰지 않는다.
 
 ## 6. 라이선스 대장
 
@@ -190,7 +200,7 @@ CI(`.github/workflows/ci.yml`)가 같은 다섯을 돈다.
 | 환경 | uv · ollama | 컨테이너(PLAN #26) — torch 가 들어올 때 |
 | 실험 | `evaluate.py` → `runs/`(커밋 밖) · 머리줄에 재현 조건 · GPU 러너(§10) | 평가 게이트(PLAN #28) · 비용 장부 |
 | 학습 | 없다 | ② 원격 T4 · 스팟 → ③ 학습용 데스크탑 |
-| 데이터 | `data/eval/` · `data/bench/`(받아 쓴다) · `data/private/` | thoth 쌍(원문만) · 교사 공장 산출 · 온톨로지 |
+| 데이터 | 저장소의 `data/`(작은 정본 · 받는 도구) · SSD 레이크 `SESHAT_DATA`(raw · runs · cache — §11) | thoth 쌍(원문만) · 교사 공장 산출 · 온톨로지 2판 원천 |
 
 ★ **HTTP 가 맞는 이유는 웹 도구라서가 아니다.** 브라우저는 thoth 워커만 부르고, seshat 을 부르는 것은
 워커다. 둘이 다른 곳(Lambda 와 모델 서버)에 살기 때문에 서버 대 서버 HTTP 가 가장 단순한 경계다. 자원
@@ -253,3 +263,36 @@ mkdir -p ~/actions-runner && cd ~/actions-runner      # 저장소 밖 · 한 번
 ★ **노트북이 꺼져 있으면 작업이 줄을 선다.** 켜고 `./run.sh` 를 띄우면 받아 간다.
 ★ **비공개 저장소라서 안전하다.** 셀프 호스티드 러너는 공개 저장소에서 남의 PR 을 이 기계에서 돌린다.
 ★ 러너 폴더(`~/actions-runner`)는 저장소 밖이다. 러너 토큰을 커밋하지 않는다.
+
+## 11. 데이터 관리
+
+**원본과 실험 결과는 SSD 레이크에 산다**(DECISIONS §21). 자리는 `.env` 의 `SESHAT_DATA` 다 — thoth 의
+`/mnt/f/projects/thoth` 옆 `/mnt/f/projects/seshat`. 경로 정본은 `seshat/paths.py` 이고 **셸이 `.env` 를 이긴다.**
+심링크는 쓰지 않는다.
+
+| 층 | 무엇 | 대장 | 백업 |
+|---|---|---|---|
+| `raw` | 바꾸지 않는 원본 — thoth 쌍(원문) · 도메인 문서 스냅숏 · 수집한 공식 용어집 | `MANIFEST.tsv` | 한다 |
+| `runs` | 실험 결과. 다시 만들 수 없다 — 그날의 가중치 · 서버 · GPU 시간. 가설 대장의 `runs/…` 근거가 여기 있다 | `MANIFEST.tsv` | 한다 |
+| `cache` | 다시 받는 것 — FLORES+ · 논문 PDF · 가중치 | 없다 | 안 한다 |
+
+| 저장소 안에 남는 것 | 이유 |
+|---|---|
+| `data/ontology/` · `data/eval/seed.jsonl` | 사람이 고치는 작은 정본이다. diff 로 봐야 한다 |
+| 받는 도구(`fetch_flores.py`) · 만드는 도구(`make_probes.py`) | 산출물은 다시 만든다 |
+| `docs/papers.md` | 논문의 **읽은 결과**가 자산이다. PDF 는 cache 다 |
+
+```bash
+python3 tools/lake.py init                   # 한 번 — 층 디렉터리와 MANIFEST.tsv
+python3 tools/lake.py put runs /tmp/h001/*/*.jsonl runs/*.jsonl   # 결과를 넣는다. 같은 이름 · 다른 내용은 거절
+python3 tools/lake.py check                  # 해시 · 대장 밖 파일 · 가설 근거
+```
+
+★ **넣기만 한다.** 같은 이름에 다른 내용이 오면 거절한다 — 가설의 근거가 조용히 다른 파일이 되면 판정이 거짓말을 한다.
+★ **GPU 러너가 바로 넣는다.** 러너가 이 기계라서 `gpu-eval.yml` 이 레이크에 쓴다. 러너는 `~/actions-runner/.env` 에서
+  `SESHAT_DATA` 를 받는다(적고 `./run.sh` 를 다시 띄운다). 아티팩트는 사본이다.
+★ **INBOX 는 브라우저 다운로드 폴더다**(`SESHAT_INBOX` = thoth 의 `WIN_DOWNLOADS`). 패치가 그리로 온다.
+  `tools/apply_patch.sh` 가 거기서 최신 `seshat-*.patch` 를 골라 CRLF 를 벗기고 `git am` 으로 붙인다. 이미 붙은
+  패치(커밋 제목이 이력에 있다)는 아무것도 안 한다.
+★ 파이어레인의 데이터 관리 체계(sources.yaml · 매니페스트 봉인 · norm 층)는 옮기지 않았다. seshat 의 원본은 아직
+  작고 사람이 손으로 모으지 않는다. 옮긴 것은 층 · 넣기만 하는 해시 대장 · 경로 정본 · 셸 우선 세 가지다.
