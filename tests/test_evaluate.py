@@ -78,3 +78,10 @@ def test_머리줄이_재현_조건을_든다(tmp_path, monkeypatch):
 ])
 def test_조사를_끝소리로_잰다(out, want):
     assert ev.josa([{"src": "x", "keep": ["Amazon S3"]}], [out]) == want
+
+
+
+def test_개념이_번역에_남았는지_잰다():
+    rows = [{"src": "The role must be encrypted."}]
+    assert ev.term(rows, ["역할은 암호화되어야 합니다."]) == 1.0
+    assert ev.term(rows, ["데이터는 암호화되어야 합니다."]) == 0.0

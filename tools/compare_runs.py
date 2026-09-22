@@ -30,6 +30,56 @@ def kept(keep: list[str], out: str) -> list[str]:
     return [k for k in keep if k not in out]
 
 
+def words_after_last_name(src: str, keep: list[str]) -> int | None:
+    """원문에서 마지막 영어 이름 뒤에 낱말이 몇 개 남았는가. 문장 끝에 가까울수록 작다(H-017)."""
+    ends = [src.rfind(k) + len(k) for k in keep if k in src]
+    return len([w for w in src[max(ends):].split() if any(c.isalnum() for c in w)]) if ends else None
+
+
+def style_flips(a_rows: dict, b_rows: dict, spec: dict[str, dict]) -> dict:
+    """A 는 합쇼체인데 B 는 아닌 줄과, 그 줄에서 마지막 이름이 문장 끝에서 얼마나 떨어졌는가."""
+    import importlib.util
+    root = Path(__file__).resolve().parent.parent
+    sp = importlib.util.spec_from_file_location("ev", root / "seshat/evaluate.py")
+    ev = importlib.util.module_from_spec(sp)
+    sp.loader.exec_module(ev)
+    flips, dist_flip, dist_rest = [], [], []
+    for i in a_rows:
+        if i not in b_rows:
+            continue
+        d = words_after_last_name(a_rows[i]["src"], spec.get(i, {}).get("keep", []))
+        flipped = ev.is_hapsyo(a_rows[i]["out"]) and not ev.is_hapsyo(b_rows[i]["out"])
+        if flipped:
+            flips.append(i)
+        if d is not None:
+            (dist_flip if flipped else dist_rest).append(d)
+    mean = lambda xs: round(sum(xs) / len(xs), 2) if xs else None  # noqa: E731
+    return {"flips": flips, "after_flip": mean(dist_flip), "after_rest": mean(dist_rest)}
+
+
+def terms_by_construction(a_rows: dict, b_rows: dict, spec: dict[str, dict]) -> dict:
+    """구문별로 원문 개념의 한국어가 번역에 남은 비율(H-012). 관계절의 머리 명사가 여기서 보인다."""
+    import sys as _s
+    root = Path(__file__).resolve().parent.parent
+    _s.path.insert(0, str(root))
+    from seshat import ontology
+    onto = ontology.load()
+    out = defaultdict(lambda: [0, 0, 0])
+    for i in a_rows:
+        if i not in b_rows:
+            continue
+        cons = spec.get(i, {}).get("construction", "?")
+        for _, _, s in ontology.find(onto, a_rows[i]["src"]):
+            if s.node["keep"]:
+                continue
+            names = [s.node["ko"], *s.node.get("alt_ko", [])]
+            c = out[cons]
+            c[0] += 1
+            c[1] += any(k in a_rows[i]["out"] for k in names)
+            c[2] += any(k in b_rows[i]["out"] for k in names)
+    return dict(out)
+
+
 def compare(a_rows: dict, b_rows: dict, spec: dict[str, dict]) -> dict:
     ids = [i for i in a_rows if i in b_rows]
     lost_a, lost_b, only_b_worse, only_b_better, residue = Counter(), Counter(), [], [], []
@@ -79,6 +129,15 @@ def main(argv=None) -> int:
     print("\n  구문별 keep (이름 수 · A · B)")
     for cons, (n, ka, kb) in sorted(r["by_construction"].items(), key=lambda x: (x[1][2] - x[1][0])):
         print(f"    {cons:<13} {n:>4} · {ka / n:.2f} · {kb / n:.2f}" if n else f"    {cons:<13} 0")
+    tb = terms_by_construction(ra, rb, spec)
+    if tb:
+        print("\n  구문별 개념 유지 — 원문 개념의 한국어가 번역에 있는가 (개념 수 · A · B)  [H-012]")
+        for cons, (n, ka, kb) in sorted(tb.items(), key=lambda x: x[1][1] / max(x[1][0], 1)):
+            print(f"    {cons:<13} {n:>4} · {ka / n:.2f} · {kb / n:.2f}")
+    sf = style_flips(ra, rb, spec)
+    print(f"\n  합쇼체가 B 에서만 깨진 줄 {len(sf['flips'])} — 마지막 이름 뒤 낱말 수 평균: 깨진 줄 {sf['after_flip']} · 나머지 {sf['after_rest']}  [H-017]")
+    for i in sf["flips"][: a.show]:
+        print(f"    [{spec.get(i, {}).get('construction', '?')}] {ra[i]['src']}\n      A: {ra[i]['out']}\n      B: {rb[i]['out']}")
     print("\n  B 가 가장 많이 잃은 이름")
     for k, c in r["lost_b"].most_common(8):
         print(f"    {c:>3} · A 도 잃음 {r['lost_a'].get(k, 0):>3} · {k}")

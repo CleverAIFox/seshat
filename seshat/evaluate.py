@@ -23,6 +23,8 @@
   ms      문장당 지연
 
   josa    `keep` 이름 바로 뒤 조사가 그 이름의 끝소리와 맞는 비율(온톨로지 `coda`, H-001)
+  term    원문에 나온 온톨로지 개념의 한국어(`ko` · `alt_ko`)가 번역에 있는 비율. 관계절의 머리 명사가
+          사라지는지를 이것으로 본다(H-012)
 
   COMET 같은 신경망 지표는 torch 를 요구하므로 여기 넣지 않는다(PLAN #3).
 
@@ -91,6 +93,20 @@ def josa(rows: list[dict], outs: list[str]) -> float | None:
     return ok / total if total else None
 
 
+def term(rows: list[dict], outs: list[str]) -> float | None:
+    """원문의 개념이 번역에 한국어로 남았는가. 개념을 버리면(머리 명사 탈락) 여기서 깎인다."""
+    from . import ontology
+    onto = ontology.load()
+    ok = total = 0
+    for r, o in zip(rows, outs):
+        for _, _, s in ontology.find(onto, r["src"]):
+            if s.node["keep"]:
+                continue
+            total += 1
+            ok += any(k in o for k in [s.node["ko"], *s.node.get("alt_ko", [])])
+    return ok / total if total else None
+
+
 def score(rows: list[dict], outs: list[str]) -> dict:
     n = len(rows)
     style = sum(is_hapsyo(o) for o in outs) / n if n else None
@@ -100,7 +116,7 @@ def score(rows: list[dict], outs: list[str]) -> dict:
             total += 1
             kept += k in o
     res = {"n": n, "style": style, "keep": kept / total if total else None, "chrf": None,
-           "josa": josa(rows, outs) if total else None}
+           "josa": josa(rows, outs) if total else None, "term": term(rows, outs)}
     pairs = [(o, r["ref"]) for r, o in zip(rows, outs) if r.get("ref")]
     if pairs:
         try:

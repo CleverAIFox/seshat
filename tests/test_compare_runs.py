@@ -45,3 +45,25 @@ def test_다시_채점한다(tmp_path, monkeypatch):
         {"id": "1", "src": "Use Amazon EMR.", "out": "\\[T1]를 씁니다."}]) + "\n", encoding="utf-8")
     head, body = rs.rescore(str(run), str(setf))
     assert body[0]["out"] == "Amazon EMR을 씁니다." and head["keep"] == 1.0 and head["rescored_from"] == "r.jsonl"
+
+
+
+def test_마지막_이름_뒤_낱말을_센다():
+    assert cr.words_after_last_name("Use Amazon S3 to store the logs.", ["Amazon S3"]) == 4
+    assert cr.words_after_last_name("Configure Athena.", ["Athena"]) == 0  # 마침표는 낱말이 아니다
+    assert cr.words_after_last_name("No names here.", ["Amazon S3"]) is None
+
+
+def test_합쇼체가_한쪽에서만_깨진_줄을_찾는다():
+    a = {"1": {"src": "Use Amazon S3.", "out": "Amazon S3를 씁니다."}, "2": {"src": "Use Athena now.", "out": "Athena를 씁니다."}}
+    b = {"1": {"src": "Use Amazon S3.", "out": "Amazon S3를 쓴다."}, "2": {"src": "Use Athena now.", "out": "Athena를 씁니다."}}
+    spec = {"1": {"keep": ["Amazon S3"]}, "2": {"keep": ["Athena"]}}
+    r = cr.style_flips(a, b, spec)
+    assert r["flips"] == ["1"] and r["after_flip"] == 0 and r["after_rest"] == 1
+
+
+def test_구문별로_개념이_남았는지_본다():
+    a = {"1": {"src": "The role that Athena writes.", "out": "Athena가 쓰는 역할"}}
+    b = {"1": {"src": "The role that Athena writes.", "out": "Athena가 쓰는 데이터"}}
+    r = cr.terms_by_construction(a, b, {"1": {"construction": "relative"}})
+    assert r["relative"] == [1, 1, 0]
