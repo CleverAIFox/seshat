@@ -47,7 +47,9 @@ bash tools/apply_patch.sh                # INBOX 의 안 붙은 seshat-*.patch �
 
 thoth 가 `ENGINE=http` 로 부를 영한 번역 서버와, 그 서버에 올릴 모델을 만드는 도구다.
 **목표는 영→한 범용에서 AWS Translate 를 넘는 것이고**(DECISIONS §11), thoth 의 도메인은 그 위의
-특화다. **모델은 아직 없다.** `echo` 백엔드가 자리를 채우고 `aws-translate` 가 이길 대상을 잰다.
+특화다. **2026-09-23 현재 가장 좋은 팔은 `gemma3-4b+ph+endings+terms` 이고 값이 0 이다**(DECISIONS §58) —
+탐침 200 줄에서 공식 표기 0.846 대 AWS Translate 0.795. 남은 격차는 `keep` 0.975(이름 누락) 하나다.
+`aws-translate` 는 이제 이길 대상이 아니라 **기준선**으로 남는다.
 
 ```
 seshat/
