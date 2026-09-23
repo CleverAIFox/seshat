@@ -5,8 +5,10 @@
 ★ **범용 번역의 자다.** AWS Translate 를 이긴다는 말을 이 셋 위의 숫자로 한다(PLAN #12).
 ★ 라이선스 CC BY-SA 4.0 · 출처 openlanguagedata/flores_plus. 그래도 **커밋하지 않는다** —
   받는 도구를 커밋하고 데이터는 `data/bench/` 에 둔다(git 이 무시한다, DECISIONS §2).
-★ 데이터셋 저장소는 동의를 요구할 수 있다(gated). 그러면 Hugging Face 에서 한 번 동의하고
-  `HF_TOKEN` 을 준다.
+★ 데이터셋 저장소는 동의를 요구한다(gated). Hugging Face 에서 **openlanguagedata/flores_plus 페이지의
+  Agree 를 한 번 누르고** `HF_TOKEN` 을 준다 — 토큰만 있고 동의가 없으면 막힌다.
+★ `HF_TOKEN` 은 `.env` 에 적는다. **그러려면 이 도구가 `.env` 를 얹어야 한다** — seshat 패키지를 불러
+  오는 것이 곧 그 일이다(DECISIONS §39). 안 불러 오면 `.env` 에 적어 놓고 왜 안 되는지 헤맨다.
 ★ 파일 배치를 가정하지 않는다. 받은 parquet 을 훑어 `eng_Latn` · `kor_Hang` 을 split 별로
   짝짓는다. 짝은 `id` 로 맞춘다 — 순서로 맞추면 한 줄이 밀릴 때 전부 틀린다.
 """
@@ -17,6 +19,9 @@ import pathlib
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
+import seshat  # noqa: E402,F401  — 불러 오는 것이 곧 `.env` 를 얹는 일이다(DECISIONS §39)
+
 OUT = ROOT / "data/bench"
 # ★ 데이터셋이다. 가중치가 아니므로 라이선스 대장(seshat/licenses.py) 밖이다.
 FLORES = "openlanguagedata/flores_plus"
