@@ -59,3 +59,11 @@ def test_verify_가_검사기를_빠뜨리지_않는다():
     v = (ROOT / "tools/verify.sh").read_text(encoding="utf-8")
     tools = [p.name for p in (ROOT / "tools").glob("check_*.py")] + ["doc_fsck.py", "lake.py"]
     assert [t for t in tools if f"tools/{t}" not in v] == []
+
+
+def test_결과는_레이크보다_먼저_아티팩트로_간다():
+    """레이크 단계가 실패해도 GPU 시간이 살아남는다(DECISIONS §28)."""
+    t = (ROOT / ".github/workflows/gpu-eval.yml").read_text(encoding="utf-8")
+    assert t.index("upload-artifact") < t.index("lake.py put")
+    art = t[t.index("upload-artifact"):t.index("lake.py put")]
+    assert "if: always()" in art

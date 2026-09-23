@@ -55,13 +55,17 @@ jobs:
           done
       - name: 탐침을 결과와 함께 남긴다 — 대조 도구가 구문을 붙인다
         run: cp data/probes/h001.jsonl "runs/${{ inputs.hypothesis }}-probes-${{ github.run_id }}.jsonl"
+      # ★ **먼저 아티팩트로 올린다**(DECISIONS §28). 레이크 단계가 실패하면 GPU 시간이 통째로 사라진다 —
+      #   결과는 다시 만들 수 없다. `always()` 는 앞 단계가 깨져도 남은 결과를 건진다
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: runs-${{ inputs.hypothesis }}-${{ github.run_id }}
+          path: runs/
+          if-no-files-found: ignore
       # ★ 러너가 이 기계라서 SSD 레이크에 바로 넣는다(DECISIONS §21). 러너는 `~/actions-runner/.env` 의
-      #   SESHAT_DATA 를 받는다. 없으면 이 단계는 실패한다 — 아티팩트만 남기고 조용히 지나가지 않는다
+      #   SESHAT_DATA 를 받는다. 없으면 이 단계는 실패한다 — 조용히 지나가지 않는다
       - name: 레이크에 넣는다
         run: |
           [ -n "${SESHAT_DATA:-}" ] || { echo "러너에 SESHAT_DATA 가 없다 — ~/actions-runner/.env 에 적고 러너를 다시 띄운다"; exit 1; }
           python3 tools/lake.py put runs runs/*.jsonl
-      - uses: actions/upload-artifact@v7
-        with:
-          name: runs-${{ inputs.hypothesis }}-${{ github.run_id }}
-          path: runs/
