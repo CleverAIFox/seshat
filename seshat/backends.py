@@ -25,11 +25,18 @@ def aws_translate(texts: list[str], terms: dict[str, str], client=None) -> list[
     ★ `terms` 를 쓰지 않는다. Custom Terminology 는 미리 등록해야 하고 AWS 전용이다 —
       기준선은 AWS Translate 를 **있는 그대로** 잰다.
     ★ 자격증명은 boto3 가 찾는다(`AWS_PROFILE` 등). 이 저장소는 키를 들지 않는다.
+    ★ **리전을 짐작하지 않는다**(DECISIONS §36). 없으면 `NoRegionError` 가 botocore 깊은 곳에서 터지는데, 그 말은
+      무엇을 해야 하는지 알려주지 않는다. 여기서 먼저 보고 무엇을 적어야 하는지 말한다.
     ★ 과금이다 — 100만 자에 USD 15(2026-09 인용, thoth MASTER §7). FLORES+ devtest 한 판이 약 13만 자다.
     """
     if client is None:
+        import os
+        region = os.environ.get("AWS_REGION") or os.environ.get("AWS_DEFAULT_REGION") or ""
+        if not region:                       # 의존성을 들이기 전에 본다 — 설정이 틀린 것을 설치로 덮지 않는다
+            raise SystemExit("AWS 리전이 없다 — .env 에 AWS_REGION 을 적는다(예: ap-northeast-2)\n"
+                             "    자격증명은 AWS_PROFILE 이나 ~/.aws 가 든다. 이 저장소는 키를 들지 않는다")
         import boto3  # 무거운 의존성은 함수 안에서(모듈 머리말)
-        client = boto3.client("translate")
+        client = boto3.client("translate", region_name=region)
     out = []
     for t in texts:
         r = client.translate_text(Text=t, SourceLanguageCode="en", TargetLanguageCode="ko")

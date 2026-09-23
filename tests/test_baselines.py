@@ -113,3 +113,15 @@ def test_끼울_후보는_자리표시와_종결_정규화를_함께_쓴다():
     assert model.endswith("+ph+endings")
     out = b.with_endings(lambda texts, terms: ["무엇인가요?"])(["x"], {})
     assert out == ["무엇입니까?"]
+
+
+def test_리전이_없으면_먼저_멈춘다(monkeypatch):
+    """botocore 의 NoRegionError 는 무엇을 적어야 하는지 말하지 않는다(DECISIONS §36)."""
+    import pytest
+
+    from seshat import backends as b
+    monkeypatch.delenv("AWS_REGION", raising=False)
+    monkeypatch.delenv("AWS_DEFAULT_REGION", raising=False)
+    with pytest.raises(SystemExit) as e:
+        b.aws_translate(["x"], {})
+    assert "AWS_REGION" in str(e.value)
