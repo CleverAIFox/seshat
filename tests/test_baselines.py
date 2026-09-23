@@ -251,19 +251,22 @@ def _calls(answers):
 
 
 def test_이름이_사라진_줄만_다시_묻는다():
+    """고치는 판은 **원문을 그대로** 받는다 — 자리표시가 없는 물음이다(DECISIONS §60)."""
     from seshat import backends as b
     inner, seen = _calls(["⟦T1⟧ API를 호출합니다."])                          # ⟦T2⟧ 를 버렸다
-    repair, fixed = _calls(["⟦T2⟧의 ⟦T1⟧ API를 호출합니다."])
-    out = b.with_placeholders(inner, repair=repair)(["Call the PutObject API of Amazon S3."], {})
+    repair, fixed = _calls(["Amazon S3의 PutObject API를 호출합니다."])
+    b.REPAIR_STATS.update(tried=0, fixed=0)
+    out = b.with_placeholders(inner, repair=(repair,))(["Call the PutObject API of Amazon S3."], {})
     assert out == ["Amazon S3의 PutObject API를 호출합니다."]
     assert seen["n"] == 1 and fixed["n"] == 1
+    assert b.REPAIR_STATS == {"tried": 1, "fixed": 1}
 
 
 def test_멀쩡한_줄은_다시_묻지_않는다():
     from seshat import backends as b
     inner, _ = _calls(["⟦T1⟧에 씁니다."])
     repair, fixed = _calls(["안 불려야 한다"])
-    out = b.with_placeholders(inner, repair=repair)(["Write to Amazon S3."], {})
+    out = b.with_placeholders(inner, repair=(repair,))(["Write to Amazon S3."], {})
     assert out == ["Amazon S3에 씁니다."] and fixed["n"] == 0
 
 
@@ -271,10 +274,13 @@ def test_다시_물어도_안_되면_첫_답을_둔다():
     """없는 이름을 지어 넣지 않는다 — 사라진 것은 사라진 것으로 재야 keep 이 진실을 말한다."""
     from seshat import backends as b
     inner, _ = _calls(["⟦T1⟧ API를 호출합니다."])
-    repair, fixed = _calls(["또 버린 답입니다."])
-    out = b.with_placeholders(inner, repair=repair, tries=2)(["Call the PutObject API of Amazon S3."], {})
+    first, a = _calls(["또 버린 답입니다."])
+    second, c = _calls(["이것도 버렸습니다."])
+    b.REPAIR_STATS.update(tried=0, fixed=0)
+    out = b.with_placeholders(inner, repair=(first, second))(["Call the PutObject API of Amazon S3."], {})
     assert out == ["PutObject API를 호출합니다."]              # ⟦T1⟧ 만 돌아오고 ⟦T2⟧ 는 없는 그대로
-    assert fixed["n"] == 2                                   # 두 번까지만 묻는다
+    assert a["n"] == 1 and c["n"] == 1                       # 판마다 한 번씩만 묻는다
+    assert b.REPAIR_STATS == {"tried": 1, "fixed": 0}        # 걸렸으나 못 고쳤다 — 결과가 그렇게 말한다
 
 
 def test_고치는_판은_복호화만_다르다():
@@ -285,3 +291,4 @@ def test_고치는_판은_복호화만_다르다():
     assert b.OLLAMA_OF[arm] == b.OLLAMA_OF["gemma3-4b+ph+endings+terms"]
     assert b.DECODING_OF[arm]["repair"] == b.REPAIR
     assert b.REPAIR["temperature"] > 0 and b.REPAIR["seed"] != b.DECODING["seed"]
+    assert len(b._gemma3_repair) == 2                        # 원문 · 온도 0 → 원문 · 온도 0.4

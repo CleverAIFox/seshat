@@ -273,6 +273,8 @@ def conditions(a, rows: list[dict]) -> dict:
         out["cost_usd"] = round(chars * 15 / 1_000_000, 4)   # 100만 자에 USD 15 — 인용(2026-09)
     if (a.backend or "") in backends.OLLAMA_OF:      # 이름으로 짐작하지 않는다(DECISIONS §45)
         out["ollama"] = ollama_placement()
+    if (a.backend or "") in backends.REPAIR_ARMS:   # 처치가 일했는지를 결과가 말한다(DECISIONS §60)
+        out["repair"] = dict(backends.REPAIR_STATS)
     return out
 
 
@@ -325,6 +327,8 @@ def main(argv=None) -> int:
         def call(texts):
             return translate(a.url, texts, a.token, a.thoth or bool(a.thoth_token), a.thoth_token)
     outs: list[str] = []
+    from . import backends as _b
+    _b.REPAIR_STATS.update(tried=0, fixed=0)         # 이번 실행의 셈만 센다
     t = time.monotonic()
     for i in range(0, len(rows), BATCH):
         outs += call([r["src"] for r in rows[i:i + BATCH]])
