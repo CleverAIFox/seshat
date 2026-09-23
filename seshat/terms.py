@@ -71,8 +71,13 @@ def ko_coda(text: str) -> str | None:
     return "none" if jong == 0 else ("rieul" if jong == _RIEUL else "closed")
 
 
-def fix_terms(onto: list[dict], ko: str) -> tuple[str, list[str]]:
-    """관측된 오역(`bad_ko`)을 공식 표기(`ko`)로 바꾼다 — H-033 의 처치(DECISIONS §56).
+def fix_terms(onto: list[dict], ko: str, src: str | None = None) -> tuple[str, list[str]]:
+    """관측된 오역(`bad_ko`)을 공식 표기(`ko`)로 바꾼다 — H-033 의 처치(DECISIONS §56 · §67).
+
+    ★ **원문을 본다.** `src` 를 주면 **그 줄의 원문에 그 개념이 있는 노드만** 고친다. 안 그러면 흔한 말이
+      휩쓸린다 — `제한` 은 throttling 의 오역이기도 하지만 limit · restriction 의 바른 번역이기도 하다.
+      2026-09-23 탐침에서 `요청을 제한하면` 이 `요청을 스로틀링하면` 으로 바뀌었다. 여기서는 맞았지만
+      원문에 throttling 이 없는 줄이었다면 멀쩡한 번역을 망가뜨린 것이다.
 
     ★ **조사를 같이 고친다.** `휴지 암호화를` → `저장 시 암호화를` 은 끝소리가 같아 괜찮지만, 끝소리가
       바뀌는 짝에서는 조사가 틀어진다. 되돌리기(`unmask`)와 같은 셈을 쓴다.
@@ -81,8 +86,9 @@ def fix_terms(onto: list[dict], ko: str) -> tuple[str, list[str]]:
       올리는 일이다(`tools/show_misses.py`).
     """
     hits = []
+    here = None if src is None else {s.node["id"] for s in [x[2] for x in ontology.find(onto, src)]}
     for n in onto:
-        if n["keep"]:
+        if n["keep"] or (here is not None and n["id"] not in here):
             continue
         good, coda = n["ko"], ko_coda(n["ko"])
         for bad in sorted(n.get("bad_ko", []), key=len, reverse=True):

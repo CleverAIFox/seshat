@@ -211,3 +211,24 @@ def test_번역_대상_개념은_근거를_든다():
     없음 = [n["id"] for n in onto if not n["keep"] and not n.get("ko_ref")]
     assert 없음 == [], f"근거 없는 개념 {없음}"
     assert ontology.validate([_node("대기열", [])]) != []     # 새로 들어오는 개념도 같은 문을 지난다
+
+
+def test_후처리는_원문에_있는_개념만_고친다():
+    """`제한` 은 throttling 의 오역이면서 limit 의 바른 번역이다 — 원문이 가른다(DECISIONS §67)."""
+    onto = [_node("스로틀링", ["제한"])]
+    onto[0]["en"] = "throttling"
+    ko = "요청 수를 제한하려면 할당량을 늘리십시오."
+    assert terms.fix_terms(onto, ko, src="To limit the number of requests …")[0] == ko      # 안 건드린다
+    assert terms.fix_terms(onto, ko, src="throttling happens here")[0] != ko                # 원문에 있으면 고친다
+    assert terms.fix_terms(onto, ko)[0] != ko            # 원문을 모르면 전부 본다 — 도구용 옛 길
+
+
+def test_후처리가_고치는_개념과_지표가_세는_개념이_같다():
+    """처치가 지표 밖의 개념을 건드리면, 점수는 안 오르고 문장만 바뀐다(DECISIONS §67)."""
+    onto = ontology.load()
+    src = "The team uses the data lake and the queue for ingestion."
+    보는것 = {s.node["id"] for _, _, s in ontology.find(onto, src) if not s.node["keep"]}
+    _, hits = terms.fix_terms(onto, "데이터 레이크와 큐를 수집에 씁니다.", src=src)
+    assert hits and 보는것                                # 카나리아 — 둘 다 비면 시험이 죽은 것이다
+    고친것 = {h.split(" → ")[1] for h in hits}
+    assert 고친것 <= {n["ko"] for n in onto if n["id"] in 보는것}

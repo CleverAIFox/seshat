@@ -190,7 +190,8 @@ def with_terms(inner: Backend) -> Backend:
     def run(texts: list[str], terms_: dict) -> list[str]:
         from . import ontology, terms
         onto = ontology.load()
-        return [terms.fix_terms(onto, o)[0] for o in inner(texts, terms_)]
+        # ★ 줄마다 그 줄의 원문을 함께 준다 — 흔한 말이 휩쓸리지 않게(DECISIONS §67)
+        return [terms.fix_terms(onto, o, src=t)[0] for t, o in zip(texts, inner(texts, terms_))]
     return run
 
 
