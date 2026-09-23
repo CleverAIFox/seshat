@@ -47,6 +47,13 @@ TRANSLATEGEMMA_PROMPT = (
     "meaning and nuances of the original English text while adhering to Korean grammar, vocabulary, and "
     "cultural sensitivities.\nProduce only the Korean translation, without any additional explanations or "
     "commentary. Please translate the following English text into Korean:\n\n\n{text}")
+# ★ H-019 의 처치 — 문체를 프롬프트가 지시한다(DECISIONS §27). H-001 에서 자리표시가 든 의문문 6줄이
+#   해요체(`… 충족할까요?`)로 끝났다. 틀은 위와 같고 **한 문단만 더한다** — 한 번에 한 가지만 바꾼다.
+TRANSLATEGEMMA_PROMPT_HAPSYO = TRANSLATEGEMMA_PROMPT.replace(
+    "Please translate the following English text into Korean:",
+    "Write every sentence in the Korean formal-polite style (합쇼체): statements end with -ㅂ니다/습니다 and "
+    "questions end with -ㅂ니까/습니까. Never use -요 endings.\nPlease translate the following English text "
+    "into Korean:")
 # 결정성 — thoth 에서 temperature 0 만으로는 모자랐다(thoth DECISIONS §35 · §65). seed 를 함께 준다.
 DECODING = {"temperature": 0, "seed": 42, "num_predict": 512}
 
@@ -80,6 +87,7 @@ def with_placeholders(inner: Backend) -> Backend:
 
 
 _tg = ollama("translategemma:4b", TRANSLATEGEMMA_PROMPT)
+_tg_hapsyo = ollama("translategemma:4b", TRANSLATEGEMMA_PROMPT_HAPSYO)
 
 REGISTRY: dict[str, tuple[Backend, str]] = {
     # 이름 → (함수, /health 가 말할 모델명)
@@ -87,6 +95,7 @@ REGISTRY: dict[str, tuple[Backend, str]] = {
     "aws-translate": (aws_translate, "aws-translate"),
     "translategemma-4b": (_tg, "translategemma:4b"),
     "translategemma-4b+ph": (with_placeholders(_tg), "translategemma:4b+ph"),
+    "translategemma-4b+ph+style": (with_placeholders(_tg_hapsyo), "translategemma:4b+ph+style"),
 }
 
 # ★ **백엔드가 어떤 가중치를 부르는지 선언한다.** `from_pretrained` 를 거치지 않는 호출(ollama)은
@@ -94,10 +103,12 @@ REGISTRY: dict[str, tuple[Backend, str]] = {
 WEIGHTS: dict[str, str] = {
     "translategemma-4b": "google/translategemma-4b-it",
     "translategemma-4b+ph": "google/translategemma-4b-it",
+    "translategemma-4b+ph+style": "google/translategemma-4b-it",
 }
 
 # 결과 파일 머리줄에 싣는 디코딩 조건
-DECODING_OF: dict[str, dict] = {"translategemma-4b": DECODING, "translategemma-4b+ph": DECODING}
+DECODING_OF: dict[str, dict] = {"translategemma-4b": DECODING, "translategemma-4b+ph": DECODING,
+                                "translategemma-4b+ph+style": DECODING}
 
 # ★ 서빙하지 않는 백엔드. 기준선으로만 잰다 — thoth 에 끼우는 자리가 아니다.
 BASELINE_ONLY = {"aws-translate"}

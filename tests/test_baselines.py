@@ -91,3 +91,14 @@ def test_ollama_백엔드는_틀과_결정성을_싣는다(monkeypatch):
     assert "⟦T1⟧" in got[0]["prompt"] and "Amazon EMR" not in got[0]["prompt"]
     # ★ 모델은 ⟦T1⟧를 썼지만 EMR 은 ㄹ로 끝난다 — 되돌리며 '을' 로 고친다
     assert out == ["Amazon EMR을 씁니다."]
+
+
+def test_문체_지시_팔은_틀을_한_문단만_바꾼다():
+    """한 번에 한 가지만 바꾼다(DECISIONS §27). 틀 전체를 다시 쓰면 무엇이 효과인지 못 가른다."""
+    from seshat import backends as b
+    base, styled = b.TRANSLATEGEMMA_PROMPT, b.TRANSLATEGEMMA_PROMPT_HAPSYO
+    assert styled != base and styled.endswith("{text}")
+    assert "합쇼체" in styled and "-ㅂ니까" in styled
+    added = len(styled) - len(base)
+    assert 0 < added < 250                                   # 한 문단이다
+    assert "translategemma-4b+ph+style" in b.REGISTRY and "translategemma-4b+ph+style" in b.WEIGHTS

@@ -17,6 +17,9 @@ on:
       probes:
         description: "문형 탐침 줄 수"
         default: "200"
+      arms:
+        description: "잴 백엔드 — 공백으로 나눈다. 대조군을 먼저 적는다"
+        default: "translategemma-4b translategemma-4b+ph"
 
 permissions:
   contents: read
@@ -41,12 +44,15 @@ jobs:
       - run: python3 tools/check_hypotheses.py
       - name: 탐침을 만든다
         run: uv run python tools/make_probes.py --name h001 --n "${{ inputs.probes }}"
-      - name: 대조군 · 처치군
+      # ★ 팔은 입력이 정한다(DECISIONS §27). 워크플로에 백엔드 이름을 박으면 실험마다 이 파일을 고친다
+      - name: 팔마다 잰다
         env:
           H: ${{ inputs.hypothesis }}
+          ARMS: ${{ inputs.arms }}
         run: |
-          uv run python -m seshat.evaluate --backend translategemma-4b --set data/probes/h001.jsonl --hypothesis "$H" --name "$H-base"
-          uv run python -m seshat.evaluate --backend translategemma-4b+ph --set data/probes/h001.jsonl --hypothesis "$H" --name "$H-ph"
+          for b in $ARMS; do
+            uv run python -m seshat.evaluate --backend "$b" --set data/probes/h001.jsonl --hypothesis "$H" --name "$H-$b"
+          done
       - name: 탐침을 결과와 함께 남긴다 — 대조 도구가 구문을 붙인다
         run: cp data/probes/h001.jsonl "runs/${{ inputs.hypothesis }}-probes-${{ github.run_id }}.jsonl"
       # ★ 러너가 이 기계라서 SSD 레이크에 바로 넣는다(DECISIONS §21). 러너는 `~/actions-runner/.env` 의
