@@ -57,6 +57,44 @@ _AFTER = re.compile(SLOT_FORMS + r"(?:(으로|이나|이라|을|를|이|가|은|
 RESIDUE = re.compile(SLOT_FORMS)
 
 
+BASE, JONG, _RIEUL = 0xAC00, 28, 8
+_PARTICLE = r"(?:(으로|이나|이라|을|를|이|가|은|는|과|와|나|라|로)(?![가-힣]))?"
+
+
+def ko_coda(text: str) -> str | None:
+    """한국어 표기의 끝소리. 한글로 끝나지 않으면 모른다(None)."""
+    last = text.strip()[-1:] if text.strip() else ""
+    i = ord(last) - BASE if last else -1
+    if not 0 <= i < 11172:
+        return None
+    jong = i % JONG
+    return "none" if jong == 0 else ("rieul" if jong == _RIEUL else "closed")
+
+
+def fix_terms(onto: list[dict], ko: str) -> tuple[str, list[str]]:
+    """관측된 오역(`bad_ko`)을 공식 표기(`ko`)로 바꾼다 — H-033 의 처치(DECISIONS §56).
+
+    ★ **조사를 같이 고친다.** `휴지 암호화를` → `저장 시 암호화를` 은 끝소리가 같아 괜찮지만, 끝소리가
+      바뀌는 짝에서는 조사가 틀어진다. 되돌리기(`unmask`)와 같은 셈을 쓴다.
+    ★ 긴 오역부터 본다 — `글로벌 이차 인덱스` 를 `이차 인덱스` 가 먼저 먹으면 `글로벌` 이 남는다.
+    ★ **사전에 적힌 것만 바꾼다.** 모델이 새로 지어낸 말은 여기서 안 잡힌다 — 그건 눈으로 보고 사전에
+      올리는 일이다(`tools/show_misses.py`).
+    """
+    hits = []
+    for n in onto:
+        if n["keep"]:
+            continue
+        good, coda = n["ko"], ko_coda(n["ko"])
+        for bad in sorted(n.get("bad_ko", []), key=len, reverse=True):
+            if bad == good or bad not in ko:
+                continue
+            pat = re.compile(re.escape(bad) + _PARTICLE)
+            ko, cnt = pat.subn(lambda m: good + (particle(coda, m.group(1)) if m.group(1) else ""), ko)
+            if cnt:
+                hits.append(f"{bad} → {good}")
+    return ko, hits
+
+
 def unmask(ko: str, slots: dict[str, dict]) -> tuple[str, list[str]]:
     seen = set()
 

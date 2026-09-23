@@ -153,3 +153,52 @@ def test_맨_자리표시는_낱말_속을_건드리지_않는다():
     slots = {"T1": {"text": "KCL", "coda": "rieul", "id": "feat.kcl"}}
     for keep in ("MT1 은 다르다.", "T10 은 다르다.", "xT1y"):
         assert terms.unmask(keep, slots)[0] == keep
+
+
+# ── 사전으로 표기를 바로잡는다(DECISIONS §56)
+def _node(ko, bad, alt=None):
+    return {"id": "con.t", "kind": "concept", "en": "t", "keep": False, "ko": ko,
+            "aliases": [], "parent": None, "src": "author", "bad_ko": bad, "alt_ko": alt or []}
+
+
+def test_관측된_오역을_공식_표기로_바꾼다():
+    onto = [_node("글로벌 보조 인덱스", ["글로벌 이차 인덱스"])]
+    got, hits = terms.fix_terms(onto, "분석가에게 글로벌 이차 인덱스의 뷰를 제공합니다.")
+    assert got == "분석가에게 글로벌 보조 인덱스의 뷰를 제공합니다."
+    assert hits == ["글로벌 이차 인덱스 → 글로벌 보조 인덱스"]
+
+
+def test_끝소리가_바뀌면_조사도_바뀐다():
+    """`대기열` 은 ㄹ 받침이고 `큐` 는 받침이 없다 — 조사를 안 고치면 `큐을` 이 된다."""
+    onto = [_node("대기열", ["큐"])]
+    assert terms.fix_terms(onto, "큐를 만듭니다.")[0] == "대기열을 만듭니다."
+    onto = [_node("큐", ["대기열"])]
+    assert terms.fix_terms(onto, "대기열을 만듭니다.")[0] == "큐를 만듭니다."
+
+
+def test_긴_오역부터_바꾼다():
+    """짧은 것이 먼저 먹으면 `글로벌` 이 남는다."""
+    onto = [_node("글로벌 보조 인덱스", ["이차 인덱스", "글로벌 이차 인덱스"])]
+    assert terms.fix_terms(onto, "글로벌 이차 인덱스입니다.")[0] == "글로벌 보조 인덱스입니다."
+
+
+def test_맞는_표기는_건드리지_않는다():
+    onto = [_node("저장 시 암호화", ["휴지 암호화"])]
+    ko = "저장 시 암호화가 필요합니다."
+    assert terms.fix_terms(onto, ko) == (ko, [])
+
+
+def test_영어로_남는_이름은_사전이_안_건드린다():
+    """`keep` 노드는 자리표시가 지킨다 — 여기서 또 만지면 두 규칙이 싸운다."""
+    onto = [{"id": "svc.s3", "kind": "service", "en": "Amazon S3", "keep": True, "coda": "none",
+             "aliases": [], "parent": None, "src": "author", "bad_ko": ["아마존 에스쓰리"]}]
+    ko = "아마존 에스쓰리에 저장합니다."
+    assert terms.fix_terms(onto, ko) == (ko, [])
+
+
+def test_한글로_안_끝나는_표기는_끝소리를_모른다():
+    assert terms.ko_coda("Amazon S3") is None
+    assert terms.ko_coda("대기열") == "rieul"
+    assert terms.ko_coda("큐") == "none"
+    assert terms.ko_coda("인덱스") == "none"
+    assert terms.ko_coda("검색") == "closed"

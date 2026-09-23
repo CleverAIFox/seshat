@@ -154,6 +154,18 @@ def with_placeholders(inner: Backend) -> Backend:
     return call
 
 
+def with_terms(inner: Backend) -> Backend:
+    """H-033 의 처치 — 출력의 관측된 오역을 공식 표기로 바꾼다(`seshat/terms.py` · DECISIONS §56).
+
+    ★ **맨 뒤에 선다.** 이름을 되돌리고 종결을 고친 뒤의 한국어를 본다 — 자리표시 안의 글자를 건드리지 않는다.
+    """
+    def run(texts: list[str], terms_: dict) -> list[str]:
+        from . import ontology, terms
+        onto = ontology.load()
+        return [terms.fix_terms(onto, o)[0] for o in inner(texts, terms_)]
+    return run
+
+
 def with_endings(inner: Backend) -> Backend:
     """H-023 의 처치 — 해요체 의문 종결을 합쇼체로 고친다(`seshat/endings.py` · DECISIONS §33).
 
@@ -198,6 +210,10 @@ REGISTRY: dict[str, tuple[Backend, str]] = {
     "qwen3-8b+ph+endings": (with_endings(with_placeholders(_qwen8)), "qwen3:8b+ph+endings"),
     "qwen3-4b+ph+endings": (with_endings(with_placeholders(_qwen4)), "qwen3:4b+ph+endings"),
     "gemma3-4b+ph+endings": (with_endings(with_placeholders(_gemma3)), "gemma3:4b+ph+endings"),
+    "gemma3-4b+ph+endings+terms": (with_terms(with_endings(with_placeholders(_gemma3))),
+                                   "gemma3:4b+ph+endings+terms"),
+    "aws-translate+ph+endings+terms": (with_terms(with_endings(with_placeholders(aws_translate))),
+                                       "aws-translate+ph+endings+terms"),
 }
 
 # ★ **백엔드가 어떤 가중치를 부르는지 선언한다.** `from_pretrained` 를 거치지 않는 호출(ollama)은
@@ -228,15 +244,18 @@ OLLAMA_OF.update({"translategemma-4b": "translategemma:4b", "translategemma-4b+p
                   "translategemma-4b+ph+endings": "translategemma:4b",
                   "exaone-3.5-7.8b+ph+endings": "exaone3.5:7.8b",
                   "qwen3-8b+ph+endings": "qwen3:8b", "qwen3-4b+ph+endings": "qwen3:4b",
-                  "gemma3-4b+ph+endings": "gemma3:4b"})
+                  "gemma3-4b+ph+endings": "gemma3:4b",
+                  "gemma3-4b+ph+endings+terms": "gemma3:4b"})
 
 # ★ 서빙하지 않는 백엔드. 기준선으로만 잰다 — thoth 에 끼우는 자리가 아니다.
 # ★ 여기에는 **서빙하지 않는 백엔드**가 전부 들어온다 — 과금이라서(AWS)든 라이선스라서(EXAONE · §44)든.
-BASELINE_ONLY = {"aws-translate", "aws-translate+ph+endings", "exaone-3.5-7.8b+ph+endings"}
+BASELINE_ONLY = {"aws-translate", "aws-translate+ph+endings", "aws-translate+ph+endings+terms",
+                 "exaone-3.5-7.8b+ph+endings"}
 
 # ★ **돈이 드는 백엔드의 값이다**(DECISIONS §35). 100만 자에 USD. `evaluate` 가 재기 전에 견적을 내고
 #   `--max-usd` 를 넘으면 부르지 않는다 — 가설의 상한을 사람이 지키는 것이 아니라 도구가 지킨다.
-PRICE_PER_MCHAR: dict[str, float] = {"aws-translate": 15.0, "aws-translate+ph+endings": 15.0}
+PRICE_PER_MCHAR: dict[str, float] = {"aws-translate": 15.0, "aws-translate+ph+endings": 15.0,
+                                     "aws-translate+ph+endings+terms": 15.0}
 
 
 def get(name: str) -> tuple[Backend, str]:
