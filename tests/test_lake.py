@@ -104,3 +104,11 @@ def test_붙지_않은_드라이브는_종료코드_2다(tmp_path):
     r = subprocess.run(["python3", str(ROOT / "tools/lake.py"), "check"], capture_output=True, text=True,
                        env={**os.environ, "SESHAT_DATA": str(empty)})
     assert r.returncode == 2 and "MANIFEST.tsv" in r.stderr
+
+
+def test_패키지를_부르면_env_가_얹힌다():
+    """도구마다 따로 읽으면 부르는 방법에 따라 설정이 있다 없다 한다(DECISIONS §39)."""
+    import subprocess
+    code = "import seshat, sys; print('seshat.paths' in sys.modules)"
+    r = subprocess.run(["python3", "-c", code], capture_output=True, text=True, cwd=ROOT)
+    assert r.stdout.strip() == "True"                 # 패키지를 부르는 순간 .env 가 얹힌다
