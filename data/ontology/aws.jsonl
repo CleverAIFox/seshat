@@ -108,7 +108,7 @@
 {"id": "con.quota", "kind": "concept", "en": "quota", "keep": false, "ko": "할당량", "aliases": [], "parent": null, "src": "thoth-glossary", "alt_ko": ["쿼터", "쿼타"], "bad_ko": ["쿼리 한도"]}
 {"id": "con.throttling", "kind": "concept", "en": "throttling", "keep": false, "ko": "제한", "aliases": [], "parent": null, "src": "thoth-glossary", "alt_ko": ["스로틀링", "조절"], "bad_ko": ["제어 명령"]}
 {"id": "con.sort-key", "kind": "concept", "en": "sort key", "keep": false, "ko": "정렬 키", "aliases": [], "parent": null, "src": "author"}
-{"id": "con.global-secondary-index", "kind": "concept", "en": "global secondary index", "keep": false, "ko": "글로벌 보조 인덱스", "aliases": ["GSI"], "parent": null, "src": "author", "alt_ko": ["전역 보조 인덱스", "GSI"], "bad_ko": ["두 번째 인덱스"], "ko_ref": "dynamodb/GSI"}
+{"id": "con.global-secondary-index", "kind": "concept", "en": "global secondary index", "keep": false, "ko": "글로벌 보조 인덱스", "aliases": ["GSI"], "parent": null, "src": "author", "alt_ko": ["전역 보조 인덱스", "GSI"], "bad_ko": ["두 번째 인덱스", "글로벌 이차 인덱스", "이차 인덱스"], "ko_ref": "dynamodb/GSI"}
 {"id": "con.local-secondary-index", "kind": "concept", "en": "local secondary index", "keep": false, "ko": "로컬 보조 인덱스", "aliases": ["LSI"], "parent": null, "src": "author"}
 {"id": "con.read-capacity-unit", "kind": "concept", "en": "read capacity unit", "keep": false, "ko": "읽기 용량 단위", "aliases": ["RCU"], "parent": null, "src": "author"}
 {"id": "con.write-capacity-unit", "kind": "concept", "en": "write capacity unit", "keep": false, "ko": "쓰기 용량 단위", "aliases": ["WCU"], "parent": null, "src": "author"}
@@ -120,7 +120,7 @@
 {"id": "con.change-data-capture", "kind": "concept", "en": "change data capture", "keep": false, "ko": "변경 데이터 캡처", "aliases": ["CDC"], "parent": null, "src": "author", "alt_ko": ["CDC", "데이터 변경 사항", "지속적 복제", "연속 복제"], "bad_ko": ["변환된 데이터"], "ko_ref": "dms/CHAP_Task.CDC"}
 {"id": "con.dead-letter-queue", "kind": "concept", "en": "dead-letter queue", "keep": false, "ko": "배달 못한 편지 대기열", "aliases": ["DLQ"], "parent": null, "src": "author", "alt_ko": ["데드 레터 큐", "죽은 편지 큐", "배달 못한 편지 큐", "DLQ"], "ko_ref": "sqs/sqs-dead-letter-queues"}
 {"id": "con.visibility-timeout", "kind": "concept", "en": "visibility timeout", "keep": false, "ko": "가시성 제한 시간", "aliases": [], "parent": null, "src": "author", "alt_ko": ["가시성 타임아웃", "가시성 시간 초과", "표시 제한 시간"], "bad_ko": ["시각성 시간 초과", "응답 시간 제한"], "ko_ref": "sqs/sqs-visibility-timeout"}
-{"id": "con.encryption-at-rest", "kind": "concept", "en": "encryption at rest", "keep": false, "ko": "저장 시 암호화", "aliases": [], "parent": null, "src": "author", "alt_ko": ["유휴 시 암호화", "저장 데이터 암호화", "저장된 데이터 암호화"], "ko_ref": "s3/serv-side-encryption"}
+{"id": "con.encryption-at-rest", "kind": "concept", "en": "encryption at rest", "keep": false, "ko": "저장 시 암호화", "aliases": [], "parent": null, "src": "author", "alt_ko": ["유휴 시 암호화", "저장 데이터 암호화", "저장된 데이터 암호화"], "ko_ref": "s3/serv-side-encryption", "bad_ko": ["휴지 암호화", "휴면 암호화"]}
 {"id": "con.encryption-in-transit", "kind": "concept", "en": "encryption in transit", "keep": false, "ko": "전송 중 암호화", "aliases": [], "parent": null, "src": "author", "alt_ko": ["전송 중인 데이터 암호화", "전송 구간 암호화"], "bad_ko": ["암호화 과정"]}
 {"id": "con.least-privilege", "kind": "concept", "en": "least privilege", "keep": false, "ko": "최소 권한", "aliases": [], "parent": null, "src": "author"}
 {"id": "con.resource-based-policy", "kind": "concept", "en": "resource-based policy", "keep": false, "ko": "리소스 기반 정책", "aliases": [], "parent": null, "src": "author", "alt_ko": ["자원 기반 정책"], "ko_ref": "iam/access_policies"}
