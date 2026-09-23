@@ -86,7 +86,7 @@ def test_사라진_자리표시를_센다():
     assert missing == ["T2"]
 
 
-@pytest.mark.parametrize("form", ["⟦T1⟧", "[T1]", "\\[T1]", "\\[T1\\]", "【T1】", "`T1`"])
+@pytest.mark.parametrize("form", ["⟦T1⟧", "[T1]", "\\[T1]", "\\[T1\\]", "【T1】", "`T1`", "T1"])
 def test_모델이_바꾼_자리표시도_되돌린다(form):
     # ★ H-001 의 관계절에서 `⟦T1⟧` 이 `\[T1]` 로 돌아왔다(DECISIONS §16)
     slots = {"T1": {"text": "Amazon S3", "coda": "none", "id": "svc.s3"}}
@@ -138,3 +138,18 @@ def test_대조한_개념이_실제로_있다():
     refs = [n for n in onto if n.get("ko_ref")]
     assert len(refs) >= 15
     assert all(n["kind"] == "concept" and not n["keep"] for n in refs)
+
+
+def test_괄호가_벗겨진_맨_자리표시와_붙은_조사를_되돌린다():
+    """AWS Translate 는 `⟦T1⟧` 을 `T1` 로 돌려주고 조사까지 붙인다(DECISIONS §42)."""
+    slots = {"T1": {"text": "KCL", "coda": "rieul", "id": "feat.kcl"}}
+    assert terms.unmask("T1는 자동으로 크기가 조절됩니다.", slots)[0] == "KCL은 자동으로 크기가 조절됩니다."
+    slots2 = {"T1": {"text": "AWS Transfer Family", "coda": "none", "id": "svc.tf"}}
+    assert terms.unmask("팀은 T1를 사용합니다.", slots2)[0] == "팀은 AWS Transfer Family를 사용합니다."
+
+
+def test_맨_자리표시는_낱말_속을_건드리지_않는다():
+    """`MT1` · `T10` 은 자리표시가 아니다 — 맨 모양을 받는 값으로 오검출을 사지 않는다."""
+    slots = {"T1": {"text": "KCL", "coda": "rieul", "id": "feat.kcl"}}
+    for keep in ("MT1 은 다르다.", "T10 은 다르다.", "xT1y"):
+        assert terms.unmask(keep, slots)[0] == keep

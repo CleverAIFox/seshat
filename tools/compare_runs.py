@@ -17,7 +17,8 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 # seshat/terms.py 의 SLOT_FORMS 와 같다. 도구가 패키지 없이도 돌게 여기에 둔다 — 테스트가 둘을 대조한다
-RESIDUE = re.compile(r"(?:⟦T(\d+)⟧|\\?\[T(\d+)\\?\]|【T(\d+)】|`T(\d+)`)")
+RESIDUE = re.compile(r"(?:⟦T(\d+)⟧|\\?\[T(\d+)\\?\]|【T(\d+)】|`T(\d+)`"
+                     r"|(?<![A-Za-z0-9])T(\d+)(?![0-9]))")
 
 
 def read(path: str) -> tuple[dict, dict[str, dict]]:

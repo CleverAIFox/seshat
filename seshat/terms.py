@@ -48,8 +48,11 @@ def particle(coda: str | None, got: str) -> str:
 
 
 # ★ 조사 뒤에 한글이 이어지면 조사가 아니다 — `⟦T1⟧이다` 의 `이` 는 서술격이다. 건드리지 않는다.
-# ★ 모델이 바꾼 모양도 받는다 — `[T1]` · `\[T1]` · `\[T1\]` · `【T1】`(DECISIONS §16) · 백틱으로 싼 `T1`(DECISIONS §24).
-SLOT_FORMS = r"(?:⟦T(\d+)⟧|\\?\[T(\d+)\\?\]|【T(\d+)】|`T(\d+)`)"
+# ★ 모델이 바꾼 모양도 받는다 — `[T1]` · `\[T1]` · `\[T1\]` · `【T1】`(DECISIONS §16) · 백틱 `T1`(DECISIONS §24) ·
+#   **괄호가 통째로 벗겨진 맨 `T1`**(DECISIONS §42 — AWS Translate 가 그렇게 돌려준다. 조사까지 붙여서 온다).
+#   맨 모양은 앞뒤에 영숫자가 없을 때만 본다 — `MT1` · `T10` 을 잘못 집지 않는다.
+SLOT_FORMS = (r"(?:⟦T(\d+)⟧|\\?\[T(\d+)\\?\]|【T(\d+)】|`T(\d+)`"
+              r"|(?<![A-Za-z0-9])T(\d+)(?![0-9]))")
 _AFTER = re.compile(SLOT_FORMS + r"(?:(으로|이나|이라|을|를|이|가|은|는|과|와|나|라|로)(?![가-힣]))?")
 RESIDUE = re.compile(SLOT_FORMS)
 
@@ -58,12 +61,12 @@ def unmask(ko: str, slots: dict[str, dict]) -> tuple[str, list[str]]:
     seen = set()
 
     def put(m: re.Match) -> str:
-        key = f"T{m.group(1) or m.group(2) or m.group(3) or m.group(4)}"
+        key = f"T{m.group(1) or m.group(2) or m.group(3) or m.group(4) or m.group(5)}"
         slot = slots.get(key)
         if slot is None:
             return m.group(0)
         seen.add(key)
-        return slot["text"] + (particle(slot["coda"], m.group(5)) if m.group(5) else "")
+        return slot["text"] + (particle(slot["coda"], m.group(6)) if m.group(6) else "")
 
     out = _AFTER.sub(put, ko)
     return out, sorted(set(slots) - seen)
