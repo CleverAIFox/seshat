@@ -86,6 +86,18 @@ def with_placeholders(inner: Backend) -> Backend:
     return call
 
 
+def with_endings(inner: Backend) -> Backend:
+    """H-023 의 처치 — 해요체 의문 종결을 합쇼체로 고친다(`seshat/endings.py` · DECISIONS §33).
+
+    ★ **프롬프트가 못 하는 것을 검사기가 한다.** 문체 지시는 종결을 못 바꿨고(H-019 기각) 결정적 후처리는
+      style 을 0.93 → 1.00 으로 올렸다. 다른 지표는 그대로다 — 공짜로 얻는 자리다.
+    """
+    def call(texts: list[str], terms_: dict[str, str]) -> list[str]:
+        from . import endings
+        return [endings.normalize(o) for o in inner(texts, terms_)]
+    return call
+
+
 _tg = ollama("translategemma:4b", TRANSLATEGEMMA_PROMPT)
 _tg_hapsyo = ollama("translategemma:4b", TRANSLATEGEMMA_PROMPT_HAPSYO)
 
@@ -96,6 +108,8 @@ REGISTRY: dict[str, tuple[Backend, str]] = {
     "translategemma-4b": (_tg, "translategemma:4b"),
     "translategemma-4b+ph": (with_placeholders(_tg), "translategemma:4b+ph"),
     "translategemma-4b+ph+style": (with_placeholders(_tg_hapsyo), "translategemma:4b+ph+style"),
+    # ★ 지금의 후보다 — 자리표시(H-016) + 종결 정규화(H-023). thoth 에 끼운다면 이것이다
+    "translategemma-4b+ph+endings": (with_endings(with_placeholders(_tg)), "translategemma:4b+ph+endings"),
 }
 
 # ★ **백엔드가 어떤 가중치를 부르는지 선언한다.** `from_pretrained` 를 거치지 않는 호출(ollama)은
@@ -104,11 +118,13 @@ WEIGHTS: dict[str, str] = {
     "translategemma-4b": "google/translategemma-4b-it",
     "translategemma-4b+ph": "google/translategemma-4b-it",
     "translategemma-4b+ph+style": "google/translategemma-4b-it",
+    "translategemma-4b+ph+endings": "google/translategemma-4b-it",
 }
 
 # 결과 파일 머리줄에 싣는 디코딩 조건
 DECODING_OF: dict[str, dict] = {"translategemma-4b": DECODING, "translategemma-4b+ph": DECODING,
-                                "translategemma-4b+ph+style": DECODING}
+                                "translategemma-4b+ph+style": DECODING,
+                                "translategemma-4b+ph+endings": DECODING}
 
 # ★ 서빙하지 않는 백엔드. 기준선으로만 잰다 — thoth 에 끼우는 자리가 아니다.
 BASELINE_ONLY = {"aws-translate"}

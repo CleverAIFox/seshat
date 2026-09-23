@@ -102,3 +102,14 @@ def test_문체_지시_팔은_틀을_한_문단만_바꾼다():
     added = len(styled) - len(base)
     assert 0 < added < 250                                   # 한 문단이다
     assert "translategemma-4b+ph+style" in b.REGISTRY and "translategemma-4b+ph+style" in b.WEIGHTS
+
+
+def test_끼울_후보는_자리표시와_종결_정규화를_함께_쓴다():
+    """H-016 · H-023 채택의 결과다(DECISIONS §33). 채택한 것이 등록부에 없으면 쓰이지 않는다."""
+    from seshat import backends as b
+    name = "translategemma-4b+ph+endings"
+    assert name in b.REGISTRY and name in b.WEIGHTS and name in b.DECODING_OF
+    fn, model = b.REGISTRY[name]
+    assert model.endswith("+ph+endings")
+    out = b.with_endings(lambda texts, terms: ["무엇인가요?"])(["x"], {})
+    assert out == ["무엇입니까?"]
