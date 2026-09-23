@@ -135,3 +135,12 @@ def test_남의_엔진에_후처리를_얹은_팔도_과금과_서빙_밖이다(
     assert name in b.BASELINE_ONLY                      # 서빙 후보가 아니다
     assert b.PRICE_PER_MCHAR[name] == b.PRICE_PER_MCHAR["aws-translate"]   # 견적이 새지 않는다
     assert name not in b.WEIGHTS                        # 가중치를 부르지 않는다
+
+
+def test_ollama_위에_서는_백엔드를_이름으로_짐작하지_않는다():
+    """재현 조건이 GPU 적재를 적을 자리다 — 목록이 정본이다(DECISIONS §45)."""
+    from seshat import backends as b
+    assert b.OLLAMA_OF["exaone-3.5-7.8b+ph+endings"] == "exaone3.5:7.8b"
+    assert set(b.OLLAMA_OF) <= set(b.REGISTRY)
+    local = {k for k in b.REGISTRY if k not in b.BASELINE_ONLY and k != "echo"}
+    assert local <= set(b.OLLAMA_OF)              # 서빙 후보는 전부 어디서 도는지 적혀 있다

@@ -238,7 +238,7 @@ def conditions(a, rows: list[dict]) -> dict:
            "decoding": backends.DECODING_OF.get(a.backend or "")}
     if a.backend == "aws-translate":
         out["cost_usd"] = round(chars * 15 / 1_000_000, 4)   # 100만 자에 USD 15 — 인용(2026-09)
-    if (a.backend or "").startswith("translategemma"):
+    if (a.backend or "") in backends.OLLAMA_OF:      # 이름으로 짐작하지 않는다(DECISIONS §45)
         out["ollama"] = ollama_placement()
     return out
 

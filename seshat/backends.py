@@ -65,6 +65,10 @@ TRANSLATEGEMMA_PROMPT_HAPSYO = TRANSLATEGEMMA_PROMPT.replace(
 DECODING = {"temperature": 0, "seed": 42, "num_predict": 512}
 
 
+# 백엔드 이름 → ollama 가 서는 모델. 재현 조건이 GPU 적재를 적을 때 본다(DECISIONS §45)
+OLLAMA_OF: dict[str, str] = {}
+
+
 def ollama(model: str, prompt: str):
     def call(texts: list[str], terms: dict[str, str]) -> list[str]:
         import json as _json
@@ -142,6 +146,13 @@ DECODING_OF: dict[str, dict] = {"translategemma-4b": DECODING, "translategemma-4
                                 "translategemma-4b+ph+style": DECODING,
                                 "translategemma-4b+ph+endings": DECODING,
                                 "exaone-3.5-7.8b+ph+endings": DECODING}
+
+# ★ 이름으로 짐작하지 않는다 — 어느 백엔드가 ollama 위에 서는지 여기 적는다. 종전에는 `translategemma` 로
+#   시작하는 이름만 GPU 적재를 적었고, EXAONE 을 재고 나서야 그 줄이 비어 있는 것을 봤다(DECISIONS §45).
+OLLAMA_OF.update({"translategemma-4b": "translategemma:4b", "translategemma-4b+ph": "translategemma:4b",
+                  "translategemma-4b+ph+style": "translategemma:4b",
+                  "translategemma-4b+ph+endings": "translategemma:4b",
+                  "exaone-3.5-7.8b+ph+endings": "exaone3.5:7.8b"})
 
 # ★ 서빙하지 않는 백엔드. 기준선으로만 잰다 — thoth 에 끼우는 자리가 아니다.
 # ★ 여기에는 **서빙하지 않는 백엔드**가 전부 들어온다 — 과금이라서(AWS)든 라이선스라서(EXAONE · §44)든.

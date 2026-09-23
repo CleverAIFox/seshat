@@ -110,3 +110,15 @@ def test_사전이_다르면_대조를_멈춘다(capsys, tmp_path):
             "\n".join(json.dumps(x, ensure_ascii=False) for x in (head, row)) + "\n", encoding="utf-8")
     assert cr.main([str(tmp_path / "a.jsonl"), str(tmp_path / "b.jsonl")]) == 1
     assert "온톨로지 해시가 다르다" in capsys.readouterr().out
+
+
+def test_줄_수가_다르면_대조를_멈춘다(capsys, tmp_path):
+    """`--limit` 판과 전수를 나란히 놓으면 다른 문장을 비교한다(DECISIONS §45)."""
+    row = {"id": "1", "src": "Use Amazon S3.", "out": "Amazon S3를 씁니다."}
+    for name, n in (("a", 20), ("b", 200)):
+        head = {"meta": True, "backend": name, "keep": 1.0, "josa": 1.0, "style": 1.0, "ms": 1,
+                "set_sha256": "s", "onto_sha256": "o", "n": n}
+        (tmp_path / f"{name}.jsonl").write_text(
+            "\n".join(json.dumps(x, ensure_ascii=False) for x in (head, row)) + "\n", encoding="utf-8")
+    assert cr.main([str(tmp_path / "a.jsonl"), str(tmp_path / "b.jsonl")]) == 1
+    assert "줄 수가 다르다" in capsys.readouterr().out
