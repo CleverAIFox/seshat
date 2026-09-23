@@ -230,10 +230,20 @@ def door(h: str) -> None:
 
 
 def estimate_usd(backend: str, rows: list[dict]) -> float:
-    """돈이 드는 백엔드의 견적. 무료면 0 이다(DECISIONS §35)."""
+    """돈이 드는 백엔드의 견적. 무료면 0 이다(DECISIONS §35 · §62).
+
+    ★ **값을 모르는 백엔드는 공짜가 아니다.** 종전에는 표에 없는 이름이 0 원으로 떨어졌고, 그러면 상한이
+      아무것도 안 막는다. 무료임을 **선언한** 백엔드(`FREE`)만 0 이고, 나머지 모르는 이름은 멈춘다.
+    """
     from . import backends
-    rate = backends.PRICE_PER_MCHAR.get(backend, 0.0)
-    return round(sum(len(r["src"]) for r in rows) * rate / 1_000_000, 4)
+    chars = sum(len(r["src"]) for r in rows)
+    if backend in backends.PRICE_PER_MCHAR:
+        return round(chars * backends.PRICE_PER_MCHAR[backend] / 1_000_000, 4)
+    if backend in backends.FREE:
+        return 0.0
+    raise SystemExit(f"{backend} 의 값을 모른다 — 공짜인지 아닌지 모르는 채로 {chars:,}자를 던지지 않는다\n"
+                     f"    무료면 : seshat/backends.py 의 FREE 에 적는다\n"
+                     f"    아니면 : PRICE_PER_MCHAR 에 100만 자당 USD 를 적는다(근거와 날짜를 주석에)")
 
 
 def onto_sha256() -> str:

@@ -292,3 +292,13 @@ def test_고치는_판은_복호화만_다르다():
     assert b.DECODING_OF[arm]["repair"] == b.REPAIR
     assert b.REPAIR["temperature"] > 0 and b.REPAIR["seed"] != b.DECODING["seed"]
     assert len(b._gemma3_repair) == 2                        # 원문 · 온도 0 → 원문 · 온도 0.4
+
+
+def test_범용_팔은_문체를_강제하지_않는다():
+    """정답 문장이 있는 셋에서 합쇼체를 강제하면 맞는 문장이 정답에서 멀어진다(DECISIONS §63)."""
+    from seshat import backends as b
+    for arm in ("gemma3-4b", "gemma3-4b+ph+retry"):
+        assert arm in b.REGISTRY and arm in b.OLLAMA_OF
+        assert "endings" not in arm and "terms" not in arm
+        assert b.WEIGHTS[arm] == "google/gemma-3-4b-it"
+    assert "gemma3-4b+ph+retry" in b.REPAIR_ARMS          # 이름은 그대로 지킨다

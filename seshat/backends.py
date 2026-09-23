@@ -240,6 +240,10 @@ REGISTRY: dict[str, tuple[Backend, str]] = {
     "exaone-3.5-7.8b+ph+endings": (with_endings(with_placeholders(_exaone)), "exaone3.5:7.8b+ph+endings"),
     "qwen3-8b+ph+endings": (with_endings(with_placeholders(_qwen8)), "qwen3:8b+ph+endings"),
     "qwen3-4b+ph+endings": (with_endings(with_placeholders(_qwen4)), "qwen3:4b+ph+endings"),
+    # ★ **범용 성적표에는 종결 정규화를 안 얹는다**(DECISIONS §63). 합쇼체는 thoth 의 도메인 요구이지
+    #   번역 품질이 아니다 — 정답 문장이 있는 셋에서 문체를 강제하면 맞는 문장을 정답에서 멀어지게 한다
+    "gemma3-4b": (_gemma3, "gemma3:4b"),
+    "gemma3-4b+ph+retry": (with_placeholders(_gemma3, repair=_gemma3_repair), "gemma3:4b+ph+retry"),
     "gemma3-4b+ph+endings": (with_endings(with_placeholders(_gemma3)), "gemma3:4b+ph+endings"),
     "gemma3-4b+ph+endings+terms": (with_terms(with_endings(with_placeholders(_gemma3))),
                                    "gemma3:4b+ph+endings+terms"),
@@ -259,7 +263,8 @@ OLLAMA_OF.update({"translategemma-4b": "translategemma:4b", "translategemma-4b+p
                   "qwen3-8b+ph+endings": "qwen3:8b", "qwen3-4b+ph+endings": "qwen3:4b",
                   "gemma3-4b+ph+endings": "gemma3:4b",
                   "gemma3-4b+ph+endings+terms": "gemma3:4b",
-                  "gemma3-4b+ph+retry+endings+terms": "gemma3:4b"})
+                  "gemma3-4b+ph+retry+endings+terms": "gemma3:4b",
+                  "gemma3-4b": "gemma3:4b", "gemma3-4b+ph+retry": "gemma3:4b"})
 
 # ★ **어느 ollama 모델이 어느 가중치인가.** `from_pretrained` 를 거치지 않는 호출은 라이선스 검사의
 #   정규식이 보지 못한다. 선언을 검사가 대장과 대조한다(DECISIONS §14).
@@ -280,7 +285,7 @@ WEIGHTS: dict[str, str] = {arm: WEIGHTS_OF_MODEL[m] for arm, m in OLLAMA_OF.item
 DECODING_OF: dict[str, dict] = {arm: DECODING for arm in OLLAMA_OF}
 
 # ★ 고치는 판을 쓰는 팔은 그 조건도 머리줄에 싣는다 — 안 적으면 되풀이할 수 없다(DECISIONS §57)
-REPAIR_ARMS.add("gemma3-4b+ph+retry+endings+terms")
+REPAIR_ARMS.update({"gemma3-4b+ph+retry+endings+terms", "gemma3-4b+ph+retry"})
 for _arm in REPAIR_ARMS:
     DECODING_OF[_arm] = {**DECODING, "repair": REPAIR}
 
@@ -294,6 +299,11 @@ BASELINE_ONLY = {"aws-translate", "aws-translate+ph+endings", "aws-translate+ph+
 #   `--max-usd` 를 넘으면 부르지 않는다 — 가설의 상한을 사람이 지키는 것이 아니라 도구가 지킨다.
 PRICE_PER_MCHAR: dict[str, float] = {"aws-translate": 15.0, "aws-translate+ph+endings": 15.0,
                                      "aws-translate+ph+endings+terms": 15.0}
+
+# ★ **무료는 선언한다**(DECISIONS §62). 표에 없는 이름이 0 원으로 떨어지면 상한이 아무것도 안 막는다.
+#   여기 없고 값표에도 없는 백엔드는 `evaluate` 가 부르기 전에 멈춘다 — 모르는 값은 공짜가 아니다.
+#   빈 이름("")은 `--url` 로 남의 서버를 재는 길이다 — 그 값은 그 서버를 띄운 쪽이 안다.
+FREE: set[str] = {"", "echo", *OLLAMA_OF}
 
 
 def get(name: str) -> tuple[Backend, str]:

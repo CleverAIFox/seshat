@@ -112,7 +112,16 @@ def test_돈이_드는_백엔드는_견적을_먼저_낸다():
     rows = [{"src": "x" * 100_000}]
     assert ev.estimate_usd("aws-translate", rows) == 1.5
     assert ev.estimate_usd("translategemma-4b", rows) == 0.0
-    assert ev.estimate_usd("", []) == 0.0
+    assert ev.estimate_usd("", []) == 0.0                 # --url 은 남의 서버다
+
+
+def test_값을_모르는_백엔드는_공짜가_아니다():
+    """표에 없는 이름이 0 원으로 떨어지면 상한이 아무것도 안 막는다(DECISIONS §62)."""
+    import pytest
+    rows = [{"src": "x" * 100_000}]
+    with pytest.raises(SystemExit) as e:
+        ev.estimate_usd("papago", rows)
+    assert "값을 모른다" in str(e.value) and "100,000자" in str(e.value)
 
 
 def test_상한을_넘으면_부르지_않는다(tmp_path):
