@@ -125,3 +125,13 @@ def test_리전이_없으면_먼저_멈춘다(monkeypatch):
     with pytest.raises(SystemExit) as e:
         b.aws_translate(["x"], {})
     assert "AWS_REGION" in str(e.value)
+
+
+def test_남의_엔진에_후처리를_얹은_팔도_과금과_서빙_밖이다():
+    """무엇이 엔진의 몫이고 무엇이 후처리의 몫인지 가르는 자다(DECISIONS §41)."""
+    from seshat import backends as b
+    name = "aws-translate+ph+endings"
+    assert name in b.REGISTRY
+    assert name in b.BASELINE_ONLY                      # 서빙 후보가 아니다
+    assert b.PRICE_PER_MCHAR[name] == b.PRICE_PER_MCHAR["aws-translate"]   # 견적이 새지 않는다
+    assert name not in b.WEIGHTS                        # 가중치를 부르지 않는다

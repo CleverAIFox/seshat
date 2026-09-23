@@ -117,6 +117,9 @@ REGISTRY: dict[str, tuple[Backend, str]] = {
     "translategemma-4b+ph+style": (with_placeholders(_tg_hapsyo), "translategemma:4b+ph+style"),
     # ★ 지금의 후보다 — 자리표시(H-016) + 종결 정규화(H-023). thoth 에 끼운다면 이것이다
     "translategemma-4b+ph+endings": (with_endings(with_placeholders(_tg)), "translategemma:4b+ph+endings"),
+    # ★ **남의 엔진에 이 저장소의 후처리를 얹는다**(H-028 · DECISIONS §41). 기준선이 이름을 44% 잃는 것을 이 기계가
+    #   메우는가를 잰다. 서빙 후보가 아니다 — 과금이고, 무엇이 누구 몫인지 가르는 자다
+    "aws-translate+ph+endings": (with_endings(with_placeholders(aws_translate)), "aws-translate+ph+endings"),
 }
 
 # ★ **백엔드가 어떤 가중치를 부르는지 선언한다.** `from_pretrained` 를 거치지 않는 호출(ollama)은
@@ -134,11 +137,11 @@ DECODING_OF: dict[str, dict] = {"translategemma-4b": DECODING, "translategemma-4
                                 "translategemma-4b+ph+endings": DECODING}
 
 # ★ 서빙하지 않는 백엔드. 기준선으로만 잰다 — thoth 에 끼우는 자리가 아니다.
-BASELINE_ONLY = {"aws-translate"}
+BASELINE_ONLY = {"aws-translate", "aws-translate+ph+endings"}
 
 # ★ **돈이 드는 백엔드의 값이다**(DECISIONS §35). 100만 자에 USD. `evaluate` 가 재기 전에 견적을 내고
 #   `--max-usd` 를 넘으면 부르지 않는다 — 가설의 상한을 사람이 지키는 것이 아니라 도구가 지킨다.
-PRICE_PER_MCHAR: dict[str, float] = {"aws-translate": 15.0}
+PRICE_PER_MCHAR: dict[str, float] = {"aws-translate": 15.0, "aws-translate+ph+endings": 15.0}
 
 
 def get(name: str) -> tuple[Backend, str]:
