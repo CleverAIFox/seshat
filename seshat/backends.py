@@ -75,6 +75,24 @@ OLLAMA_OF: dict[str, str] = {}
 THINK = re.compile(r"<think>.*?</think>\s*", re.S)
 
 
+def _ask(req, model: str):
+    """ollama 에 묻고 답을 돌려준다. 꺼져 있으면 **한 줄로** 말한다(DECISIONS §51).
+
+    ★ 종전에는 `URLError` 가 40줄 역추적으로 올라왔다. 무엇을 해야 하는지는 그 안에 없다 —
+      리전 때와 같다(§36). 원인을 아는 자리에서 말한다.
+    """
+    import json as _json
+    import urllib.error
+    import urllib.request
+    try:
+        with urllib.request.urlopen(req, timeout=600) as r:
+            return _json.loads(r.read())
+    except urllib.error.URLError as e:
+        raise SystemExit(f"ollama 에 닿지 못한다 — {req.full_url}\n"
+                         f"    띄운다 : ollama serve &  (그 뒤 ollama pull {model})\n"
+                         f"    까닭   : {e.reason}") from None
+
+
 def ollama(model: str, prompt: str, extra: dict | None = None):
     def call(texts: list[str], terms: dict[str, str]) -> list[str]:
         import json as _json
@@ -86,8 +104,7 @@ def ollama(model: str, prompt: str, extra: dict | None = None):
             body = _json.dumps({"model": model, "prompt": prompt.format(text=t), "stream": False,
                                 "options": DECODING, **(extra or {})}).encode("utf-8")
             req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"})
-            with urllib.request.urlopen(req, timeout=600) as r:
-                out.append(THINK.sub("", _json.loads(r.read())["response"]).strip())
+            out.append(THINK.sub("", _ask(req, model)["response"]).strip())
         return out
     return call
 
@@ -121,8 +138,7 @@ def ollama_chat(model: str, system: str, extra: dict | None = None, suffix: str 
                                              {"role": "user", "content": t + suffix}],
                                 **(extra or {})}).encode("utf-8")
             req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"})
-            with urllib.request.urlopen(req, timeout=600) as r:
-                out.append(THINK.sub("", _json.loads(r.read())["message"]["content"]).strip())
+            out.append(THINK.sub("", _ask(req, model)["message"]["content"]).strip())
         return out
     return call
 

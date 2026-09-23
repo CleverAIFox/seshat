@@ -200,3 +200,20 @@ def test_채팅_배선은_체계_지시와_사고_끄기를_싣는다(monkeypatc
     assert seen["url"].endswith("/api/chat")
     assert seen["body"]["think"] is False
     assert [m["role"] for m in seen["body"]["messages"]] == ["system", "user"]
+
+
+def test_ollama_가_꺼져_있으면_한_줄로_말한다(monkeypatch):
+    """40줄 역추적에는 무엇을 해야 하는지가 없다(DECISIONS §51 · §36 과 같은 원칙)."""
+    import urllib.error
+
+    import pytest
+
+    from seshat import backends as b
+
+    def dead(req, timeout=0):
+        raise urllib.error.URLError(ConnectionRefusedError(111, "Connection refused"))
+
+    monkeypatch.setattr("urllib.request.urlopen", dead)
+    with pytest.raises(SystemExit) as e:
+        b.ollama("m", "{text}")(["x"], {})
+    assert "ollama serve" in str(e.value) and "m" in str(e.value)
