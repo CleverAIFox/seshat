@@ -162,3 +162,41 @@ def test_오디션_후보가_대장과_등록부에_함께_있다():
         assert lic.LEDGER[w][1] == "yes" and lic.can_teach(w)
         assert name in b.OLLAMA_OF and name in b.DECODING_OF
         assert name not in b.BASELINE_ONLY          # 쓸 수 있는 가중치다 — 서빙 후보로 남는다
+
+
+def test_범용_모델은_같은_배선을_쓴다():
+    """범용 후보끼리는 배선이 같아야 모델끼리 공정하다(DECISIONS §48)."""
+    from seshat import backends as b
+    assert "Output ONLY the Korean translation" in b.GENERIC_SYSTEM
+    assert "placeholder" in b.GENERIC_SYSTEM.lower()      # 자리표시를 지키라고 말한다
+    assert b.GENERIC_SYSTEM != b.TRANSLATEGEMMA_PROMPT    # 번역 전용 모델과는 다른 배선이다
+
+
+def test_채팅_배선은_체계_지시와_사고_끄기를_싣는다(monkeypatch):
+    """`/api/generate` 로 보낸 `think: false` 는 안 먹혔다 — 채팅 API 로 보낸다(DECISIONS §48)."""
+    import json
+
+    from seshat import backends as b
+    seen = {}
+
+    class _R:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        def read(self):
+            return json.dumps({"message": {"content": "<think>음</think>Amazon S3를 씁니다."}}).encode()
+
+    def fake(req, timeout=0):
+        seen["url"] = req.full_url
+        seen["body"] = json.loads(req.data)
+        return _R()
+
+    monkeypatch.setattr("urllib.request.urlopen", fake)
+    out = b.ollama_chat("m", "체계", {"think": False})(["x"], {})
+    assert out == ["Amazon S3를 씁니다."]                  # 사고는 벗긴다
+    assert seen["url"].endswith("/api/chat")
+    assert seen["body"]["think"] is False
+    assert [m["role"] for m in seen["body"]["messages"]] == ["system", "user"]

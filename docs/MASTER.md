@@ -52,6 +52,7 @@ thoth 가 `ENGINE=http` 로 부를 영한 번역 서버와, 그 서버에 올릴
 ```
 seshat/
   backends.py   (texts, terms) → translations. 모델이 들어갈 자리 · 기준선(aws-translate)
+                번역 전용 모델은 `/api/generate`, 범용 지시 모델은 `/api/chat` + 사고 끄기(DECISIONS §48)
   serve.py      thoth 계약을 말하는 HTTP 서버. 표준 라이브러리
   evaluate.py   계약을 말하는 서버면 무엇이든 평가셋으로 잰다
 tests/

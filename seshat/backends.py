@@ -92,6 +92,36 @@ def ollama(model: str, prompt: str, extra: dict | None = None):
     return call
 
 
+# ★ **범용 지시 모델은 배선이 다르다**(DECISIONS §48). 번역 전용 모델(TranslateGemma)은 시키면 번역만 주는데,
+#   범용 모델은 사고 과정과 설명을 함께 준다 — 2026-09-23 Qwen3 4B 가 영어 사고문을 번역문 자리에 뱉었다.
+#   채팅 API 로 체계 지시를 따로 주고, 사고를 끄고, 출력만 받는다. **이것은 실험 변수가 아니라 배선이다** —
+#   범용 후보는 전부 이 하나를 같이 쓴다. 그래야 모델끼리는 여전히 공정하다.
+GENERIC_SYSTEM = (
+    "You are a professional English-to-Korean translator. Translate the user's text into Korean.\n"
+    "Output ONLY the Korean translation — no explanations, no reasoning, no romanization, no alternatives, "
+    "no quotation marks around the whole sentence. Keep every placeholder token exactly as it appears.")
+
+
+def ollama_chat(model: str, system: str, extra: dict | None = None):
+    """`/api/chat` — 체계 지시를 따로 싣는다. 사고 모드는 `think: false` 로 끈다."""
+    def call(texts: list[str], terms: dict[str, str]) -> list[str]:
+        import json as _json
+        import os
+        import urllib.request
+        url = os.environ.get("OLLAMA_URL", OLLAMA_URL).rstrip("/") + "/api/chat"
+        out = []
+        for t in texts:
+            body = _json.dumps({"model": model, "stream": False, "options": DECODING,
+                                "messages": [{"role": "system", "content": system},
+                                             {"role": "user", "content": t}],
+                                **(extra or {})}).encode("utf-8")
+            req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"})
+            with urllib.request.urlopen(req, timeout=600) as r:
+                out.append(THINK.sub("", _json.loads(r.read())["message"]["content"]).strip())
+        return out
+    return call
+
+
 def with_placeholders(inner: Backend) -> Backend:
     """H-001 의 처치군 — 영어로 남을 이름을 `⟦Tn⟧` 로 빼고 번역한 뒤 되돌린다(`seshat/terms.py`)."""
     def call(texts: list[str], terms_: dict[str, str]) -> list[str]:
@@ -122,8 +152,8 @@ _tg = ollama("translategemma:4b", TRANSLATEGEMMA_PROMPT)
 _exaone = ollama("exaone3.5:7.8b", TRANSLATEGEMMA_PROMPT)
 # ★ Qwen3 는 Apache-2.0 이라 서빙도 증류도 열려 있다(H-032 · 라이선스 대장). **사고 모드를 끈다** —
 #   켜 두면 번역 앞에 `<think>` 가 붙고 느려진다. 같은 지시문을 쓴다 — 바꾸는 것은 모델 하나다
-_qwen8 = ollama("qwen3:8b", TRANSLATEGEMMA_PROMPT, {"think": False})
-_qwen4 = ollama("qwen3:4b", TRANSLATEGEMMA_PROMPT, {"think": False})
+_qwen8 = ollama_chat("qwen3:8b", GENERIC_SYSTEM, {"think": False})
+_qwen4 = ollama_chat("qwen3:4b", GENERIC_SYSTEM, {"think": False})
 _tg_hapsyo = ollama("translategemma:4b", TRANSLATEGEMMA_PROMPT_HAPSYO)
 
 REGISTRY: dict[str, tuple[Backend, str]] = {
