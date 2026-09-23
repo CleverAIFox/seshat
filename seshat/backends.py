@@ -102,8 +102,13 @@ GENERIC_SYSTEM = (
     "no quotation marks around the whole sentence. Keep every placeholder token exactly as it appears.")
 
 
-def ollama_chat(model: str, system: str, extra: dict | None = None):
-    """`/api/chat` — 체계 지시를 따로 싣는다. 사고 모드는 `think: false` 로 끈다."""
+# ★ Qwen3 는 `/no_think` 를 사용자 말끝에 붙여 사고를 끈다(모델 카드). `think: false` 만으로는 안 꺼졌다
+#   (2026-09-23 · ollama 0.34 · qwen3:4b — 사고문이 그대로 왔다). 둘을 함께 보낸다(DECISIONS §49).
+NO_THINK = "\n/no_think"
+
+
+def ollama_chat(model: str, system: str, extra: dict | None = None, suffix: str = ""):
+    """`/api/chat` — 체계 지시를 따로 싣는다. 사고 모드는 `think: false` 와 말끝 스위치로 끈다."""
     def call(texts: list[str], terms: dict[str, str]) -> list[str]:
         import json as _json
         import os
@@ -113,7 +118,7 @@ def ollama_chat(model: str, system: str, extra: dict | None = None):
         for t in texts:
             body = _json.dumps({"model": model, "stream": False, "options": DECODING,
                                 "messages": [{"role": "system", "content": system},
-                                             {"role": "user", "content": t}],
+                                             {"role": "user", "content": t + suffix}],
                                 **(extra or {})}).encode("utf-8")
             req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"})
             with urllib.request.urlopen(req, timeout=600) as r:
@@ -152,8 +157,8 @@ _tg = ollama("translategemma:4b", TRANSLATEGEMMA_PROMPT)
 _exaone = ollama("exaone3.5:7.8b", TRANSLATEGEMMA_PROMPT)
 # ★ Qwen3 는 Apache-2.0 이라 서빙도 증류도 열려 있다(H-032 · 라이선스 대장). **사고 모드를 끈다** —
 #   켜 두면 번역 앞에 `<think>` 가 붙고 느려진다. 같은 지시문을 쓴다 — 바꾸는 것은 모델 하나다
-_qwen8 = ollama_chat("qwen3:8b", GENERIC_SYSTEM, {"think": False})
-_qwen4 = ollama_chat("qwen3:4b", GENERIC_SYSTEM, {"think": False})
+_qwen8 = ollama_chat("qwen3:8b", GENERIC_SYSTEM, {"think": False}, NO_THINK)
+_qwen4 = ollama_chat("qwen3:4b", GENERIC_SYSTEM, {"think": False}, NO_THINK)
 _tg_hapsyo = ollama("translategemma:4b", TRANSLATEGEMMA_PROMPT_HAPSYO)
 
 REGISTRY: dict[str, tuple[Backend, str]] = {

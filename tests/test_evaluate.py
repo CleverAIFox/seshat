@@ -124,3 +124,12 @@ def test_상한을_넘으면_부르지_않는다(tmp_path):
                         "--set", str(st), "--hypothesis", "H-025", "--max-usd", "1"],
                        capture_output=True, text=True, cwd=ROOT)
     assert r.returncode != 0 and "상한" in (r.stderr + r.stdout)
+
+
+def test_번역인가를_묻는_지표가_있다():
+    """영어 사고문이 번역문 자리에 와도 term 은 1.0 이 나왔다(DECISIONS §49)."""
+    # ★ 이름을 영어로 남기는 번역도 1.0 이다 — 글자 비율로 재면 정상과 사고가 겹친다
+    assert ev.hangul(["Amazon S3를 씁니다."]) == 1.0
+    assert ev.hangul(["Okay, let's tackle this translation request. The user wants me to"]) == 0.0
+    assert ev.hangul([]) is None
+    assert ev.hangul(["Amazon S3를 씁니다.", "Okay, I need to"]) == 0.5
