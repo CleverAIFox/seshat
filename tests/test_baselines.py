@@ -144,3 +144,21 @@ def test_ollama_위에_서는_백엔드를_이름으로_짐작하지_않는다()
     assert set(b.OLLAMA_OF) <= set(b.REGISTRY)
     local = {k for k in b.REGISTRY if k not in b.BASELINE_ONLY and k != "echo"}
     assert local <= set(b.OLLAMA_OF)              # 서빙 후보는 전부 어디서 도는지 적혀 있다
+
+
+def test_사고_모드_출력은_번역이_아니다():
+    """Qwen3 류가 `<think>` 를 붙이면 검사가 그것을 번역으로 센다(DECISIONS §47)."""
+    from seshat import backends as b
+    assert b.THINK.sub("", "<think>음... 이건</think>\nAmazon S3를 씁니다.").strip() == "Amazon S3를 씁니다."
+    assert b.THINK.sub("", "Amazon S3를 씁니다.") == "Amazon S3를 씁니다."
+
+
+def test_오디션_후보가_대장과_등록부에_함께_있다():
+    """상업 · 교사가 열린 후보만 오디션에 세운다(H-032 · DECISIONS §44)."""
+    from seshat import backends as b
+    from seshat import licenses as lic
+    for name in ("qwen3-8b+ph+endings", "qwen3-4b+ph+endings"):
+        w = b.WEIGHTS[name]
+        assert lic.LEDGER[w][1] == "yes" and lic.can_teach(w)
+        assert name in b.OLLAMA_OF and name in b.DECODING_OF
+        assert name not in b.BASELINE_ONLY          # 쓸 수 있는 가중치다 — 서빙 후보로 남는다

@@ -9,6 +9,7 @@
 """
 from __future__ import annotations
 
+import re
 from typing import Callable
 
 Backend = Callable[[list[str], dict[str, str]], list[str]]
@@ -69,7 +70,12 @@ DECODING = {"temperature": 0, "seed": 42, "num_predict": 512}
 OLLAMA_OF: dict[str, str] = {}
 
 
-def ollama(model: str, prompt: str):
+# ★ 사고 모드를 켜는 모델(Qwen3 류)은 `<think>…</think>` 를 앞에 붙인다. 번역문만 받아야 하므로 `think: false`
+#   로 끄고, 그래도 오면 **여기서 벗긴다** — 검사가 사고 과정을 번역으로 세지 않게(DECISIONS §47).
+THINK = re.compile(r"<think>.*?</think>\s*", re.S)
+
+
+def ollama(model: str, prompt: str, extra: dict | None = None):
     def call(texts: list[str], terms: dict[str, str]) -> list[str]:
         import json as _json
         import os
@@ -78,10 +84,10 @@ def ollama(model: str, prompt: str):
         out = []
         for t in texts:
             body = _json.dumps({"model": model, "prompt": prompt.format(text=t), "stream": False,
-                                "options": DECODING}).encode("utf-8")
+                                "options": DECODING, **(extra or {})}).encode("utf-8")
             req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"})
-            with urllib.request.urlopen(req, timeout=300) as r:
-                out.append(_json.loads(r.read())["response"].strip())
+            with urllib.request.urlopen(req, timeout=600) as r:
+                out.append(THINK.sub("", _json.loads(r.read())["response"]).strip())
         return out
     return call
 
@@ -114,6 +120,10 @@ _tg = ollama("translategemma:4b", TRANSLATEGEMMA_PROMPT)
 #   서빙에도 증류에도 못 쓴다. 연구 목적 평가는 라이선스가 명시적으로 허락한다. 한국어에 강한 모델이 용어에서
 #   TranslateGemma 4B 를 넘는지만 본다. 같은 지시문을 쓴다 — 바꾸는 것은 모델 하나다
 _exaone = ollama("exaone3.5:7.8b", TRANSLATEGEMMA_PROMPT)
+# ★ Qwen3 는 Apache-2.0 이라 서빙도 증류도 열려 있다(H-032 · 라이선스 대장). **사고 모드를 끈다** —
+#   켜 두면 번역 앞에 `<think>` 가 붙고 느려진다. 같은 지시문을 쓴다 — 바꾸는 것은 모델 하나다
+_qwen8 = ollama("qwen3:8b", TRANSLATEGEMMA_PROMPT, {"think": False})
+_qwen4 = ollama("qwen3:4b", TRANSLATEGEMMA_PROMPT, {"think": False})
 _tg_hapsyo = ollama("translategemma:4b", TRANSLATEGEMMA_PROMPT_HAPSYO)
 
 REGISTRY: dict[str, tuple[Backend, str]] = {
@@ -129,6 +139,8 @@ REGISTRY: dict[str, tuple[Backend, str]] = {
     #   메우는가를 잰다. 서빙 후보가 아니다 — 과금이고, 무엇이 누구 몫인지 가르는 자다
     "aws-translate+ph+endings": (with_endings(with_placeholders(aws_translate)), "aws-translate+ph+endings"),
     "exaone-3.5-7.8b+ph+endings": (with_endings(with_placeholders(_exaone)), "exaone3.5:7.8b+ph+endings"),
+    "qwen3-8b+ph+endings": (with_endings(with_placeholders(_qwen8)), "qwen3:8b+ph+endings"),
+    "qwen3-4b+ph+endings": (with_endings(with_placeholders(_qwen4)), "qwen3:4b+ph+endings"),
 }
 
 # ★ **백엔드가 어떤 가중치를 부르는지 선언한다.** `from_pretrained` 를 거치지 않는 호출(ollama)은
@@ -139,20 +151,24 @@ WEIGHTS: dict[str, str] = {
     "translategemma-4b+ph+style": "google/translategemma-4b-it",
     "translategemma-4b+ph+endings": "google/translategemma-4b-it",
     "exaone-3.5-7.8b+ph+endings": "LGAI-EXAONE/EXAONE-3.5-7.8B-Instruct",
+    "qwen3-8b+ph+endings": "Qwen/Qwen3-8B",
+    "qwen3-4b+ph+endings": "Qwen/Qwen3-4B",
 }
 
 # 결과 파일 머리줄에 싣는 디코딩 조건
 DECODING_OF: dict[str, dict] = {"translategemma-4b": DECODING, "translategemma-4b+ph": DECODING,
                                 "translategemma-4b+ph+style": DECODING,
                                 "translategemma-4b+ph+endings": DECODING,
-                                "exaone-3.5-7.8b+ph+endings": DECODING}
+                                "exaone-3.5-7.8b+ph+endings": DECODING,
+                                "qwen3-8b+ph+endings": DECODING, "qwen3-4b+ph+endings": DECODING}
 
 # ★ 이름으로 짐작하지 않는다 — 어느 백엔드가 ollama 위에 서는지 여기 적는다. 종전에는 `translategemma` 로
 #   시작하는 이름만 GPU 적재를 적었고, EXAONE 을 재고 나서야 그 줄이 비어 있는 것을 봤다(DECISIONS §45).
 OLLAMA_OF.update({"translategemma-4b": "translategemma:4b", "translategemma-4b+ph": "translategemma:4b",
                   "translategemma-4b+ph+style": "translategemma:4b",
                   "translategemma-4b+ph+endings": "translategemma:4b",
-                  "exaone-3.5-7.8b+ph+endings": "exaone3.5:7.8b"})
+                  "exaone-3.5-7.8b+ph+endings": "exaone3.5:7.8b",
+                  "qwen3-8b+ph+endings": "qwen3:8b", "qwen3-4b+ph+endings": "qwen3:4b"})
 
 # ★ 서빙하지 않는 백엔드. 기준선으로만 잰다 — thoth 에 끼우는 자리가 아니다.
 # ★ 여기에는 **서빙하지 않는 백엔드**가 전부 들어온다 — 과금이라서(AWS)든 라이선스라서(EXAONE · §44)든.

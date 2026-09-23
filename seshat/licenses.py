@@ -26,6 +26,9 @@ LEDGER: dict[str, tuple[str, str, str, str]] = {
     #   명시적으로 허락된다(§2.1(a)) — 그래서 비교 실험(H-029)에만 부른다. 서빙도 증류도 안 된다.
     "LGAI-EXAONE/EXAONE-3.5-7.8B-Instruct": ("EXAONE AI Model License Agreement 1.1 - NC", "no", "no",
                                              "huggingface.co/LGAI-EXAONE/EXAONE-3.5-7.8B-Instruct/raw/main/LICENSE · 2026-09-23"),
+    # ★ Apache-2.0 — 상업도 증류도 조건 없이 열린다. 학생이 약관을 상속하지 않는 유일한 후보다(H-032).
+    "Qwen/Qwen3-8B": ("Apache-2.0", "yes", "yes", "huggingface.co/Qwen/Qwen3-8B · 2026-09-23"),
+    "Qwen/Qwen3-4B": ("Apache-2.0", "yes", "yes", "huggingface.co/Qwen/Qwen3-4B · 2026-09-23"),
 }
 
 VALID_COMMERCIAL = {"yes", "no", "unknown"}
