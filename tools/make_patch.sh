@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# 패치를 만든다 — **기준 나무(base-tree)를 패치가 들고 간다**(DECISIONS §30).
+#   bash tools/make_patch.sh 2 /경로/seshat-030-무엇.patch     최근 2개 커밋
+#
+# ★ 2026-09-23. 의존성 봇의 PR 을 GitHub 에서 합치자 main 이 움직였고, 그것을 모르는 사본에서 만든 패치가
+#   `sha1 information is lacking` 로 죽었다. git 의 말은 **무엇이 다른지** 알려주지 않는다.
+#   패치가 「내가 선 자리」 를 적어 오면 붙이는 쪽이 「여기는 다른 자리다」 라고 말할 수 있다.
+# ★ 커밋 해시가 아니라 **나무 해시**다. 같은 내용을 다른 기계에서 커밋하면 해시는 달라도 나무는 같다.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+N="${1:?몇 개 커밋인가}"
+OUT="${2:?어디에 쓸 것인가}"
+BASE="$(git rev-parse "HEAD~$N^{tree}")"
+git format-patch -"$N" --stdout > "$OUT.tmp"
+awk -v b="$BASE" 'NR==1{print; print "Seshat-Base-Tree: " b; next} {print}' "$OUT.tmp" > "$OUT"
+rm -f "$OUT.tmp"
+echo "  $OUT · 기준 나무 $BASE · 커밋 $N개"

@@ -98,3 +98,13 @@ def test_빈_디렉터리만_지운다(tmp_path):
     assert (d / "runs-2/runner.log").exists()
     (d / "runs-2/runner.log").unlink()
     assert sweep.prune_empty(d) == [d / "runs-2", d]
+
+
+def test_상태를_명령줄로도_묻는다(tmp_path):
+    """`apply_patch.sh` 가 밀린 패치를 고를 때 이 입구를 쓴다(DECISIONS §30)."""
+    import subprocess
+    p = tmp_path / "seshat-099-x.patch"
+    p.write_text(PATCH, encoding="utf-8")
+    r = subprocess.run(["python3", str(ROOT / "tools/patch_subjects.py"), "--state", str(p)],
+                       capture_output=True, text=True, cwd=_repo(tmp_path, "seshat-099: 한글 제목", "seshat-100: plain"))
+    assert r.stdout.strip() == "붙음"

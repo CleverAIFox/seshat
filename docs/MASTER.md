@@ -21,7 +21,7 @@ python3 tools/check_ontology.py          # 온톨로지 — 표기 유일 · 부
 python3 tools/check_catalog.py           # 데이터 카탈로그 — 칸 · 쓰임 · data/ 의 카탈로그 밖 파일(§11)
 python3 tools/sweep.py [--fix]           # WSL 위생 — seshat 이 남긴 흔적만(§12)
 bash tools/deps.sh --merge               # 의존성 봇(Actions 만) — 초록만 합치고 가지를 지운다
-bash tools/apply_patch.sh                # INBOX 의 최신 seshat-*.patch 를 커밋째 붙인다(§11)
+bash tools/apply_patch.sh                # INBOX 의 안 붙은 seshat-*.patch 를 번호 순서로 붙인다(§11)
 ```
 
 | 규칙 | 강제자 |
@@ -299,6 +299,8 @@ python3 tools/lake.py check                  # 해시 · 대장 밖 파일 · �
 ★ **넣기만 한다.** 같은 이름에 다른 내용이 오면 거절한다 — 가설의 근거가 조용히 다른 파일이 되면 판정이 거짓말을 한다.
 ★ **GPU 러너가 바로 넣는다.** 러너가 이 기계라서 `gpu-eval.yml` 이 레이크에 쓴다. 러너는 `~/actions-runner/.env` 에서
   `SESHAT_DATA` 를 받는다(적고 `./run.sh` 를 다시 띄운다). 아티팩트는 사본이다.
+★ **패치는 기준 나무를 들고 온다**(DECISIONS §30). `tools/make_patch.sh` 가 머리에 `Seshat-Base-Tree` 를 넣고,
+  `apply_patch.sh` 가 지금 나무와 대조한다. 봇이 GitHub 에서 main 을 움직이면 여기서 잡힌다.
 ★ **INBOX 는 브라우저 다운로드 폴더다**(`SESHAT_INBOX` = thoth 의 `WIN_DOWNLOADS`). 패치가 그리로 온다.
   `tools/apply_patch.sh` 가 거기서 최신 `seshat-*.patch` 를 골라 CRLF 를 벗기고 `git am` 으로 붙인다. 이미 붙은
   패치(커밋 제목이 이력에 있다)는 아무것도 안 한다.

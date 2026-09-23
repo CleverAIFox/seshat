@@ -61,5 +61,8 @@ def state(patch: Path, repo: Path) -> str:
 
 
 if __name__ == "__main__":
-    for s in subjects(Path(sys.argv[1])):
-        print(s)
+    if sys.argv[1] == "--state":                 # apply_patch 가 밀린 패치를 고를 때 쓴다
+        print(state(Path(sys.argv[2]), Path.cwd()))
+    else:
+        for s in subjects(Path(sys.argv[1])):
+            print(s)
