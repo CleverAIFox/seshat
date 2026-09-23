@@ -908,3 +908,37 @@ H-001 처치군 결과(`H-001-ph-20260922-162419.jsonl`)를 `tools/rescore.py` �
 
 **모델을 고칠 일과 둘레를 고칠 일을 가르는 것이 연구의 절반이다.** 6GB 노트북에서 GPU 20분과 재채점 몇 초로,
 연말 장비가 무엇을 배워야 하는지 한 줄이 정해졌다 — 문체는 아니다.
+
+## §34. 온톨로지 2판 — 공식 표기를 문서와 대조한다
+
+**2026-09-23**
+
+### 결정
+
+- AWS 한국어 문서와 대조해 개념 18 개의 공식 표기를 확정했다. **일곱 개가 틀려 있었다.**
+
+  | 개념 | 1판 | 2판(공식) | 근거 |
+  |---|---|---|---|
+  | producer | 프로듀서 | **생산자** | streams/key-concepts |
+  | consumer | 컨슈머 | **소비자** | streams/key-concepts |
+  | consumer application | 컨슈머 애플리케이션 | **소비자 애플리케이션** | streams/key-concepts |
+  | topic | 토픽 | **주제** | sns/sns-create-topic |
+  | visibility timeout | 표시 제한 시간 | **가시성 제한 시간** | sqs/sqs-visibility-timeout |
+  | lifecycle policy | 수명 주기 정책 | **수명 주기 구성** | s3/object-lifecycle-mgmt |
+  | cross-account | 교차 계정 | **크로스 계정** | iam/access_policies |
+
+- 1판의 표기는 허용 표기(`alt_ko`)로 내린다. 모델이 그렇게 옮겨도 **뜻은 맞다** — `term` 은 그대로 세고
+  `term_off` 만 깎인다. 지우면 옳은 번역을 틀렸다고 센다
+- 노드가 `ko_ref` 로 근거를 든다 — `<서비스>/<페이지>`. **URL 은 적지 않는다.** 깨지고, 서비스와 페이지
+  이름이면 다시 찾는다(파이어레인 sources.yaml 의 규칙)
+- `check_ontology --list` 가 대조 진척(18/60)을 찍는다. 2판은 한 번에 끝나지 않는다 — 남은 42 는 같은 방식으로
+  채운다
+- **문서를 저장소에 넣지 않는다.** 대조의 산출물은 표기와 그 자리뿐이다(카탈로그의 `aws-docs` 는 여전히 라이선스
+  미확인이라 학습에 못 쓴다 · §22)
+
+강제자 — `tools/check_ontology.py` · `tests/test_ontology.py::test_공식_표기의_근거는_문서_자리다` · `tests/test_ontology.py::test_대조한_개념이_실제로_있다`
+
+### 배운 것
+
+**모르는 것과 틀린 것은 다르다.** 1판은 「대조하지 않았다」 고 적어 두었고, 실제로 대조하니 18 중 7 이 틀렸다.
+`term_off` 0.628 의 상당 부분은 모델이 아니라 **사전이 틀려서** 깎이고 있었다. 자를 만들 때는 자부터 재야 한다.

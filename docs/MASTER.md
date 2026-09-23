@@ -233,6 +233,7 @@ bash tools/verify.sh --only=pytest  # 부분 실행 — 마지막에 일부러 �
 | `coda` | 한국어로 읽은 끝소리 — `none`(모음) · `closed`(받침) · `rieul`(ㄹ). 자리표시 뒤 조사를 고른다. 약어 별칭은 마지막 글자의 영어 읽기로 센다(`IAM` 받침 · `KPL` ㄹ) |
 | `src` | `thoth-glossary`(배포본에서 쓰는 값) · `author`(이 저장소가 적은 값) |
 | `alt_ko` | **허용 표기.** 뜻이 통하는 다른 표기 — 음차(`role` → 롤) · 의역(`operational overhead` → 운영상의 부담) · 다른 공식 표기(`queue` → 큐 · 대기열) |
+| `ko_ref` | 공식 표기의 근거 — AWS 한국어 문서의 `<서비스>/<페이지>`. 있으면 대조를 마친 노드다(DECISIONS §34) |
 | `bad_ko` | **관측된 오역.** 뜻이 바뀐 표기다 — `quota` → 쿼리 한도 · `visibility timeout` → 시각성 시간 초과. H-001 에서 본 것만 적는다(DECISIONS §25) |
 
 ```python
@@ -245,7 +246,8 @@ ko, missing = terms.unmask(model_output, slots)                                 
 ★ **긴 표기가 이긴다.** `Amazon Kinesis Data Streams` 가 `Kinesis Data Streams` 보다 먼저 잡힌다.
 ★ **약어는 대소문자를 지킨다.** 영어 본문의 소문자 조각(`dms`)을 서비스로 읽지 않는다.
 ★ **서술격은 건드리지 않는다.** `⟦T1⟧이다` 의 `이` 는 조사가 아니다 — 조사 뒤에 한글이 이어지면 고치지 않는다.
-★ **공식 한국어 표기와 대조하지 않았다.** 개념의 `ko` 는 thoth 용어집(배포본에서 쓰는 중)과 이 저장소가 적은
+★ **2판은 대조를 시작했다**(DECISIONS §34). `ko_ref` 를 든 개념 18/60 은 AWS 한국어 문서와 맞췄고 일곱은 1판이 틀렸다.
+★ **나머지는 아직 대조 전이다.** 개념의 `ko` 는 thoth 용어집(배포본에서 쓰는 중)과 이 저장소가 적은
 값이다. 대조는 PLAN #22 에 남았다.
 
 ## 10. GPU 러너

@@ -122,3 +122,19 @@ def test_허용_표기와_오역_표기는_겹치지_않는다():
     assert ontology.validate([{"id": "svc.a", "kind": "service", "en": "A", "keep": True, "coda": "none",
                                "src": "author", "alt_ko": ["에이"]}])          # 영어로 남는 노드는 한국어 표기를 안 든다
     assert ontology.validate([{**node, "alt_ko": ["나"], "bad_ko": ["다"]}]) == []
+
+
+def test_공식_표기의_근거는_문서_자리다():
+    """URL 은 깨진다. 서비스와 페이지 이름이면 다시 찾는다(DECISIONS §34)."""
+    node = {"id": "con.a", "kind": "concept", "en": "a", "keep": False, "ko": "가", "src": "author"}
+    assert ontology.validate([{**node, "ko_ref": "sqs/sqs-visibility-timeout"}]) == []
+    assert ontology.validate([{**node, "ko_ref": "https://docs.aws.amazon.com/ko_kr/x.html"}])
+    assert ontology.validate([{**node, "ko_ref": ""}])
+
+
+def test_대조한_개념이_실제로_있다():
+    """카나리아 — 2판이 대조한 개념이 하나도 없으면 검사가 죽은 것이다."""
+    onto = ontology.load()
+    refs = [n for n in onto if n.get("ko_ref")]
+    assert len(refs) >= 15
+    assert all(n["kind"] == "concept" and not n["keep"] for n in refs)

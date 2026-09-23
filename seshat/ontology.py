@@ -11,6 +11,8 @@
 ★ **끝소리(`coda`)를 노드가 든다.** 자리표시를 되돌릴 때 뒤의 조사를 고르는 근거다. 한국어로 읽은
   끝소리 — `none`(모음) · `closed`(받침) · `rieul`(ㄹ). 약어 별칭은 마지막 글자의 영어 읽기로 센다.
 ★ 별칭은 온톨로지 전체에서 유일하다(대소문자 무시). 한 표기가 두 노드를 가리키면 자리표시가 흔들린다.
+★ **개념의 한국어는 셋이다** — `ko`(공식) · `alt_ko`(허용) · `bad_ko`(관측된 오역). `ko_ref` 가 있으면 AWS 한국어
+  문서와 대조한 것이고, 없으면 아직 대조 전이다(DECISIONS §34).
 """
 from __future__ import annotations
 
@@ -26,6 +28,8 @@ CODAS = {"none", "closed", "rieul"}
 SOURCES = {"author", "thoth-glossary"}
 _HANGUL = re.compile(r"[가-힣]")
 _ACRONYM = re.compile(r"^[A-Z0-9-]+$")
+# 공식 표기의 근거 — AWS 한국어 문서의 <서비스>/<페이지>. URL 은 적지 않는다(DECISIONS §34)
+KO_REF = re.compile(r"[a-z0-9_-]+/[A-Za-z0-9._-]+")
 # 영어 글자 · 숫자를 한국어로 읽은 끝소리. 엘 · 알 은 ㄹ, 엠 · 엔 은 받침
 _LETTER = {"L": "rieul", "R": "rieul", "M": "closed", "N": "closed"}
 _DIGIT = {"1": "closed", "7": "closed", "9": "closed"}   # 원 · 세븐 · 나인
@@ -102,8 +106,11 @@ def validate(onto: list[dict]) -> list[str]:
                 fails.append(f"{i} 의 ko 가 alt_ko · bad_ko 에도 있다")
             if set(alt) & set(bad):
                 fails.append(f"{i} 의 표기 하나가 허용이면서 오역이다 — {sorted(set(alt) & set(bad))}")
-        if n.get("keep") and (n.get("alt_ko") or n.get("bad_ko")):
-            fails.append(f"{i} 는 영어로 남는데 한국어 표기를 든다")
+            ref = n.get("ko_ref")
+            if ref is not None and not KO_REF.fullmatch(ref or ""):
+                fails.append(f"{i} 의 ko_ref 는 <서비스>/<페이지> 다 — {ref!r}")
+        if n.get("keep") and (n.get("alt_ko") or n.get("bad_ko") or n.get("ko_ref")):
+            fails.append(f"{i} 는 영어로 남는데 한국어 표기 · 근거를 든다")
     for n in onto:
         p = n.get("parent")
         if p and p not in ids:

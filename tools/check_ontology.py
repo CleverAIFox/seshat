@@ -32,6 +32,8 @@ def main(argv=None) -> int:
             print(f"  {k:<8} {v}")
         print(f"  표기 {len(ontology.surfaces(onto))}")
         print(f"  허용 표기 {sum(len(n.get('alt_ko', [])) for n in onto)} · 관측된 오역 {sum(len(n.get('bad_ko', [])) for n in onto)}")
+        con = [n for n in onto if n["kind"] == "concept"]
+        print(f"  공식 표기 대조 {sum(1 for n in con if n.get('ko_ref'))}/{len(con)} 개념 (PLAN #22)")
         return 0
     fails = ontology.validate(onto)
     for f in fails:
