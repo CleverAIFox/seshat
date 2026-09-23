@@ -216,27 +216,6 @@ REGISTRY: dict[str, tuple[Backend, str]] = {
                                        "aws-translate+ph+endings+terms"),
 }
 
-# ★ **백엔드가 어떤 가중치를 부르는지 선언한다.** `from_pretrained` 를 거치지 않는 호출(ollama)은
-#   라이선스 검사의 정규식이 보지 못한다. 선언을 검사가 대장과 대조한다(DECISIONS §14).
-WEIGHTS: dict[str, str] = {
-    "translategemma-4b": "google/translategemma-4b-it",
-    "translategemma-4b+ph": "google/translategemma-4b-it",
-    "translategemma-4b+ph+style": "google/translategemma-4b-it",
-    "translategemma-4b+ph+endings": "google/translategemma-4b-it",
-    "exaone-3.5-7.8b+ph+endings": "LGAI-EXAONE/EXAONE-3.5-7.8B-Instruct",
-    "qwen3-8b+ph+endings": "Qwen/Qwen3-8B",
-    "qwen3-4b+ph+endings": "Qwen/Qwen3-4B",
-    "gemma3-4b+ph+endings": "google/gemma-3-4b-it",
-}
-
-# 결과 파일 머리줄에 싣는 디코딩 조건
-DECODING_OF: dict[str, dict] = {"translategemma-4b": DECODING, "translategemma-4b+ph": DECODING,
-                                "translategemma-4b+ph+style": DECODING,
-                                "translategemma-4b+ph+endings": DECODING,
-                                "exaone-3.5-7.8b+ph+endings": DECODING,
-                                "qwen3-8b+ph+endings": DECODING, "qwen3-4b+ph+endings": DECODING,
-                                "gemma3-4b+ph+endings": DECODING}
-
 # ★ 이름으로 짐작하지 않는다 — 어느 백엔드가 ollama 위에 서는지 여기 적는다. 종전에는 `translategemma` 로
 #   시작하는 이름만 GPU 적재를 적었고, EXAONE 을 재고 나서야 그 줄이 비어 있는 것을 봤다(DECISIONS §45).
 OLLAMA_OF.update({"translategemma-4b": "translategemma:4b", "translategemma-4b+ph": "translategemma:4b",
@@ -246,6 +225,25 @@ OLLAMA_OF.update({"translategemma-4b": "translategemma:4b", "translategemma-4b+p
                   "qwen3-8b+ph+endings": "qwen3:8b", "qwen3-4b+ph+endings": "qwen3:4b",
                   "gemma3-4b+ph+endings": "gemma3:4b",
                   "gemma3-4b+ph+endings+terms": "gemma3:4b"})
+
+# ★ **어느 ollama 모델이 어느 가중치인가.** `from_pretrained` 를 거치지 않는 호출은 라이선스 검사의
+#   정규식이 보지 못한다. 선언을 검사가 대장과 대조한다(DECISIONS §14).
+WEIGHTS_OF_MODEL: dict[str, str] = {
+    "translategemma:4b": "google/translategemma-4b-it",
+    "exaone3.5:7.8b": "LGAI-EXAONE/EXAONE-3.5-7.8B-Instruct",
+    "qwen3:8b": "Qwen/Qwen3-8B",
+    "qwen3:4b": "Qwen/Qwen3-4B",
+    "gemma3:4b": "google/gemma-3-4b-it",
+}
+
+# ★ **팔마다 적지 않는다 — 배선에서 끌어온다**(DECISIONS §57). 종전에는 팔 이름을 키로 손으로 적었고,
+#   `+terms` 팔을 더한 날 그 줄을 빠뜨려 결과 파일에 `weights: null` 이 실렸다. 재현할 수 없는 결과다.
+#   목록은 `OLLAMA_OF` 하나이고 나머지는 거기서 나온다 — 빠뜨릴 자리가 없다.
+WEIGHTS: dict[str, str] = {arm: WEIGHTS_OF_MODEL[m] for arm, m in OLLAMA_OF.items()}
+
+# 결과 파일 머리줄에 싣는 디코딩 조건
+DECODING_OF: dict[str, dict] = {arm: DECODING for arm in OLLAMA_OF}
+
 
 # ★ 서빙하지 않는 백엔드. 기준선으로만 잰다 — thoth 에 끼우는 자리가 아니다.
 # ★ 여기에는 **서빙하지 않는 백엔드**가 전부 들어온다 — 과금이라서(AWS)든 라이선스라서(EXAONE · §44)든.

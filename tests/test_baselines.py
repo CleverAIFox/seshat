@@ -217,3 +217,23 @@ def test_ollama_가_꺼져_있으면_한_줄로_말한다(monkeypatch):
     with pytest.raises(SystemExit) as e:
         b.ollama("m", "{text}")(["x"], {})
     assert "ollama serve" in str(e.value) and "m" in str(e.value)
+
+
+def test_재현_조건은_배선에서_나온다():
+    """팔을 더하면서 표 하나를 빠뜨리면 `weights: null` 이 실린다 — 재현할 수 없는 결과다(DECISIONS §57)."""
+    from seshat import backends as b
+    assert set(b.WEIGHTS) == set(b.OLLAMA_OF)              # 손으로 적는 목록이 둘이 아니다
+    assert set(b.DECODING_OF) == set(b.OLLAMA_OF)
+    for arm, model in b.OLLAMA_OF.items():
+        assert b.WEIGHTS[arm] == b.WEIGHTS_OF_MODEL[model]
+        assert b.DECODING_OF[arm]["temperature"] == 0
+
+
+def test_사전_후처리_팔이_등록부와_표에_함께_있다():
+    """H-033 의 처치. 후처리만 다르고 가중치 · 복호화는 맨몸 팔과 같아야 대조가 된다(DECISIONS §56)."""
+    from seshat import backends as b
+    bare, fixed = "gemma3-4b+ph+endings", "gemma3-4b+ph+endings+terms"
+    assert fixed in b.REGISTRY and fixed not in b.BASELINE_ONLY
+    assert b.WEIGHTS[fixed] == b.WEIGHTS[bare]
+    assert b.OLLAMA_OF[fixed] == b.OLLAMA_OF[bare]
+    assert b.PRICE_PER_MCHAR["aws-translate+ph+endings+terms"] == b.PRICE_PER_MCHAR["aws-translate"]
