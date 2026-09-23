@@ -158,6 +158,11 @@ def main(argv=None) -> int:
     if ha.get("set_sha256") != hb.get("set_sha256"):
         print("    ★ 두 파일의 평가셋 해시가 다르다 — 같은 셋이 아니면 줄 대조는 뜻이 없다")
         return 1
+    # ★ 온톨로지도 채점기의 일부다(DECISIONS §32). 사전이 다르면 term 은 모델이 아니라 사전을 재고 있다
+    if ha.get("onto_sha256") != hb.get("onto_sha256"):
+        print(f"    ★ 두 파일의 온톨로지 해시가 다르다 — A {ha.get('onto_sha256')} · B {hb.get('onto_sha256')}")
+        print("      term 은 사전이 바뀐 몫까지 센다. 같은 사전으로 한쪽을 다시 채점한다(tools/rescore.py)")
+        return 1
     r = compare(ra, rb, spec)
     for name, h in (("A", ha), ("B", hb)):
         t = " · ".join(f"{k} {h[k]:.3f}" for k in ("term", "term_off", "term_bad") if h.get(k) is not None)

@@ -196,6 +196,17 @@ def door(h: str) -> None:
         raise SystemExit(f"{h} 는 '{rows[h][0]}' 상태다 — 실험 상태여야 잰다(검증 방법 · 비용 상한)")
 
 
+def onto_sha256() -> str:
+    """온톨로지 파일의 해시. **채점기의 일부다**(DECISIONS §32).
+
+    ★ `term` · `term_off` · `term_bad` 는 온톨로지의 `ko` · `alt_ko` · `bad_ko` 로 센다. 표기를 한 줄 더하면
+      같은 번역의 점수가 바뀐다. 어느 사전으로 잰 숫자인지 결과가 들고 있어야 두 파일을 비교할 수 있다.
+    """
+    import hashlib
+    from . import ontology
+    return hashlib.sha256(ontology.DEFAULT.read_bytes()).hexdigest()[:16]
+
+
 def conditions(a, rows: list[dict]) -> dict:
     """재현 조건. 결과 파일 머리줄에 싣는다."""
     import hashlib
@@ -213,6 +224,7 @@ def conditions(a, rows: list[dict]) -> dict:
            "commit": git("rev-parse", "--short", "HEAD") or None,
            "dirty": bool(git("status", "--porcelain")),
            "set_sha256": hashlib.sha256(pathlib.Path(a.set).read_bytes()).hexdigest()[:16],
+           "onto_sha256": onto_sha256(),
            "chars": chars,
            "backend": a.backend or None,
            "weights": backends.WEIGHTS.get(a.backend or ""),

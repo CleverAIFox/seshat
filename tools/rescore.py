@@ -37,6 +37,7 @@ def rescore(run_path: str, set_path: str, post: str = "none") -> tuple[dict, lis
         out_lines.append({**x, "out": fixed, "missing": missing})
     res = evaluate.score(rows, outs)
     keep = {k: head[k] for k in ("commit", "set_sha256", "chars", "backend", "weights", "decoding", "model", "ms") if k in head}
+    keep["onto_sha256"] = evaluate.onto_sha256()      # 지금 사전으로 다시 쟀다(DECISIONS §32)
     return {"meta": True, **res, **keep, "post": post, "rescored_from": Path(run_path).name}, out_lines
 
 

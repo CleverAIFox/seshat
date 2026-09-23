@@ -94,3 +94,9 @@ def test_관측된_오역을_따로_센다():
     assert ev.term(rows, ["쿼리 한도를 늘립니다."]) == {"term": 0.0, "term_off": 0.0, "term_bad": 1.0}
     # 맞는 표기가 함께 있으면 오역이 아니다 — 병기한 줄을 벌주지 않는다
     assert ev.term(rows, ["할당량(쿼리 한도)을 늘립니다."]) == {"term": 1.0, "term_off": 1.0, "term_bad": 0.0}
+
+
+def test_머리줄이_온톨로지_해시를_든다():
+    """사전을 한 줄 고치면 같은 번역의 term 이 바뀐다 — 어느 사전으로 쟀는지 결과가 들어야 한다(DECISIONS §32)."""
+    h = ev.onto_sha256()
+    assert len(h) == 16 and h == ev.onto_sha256()

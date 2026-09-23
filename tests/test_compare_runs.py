@@ -98,3 +98,15 @@ def test_머리줄이_지표_셋을_찍는다(capsys, tmp_path):
     cr.main([str(tmp_path / "a.jsonl"), str(tmp_path / "b.jsonl")])
     out = capsys.readouterr().out
     assert "term 0.800 · term_off 0.500 · term_bad 0.000" in out
+
+
+def test_사전이_다르면_대조를_멈춘다(capsys, tmp_path):
+    """온톨로지가 다르면 term 차이는 모델이 아니라 사전의 차이다(DECISIONS §32)."""
+    row = {"id": "1", "src": "Use Amazon S3.", "out": "Amazon S3를 씁니다."}
+    for name, onto in (("a", "1111"), ("b", "2222")):
+        head = {"meta": True, "backend": name, "keep": 1.0, "josa": 1.0, "style": 1.0, "ms": 1,
+                "set_sha256": "s", "onto_sha256": onto}
+        (tmp_path / f"{name}.jsonl").write_text(
+            "\n".join(json.dumps(x, ensure_ascii=False) for x in (head, row)) + "\n", encoding="utf-8")
+    assert cr.main([str(tmp_path / "a.jsonl"), str(tmp_path / "b.jsonl")]) == 1
+    assert "온톨로지 해시가 다르다" in capsys.readouterr().out
