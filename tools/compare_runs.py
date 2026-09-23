@@ -147,7 +147,9 @@ def main(argv=None) -> int:
         return 1
     r = compare(ra, rb, spec)
     for name, h in (("A", ha), ("B", hb)):
-        print(f"  {name} {h.get('backend') or h.get('url')}: keep {h['keep']:.3f} · josa {h.get('josa')} · style {h['style']:.2f} · {h['ms']}ms")
+        t = " · ".join(f"{k} {h[k]:.3f}" for k in ("term", "term_off", "term_bad") if h.get(k) is not None)
+        print(f"  {name} {h.get('backend') or h.get('url')}: keep {h['keep']:.3f} · josa {h.get('josa')} · style {h['style']:.2f}"
+              + (f" · {t}" if t else "") + f" · {h['ms']}ms")
     print(f"\n  줄 {r['lines']} — B 가 이긴 줄 {len(r['b_better'])} · 진 줄 {len(r['b_worse'])} · B 에 자리표시가 남은 줄 {len(r['residue'])}")
     print("\n  구문별 keep (이름 수 · A · B)")
     for cons, (n, ka, kb) in sorted(r["by_construction"].items(), key=lambda x: (x[1][2] - x[1][0])):

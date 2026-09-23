@@ -76,3 +76,16 @@ def test_개념이_없다고_센_자리를_줄로_보인다():
     # ★ 버린 자리와 오역한 자리를 표시로 가른다(DECISIONS §25). 둘은 대응이 다르다
     assert ("relative", "role · 없음", ["역할", "롤"], rows["1"]["out"]) in lines
     assert count["con.quota · 오역"] == 1
+
+
+def test_머리줄이_지표_셋을_찍는다(capsys, tmp_path):
+    """`term` 하나만 보면 표기 차이와 오역이 섞인다(DECISIONS §25). 머리줄에서 셋을 가른다."""
+    head = {"meta": True, "backend": "x", "keep": 1.0, "josa": 1.0, "style": 1.0, "ms": 1,
+            "set_sha256": "s", "term": 0.8, "term_off": 0.5, "term_bad": 0.0}
+    row = {"id": "1", "src": "Use Amazon S3.", "out": "Amazon S3를 씁니다."}
+    for name in ("a", "b"):
+        (tmp_path / f"{name}.jsonl").write_text(
+            "\n".join(json.dumps(x, ensure_ascii=False) for x in (head, row)) + "\n", encoding="utf-8")
+    cr.main([str(tmp_path / "a.jsonl"), str(tmp_path / "b.jsonl")])
+    out = capsys.readouterr().out
+    assert "term 0.800 · term_off 0.500 · term_bad 0.000" in out
