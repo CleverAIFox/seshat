@@ -115,7 +115,8 @@ def test_백틱으로_싼_자리표시를_되돌린다():
 
 def test_허용_표기와_오역_표기는_겹치지_않는다():
     """같은 표기가 허용이면서 오역이면 `term` 이 같은 줄을 맞다고도 틀리다고도 센다(DECISIONS §25)."""
-    node = {"id": "con.a", "kind": "concept", "en": "a", "keep": False, "ko": "가", "src": "author"}
+    node = {"id": "con.a", "kind": "concept", "en": "a", "keep": False, "ko": "가", "src": "author",
+            "ko_ref": "s3/UsingBucket"}
     assert ontology.validate([{**node, "alt_ko": ["나"], "bad_ko": ["나"]}])
     assert ontology.validate([{**node, "alt_ko": ["가"]}])                     # ko 를 다시 적지 않는다
     assert ontology.validate([{**node, "alt_ko": "나"}])                       # 목록이다
@@ -136,7 +137,7 @@ def test_대조한_개념이_실제로_있다():
     """카나리아 — 2판이 대조한 개념이 하나도 없으면 검사가 죽은 것이다."""
     onto = ontology.load()
     refs = [n for n in onto if n.get("ko_ref")]
-    assert len(refs) >= 15
+    assert len(refs) >= 60          # 2판에서 60/60 을 채웠다(DECISIONS §65) — 줄어들면 누가 지운 것이다
     assert all(n["kind"] == "concept" and not n["keep"] for n in refs)
 
 
@@ -202,3 +203,11 @@ def test_한글로_안_끝나는_표기는_끝소리를_모른다():
     assert terms.ko_coda("큐") == "none"
     assert terms.ko_coda("인덱스") == "none"
     assert terms.ko_coda("검색") == "closed"
+
+
+def test_번역_대상_개념은_근거를_든다():
+    """근거 없는 표기는 표기가 아니다 — 1판 60 개 중 셋이 「자연스러워서」 틀렸다(DECISIONS §65)."""
+    onto = ontology.load()
+    없음 = [n["id"] for n in onto if not n["keep"] and not n.get("ko_ref")]
+    assert 없음 == [], f"근거 없는 개념 {없음}"
+    assert ontology.validate([_node("대기열", [])]) != []     # 새로 들어오는 개념도 같은 문을 지난다

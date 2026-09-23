@@ -107,7 +107,11 @@ def validate(onto: list[dict]) -> list[str]:
             if set(alt) & set(bad):
                 fails.append(f"{i} 의 표기 하나가 허용이면서 오역이다 — {sorted(set(alt) & set(bad))}")
             ref = n.get("ko_ref")
-            if ref is not None and not KO_REF.fullmatch(ref or ""):
+            # ★ **근거 없는 표기는 표기가 아니다**(DECISIONS §65). 2 판에서 60/60 을 채웠고, 그 뒤로 들어오는
+            #   개념도 같은 문을 지난다. 1 판 60 개 중 셋이 「자연스러워서」 틀려 있었다.
+            if not ref:
+                fails.append(f"{i} 는 번역 대상인데 ko_ref 가 없다 — AWS 한국어 문서에서 표기를 확인한다")
+            elif not KO_REF.fullmatch(ref):
                 fails.append(f"{i} 의 ko_ref 는 <서비스>/<페이지> 다 — {ref!r}")
         if n.get("keep") and (n.get("alt_ko") or n.get("bad_ko") or n.get("ko_ref")):
             fails.append(f"{i} 는 영어로 남는데 한국어 표기 · 근거를 든다")
