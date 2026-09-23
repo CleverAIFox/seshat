@@ -237,3 +237,51 @@ def test_사전_후처리_팔이_등록부와_표에_함께_있다():
     assert b.WEIGHTS[fixed] == b.WEIGHTS[bare]
     assert b.OLLAMA_OF[fixed] == b.OLLAMA_OF[bare]
     assert b.PRICE_PER_MCHAR["aws-translate+ph+endings+terms"] == b.PRICE_PER_MCHAR["aws-translate"]
+
+
+# ── 사라진 자리표시만 다시 묻는다(H-034 · DECISIONS §59)
+def _calls(answers):
+    """부른 횟수를 세는 가짜 백엔드. 답을 차례로 돌려준다."""
+    box = {"n": 0}
+
+    def fn(texts, terms_):
+        box["n"] += 1
+        return [answers[min(box["n"] - 1, len(answers) - 1)] for _ in texts]
+    return fn, box
+
+
+def test_이름이_사라진_줄만_다시_묻는다():
+    from seshat import backends as b
+    inner, seen = _calls(["⟦T1⟧ API를 호출합니다."])                          # ⟦T2⟧ 를 버렸다
+    repair, fixed = _calls(["⟦T2⟧의 ⟦T1⟧ API를 호출합니다."])
+    out = b.with_placeholders(inner, repair=repair)(["Call the PutObject API of Amazon S3."], {})
+    assert out == ["Amazon S3의 PutObject API를 호출합니다."]
+    assert seen["n"] == 1 and fixed["n"] == 1
+
+
+def test_멀쩡한_줄은_다시_묻지_않는다():
+    from seshat import backends as b
+    inner, _ = _calls(["⟦T1⟧에 씁니다."])
+    repair, fixed = _calls(["안 불려야 한다"])
+    out = b.with_placeholders(inner, repair=repair)(["Write to Amazon S3."], {})
+    assert out == ["Amazon S3에 씁니다."] and fixed["n"] == 0
+
+
+def test_다시_물어도_안_되면_첫_답을_둔다():
+    """없는 이름을 지어 넣지 않는다 — 사라진 것은 사라진 것으로 재야 keep 이 진실을 말한다."""
+    from seshat import backends as b
+    inner, _ = _calls(["⟦T1⟧ API를 호출합니다."])
+    repair, fixed = _calls(["또 버린 답입니다."])
+    out = b.with_placeholders(inner, repair=repair, tries=2)(["Call the PutObject API of Amazon S3."], {})
+    assert out == ["PutObject API를 호출합니다."]              # ⟦T1⟧ 만 돌아오고 ⟦T2⟧ 는 없는 그대로
+    assert fixed["n"] == 2                                   # 두 번까지만 묻는다
+
+
+def test_고치는_판은_복호화만_다르다():
+    """모델도 체계 지시도 같아야 무엇이 효과인지 가른다. 조건은 머리줄에 실린다(DECISIONS §57)."""
+    from seshat import backends as b
+    arm = "gemma3-4b+ph+retry+endings+terms"
+    assert arm in b.REGISTRY and arm in b.REPAIR_ARMS
+    assert b.OLLAMA_OF[arm] == b.OLLAMA_OF["gemma3-4b+ph+endings+terms"]
+    assert b.DECODING_OF[arm]["repair"] == b.REPAIR
+    assert b.REPAIR["temperature"] > 0 and b.REPAIR["seed"] != b.DECODING["seed"]

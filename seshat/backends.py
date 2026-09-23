@@ -143,14 +143,34 @@ def ollama_chat(model: str, system: str, extra: dict | None = None, suffix: str 
     return call
 
 
-def with_placeholders(inner: Backend) -> Backend:
-    """H-001 의 처치군 — 영어로 남을 이름을 `⟦Tn⟧` 로 빼고 번역한 뒤 되돌린다(`seshat/terms.py`)."""
+# ★ **고친 줄만 다시 묻는다**(H-034 · DECISIONS §59). 되돌리기가 `missing` 을 돌려주므로 이름이 사라진 줄은
+#   도구가 **안다**. 온도 0 으로 다시 물으면 같은 답이 오니(탐욕 복호화) 고치는 판만 온도를 올려 다시 뽑는다.
+#   씨앗을 적어 두어 되풀이할 수 있게 한다 — 무작위가 아니라 **정해진 두 번째 시도**다.
+REPAIR = {"temperature": 0.4, "seed": 43, "num_predict": 512}
+REPAIR_ARMS: set[str] = set()
+
+
+def with_placeholders(inner: Backend, repair: Backend | None = None, tries: int = 2) -> Backend:
+    """H-001 의 처치군 — 영어로 남을 이름을 `⟦Tn⟧` 로 빼고 번역한 뒤 되돌린다(`seshat/terms.py`).
+
+    ★ `repair` 를 주면 **자리표시가 사라진 줄만** 다시 묻는다. 다 실패하면 **첫 답을 그대로 둔다** —
+      없는 이름을 지어 넣지 않는다. 사라진 것은 사라진 것으로 재야 `keep` 이 진실을 말한다.
+    """
     def call(texts: list[str], terms_: dict[str, str]) -> list[str]:
         from . import ontology, terms
         onto = ontology.load()
         masked = [terms.mask(onto, t) for t in texts]
         outs = inner([m for m, _ in masked], terms_)
-        return [terms.unmask(o, slots)[0] for o, (_, slots) in zip(outs, masked)]
+        fixed = []
+        for o, (m, slots) in zip(outs, masked):
+            ko, missing = terms.unmask(o, slots)
+            for _ in range(tries if (missing and repair) else 0):
+                ko2, missing2 = terms.unmask(repair([m], terms_)[0], slots)
+                if not missing2:
+                    ko = ko2
+                    break
+            fixed.append(ko)
+        return fixed
     return call
 
 
@@ -192,6 +212,8 @@ _qwen4 = ollama_chat("qwen3:4b", GENERIC_SYSTEM + NO_THINK, {"think": False}, NO
 # ★ Gemma 3 는 사고 모드가 없다 — 범용 지시 모델이지만 이 문제를 처음부터 안 만든다. Gemma 약관이라 서빙도
 #   증류도 되고, 학생은 약관을 상속한다(§44).
 _gemma3 = ollama_chat("gemma3:4b", GENERIC_SYSTEM)
+# 고치는 판 — 배선은 같고 복호화만 다르다. 모델도 체계 지시도 그대로여야 무엇이 효과인지 가른다
+_gemma3_repair = ollama_chat("gemma3:4b", GENERIC_SYSTEM, {"options": REPAIR})
 _tg_hapsyo = ollama("translategemma:4b", TRANSLATEGEMMA_PROMPT_HAPSYO)
 
 REGISTRY: dict[str, tuple[Backend, str]] = {
@@ -212,6 +234,9 @@ REGISTRY: dict[str, tuple[Backend, str]] = {
     "gemma3-4b+ph+endings": (with_endings(with_placeholders(_gemma3)), "gemma3:4b+ph+endings"),
     "gemma3-4b+ph+endings+terms": (with_terms(with_endings(with_placeholders(_gemma3))),
                                    "gemma3:4b+ph+endings+terms"),
+    "gemma3-4b+ph+retry+endings+terms": (
+        with_terms(with_endings(with_placeholders(_gemma3, repair=_gemma3_repair))),
+        "gemma3:4b+ph+retry+endings+terms"),
     "aws-translate+ph+endings+terms": (with_terms(with_endings(with_placeholders(aws_translate))),
                                        "aws-translate+ph+endings+terms"),
 }
@@ -224,7 +249,8 @@ OLLAMA_OF.update({"translategemma-4b": "translategemma:4b", "translategemma-4b+p
                   "exaone-3.5-7.8b+ph+endings": "exaone3.5:7.8b",
                   "qwen3-8b+ph+endings": "qwen3:8b", "qwen3-4b+ph+endings": "qwen3:4b",
                   "gemma3-4b+ph+endings": "gemma3:4b",
-                  "gemma3-4b+ph+endings+terms": "gemma3:4b"})
+                  "gemma3-4b+ph+endings+terms": "gemma3:4b",
+                  "gemma3-4b+ph+retry+endings+terms": "gemma3:4b"})
 
 # ★ **어느 ollama 모델이 어느 가중치인가.** `from_pretrained` 를 거치지 않는 호출은 라이선스 검사의
 #   정규식이 보지 못한다. 선언을 검사가 대장과 대조한다(DECISIONS §14).
@@ -243,6 +269,11 @@ WEIGHTS: dict[str, str] = {arm: WEIGHTS_OF_MODEL[m] for arm, m in OLLAMA_OF.item
 
 # 결과 파일 머리줄에 싣는 디코딩 조건
 DECODING_OF: dict[str, dict] = {arm: DECODING for arm in OLLAMA_OF}
+
+# ★ 고치는 판을 쓰는 팔은 그 조건도 머리줄에 싣는다 — 안 적으면 되풀이할 수 없다(DECISIONS §57)
+REPAIR_ARMS.add("gemma3-4b+ph+retry+endings+terms")
+for _arm in REPAIR_ARMS:
+    DECODING_OF[_arm] = {**DECODING, "repair": REPAIR}
 
 
 # ★ 서빙하지 않는 백엔드. 기준선으로만 잰다 — thoth 에 끼우는 자리가 아니다.
