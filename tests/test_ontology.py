@@ -111,3 +111,14 @@ def test_백틱으로_싼_자리표시를_되돌린다():
     ko, missing = terms.unmask("`T1`에서 크로스 계정 데이터를 가져와 `T2`에 저장합니다.", slots)
     assert ko == "AWS CloudFormation에서 크로스 계정 데이터를 가져와 Amazon Simple Storage Service에 저장합니다."
     assert missing == []
+
+
+def test_허용_표기와_오역_표기는_겹치지_않는다():
+    """같은 표기가 허용이면서 오역이면 `term` 이 같은 줄을 맞다고도 틀리다고도 센다(DECISIONS §25)."""
+    node = {"id": "con.a", "kind": "concept", "en": "a", "keep": False, "ko": "가", "src": "author"}
+    assert ontology.validate([{**node, "alt_ko": ["나"], "bad_ko": ["나"]}])
+    assert ontology.validate([{**node, "alt_ko": ["가"]}])                     # ko 를 다시 적지 않는다
+    assert ontology.validate([{**node, "alt_ko": "나"}])                       # 목록이다
+    assert ontology.validate([{"id": "svc.a", "kind": "service", "en": "A", "keep": True, "coda": "none",
+                               "src": "author", "alt_ko": ["에이"]}])          # 영어로 남는 노드는 한국어 표기를 안 든다
+    assert ontology.validate([{**node, "alt_ko": ["나"], "bad_ko": ["다"]}]) == []

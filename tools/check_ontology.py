@@ -31,6 +31,7 @@ def main(argv=None) -> int:
         for k, v in sorted(Counter(n["kind"] for n in onto).items()):
             print(f"  {k:<8} {v}")
         print(f"  표기 {len(ontology.surfaces(onto))}")
+        print(f"  허용 표기 {sum(len(n.get('alt_ko', [])) for n in onto)} · 관측된 오역 {sum(len(n.get('bad_ko', [])) for n in onto)}")
         return 0
     fails = ontology.validate(onto)
     for f in fails:

@@ -93,18 +93,32 @@ def josa(rows: list[dict], outs: list[str]) -> float | None:
     return ok / total if total else None
 
 
-def term(rows: list[dict], outs: list[str]) -> float | None:
-    """원문의 개념이 번역에 한국어로 남았는가. 개념을 버리면(머리 명사 탈락) 여기서 깎인다."""
+def term(rows: list[dict], outs: list[str]) -> dict[str, float | None]:
+    """원문의 개념이 번역에 어떻게 나타났나 — 셋으로 가른다(DECISIONS §25).
+
+      term      뜻이 남았다 — 공식 표기(`ko`) 또는 허용 표기(`alt_ko`)
+      term_off  공식 표기 그대로다. thoth 의 도메인은 표기까지 맞아야 한다
+      term_bad  관측된 오역(`bad_ko`)이 보이고 맞는 표기는 없다 — 뜻이 바뀐 자리다
+
+    ★ 셋을 한 숫자로 묶으면 「모델이 버렸다」 와 「사전이 그 표기를 모른다」 가 섞인다. H-020 에서 40줄을 눈으로
+      가른 결과 표기 차이가 25 · 버림 11 · 오역 4 였다 — 지표 하나로는 이 셋 중 무엇도 못 잰다.
+    """
     from . import ontology
     onto = ontology.load()
-    ok = total = 0
+    ok = off = bad = total = 0
     for r, o in zip(rows, outs):
         for _, _, s in ontology.find(onto, r["src"]):
             if s.node["keep"]:
                 continue
             total += 1
-            ok += any(k in o for k in [s.node["ko"], *s.node.get("alt_ko", [])])
-    return ok / total if total else None
+            hit_off = s.node["ko"] in o
+            hit = hit_off or any(k in o for k in s.node.get("alt_ko", []))
+            off += hit_off
+            ok += hit
+            bad += (not hit) and any(k in o for k in s.node.get("bad_ko", []))
+    if not total:
+        return {"term": None, "term_off": None, "term_bad": None}
+    return {"term": ok / total, "term_off": off / total, "term_bad": bad / total}
 
 
 def score(rows: list[dict], outs: list[str]) -> dict:
@@ -116,7 +130,7 @@ def score(rows: list[dict], outs: list[str]) -> dict:
             total += 1
             kept += k in o
     res = {"n": n, "style": style, "keep": kept / total if total else None, "chrf": None,
-           "josa": josa(rows, outs) if total else None, "term": term(rows, outs)}
+           "josa": josa(rows, outs) if total else None, **term(rows, outs)}
     pairs = [(o, r["ref"]) for r, o in zip(rows, outs) if r.get("ref")]
     if pairs:
         try:

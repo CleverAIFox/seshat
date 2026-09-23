@@ -72,23 +72,23 @@
 {"id": "api.getobject", "kind": "api", "en": "GetObject", "keep": true, "coda": "none", "aliases": [], "parent": "svc.s3", "src": "author"}
 {"id": "api.startjobrun", "kind": "api", "en": "StartJobRun", "keep": true, "coda": "closed", "aliases": [], "parent": "svc.glue", "src": "author"}
 {"id": "api.startqueryexecution", "kind": "api", "en": "StartQueryExecution", "keep": true, "coda": "closed", "aliases": [], "parent": "svc.athena", "src": "author"}
-{"id": "con.record", "kind": "concept", "en": "record", "keep": false, "ko": "레코드", "aliases": [], "parent": null, "src": "thoth-glossary"}
-{"id": "con.shard", "kind": "concept", "en": "shard", "keep": false, "ko": "샤드", "aliases": [], "parent": null, "src": "thoth-glossary"}
-{"id": "con.retention-period", "kind": "concept", "en": "retention period", "keep": false, "ko": "보존 기간", "aliases": [], "parent": null, "src": "thoth-glossary"}
-{"id": "con.throughput", "kind": "concept", "en": "throughput", "keep": false, "ko": "처리량", "aliases": [], "parent": null, "src": "thoth-glossary"}
+{"id": "con.record", "kind": "concept", "en": "record", "keep": false, "ko": "레코드", "aliases": [], "parent": null, "src": "thoth-glossary", "alt_ko": ["기록"]}
+{"id": "con.shard", "kind": "concept", "en": "shard", "keep": false, "ko": "샤드", "aliases": [], "parent": null, "src": "thoth-glossary", "alt_ko": ["분할"]}
+{"id": "con.retention-period", "kind": "concept", "en": "retention period", "keep": false, "ko": "보존 기간", "aliases": [], "parent": null, "src": "thoth-glossary", "alt_ko": ["보관 기간", "유지 기간"]}
+{"id": "con.throughput", "kind": "concept", "en": "throughput", "keep": false, "ko": "처리량", "aliases": [], "parent": null, "src": "thoth-glossary", "alt_ko": ["스루풋", "처리 성능"]}
 {"id": "con.partition-key", "kind": "concept", "en": "partition key", "keep": false, "ko": "파티션 키", "aliases": [], "parent": null, "src": "thoth-glossary"}
-{"id": "con.consumer-application", "kind": "concept", "en": "consumer application", "keep": false, "ko": "컨슈머 애플리케이션", "aliases": [], "parent": null, "src": "thoth-glossary"}
-{"id": "con.producer", "kind": "concept", "en": "producer", "keep": false, "ko": "프로듀서", "aliases": [], "parent": null, "src": "thoth-glossary"}
-{"id": "con.consumer", "kind": "concept", "en": "consumer", "keep": false, "ko": "컨슈머", "aliases": [], "parent": null, "src": "thoth-glossary"}
+{"id": "con.consumer-application", "kind": "concept", "en": "consumer application", "keep": false, "ko": "컨슈머 애플리케이션", "aliases": [], "parent": null, "src": "thoth-glossary", "alt_ko": ["소비자 애플리케이션", "컨슈머 앱"]}
+{"id": "con.producer", "kind": "concept", "en": "producer", "keep": false, "ko": "프로듀서", "aliases": [], "parent": null, "src": "thoth-glossary", "alt_ko": ["생산자"], "bad_ko": ["프로덕서"]}
+{"id": "con.consumer", "kind": "concept", "en": "consumer", "keep": false, "ko": "컨슈머", "aliases": [], "parent": null, "src": "thoth-glossary", "alt_ko": ["소비자"]}
 {"id": "con.bucket", "kind": "concept", "en": "bucket", "keep": false, "ko": "버킷", "aliases": [], "parent": null, "src": "thoth-glossary"}
 {"id": "con.object", "kind": "concept", "en": "object", "keep": false, "ko": "객체", "aliases": [], "parent": null, "src": "thoth-glossary"}
 {"id": "con.queue", "kind": "concept", "en": "queue", "keep": false, "ko": "큐", "aliases": [], "parent": null, "src": "thoth-glossary", "alt_ko": ["대기열"]}
-{"id": "con.topic", "kind": "concept", "en": "topic", "keep": false, "ko": "토픽", "aliases": [], "parent": null, "src": "thoth-glossary"}
+{"id": "con.topic", "kind": "concept", "en": "topic", "keep": false, "ko": "토픽", "aliases": [], "parent": null, "src": "thoth-glossary", "alt_ko": ["주제"]}
 {"id": "con.stream", "kind": "concept", "en": "stream", "keep": false, "ko": "스트림", "aliases": [], "parent": null, "src": "thoth-glossary"}
 {"id": "con.cluster", "kind": "concept", "en": "cluster", "keep": false, "ko": "클러스터", "aliases": [], "parent": null, "src": "thoth-glossary"}
 {"id": "con.node", "kind": "concept", "en": "node", "keep": false, "ko": "노드", "aliases": [], "parent": null, "src": "thoth-glossary"}
 {"id": "con.instance", "kind": "concept", "en": "instance", "keep": false, "ko": "인스턴스", "aliases": [], "parent": null, "src": "thoth-glossary"}
-{"id": "con.endpoint", "kind": "concept", "en": "endpoint", "keep": false, "ko": "엔드포인트", "aliases": [], "parent": null, "src": "thoth-glossary"}
+{"id": "con.endpoint", "kind": "concept", "en": "endpoint", "keep": false, "ko": "엔드포인트", "aliases": [], "parent": null, "src": "thoth-glossary", "alt_ko": ["종단점"]}
 {"id": "con.workflow", "kind": "concept", "en": "workflow", "keep": false, "ko": "워크플로", "aliases": [], "parent": null, "src": "thoth-glossary"}
 {"id": "con.crawler", "kind": "concept", "en": "crawler", "keep": false, "ko": "크롤러", "aliases": [], "parent": null, "src": "thoth-glossary"}
 {"id": "con.trigger", "kind": "concept", "en": "trigger", "keep": false, "ko": "트리거", "aliases": [], "parent": null, "src": "thoth-glossary"}
@@ -98,37 +98,37 @@
 {"id": "con.catalog", "kind": "concept", "en": "catalog", "keep": false, "ko": "카탈로그", "aliases": [], "parent": null, "src": "thoth-glossary"}
 {"id": "con.ingestion", "kind": "concept", "en": "ingestion", "keep": false, "ko": "수집", "aliases": [], "parent": null, "src": "thoth-glossary"}
 {"id": "con.latency", "kind": "concept", "en": "latency", "keep": false, "ko": "지연 시간", "aliases": [], "parent": null, "src": "thoth-glossary"}
-{"id": "con.failover", "kind": "concept", "en": "failover", "keep": false, "ko": "장애 조치", "aliases": [], "parent": null, "src": "thoth-glossary"}
-{"id": "con.replica", "kind": "concept", "en": "replica", "keep": false, "ko": "복제본", "aliases": [], "parent": null, "src": "thoth-glossary"}
+{"id": "con.failover", "kind": "concept", "en": "failover", "keep": false, "ko": "장애 조치", "aliases": [], "parent": null, "src": "thoth-glossary", "alt_ko": ["페일오버"], "bad_ko": ["장애 복구"]}
+{"id": "con.replica", "kind": "concept", "en": "replica", "keep": false, "ko": "복제본", "aliases": [], "parent": null, "src": "thoth-glossary", "alt_ko": ["리플리카"]}
 {"id": "con.snapshot", "kind": "concept", "en": "snapshot", "keep": false, "ko": "스냅샷", "aliases": [], "parent": null, "src": "thoth-glossary"}
 {"id": "con.encryption", "kind": "concept", "en": "encryption", "keep": false, "ko": "암호화", "aliases": [], "parent": null, "src": "thoth-glossary"}
 {"id": "con.policy", "kind": "concept", "en": "policy", "keep": false, "ko": "정책", "aliases": [], "parent": null, "src": "thoth-glossary"}
-{"id": "con.role", "kind": "concept", "en": "role", "keep": false, "ko": "역할", "aliases": [], "parent": null, "src": "thoth-glossary"}
+{"id": "con.role", "kind": "concept", "en": "role", "keep": false, "ko": "역할", "aliases": [], "parent": null, "src": "thoth-glossary", "alt_ko": ["롤"]}
 {"id": "con.permission", "kind": "concept", "en": "permission", "keep": false, "ko": "권한", "aliases": [], "parent": null, "src": "thoth-glossary"}
-{"id": "con.quota", "kind": "concept", "en": "quota", "keep": false, "ko": "할당량", "aliases": [], "parent": null, "src": "thoth-glossary"}
-{"id": "con.throttling", "kind": "concept", "en": "throttling", "keep": false, "ko": "제한", "aliases": [], "parent": null, "src": "thoth-glossary"}
+{"id": "con.quota", "kind": "concept", "en": "quota", "keep": false, "ko": "할당량", "aliases": [], "parent": null, "src": "thoth-glossary", "alt_ko": ["쿼터", "쿼타"], "bad_ko": ["쿼리 한도"]}
+{"id": "con.throttling", "kind": "concept", "en": "throttling", "keep": false, "ko": "제한", "aliases": [], "parent": null, "src": "thoth-glossary", "alt_ko": ["스로틀링", "조절"]}
 {"id": "con.sort-key", "kind": "concept", "en": "sort key", "keep": false, "ko": "정렬 키", "aliases": [], "parent": null, "src": "author"}
-{"id": "con.global-secondary-index", "kind": "concept", "en": "global secondary index", "keep": false, "ko": "글로벌 보조 인덱스", "aliases": ["GSI"], "parent": null, "src": "author"}
+{"id": "con.global-secondary-index", "kind": "concept", "en": "global secondary index", "keep": false, "ko": "글로벌 보조 인덱스", "aliases": ["GSI"], "parent": null, "src": "author", "alt_ko": ["전역 보조 인덱스", "GSI"]}
 {"id": "con.local-secondary-index", "kind": "concept", "en": "local secondary index", "keep": false, "ko": "로컬 보조 인덱스", "aliases": ["LSI"], "parent": null, "src": "author"}
 {"id": "con.read-capacity-unit", "kind": "concept", "en": "read capacity unit", "keep": false, "ko": "읽기 용량 단위", "aliases": ["RCU"], "parent": null, "src": "author"}
 {"id": "con.write-capacity-unit", "kind": "concept", "en": "write capacity unit", "keep": false, "ko": "쓰기 용량 단위", "aliases": ["WCU"], "parent": null, "src": "author"}
 {"id": "con.data-lake", "kind": "concept", "en": "data lake", "keep": false, "ko": "데이터 레이크", "aliases": [], "parent": null, "src": "author"}
 {"id": "con.data-warehouse", "kind": "concept", "en": "data warehouse", "keep": false, "ko": "데이터 웨어하우스", "aliases": [], "parent": null, "src": "author"}
-{"id": "con.lifecycle-policy", "kind": "concept", "en": "lifecycle policy", "keep": false, "ko": "수명 주기 정책", "aliases": ["lifecycle configuration"], "parent": null, "src": "author"}
+{"id": "con.lifecycle-policy", "kind": "concept", "en": "lifecycle policy", "keep": false, "ko": "수명 주기 정책", "aliases": ["lifecycle configuration"], "parent": null, "src": "author", "alt_ko": ["라이프사이클 정책"]}
 {"id": "con.storage-class", "kind": "concept", "en": "storage class", "keep": false, "ko": "스토리지 클래스", "aliases": [], "parent": null, "src": "author"}
 {"id": "con.job-bookmark", "kind": "concept", "en": "job bookmark", "keep": false, "ko": "작업 북마크", "aliases": [], "parent": null, "src": "author"}
-{"id": "con.change-data-capture", "kind": "concept", "en": "change data capture", "keep": false, "ko": "변경 데이터 캡처", "aliases": ["CDC"], "parent": null, "src": "author"}
-{"id": "con.dead-letter-queue", "kind": "concept", "en": "dead-letter queue", "keep": false, "ko": "배달 못한 편지 대기열", "aliases": ["DLQ"], "parent": null, "src": "author"}
-{"id": "con.visibility-timeout", "kind": "concept", "en": "visibility timeout", "keep": false, "ko": "표시 제한 시간", "aliases": [], "parent": null, "src": "author"}
-{"id": "con.encryption-at-rest", "kind": "concept", "en": "encryption at rest", "keep": false, "ko": "저장 시 암호화", "aliases": [], "parent": null, "src": "author"}
-{"id": "con.encryption-in-transit", "kind": "concept", "en": "encryption in transit", "keep": false, "ko": "전송 중 암호화", "aliases": [], "parent": null, "src": "author"}
+{"id": "con.change-data-capture", "kind": "concept", "en": "change data capture", "keep": false, "ko": "변경 데이터 캡처", "aliases": ["CDC"], "parent": null, "src": "author", "alt_ko": ["CDC"], "bad_ko": ["변환된 데이터"]}
+{"id": "con.dead-letter-queue", "kind": "concept", "en": "dead-letter queue", "keep": false, "ko": "배달 못한 편지 대기열", "aliases": ["DLQ"], "parent": null, "src": "author", "alt_ko": ["데드 레터 큐", "죽은 편지 큐", "배달 못한 편지 큐"]}
+{"id": "con.visibility-timeout", "kind": "concept", "en": "visibility timeout", "keep": false, "ko": "표시 제한 시간", "aliases": [], "parent": null, "src": "author", "alt_ko": ["가시성 제한 시간", "가시성 타임아웃"], "bad_ko": ["시각성 시간 초과", "응답 시간 제한"]}
+{"id": "con.encryption-at-rest", "kind": "concept", "en": "encryption at rest", "keep": false, "ko": "저장 시 암호화", "aliases": [], "parent": null, "src": "author", "alt_ko": ["유휴 시 암호화", "저장 데이터 암호화", "저장된 데이터 암호화"]}
+{"id": "con.encryption-in-transit", "kind": "concept", "en": "encryption in transit", "keep": false, "ko": "전송 중 암호화", "aliases": [], "parent": null, "src": "author", "alt_ko": ["전송 중인 데이터 암호화", "전송 구간 암호화"]}
 {"id": "con.least-privilege", "kind": "concept", "en": "least privilege", "keep": false, "ko": "최소 권한", "aliases": [], "parent": null, "src": "author"}
-{"id": "con.resource-based-policy", "kind": "concept", "en": "resource-based policy", "keep": false, "ko": "리소스 기반 정책", "aliases": [], "parent": null, "src": "author"}
-{"id": "con.cross-account", "kind": "concept", "en": "cross-account", "keep": false, "ko": "교차 계정", "aliases": [], "parent": null, "src": "author"}
+{"id": "con.resource-based-policy", "kind": "concept", "en": "resource-based policy", "keep": false, "ko": "리소스 기반 정책", "aliases": [], "parent": null, "src": "author", "alt_ko": ["자원 기반 정책"]}
+{"id": "con.cross-account", "kind": "concept", "en": "cross-account", "keep": false, "ko": "교차 계정", "aliases": [], "parent": null, "src": "author", "alt_ko": ["크로스 계정", "계정 간"]}
 {"id": "con.serverless", "kind": "concept", "en": "serverless", "keep": false, "ko": "서버리스", "aliases": [], "parent": null, "src": "author"}
-{"id": "con.operational-overhead", "kind": "concept", "en": "operational overhead", "keep": false, "ko": "운영 오버헤드", "aliases": [], "parent": null, "src": "author"}
+{"id": "con.operational-overhead", "kind": "concept", "en": "operational overhead", "keep": false, "ko": "운영 오버헤드", "aliases": [], "parent": null, "src": "author", "alt_ko": ["운영 부담", "운영상의 부담"], "bad_ko": ["운영 비용", "운영 관련 비용"]}
 {"id": "con.columnar-format", "kind": "concept", "en": "columnar format", "keep": false, "ko": "열 형식", "aliases": [], "parent": null, "src": "author"}
 {"id": "con.compression", "kind": "concept", "en": "compression", "keep": false, "ko": "압축", "aliases": [], "parent": null, "src": "author"}
 {"id": "con.schema-evolution", "kind": "concept", "en": "schema evolution", "keep": false, "ko": "스키마 진화", "aliases": [], "parent": null, "src": "author"}
 {"id": "con.provisioned-capacity", "kind": "concept", "en": "provisioned capacity", "keep": false, "ko": "프로비저닝된 용량", "aliases": [], "parent": null, "src": "author"}
-{"id": "con.on-demand-capacity", "kind": "concept", "en": "on-demand capacity", "keep": false, "ko": "온디맨드 용량", "aliases": [], "parent": null, "src": "author"}
+{"id": "con.on-demand-capacity", "kind": "concept", "en": "on-demand capacity", "keep": false, "ko": "온디맨드 용량", "aliases": [], "parent": null, "src": "author", "alt_ko": ["주문형 용량", "요청형 용량"]}

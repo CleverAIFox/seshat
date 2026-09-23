@@ -97,8 +97,9 @@ def term_misses(rows: dict, spec: dict[str, dict]) -> tuple[Counter, list[tuple]
                 continue
             names = [s.node["ko"], *s.node.get("alt_ko", [])]
             if not any(k in r["out"] for k in names):
-                count[s.node["id"]] += 1
-                lines.append((spec.get(i, {}).get("construction", "?"), s.text, names, r["out"]))
+                tag = "오역" if any(k in r["out"] for k in s.node.get("bad_ko", [])) else "없음"
+                count[f"{s.node['id']} · {tag}"] += 1
+                lines.append((spec.get(i, {}).get("construction", "?"), f"{s.text} · {tag}", names, r["out"]))
     return count, lines
 
 

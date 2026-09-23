@@ -70,8 +70,9 @@ def test_구문별로_개념이_남았는지_본다():
 
 
 def test_개념이_없다고_센_자리를_줄로_보인다():
-    rows = {"1": {"src": "Attach the IAM role to the function.", "out": "함수에 IAM 롤을 붙입니다."}}
-    count, lines = cr.term_misses(rows, {"1": {"construction": "SVO"}})
-    # ★ `롤` 은 role 의 흔한 음차인데 온톨로지 1판에는 `역할` 뿐이다 — H-020 이 가르려는 바로 그 경우다
-    assert ("SVO", "role", ["역할"], rows["1"]["out"]) in lines
-    assert count["con.role"] == 1
+    rows = {"1": {"src": "The role writes the data.", "out": "데이터를 씁니다."},
+            "2": {"src": "Increase the quota.", "out": "쿼리 한도를 늘립니다."}}
+    count, lines = cr.term_misses(rows, {"1": {"construction": "relative"}, "2": {"construction": "SVO"}})
+    # ★ 버린 자리와 오역한 자리를 표시로 가른다(DECISIONS §25). 둘은 대응이 다르다
+    assert ("relative", "role · 없음", ["역할", "롤"], rows["1"]["out"]) in lines
+    assert count["con.quota · 오역"] == 1

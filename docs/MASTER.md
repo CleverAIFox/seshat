@@ -98,7 +98,9 @@ AWS_PROFILE=<프로파일> uv run --group eval --group aws python -m seshat.eval
 | `chrf` | 그렇다 | chrF++ (sacrebleu, `word_order=2`) |
 | `ms` | — | 문장당 지연. 9건씩 묶어 보낸다 |
 | `josa` | 아니다 | `keep` 이름 바로 뒤 조사가 그 이름의 끝소리(온톨로지 `coda`)와 맞는 비율. 조사가 붙지 않은 자리는 세지 않는다 |
-| `term` | 아니다 | 원문에 나온 온톨로지 개념의 한국어(`ko` · `alt_ko`)가 번역에 있는 비율. 개념을 버리면 깎인다 |
+| `term` | 아니다 | 원문에 나온 온톨로지 개념의 뜻이 남았나 — 공식(`ko`) 또는 허용(`alt_ko`) 표기가 번역에 있는 비율 |
+| `term_off` | 아니다 | 그중 **공식 표기 그대로**인 비율. thoth 의 도메인은 표기까지 맞아야 한다 |
+| `term_bad` | 아니다 | 관측된 오역(`bad_ko`)만 보이는 비율 — 뜻이 바뀐 자리다(DECISIONS §25) |
 
 ★ **가설 없이 재지 않는다.** echo 가 아닌 백엔드 · 서버는 `--hypothesis H-NNN` 을 요구하고 그 가설은 대장에서
 `실험` 상태여야 한다(DECISIONS §14). 배선만 보는 실행은 `--smoke` 다.
@@ -228,7 +230,8 @@ bash tools/verify.sh --only=pytest  # 부분 실행 — 마지막에 일부러 �
 |---|---|
 | `coda` | 한국어로 읽은 끝소리 — `none`(모음) · `closed`(받침) · `rieul`(ㄹ). 자리표시 뒤 조사를 고른다. 약어 별칭은 마지막 글자의 영어 읽기로 센다(`IAM` 받침 · `KPL` ㄹ) |
 | `src` | `thoth-glossary`(배포본에서 쓰는 값) · `author`(이 저장소가 적은 값) |
-| `alt_ko` | 다른 표기 후보. `queue` 는 thoth 가 `큐` 를 쓰고 AWS 문서는 `대기열` 을 쓰는 것으로 안다 — 대조 전이다 |
+| `alt_ko` | **허용 표기.** 뜻이 통하는 다른 표기 — 음차(`role` → 롤) · 의역(`operational overhead` → 운영상의 부담) · 다른 공식 표기(`queue` → 큐 · 대기열) |
+| `bad_ko` | **관측된 오역.** 뜻이 바뀐 표기다 — `quota` → 쿼리 한도 · `visibility timeout` → 시각성 시간 초과. H-001 에서 본 것만 적는다(DECISIONS §25) |
 
 ```python
 from seshat import ontology, terms

@@ -91,6 +91,19 @@ def validate(onto: list[dict]) -> list[str]:
         else:
             if not _HANGUL.search(n.get("ko") or ""):
                 fails.append(f"{i} 는 옮기는데 ko 에 한글이 없다")
+            alt, bad = n.get("alt_ko", []), n.get("bad_ko", [])
+            if not isinstance(alt, list) or not isinstance(bad, list):
+                fails.append(f"{i} 의 alt_ko · bad_ko 는 목록이다")
+                continue
+            for t in [*alt, *bad]:
+                if not isinstance(t, str) or not t.strip():
+                    fails.append(f"{i} 의 대체 · 오역 표기에 빈 값이 있다")
+            if n.get("ko") in alt or n.get("ko") in bad:
+                fails.append(f"{i} 의 ko 가 alt_ko · bad_ko 에도 있다")
+            if set(alt) & set(bad):
+                fails.append(f"{i} 의 표기 하나가 허용이면서 오역이다 — {sorted(set(alt) & set(bad))}")
+        if n.get("keep") and (n.get("alt_ko") or n.get("bad_ko")):
+            fails.append(f"{i} 는 영어로 남는데 한국어 표기를 든다")
     for n in onto:
         p = n.get("parent")
         if p and p not in ids:
