@@ -54,7 +54,20 @@ def style_flips(a_rows: dict, b_rows: dict, spec: dict[str, dict]) -> dict:
         if d is not None:
             (dist_flip if flipped else dist_rest).append(d)
     mean = lambda xs: round(sum(xs) / len(xs), 2) if xs else None  # noqa: E731
-    return {"flips": flips, "after_flip": mean(dist_flip), "after_rest": mean(dist_rest)}
+    return {"flips": flips, "after_flip": mean(dist_flip), "after_rest": mean(dist_rest),
+            **style_sides(a_rows, b_rows, ev)}
+
+
+def style_sides(a_rows: dict, b_rows: dict, ev) -> dict:
+    """문체가 깨진 줄을 **양쪽 다** 본다 — A 만 · B 만 · 둘 다(DECISIONS §29).
+
+    ★ 처음에는 「A 는 합쇼체인데 B 는 아닌 줄」만 셌다. 두 팔이 같은 줄에서 같이 깨지면 0 이 찍히고,
+      그것을 「B 가 안 깨졌다」 로 읽게 된다. H-019 에서 두 팔의 style 이 똑같이 0.93 이었는데 표는 0 만
+      보여 줬다 — 지표가 같으면 원인도 같은지 **줄로 보여야** 안다.
+    """
+    a_bad = {i for i in a_rows if i in b_rows and not ev.is_hapsyo(a_rows[i]["out"])}
+    b_bad = {i for i in b_rows if i in a_rows and not ev.is_hapsyo(b_rows[i]["out"])}
+    return {"a_only": sorted(a_bad - b_bad), "b_only": sorted(b_bad - a_bad), "both": sorted(a_bad & b_bad)}
 
 
 def terms_by_construction(a_rows: dict, b_rows: dict, spec: dict[str, dict]) -> dict:
@@ -160,7 +173,10 @@ def main(argv=None) -> int:
         for cons, (n, ka, kb) in sorted(tb.items(), key=lambda x: x[1][1] / max(x[1][0], 1)):
             print(f"    {cons:<13} {n:>4} · {ka / n:.2f} · {kb / n:.2f}")
     sf = style_flips(ra, rb, spec)
-    print(f"\n  합쇼체가 B 에서만 깨진 줄 {len(sf['flips'])} — 마지막 이름 뒤 낱말 수 평균: 깨진 줄 {sf['after_flip']} · 나머지 {sf['after_rest']}  [H-017]")
+    print(f"\n  합쇼체가 깨진 줄 — A 만 {len(sf['a_only'])} · B 만 {len(sf['b_only'])} · 둘 다 {len(sf['both'])}"
+          f" · 마지막 이름 뒤 낱말: B 만 깨진 줄 {sf['after_flip']} · 나머지 {sf['after_rest']}  [H-017 · H-019]")
+    for i in sf["both"][: a.show]:
+        print(f"    [둘 다 · {spec.get(i, {}).get('construction', '?')}] {ra[i]['src']}\n      A: {ra[i]['out']}\n      B: {rb[i]['out']}")
     for i in sf["flips"][: a.show]:
         print(f"    [{spec.get(i, {}).get('construction', '?')}] {ra[i]['src']}\n      A: {ra[i]['out']}\n      B: {rb[i]['out']}")
     mc, ml = term_misses(ra, spec)

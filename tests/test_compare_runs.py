@@ -60,6 +60,15 @@ def test_합쇼체가_한쪽에서만_깨진_줄을_찾는다():
     spec = {"1": {"keep": ["Amazon S3"]}, "2": {"keep": ["Athena"]}}
     r = cr.style_flips(a, b, spec)
     assert r["flips"] == ["1"] and r["after_flip"] == 0 and r["after_rest"] == 1
+    assert r["b_only"] == ["1"] and r["a_only"] == [] and r["both"] == []
+
+
+def test_두_팔이_같은_줄에서_깨지면_둘_다로_센다():
+    """같은 줄이 양쪽에서 깨지면 「B 만」 은 0 이다 — 그것을 안 깨졌다고 읽으면 안 된다(DECISIONS §29)."""
+    a = {"1": {"src": "Use Amazon S3.", "out": "Amazon S3를 쓴다."}, "2": {"src": "Use Athena.", "out": "Athena를 씁니다."}}
+    b = {"1": {"src": "Use Amazon S3.", "out": "Amazon S3를 써요."}, "2": {"src": "Use Athena.", "out": "Athena를 쓴다."}}
+    r = cr.style_flips(a, b, {})
+    assert r["both"] == ["1"] and r["b_only"] == ["2"] and r["a_only"] == []
 
 
 def test_구문별로_개념이_남았는지_본다():
