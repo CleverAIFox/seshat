@@ -129,6 +129,10 @@ DECODING_OF: dict[str, dict] = {"translategemma-4b": DECODING, "translategemma-4
 # ★ 서빙하지 않는 백엔드. 기준선으로만 잰다 — thoth 에 끼우는 자리가 아니다.
 BASELINE_ONLY = {"aws-translate"}
 
+# ★ **돈이 드는 백엔드의 값이다**(DECISIONS §35). 100만 자에 USD. `evaluate` 가 재기 전에 견적을 내고
+#   `--max-usd` 를 넘으면 부르지 않는다 — 가설의 상한을 사람이 지키는 것이 아니라 도구가 지킨다.
+PRICE_PER_MCHAR: dict[str, float] = {"aws-translate": 15.0}
+
 
 def get(name: str) -> tuple[Backend, str]:
     if name not in REGISTRY:

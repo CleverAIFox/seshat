@@ -196,6 +196,13 @@ def door(h: str) -> None:
         raise SystemExit(f"{h} 는 '{rows[h][0]}' 상태다 — 실험 상태여야 잰다(검증 방법 · 비용 상한)")
 
 
+def estimate_usd(backend: str, rows: list[dict]) -> float:
+    """돈이 드는 백엔드의 견적. 무료면 0 이다(DECISIONS §35)."""
+    from . import backends
+    rate = backends.PRICE_PER_MCHAR.get(backend, 0.0)
+    return round(sum(len(r["src"]) for r in rows) * rate / 1_000_000, 4)
+
+
 def onto_sha256() -> str:
     """온톨로지 파일의 해시. **채점기의 일부다**(DECISIONS §32).
 
@@ -264,11 +271,20 @@ def main(argv=None) -> int:
     ap.add_argument("--name", default="")
     ap.add_argument("--hypothesis", default="", help="H-NNN — 대장에서 실험 상태여야 한다")
     ap.add_argument("--smoke", action="store_true", help="배선만 본다. 가설을 요구하지 않는다")
+    ap.add_argument("--limit", type=int, default=0, help="앞에서 N줄만 잰다 — 돈이 드는 백엔드의 첫 판에 쓴다")
+    ap.add_argument("--max-usd", type=float, default=1.0, help="이 실행이 쓸 수 있는 돈의 상한")
     a = ap.parse_args(argv)
     if not (a.smoke or a.backend == "echo"):
         door(a.hypothesis)
 
     rows = load(a.set)
+    if a.limit:
+        rows = rows[:a.limit]
+    est = estimate_usd(a.backend or "", rows)
+    if est > a.max_usd:
+        raise SystemExit(f"견적 ${est:.2f} 가 상한 ${a.max_usd:.2f} 를 넘는다 — --limit 으로 줄이거나 상한을 올린다")
+    if est:
+        print(f"  견적 ${est:.2f} · {sum(len(r['src']) for r in rows):,}자 · 상한 ${a.max_usd:.2f}")
     if a.backend:
         call, model = via_backend(a.backend)
     else:

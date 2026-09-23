@@ -1,7 +1,12 @@
 """평가 도구의 판정."""
+import json
+import pathlib
+
 import pytest
 
 from seshat import evaluate as ev
+
+ROOT = pathlib.Path(__file__).resolve().parents[1]
 
 
 @pytest.mark.parametrize("ko,want", [
@@ -100,3 +105,22 @@ def test_머리줄이_온톨로지_해시를_든다():
     """사전을 한 줄 고치면 같은 번역의 term 이 바뀐다 — 어느 사전으로 쟀는지 결과가 들어야 한다(DECISIONS §32)."""
     h = ev.onto_sha256()
     assert len(h) == 16 and h == ev.onto_sha256()
+
+
+def test_돈이_드는_백엔드는_견적을_먼저_낸다():
+    """가설의 비용 상한을 사람이 아니라 도구가 지킨다(DECISIONS §35)."""
+    rows = [{"src": "x" * 100_000}]
+    assert ev.estimate_usd("aws-translate", rows) == 1.5
+    assert ev.estimate_usd("translategemma-4b", rows) == 0.0
+    assert ev.estimate_usd("", []) == 0.0
+
+
+def test_상한을_넘으면_부르지_않는다(tmp_path):
+    import subprocess
+    st = tmp_path / "big.jsonl"
+    st.write_text("\n".join(json.dumps({"id": str(i), "src": "x" * 20_000}, ensure_ascii=False)
+                            for i in range(10)) + "\n", encoding="utf-8")
+    r = subprocess.run(["python3", "-m", "seshat.evaluate", "--backend", "aws-translate",
+                        "--set", str(st), "--hypothesis", "H-025", "--max-usd", "1"],
+                       capture_output=True, text=True, cwd=ROOT)
+    assert r.returncode != 0 and "상한" in (r.stderr + r.stdout)
