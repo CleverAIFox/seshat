@@ -99,7 +99,7 @@ AWS_PROFILE=<프로파일> uv run --group eval --group aws python -m seshat.eval
 | `chrf` | 그렇다 | chrF++ (sacrebleu, `word_order=2`) |
 | `ms` | — | 문장당 지연. 9건씩 묶어 보낸다 |
 | `josa` | 아니다 | `keep` 이름 바로 뒤 조사가 그 이름의 끝소리(온톨로지 `coda`)와 맞는 비율. 조사가 붙지 않은 자리는 세지 않는다 |
-| `hangul` | 아니다 | **한글이 든 줄의 비율** — 이것이 번역인가. 배선이 깨지면 여기서 먼저 보인다(DECISIONS §49) |
+| `hangul` | 아니다 | **번역처럼 보이는 줄의 비율** — 한글이 20% 이상이고 길이가 원문의 세 배 이내. 배선이 깨지면 여기서 먼저 보인다(DECISIONS §49 · §50) |
 | `term` | 아니다 | 원문에 나온 온톨로지 개념의 뜻이 남았나 — 공식(`ko`) 또는 허용(`alt_ko`) 표기가 번역에 있는 비율 |
 | `term_off` | 아니다 | 그중 **공식 표기 그대로**인 비율. thoth 의 도메인은 표기까지 맞아야 한다 |
 | `term_bad` | 아니다 | 관측된 오역(`bad_ko`)만 보이는 비율 — 뜻이 바뀐 자리다(DECISIONS §25) |

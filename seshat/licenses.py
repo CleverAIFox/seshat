@@ -29,6 +29,9 @@ LEDGER: dict[str, tuple[str, str, str, str]] = {
     # ★ Apache-2.0 — 상업도 증류도 조건 없이 열린다. 학생이 약관을 상속하지 않는 유일한 후보다(H-032).
     "Qwen/Qwen3-8B": ("Apache-2.0", "yes", "yes", "huggingface.co/Qwen/Qwen3-8B · 2026-09-23"),
     "Qwen/Qwen3-4B": ("Apache-2.0", "yes", "yes", "huggingface.co/Qwen/Qwen3-4B · 2026-09-23"),
+    # ★ TranslateGemma 와 같은 약관이다 — 교사로 쓸 수 있고 학생이 Gemma 약관을 상속한다(§44).
+    "google/gemma-3-4b-it": ("Gemma Terms of Use", "yes", "yes",
+                             "ai.google.dev/gemma/terms · ollama.com/library/gemma3 · 2026-09-23"),
 }
 
 VALID_COMMERCIAL = {"yes", "no", "unknown"}

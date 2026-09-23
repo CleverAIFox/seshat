@@ -722,7 +722,7 @@ wheels = [
 
 [[package]]
 name = "seshat"
-version = "0.0.39"
+version = "0.0.40"
 source = { virtual = "." }
 
 [package.dev-dependencies]

@@ -128,8 +128,17 @@ def test_상한을_넘으면_부르지_않는다(tmp_path):
 
 def test_번역인가를_묻는_지표가_있다():
     """영어 사고문이 번역문 자리에 와도 term 은 1.0 이 나왔다(DECISIONS §49)."""
-    # ★ 이름을 영어로 남기는 번역도 1.0 이다 — 글자 비율로 재면 정상과 사고가 겹친다
-    assert ev.hangul(["Amazon S3를 씁니다."]) == 1.0
-    assert ev.hangul(["Okay, let's tackle this translation request. The user wants me to"]) == 0.0
-    assert ev.hangul([]) is None
-    assert ev.hangul(["Amazon S3를 씁니다.", "Okay, I need to"]) == 0.5
+    r = [{"src": "Use Amazon S3."}]
+    assert ev.hangul(r, ["Amazon S3를 씁니다."]) == 1.0          # 이름이 영어로 남아도 번역이다
+    assert ev.hangul(r, ["Okay, let's tackle this translation request. The user wants me to"]) == 0.0
+    assert ev.hangul([], []) is None
+
+
+def test_한국어를_인용하는_사고문에_속지_않는다():
+    """지표를 속인 예를 그대로 시험에 넣는다(DECISIONS §50)."""
+    src = "The data engineering team uses AWS Transfer Family to process the replica."
+    think = ("Okay, let's tackle this translation request. The user wants me to translate the English "
+             "sentence into Korean. They specified only the translation. First, \"데이터 엔지니어링 팀\" is "
+             "the subject, and I should keep the placeholder exactly as it appears in the source text.")
+    assert ev.ko_line(src, think) is False                    # 한국어를 인용해도 번역이 아니다
+    assert ev.ko_line(src, "데이터 엔지니어링 팀은 ⟦T1⟧를 사용하여 복제본을 처리합니다.") is True

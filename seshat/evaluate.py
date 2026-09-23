@@ -57,17 +57,25 @@ _LATIN = re.compile(r"[A-Za-z]")
 _HANGUL_CH = re.compile(r"[가-힣]")
 
 
-def hangul(outs: list[str]) -> float | None:
-    """번역문이 한국어인가 — **한글이 든 줄의 비율**. 배선이 깨지면 여기서 먼저 보인다(DECISIONS §49).
+def ko_line(src: str, out: str) -> bool:
+    """이 줄이 번역처럼 보이는가(DECISIONS §50). 두 가지를 함께 본다.
 
-    ★ 2026-09-23 Qwen3 가 영어 사고문을 번역문 자리에 뱉었는데 `term` 은 1.0 이 나왔다. 사고문이 한국어 낱말을
-      인용했기 때문이다. 「번역인가」 를 묻는 지표가 없으면 다른 지표가 그 자리를 대신 메운다.
-    ★ **비율이 아니라 줄로 센다.** 이 저장소의 번역은 이름을 영어로 남기므로 글자 비율은 0.3 대도 정상이다 —
-      비율로 재면 정상과 사고가 겹친다. 한글이 두 자 이상이면 한국어 문장으로 센다.
+    ① 한글이 글자(한글 + 로마자) 중 20% 이상이다 — 이름을 영어로 남기는 이 저장소의 번역도 30% 대는 된다.
+    ② 길이가 원문의 세 배를 넘지 않는다 — 사고문은 길다.
+
+    ★ 처음에는 「한글이 두 자 이상인 줄」 로 셌다. 사고문이 한국어 낱말을 인용하자 그것도 1.0 이 됐다
+      (2026-09-23 · Qwen3). **속은 지표를 고칠 때는 속인 예를 시험에 넣는다.**
     """
+    ko, en = len(_HANGUL_CH.findall(out)), len(_LATIN.findall(out))
+    share = ko / (ko + en) if ko + en else 1.0
+    return share >= 0.2 and len(out) <= 3 * len(src) + 40
+
+
+def hangul(rows: list[dict], outs: list[str]) -> float | None:
+    """번역처럼 보이는 줄의 비율. 배선이 깨지면 다른 지표를 읽기 전에 여기서 보인다(DECISIONS §49 · §50)."""
     if not outs:
         return None
-    return sum(len(_HANGUL_CH.findall(o)) >= 2 for o in outs) / len(outs)
+    return sum(ko_line(r["src"], o) for r, o in zip(rows, outs)) / len(outs)
 
 
 def is_hapsyo(ko: str) -> bool:
@@ -146,7 +154,7 @@ def score(rows: list[dict], outs: list[str]) -> dict:
         for k in r.get("keep", []):
             total += 1
             kept += k in o
-    res = {"n": n, "style": style, "hangul": hangul(outs), "keep": kept / total if total else None, "chrf": None,
+    res = {"n": n, "style": style, "hangul": hangul(rows, outs), "keep": kept / total if total else None, "chrf": None,
            "josa": josa(rows, outs) if total else None, **term(rows, outs)}
     pairs = [(o, r["ref"]) for r, o in zip(rows, outs) if r.get("ref")]
     if pairs:
