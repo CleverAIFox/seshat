@@ -7,6 +7,9 @@
   서 있었고 백칠십 건의 결정 동안 아무도 라이선스를 보지 않았다(하토르 D-0217). 튜닝을 마친
   뒤에 알면 처음부터 다시 한다. 그래서 가중치를 부르는 첫 줄부터 센다.
 
+★ **축이 둘이다**(DECISIONS §44) — 서빙에 쓸 수 있는가(상업)와 **출력을 학생 학습에 쓸 수 있는가**(교사).
+  둘은 다르다. EXAONE 3.5 는 연구 평가는 허락하고 출력으로 다른 모델을 만드는 것은 금지한다.
+
 ★ **비상업을 막지 않는다. 센다.** 비교용으로 비상업 모델을 재는 것은 정당하다(seshat PLAN #5).
   상업 불가가 몇 개인지 매번 찍고, 서빙 백엔드가 그것을 부르면 실패한다.
 
@@ -25,7 +28,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
-from seshat.licenses import EXCLUDED, LEDGER, VALID_COMMERCIAL, excluded  # noqa: E402
+from seshat.licenses import EXCLUDED, LEDGER, VALID_COMMERCIAL, VALID_TEACHER, excluded  # noqa: E402
 
 CALL = re.compile(
     r"(?:from_pretrained|snapshot_download|hf_hub_download|Translator)\(\s*(?:repo_id\s*=\s*)?[\"']([^\"']+)[\"']")
@@ -57,9 +60,11 @@ def check(root: Path, ledger: dict, weights: dict[str, str] | None = None) -> li
             fails.append(f"백엔드 {backend} 가 쓸 수 없는 가중치 {name} 를 선언한다 — {excluded(name)}")
         elif name not in ledger:
             fails.append(f"백엔드 {backend} 가 선언한 가중치 {name} 가 대장에 없다 — seshat/licenses.py")
-    for name, (lic, com, src) in ledger.items():
+    for name, (lic, com, teach, src) in ledger.items():
         if com not in VALID_COMMERCIAL:
             fails.append(f"대장 {name} 의 상업 가부 '{com}' 가 어휘 밖이다 — {sorted(VALID_COMMERCIAL)}")
+        if teach not in VALID_TEACHER:
+            fails.append(f"대장 {name} 의 교사 가부 '{teach}' 가 어휘 밖이다 — {sorted(VALID_TEACHER)}")
         if not lic.strip() or not src.strip():
             fails.append(f"대장 {name} 에 라이선스나 출처가 비었다")
     for name in ledger:
@@ -87,12 +92,12 @@ def main(argv=None) -> int:
     args = sys.argv[1:] if argv is None else argv
     _canary()
     if "--list" in args:
-        for name, (lic, com, src) in sorted(LEDGER.items()):
+        for name, (lic, com, teach, src) in sorted(LEDGER.items()):
             print(f"  {com:<8} {lic:<14} {name}  ({src})")
         for pre, why in sorted(EXCLUDED.items()):
             print(f"  제외     {pre}*  — {why}")
-        print(f"  상업 불가 {sum(1 for v in LEDGER.values() if v[1] == 'no')} · 모름 "
-              f"{sum(1 for v in LEDGER.values() if v[1] == 'unknown')} · 전체 {len(LEDGER)}")
+        print(f"  상업 불가 {sum(1 for v in LEDGER.values() if v[1] == 'no')} · 교사 불가 "
+              f"{sum(1 for v in LEDGER.values() if v[2] == 'no')} · 전체 {len(LEDGER)}")
         return 0
     fails = check(ROOT, LEDGER)
     for f in fails:

@@ -1166,3 +1166,28 @@ H-001 처치군 결과(`H-001-ph-20260922-162419.jsonl`)를 `tools/rescore.py` �
 
 **공짜처럼 보이는 후처리에도 값이 있다.** 자리표시는 이름을 완벽히 지키지만 엔진에게서 문맥을 뺏는다. 지표
 하나만 봤으면 몰랐을 것이고, `term` 을 따로 세지 않았으면 「keep 1.00 달성」 으로 끝났을 것이다.
+
+## §44. 라이선스의 축은 둘이다 — 서빙과 증류
+
+**2026-09-23**
+
+### 결정
+
+- H-029 로 EXAONE 3.5 7.8B 를 부르기 전에 라이선스를 읽었다. **EXAONE AI Model License Agreement 1.1 - NC** 는
+  비상업이고, 그보다 중한 조항이 있다 — 「the Licensee shall not use the Model, Derivatives or Output to develop
+  or improve other models」(§3.1). **출력을 학생 학습에 못 쓴다.** 연구 목적의 평가 · 시험은 §2.1(a) 가 명시로
+  허락한다
+- 대장에 **교사 가부**를 더한다. 종전에는 상업 가부 하나였고, 그것은 「서빙에 쓸 수 있는가」 만 답한다. 이 저장소의
+  계획은 증류가 중심이라(PLAN #18 → #20) **출력을 학습에 쓸 수 있는가**가 따로 필요하다. 모르면 못 쓴다
+- Gemma 약관을 다시 읽었다 — 「Google claims no rights in Outputs」 라 교사로 쓸 수 있지만, **그 출력으로 학습한
+  모델은 Model Derivative** 다(약관이 distillation 을 명시로 넣는다). 학생을 내놓을 때 약관 사본 · 고지 파일 ·
+  사용 제한을 함께 싣는다. **지금 계획대로 가면 학생은 Gemma 약관을 진다**
+- `exaone-3.5-7.8b+ph+endings` 를 등록하되 `BASELINE_ONLY` 에 넣는다 — 과금이라서가 아니라 라이선스라서 서빙하지
+  않는다. 같은 자리에 두 사유가 산다
+
+강제자 — `tools/check_model_licenses.py` · `tests/test_model_licenses.py::test_교사_가부가_대장의_둘째_축이다` · `tests/test_model_licenses.py::test_상업_불가_모델은_서빙_후보가_아니다`
+
+### 배운 것
+
+**대장의 칸은 계획이 자라면 같이 자란다.** 상업 가부 하나로 충분했던 것은 서빙만 생각할 때였다. 증류가 계획에
+들어온 순간 그 칸은 절반만 답하게 됐고, 모르고 한 달 뒤에 알면 학습을 처음부터 다시 한다.

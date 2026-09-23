@@ -31,7 +31,7 @@ def test_대장에_없는_가중치가_걸린다(tmp_path):
 
 def test_서빙이_비상업을_부르면_걸린다(tmp_path):
     root = _tree(tmp_path, 'm = Translator("org/nc")\n', "seshat/backends.py")
-    led = {"org/nc": ("CC-BY-NC-4.0", "no", "모델 카드 2026-09-22")}
+    led = {"org/nc": ("CC-BY-NC-4.0", "no", "no", "모델 카드 2026-09-22")}
     assert any("서빙 백엔드" in f for f in cml.check(root, led, {}))
     # 서빙 밖(비교 실험)에서는 센다 — 막지 않는다
     root2 = _tree(tmp_path / "b", 'm = Translator("org/nc")\n', "seshat/bench.py")
@@ -40,13 +40,13 @@ def test_서빙이_비상업을_부르면_걸린다(tmp_path):
 
 def test_어휘_밖의_상업_가부가_걸린다(tmp_path):
     root = _tree(tmp_path, "")
-    assert any("어휘 밖" in f for f in cml.check(root, {"a/b": ("MIT", "maybe", "x")}, {}))
+    assert any("어휘 밖" in f for f in cml.check(root, {"a/b": ("MIT", "maybe", "yes", "x")}, {}))
 
 
 def test_쓸_수_없는_가중치는_비교에서도_걸린다(tmp_path):
     # ★ 비상업(센다)과 다르다. 사용 허락 지역 밖이면 서빙 밖에서도 실패다(DECISIONS §9).
     root = _tree(tmp_path, 'm = AutoModel.from_pretrained("tencent/HY-MT1.5-1.8B")\n', "seshat/bench.py")
-    led = {"tencent/HY-MT1.5-1.8B": ("Tencent HY Community", "no", "모델 카드 2026-09-22")}
+    led = {"tencent/HY-MT1.5-1.8B": ("Tencent HY Community", "no", "no", "모델 카드 2026-09-22")}
     fails = cml.check(root, led, {})
     assert any("쓸 수 없는 가중치" in f and "bench.py" in f for f in fails)
     assert any(f.startswith("대장에 쓸 수 없는") for f in fails)
@@ -64,4 +64,22 @@ def test_백엔드가_선언한_가중치도_대장과_대조한다(tmp_path):
     root = _tree(tmp_path, "")
     assert any("선언한 가중치" in f for f in cml.check(root, {}, {"b": "org/m"}))
     assert any("쓸 수 없는" in f for f in cml.check(root, {}, {"b": "tencent/HY-MT1.5-7B"}))
-    assert cml.check(root, {"org/m": ("Apache-2.0", "yes", "x")}, {"b": "org/m"}) == []
+    assert cml.check(root, {"org/m": ("Apache-2.0", "yes", "yes", "x")}, {"b": "org/m"}) == []
+
+
+def test_교사_가부가_대장의_둘째_축이다():
+    """서빙에 쓸 수 있는가와 출력을 학생 학습에 쓸 수 있는가는 다르다(DECISIONS §44)."""
+    from seshat import licenses as lic
+    assert lic.can_teach("google/translategemma-4b-it")
+    assert not lic.can_teach("LGAI-EXAONE/EXAONE-3.5-7.8B-Instruct")
+    assert not lic.can_teach("모르는/가중치")             # 모르면 못 쓴다
+    bad = dict(lic.LEDGER, **{"x/y": ("L", "yes", "maybe", "곳")})
+    assert any("교사 가부" in f for f in cml.check(ROOT, bad))
+
+
+def test_상업_불가_모델은_서빙_후보가_아니다():
+    """EXAONE 은 비교 실험에만 부른다 — 등록부에 있으되 서빙 밖이다(DECISIONS §44)."""
+    from seshat import backends as b
+    name = "exaone-3.5-7.8b+ph+endings"
+    assert name in b.REGISTRY and name in b.BASELINE_ONLY
+    assert b.WEIGHTS[name] == "LGAI-EXAONE/EXAONE-3.5-7.8B-Instruct"

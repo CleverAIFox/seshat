@@ -106,6 +106,10 @@ def with_endings(inner: Backend) -> Backend:
 
 
 _tg = ollama("translategemma:4b", TRANSLATEGEMMA_PROMPT)
+# ★ **비교 전용이다**(H-029 · DECISIONS §44). EXAONE 3.5 는 비상업(NC)이고 출력을 다른 모델 학습에 못 쓴다 —
+#   서빙에도 증류에도 못 쓴다. 연구 목적 평가는 라이선스가 명시적으로 허락한다. 한국어에 강한 모델이 용어에서
+#   TranslateGemma 4B 를 넘는지만 본다. 같은 지시문을 쓴다 — 바꾸는 것은 모델 하나다
+_exaone = ollama("exaone3.5:7.8b", TRANSLATEGEMMA_PROMPT)
 _tg_hapsyo = ollama("translategemma:4b", TRANSLATEGEMMA_PROMPT_HAPSYO)
 
 REGISTRY: dict[str, tuple[Backend, str]] = {
@@ -120,6 +124,7 @@ REGISTRY: dict[str, tuple[Backend, str]] = {
     # ★ **남의 엔진에 이 저장소의 후처리를 얹는다**(H-028 · DECISIONS §41). 기준선이 이름을 44% 잃는 것을 이 기계가
     #   메우는가를 잰다. 서빙 후보가 아니다 — 과금이고, 무엇이 누구 몫인지 가르는 자다
     "aws-translate+ph+endings": (with_endings(with_placeholders(aws_translate)), "aws-translate+ph+endings"),
+    "exaone-3.5-7.8b+ph+endings": (with_endings(with_placeholders(_exaone)), "exaone3.5:7.8b+ph+endings"),
 }
 
 # ★ **백엔드가 어떤 가중치를 부르는지 선언한다.** `from_pretrained` 를 거치지 않는 호출(ollama)은
@@ -129,15 +134,18 @@ WEIGHTS: dict[str, str] = {
     "translategemma-4b+ph": "google/translategemma-4b-it",
     "translategemma-4b+ph+style": "google/translategemma-4b-it",
     "translategemma-4b+ph+endings": "google/translategemma-4b-it",
+    "exaone-3.5-7.8b+ph+endings": "LGAI-EXAONE/EXAONE-3.5-7.8B-Instruct",
 }
 
 # 결과 파일 머리줄에 싣는 디코딩 조건
 DECODING_OF: dict[str, dict] = {"translategemma-4b": DECODING, "translategemma-4b+ph": DECODING,
                                 "translategemma-4b+ph+style": DECODING,
-                                "translategemma-4b+ph+endings": DECODING}
+                                "translategemma-4b+ph+endings": DECODING,
+                                "exaone-3.5-7.8b+ph+endings": DECODING}
 
 # ★ 서빙하지 않는 백엔드. 기준선으로만 잰다 — thoth 에 끼우는 자리가 아니다.
-BASELINE_ONLY = {"aws-translate", "aws-translate+ph+endings"}
+# ★ 여기에는 **서빙하지 않는 백엔드**가 전부 들어온다 — 과금이라서(AWS)든 라이선스라서(EXAONE · §44)든.
+BASELINE_ONLY = {"aws-translate", "aws-translate+ph+endings", "exaone-3.5-7.8b+ph+endings"}
 
 # ★ **돈이 드는 백엔드의 값이다**(DECISIONS §35). 100만 자에 USD. `evaluate` 가 재기 전에 견적을 내고
 #   `--max-usd` 를 넘으면 부르지 않는다 — 가설의 상한을 사람이 지키는 것이 아니라 도구가 지킨다.
