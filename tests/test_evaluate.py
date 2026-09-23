@@ -142,3 +142,15 @@ def test_한국어를_인용하는_사고문에_속지_않는다():
              "the subject, and I should keep the placeholder exactly as it appears in the source text.")
     assert ev.ko_line(src, think) is False                    # 한국어를 인용해도 번역이 아니다
     assert ev.ko_line(src, "데이터 엔지니어링 팀은 ⟦T1⟧를 사용하여 복제본을 처리합니다.") is True
+
+
+def test_term_은_번역이_아닌_줄에서_점수를_주지_않는다():
+    """Qwen3 4B 가 실제로 뱉은 모양 — 영어 사고 과정이 한국어를 인용한다(DECISIONS §52)."""
+    rows = [{"src": "The data engineering team uses Amazon Athena to process the data lake."}]
+    fooled = ("Okay, the user wants a Korean translation. Amazon Athena stays in English, "
+              "and 'data lake' is 데이터 레이크 in Korean. Let me write it out.")
+    assert ev.hangul(rows, [fooled]) == 0.0
+    assert ev.term(rows, [fooled])["term"] == 0.0
+
+    real = "데이터 엔지니어링 팀은 Amazon Athena를 사용하여 데이터 레이크를 처리합니다."
+    assert ev.term(rows, [real])["term"] == 1.0

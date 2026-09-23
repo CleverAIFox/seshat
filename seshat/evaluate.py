@@ -125,6 +125,11 @@ def term(rows: list[dict], outs: list[str]) -> dict[str, float | None]:
       term_off  공식 표기 그대로다. thoth 의 도메인은 표기까지 맞아야 한다
       term_bad  관측된 오역(`bad_ko`)이 보이고 맞는 표기는 없다 — 뜻이 바뀐 자리다
 
+    ★ **번역이 아닌 줄은 전부 놓침이다**(DECISIONS §52). 2026-09-23 Qwen3 4B 가 영어 사고 과정을 뱉었는데
+      그 안에 한국어를 인용해서 `hangul` 0.0 · `term` 1.0 이 나왔다. 문자열이 어딘가 있다는 것과 그 자리에서
+      뜻을 옮겼다는 것은 다르다. `ko_line` 을 통과하지 못한 줄의 개념은 분모에만 들어간다 — 빼면 대답을
+      안 할수록 점수가 오른다.
+
     ★ 셋을 한 숫자로 묶으면 「모델이 버렸다」 와 「사전이 그 표기를 모른다」 가 섞인다. H-020 에서 40줄을 눈으로
       가른 결과 표기 차이가 25 · 버림 11 · 오역 4 였다 — 지표 하나로는 이 셋 중 무엇도 못 잰다.
     """
@@ -132,10 +137,13 @@ def term(rows: list[dict], outs: list[str]) -> dict[str, float | None]:
     onto = ontology.load()
     ok = off = bad = total = 0
     for r, o in zip(rows, outs):
+        translated = ko_line(r["src"], o)
         for _, _, s in ontology.find(onto, r["src"]):
             if s.node["keep"]:
                 continue
             total += 1
+            if not translated:      # 번역이 아닌 줄에서는 어떤 표기도 맞은 것이 아니다(DECISIONS §52)
+                continue
             hit_off = s.node["ko"] in o
             hit = hit_off or any(k in o for k in s.node.get("alt_ko", []))
             off += hit_off
