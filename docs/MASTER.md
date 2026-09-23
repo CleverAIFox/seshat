@@ -101,6 +101,7 @@ AWS_PROFILE=<프로파일> uv run --group eval --group aws python -m seshat.eval
 | `term` | 아니다 | 원문에 나온 온톨로지 개념의 뜻이 남았나 — 공식(`ko`) 또는 허용(`alt_ko`) 표기가 번역에 있는 비율 |
 | `term_off` | 아니다 | 그중 **공식 표기 그대로**인 비율. thoth 의 도메인은 표기까지 맞아야 한다 |
 | `term_bad` | 아니다 | 관측된 오역(`bad_ko`)만 보이는 비율 — 뜻이 바뀐 자리다(DECISIONS §25) |
+| `post` | 아니다 | 재채점에 붙인 후처리 — `none` · `endings`(해요체 의문 → 합쇼체 · DECISIONS §31) |
 
 ★ **가설 없이 재지 않는다.** echo 가 아닌 백엔드 · 서버는 `--hypothesis H-NNN` 을 요구하고 그 가설은 대장에서
 `실험` 상태여야 한다(DECISIONS §14). 배선만 보는 실행은 `--smoke` 다.

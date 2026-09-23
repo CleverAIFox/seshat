@@ -17,10 +17,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
-from seshat import evaluate, ontology, terms  # noqa: E402
+from seshat import endings, evaluate, ontology, terms  # noqa: E402
 
 
-def rescore(run_path: str, set_path: str) -> tuple[dict, list[dict]]:
+def rescore(run_path: str, set_path: str, post: str = "none") -> tuple[dict, list[dict]]:
     lines = [json.loads(x) for x in Path(run_path).read_text(encoding="utf-8").splitlines() if x.strip()]
     head = next(x for x in lines if x.get("meta"))
     body = [x for x in lines if not x.get("meta")]
@@ -30,12 +30,14 @@ def rescore(run_path: str, set_path: str) -> tuple[dict, list[dict]]:
     for x in body:
         _, slots = terms.mask(onto, x["src"])
         fixed, missing = terms.unmask(x["out"], slots)
+        if post == "endings":                     # 종결 정규화(DECISIONS §31) — 검사기가 고칠 수 있는 몫을 잰다
+            fixed = endings.normalize(fixed)
         rows.append(spec[x["id"]])
         outs.append(fixed)
         out_lines.append({**x, "out": fixed, "missing": missing})
     res = evaluate.score(rows, outs)
     keep = {k: head[k] for k in ("commit", "set_sha256", "chars", "backend", "weights", "decoding", "model", "ms") if k in head}
-    return {"meta": True, **res, **keep, "rescored_from": Path(run_path).name}, out_lines
+    return {"meta": True, **res, **keep, "post": post, "rescored_from": Path(run_path).name}, out_lines
 
 
 def out_path(hypothesis: str, run: str, now: dt.datetime | None = None) -> Path:
@@ -57,17 +59,19 @@ def main(argv=None) -> int:
     ap.add_argument("run")
     ap.add_argument("--set", required=True)
     ap.add_argument("--hypothesis", required=True)
+    ap.add_argument("--post", default="none", choices=["none", "endings"],
+                    help="되돌린 뒤 덧붙일 후처리 — endings 는 해요체 의문을 합쇼체로 고친다")
     a = ap.parse_args(argv)
     evaluate.door(a.hypothesis)
-    head, body = rescore(a.run, a.set)
+    head, body = rescore(a.run, a.set, a.post)
     head["hypothesis"] = a.hypothesis
-    out = out_path(a.hypothesis, a.run)
+    out = out_path(a.hypothesis, a.run if a.post == "none" else f"{Path(a.run).stem}-{a.post}")
     out.parent.mkdir(exist_ok=True)
     if out.exists():
         print(f"{out} 가 이미 있다 — 덮지 않는다. 같은 팔을 다시 재는 것이면 앞의 것을 레이크에 넣고 치운다", file=sys.stderr)
         return 1
     out.write_text("\n".join(json.dumps(x, ensure_ascii=False) for x in [head, *body]) + "\n", encoding="utf-8")
-    show = [k for k in ("n", "keep", "josa", "style", "term", "term_off", "term_bad", "rescored_from") if k in head]
+    show = [k for k in ("n", "keep", "josa", "style", "term", "term_off", "term_bad", "post", "rescored_from") if k in head]
     print(json.dumps({k: head[k] for k in show}, ensure_ascii=False))
     print(f"→ {out}", file=sys.stderr)
     return 0
