@@ -38,6 +38,20 @@ def rescore(run_path: str, set_path: str) -> tuple[dict, list[dict]]:
     return {"meta": True, **res, **keep, "rescored_from": Path(run_path).name}, out_lines
 
 
+def out_path(hypothesis: str, run: str, now: dt.datetime | None = None) -> Path:
+    """결과 파일 이름에 **재채점한 팔**이 들어간다(DECISIONS §26).
+
+    ★ 2026-09-23. 이름이 `가설-rescore-시각` 뿐이라 같은 초에 두 팔을 재채점하니 **뒤엣것이 앞엣것을 덮었다.**
+      대조군 결과가 레이크에 닿기 전에 사라졌다. 레이크는 이름이 같고 내용이 다르면 거절하지만, 작업대에서 덮인
+      파일은 레이크가 볼 기회조차 없다 — 이름은 만드는 쪽이 책임진다.
+    """
+    stem = Path(run).stem
+    for x in ("-rescore", ):                    # 재채점의 재채점이 이름을 길게 늘이지 않는다
+        stem = stem.replace(x, "")
+    stamp = (now or dt.datetime.now()).strftime("%Y%m%d-%H%M%S")
+    return Path("runs") / f"{hypothesis}-rescore-{stem}-{stamp}.jsonl"
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("run")
@@ -47,10 +61,14 @@ def main(argv=None) -> int:
     evaluate.door(a.hypothesis)
     head, body = rescore(a.run, a.set)
     head["hypothesis"] = a.hypothesis
-    out = Path("runs") / f"{a.hypothesis}-rescore-{dt.datetime.now().strftime('%Y%m%d-%H%M%S')}.jsonl"
+    out = out_path(a.hypothesis, a.run)
     out.parent.mkdir(exist_ok=True)
+    if out.exists():
+        print(f"{out} 가 이미 있다 — 덮지 않는다. 같은 팔을 다시 재는 것이면 앞의 것을 레이크에 넣고 치운다", file=sys.stderr)
+        return 1
     out.write_text("\n".join(json.dumps(x, ensure_ascii=False) for x in [head, *body]) + "\n", encoding="utf-8")
-    print(json.dumps({k: head[k] for k in ("n", "keep", "josa", "style", "rescored_from")}, ensure_ascii=False))
+    show = [k for k in ("n", "keep", "josa", "style", "term", "term_off", "term_bad", "rescored_from") if k in head]
+    print(json.dumps({k: head[k] for k in show}, ensure_ascii=False))
     print(f"→ {out}", file=sys.stderr)
     return 0
 

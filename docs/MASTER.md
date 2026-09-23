@@ -295,6 +295,7 @@ python3 tools/lake.py put runs /tmp/h001/*/*.jsonl runs/*.jsonl   # 결과를 �
 python3 tools/lake.py check                  # 해시 · 대장 밖 파일 · 가설 근거
 ```
 
+★ **결과 파일의 이름은 만드는 쪽이 유일하게 만든다**(DECISIONS §26). `evaluate` 는 `--name`, `rescore` 는 재채점한 팔의 이름을 넣는다. 작업대에서 덮이면 레이크가 볼 기회조차 없다.
 ★ **넣기만 한다.** 같은 이름에 다른 내용이 오면 거절한다 — 가설의 근거가 조용히 다른 파일이 되면 판정이 거짓말을 한다.
 ★ **GPU 러너가 바로 넣는다.** 러너가 이 기계라서 `gpu-eval.yml` 이 레이크에 쓴다. 러너는 `~/actions-runner/.env` 에서
   `SESHAT_DATA` 를 받는다(적고 `./run.sh` 를 다시 띄운다). 아티팩트는 사본이다.
