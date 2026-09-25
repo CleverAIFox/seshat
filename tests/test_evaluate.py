@@ -174,3 +174,28 @@ def test_term_은_번역이_아닌_줄에서_점수를_주지_않는다():
 
     real = "데이터 엔지니어링 팀은 Amazon Athena를 사용하여 데이터 레이크를 처리합니다."
     assert ev.term(rows, [real])["term"] == 1.0
+
+
+def test_긴_판은_열에_한_번_제_상태를_말한다(capsys):
+    """12B 를 CPU 로 내려 재는 판이 한 시간 동안 로그에 한 줄도 안 남겼다(DECISIONS §80)."""
+    done = 0
+    for _ in range(0, 200, 9):                      # BATCH 가 9 라 200 을 나누어떨어뜨리지 않는다
+        before, done = done, min(done + 9, 200)
+        ev._진척(before, done, 200, done * 12.0)
+    말 = capsys.readouterr().err
+    assert 말.count("남은 시간") == 9                # 열 칸 중 마지막은 안 찍는다(곧 결과가 나온다)
+    assert "줄당 12.0초" in 말
+
+
+def test_짧은_판은_조용하다(capsys):
+    """세 줄짜리 연기 시험까지 떠들면 읽을 것이 는다."""
+    ev._진척(0, 3, 3, 9.0)
+    ev._진척(0, 1, 3, 3.0)
+    assert capsys.readouterr().err == ""
+
+
+def test_진척은_표준_오류로_쓴다(capsys):
+    """표준 출력은 결과 JSON 의 자리다 — 파이프로 받는 쪽을 깨뜨리지 않는다."""
+    ev._진척(0, 20, 200, 240.0)
+    got = capsys.readouterr()
+    assert got.out == "" and "20/200" in got.err

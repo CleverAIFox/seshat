@@ -88,6 +88,21 @@ def is_hapsyo(ko: str) -> bool:
     return bool(_HAPSYO.search(last))
 
 
+def _진척(before: int, done: int, total: int, elapsed: float) -> None:
+    """긴 판이 말없이 도는 것을 막는다(DECISIONS §80).
+
+    ★ 12B 를 CPU 로 내려 재는 판이 한 시간 돌면서 로그에 한 줄도 안 남겼다. 살아 있는지 죽었는지
+      `ollama ps` 로 밖에서 물어야 했다 — **도구가 제 상태를 말하는 것이 도구의 일이다**(§51 · §60).
+    ★ 표준 오류로 쓴다. 표준 출력은 결과 JSON 의 자리다 — 파이프로 받는 쪽을 깨뜨리지 않는다.
+    """
+    step = max(total // 10, 1)                 # 열에 한 번. 묶음 크기가 나누어떨어지지 않아도 선다
+    if total < 20 or done <= 0 or done >= total or before // step == done // step:
+        return
+    남은 = elapsed / done * (total - done)
+    print(f"  {done}/{total} · 줄당 {elapsed / done:.1f}초 · 남은 시간 약 {남은 / 60:.0f}분",
+          file=sys.stderr, flush=True)
+
+
 def load(path: str) -> list[dict]:
     """평가셋을 읽는다. 없으면 **카탈로그가 아는 것을 말한다**(DECISIONS §72).
 
@@ -357,7 +372,9 @@ def main(argv=None) -> int:
     _b.REPAIR_STATS.update(tried=0, fixed=0)         # 이번 실행의 셈만 센다
     t = time.monotonic()
     for i in range(0, len(rows), BATCH):
+        before = len(outs)
         outs += call([r["src"] for r in rows[i:i + BATCH]])
+        _진척(before, len(outs), len(rows), time.monotonic() - t)
     ms = (time.monotonic() - t) * 1000 / max(len(rows), 1)
 
     res = score(rows, outs)
