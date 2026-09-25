@@ -108,3 +108,26 @@ def test_상태를_명령줄로도_묻는다(tmp_path):
     r = subprocess.run(["python3", str(ROOT / "tools/patch_subjects.py"), "--state", str(p)],
                        capture_output=True, text=True, cwd=_repo(tmp_path, "seshat-099: 한글 제목", "seshat-100: plain"))
     assert r.stdout.strip() == "붙음"
+
+
+def test_이미_붙은_패치는_기준_나무를_묻지_않는다(tmp_path):
+    """합본으로 붙인 뒤 INBOX 에 남은 옛 낱개 패치가 기준 나무 불일치로 죽었다(DECISIONS §77).
+
+    붙일 것이 없는 패치의 기준 자리는 물을 까닭이 없다. 죽으면 `&& git push` 가 통째로 날아간다.
+    """
+    repo = _repo(tmp_path, "seshat-099: 한글 제목", "seshat-100: plain")
+    p = tmp_path / "seshat-099-x.patch"
+    p.write_text(PATCH.replace("From 0 Mon", "Seshat-Base-Tree: " + "0" * 40 + "\nFrom 0 Mon", 1),
+                 encoding="utf-8")
+    # 도구는 저장소 루트에서 도니, 사본을 만들어 거기서 부른다
+    (pathlib.Path(repo) / "tools").mkdir(parents=True, exist_ok=True)
+    for name in ("apply_patch.sh", "patch_subjects.py"):
+        (pathlib.Path(repo) / "tools" / name).write_text((ROOT / "tools" / name).read_text(encoding="utf-8"),
+                                                         encoding="utf-8")
+    (pathlib.Path(repo) / "tools/lib").mkdir(parents=True, exist_ok=True)
+    (pathlib.Path(repo) / "tools/lib/env.sh").write_text((ROOT / "tools/lib/env.sh").read_text(encoding="utf-8"),
+                                                         encoding="utf-8")
+    (pathlib.Path(repo) / ".env").write_text(f"SESHAT_INBOX={tmp_path}\n", encoding="utf-8")
+    r = subprocess.run(["bash", "tools/apply_patch.sh", str(p)], capture_output=True, text=True, cwd=repo)
+    assert r.returncode == 0, (r.stdout, r.stderr)
+    assert "이미 붙어 있다" in r.stdout

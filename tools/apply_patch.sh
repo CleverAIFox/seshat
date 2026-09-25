@@ -10,6 +10,9 @@
 #   WSL 의 `~/Downloads` 가 아니다. 자리는 `.env` 의 SESHAT_INBOX 가 든다.
 # ★ 브라우저를 거친 패치는 줄끝이 CRLF 일 수 있다. 사본을 /tmp 에 두고 벗긴다 — 원본은 안 건드린다.
 # ★ **이미 붙은 패치는 아무것도 안 한다.** 패치의 커밋 제목이 전부 이력에 있으면 붙은 것이다.
+# ★ 그 판정이 **기준 나무 검사보다 앞**에 선다(DECISIONS §77). 2026-09-25, 합본에 든 커밋이 이미 붙은 뒤
+#   INBOX 에 남아 있던 옛 낱개 패치가 기준 나무 불일치로 죽었고, `&& git push` 가 통째로 날아갔다.
+#   붙일 것이 없는 패치의 기준 자리는 물을 까닭이 없다.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
@@ -46,6 +49,16 @@ trap 'rm -f "$TMP"' EXIT
 sed 's/\r$//' "$SRC" > "$TMP"
 cmp -s "$SRC" "$TMP" || echo "       줄끝 CRLF 를 LF 로 벗겼다"
 
+# 커밋 제목들. 판정 규칙은 tools/patch_subjects.py 하나다 — sweep.py 가 같은 것을 쓴다
+SUBJECTS="$(python3 tools/patch_subjects.py "$TMP")"
+[ -n "$SUBJECTS" ] || { echo "커밋 패치가 아니다 — git format-patch 산출물만 받는다" >&2; exit 1; }
+LOG="$(git log --format=%s -n 500)"
+MISSING="$(printf '%s\n' "$SUBJECTS" | while IFS= read -r s; do grep -qxF -- "$s" <<<"$LOG" || printf '%s\n' "$s"; done)"
+if [ -z "$MISSING" ]; then
+  echo "       이미 붙어 있다. 아무것도 안 한다"
+  exit 0
+fi
+
 # ★ 패치가 선 자리와 여기가 같은가(DECISIONS §30). 봇이 GitHub 에서 main 을 움직이면 여기서 갈린다
 BASE="$(sed -n 's/^Seshat-Base-Tree: //p' "$TMP" | head -1)"
 if [ -n "$BASE" ] && [ "$BASE" != "$(git rev-parse HEAD^{tree})" ]; then
@@ -58,16 +71,6 @@ if [ -n "$BASE" ] && [ "$BASE" != "$(git rev-parse HEAD^{tree})" ]; then
     echo "       git log --oneline -8 을 만든 쪽에 보이고 다시 받는다" >&2
     exit 1
   fi
-fi
-
-# 커밋 제목들. 판정 규칙은 tools/patch_subjects.py 하나다 — sweep.py 가 같은 것을 쓴다
-SUBJECTS="$(python3 tools/patch_subjects.py "$TMP")"
-[ -n "$SUBJECTS" ] || { echo "커밋 패치가 아니다 — git format-patch 산출물만 받는다" >&2; exit 1; }
-LOG="$(git log --format=%s -n 500)"
-MISSING="$(printf '%s\n' "$SUBJECTS" | while IFS= read -r s; do grep -qxF -- "$s" <<<"$LOG" || printf '%s\n' "$s"; done)"
-if [ -z "$MISSING" ]; then
-  echo "       이미 붙어 있다. 아무것도 안 한다"
-  exit 0
 fi
 
 if [ -n "$(git status --porcelain)" ]; then
