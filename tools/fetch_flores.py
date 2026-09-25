@@ -9,8 +9,9 @@
   Agree 를 한 번 누르고** `HF_TOKEN` 을 준다 — 토큰만 있고 동의가 없으면 막힌다.
 ★ `HF_TOKEN` 은 `.env` 에 적는다. **그러려면 이 도구가 `.env` 를 얹어야 한다** — seshat 패키지를 불러
   오는 것이 곧 그 일이다(DECISIONS §39). 안 불러 오면 `.env` 에 적어 놓고 왜 안 되는지 헤맨다.
-★ 파일 배치를 가정하지 않는다. 받은 parquet 을 훑어 `eng_Latn` · `kor_Hang` 을 split 별로
-  짝짓는다. 짝은 `id` 로 맞춘다 — 순서로 맞추면 한 줄이 밀릴 때 전부 틀린다.
+★ 파일 배치도 **형식도** 가정하지 않는다. 2026-09 현재 저장소는 `dev/kor_Hang.jsonl` 이고 종전에는
+  parquet 이었다. 둘 다 읽는다 — 받은 것을 훑어 `eng_Latn` · `kor_Hang` 을 split 별로 짝짓는다.
+  짝은 `id` 로 맞춘다 — 순서로 맞추면 한 줄이 밀릴 때 전부 틀린다.
 """
 from __future__ import annotations
 
@@ -42,21 +43,45 @@ def split_of(path: pathlib.Path) -> str | None:
     return "devtest" if "devtest" in parts or "devtest" in path.name else ("dev" if "dev" in parts or path.name.startswith("dev") else None)
 
 
+def read_rows(f: pathlib.Path) -> list[dict]:
+    """parquet 이든 jsonl 이든 `id` · `text` 만 꺼낸다. 다른 칸은 안 본다."""
+    if f.suffix == ".parquet":
+        import pyarrow.parquet as pq
+        return pq.read_table(f, columns=["id", "text"]).to_pylist()
+    out = []
+    for line in f.read_text(encoding="utf-8").splitlines():
+        if line.strip():
+            r = json.loads(line)
+            out.append({"id": r["id"], "text": r["text"]})
+    return out
+
+
 def main() -> int:
     from huggingface_hub import snapshot_download
-    import pyarrow.parquet as pq
-    local = pathlib.Path(snapshot_download(repo_id=FLORES, repo_type="dataset",
-                                           allow_patterns=["*eng_Latn*", "*kor_Hang*"]))
+    from huggingface_hub.errors import GatedRepoError
+    try:
+        local = pathlib.Path(snapshot_download(repo_id=FLORES, repo_type="dataset",
+                                               allow_patterns=["*eng_Latn*", "*kor_Hang*"]))
+    except GatedRepoError:
+        # ★ 401 은 토큰 문제처럼 보이지만 동의 문제일 때가 더 많다(DECISIONS §71)
+        raise SystemExit(f"{FLORES} 는 동의가 필요한 데이터셋이다 — 토큰이 멀쩡해도 막힌다\n"
+                         f"    누른다 : huggingface.co/datasets/{FLORES} 에서 Agree\n"
+                         f"    그 뒤  : .env 의 HF_TOKEN 이 그 계정의 것인지 본다(Read 권한)") from None
     found: dict[tuple[str, str], list[dict]] = {}
-    for f in local.rglob("*.parquet"):
+    for f in local.rglob("*"):
+        if f.suffix not in (".parquet", ".jsonl"):
+            continue
         lang = "eng" if "eng_Latn" in f.name else ("kor" if "kor_Hang" in f.name else None)
         sp = split_of(f.relative_to(local))
         if lang and sp:
-            found.setdefault((sp, lang), []).extend(pq.read_table(f, columns=["id", "text"]).to_pylist())
+            found.setdefault((sp, lang), []).extend(read_rows(f))
     OUT.mkdir(parents=True, exist_ok=True)
     for sp in SPLITS:
         if (sp, "eng") not in found or (sp, "kor") not in found:
-            raise SystemExit(f"{sp}: eng_Latn · kor_Hang 을 둘 다 찾지 못했다 — 받은 파일 {sorted(found)}")
+            got = sorted(p.name for p in local.rglob("*") if p.is_file())
+            raise SystemExit(f"{sp}: eng_Latn · kor_Hang 을 둘 다 찾지 못했다\n"
+                             f"    짝지은 것 : {sorted(found)}\n"
+                             f"    받은 파일 : {got}")
         rows = pair(found[(sp, "eng")], found[(sp, "kor")], sp)
         meta = {"meta": True, "about": f"FLORES+ {sp} 영→한", "license": "CC-BY-SA-4.0", "source": FLORES,
                 "register": "정답은 평어체(-다)다 — 합쇼체 출력과는 style 을 따로 본다"}

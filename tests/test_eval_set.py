@@ -32,3 +32,26 @@ def test_flores_받는_도구가_env_를_얹는다():
     assert "import seshat" in src                      # 불러 오는 것이 곧 .env 를 얹는 일이다
     tmpl = (pathlib.Path(__file__).resolve().parent.parent / ".env.example").read_text(encoding="utf-8")
     assert "HF_TOKEN=" in tmpl                         # 자리가 템플릿에 있어야 다음 기계에서 안 헤맨다
+
+
+def _flores():
+    import importlib.util
+    import pathlib
+    root = pathlib.Path(__file__).resolve().parent.parent
+    spec = importlib.util.spec_from_file_location("fetch_flores", root / "tools/fetch_flores.py")
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    return m
+
+
+def test_flores_는_형식을_가정하지_않는다(tmp_path):
+    """2026-09 저장소는 `dev/kor_Hang.jsonl` 이고 종전에는 parquet 이었다(DECISIONS §71)."""
+    import json
+    m = _flores()
+    p = tmp_path / "kor_Hang.jsonl"
+    p.write_text(json.dumps({"id": 1, "text": "가", "iso_639_3": "kor"}, ensure_ascii=False) + "\n",
+                 encoding="utf-8")
+    assert m.read_rows(p) == [{"id": 1, "text": "가"}]          # 다른 칸은 안 본다
+    import pathlib
+    assert m.split_of(pathlib.Path("dev/kor_Hang.jsonl")) == "dev"
+    assert m.split_of(pathlib.Path("devtest/eng_Latn.jsonl")) == "devtest"
