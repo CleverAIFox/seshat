@@ -288,11 +288,15 @@ def onto_sha256() -> str:
     return hashlib.sha256(ontology.DEFAULT.read_bytes()).hexdigest()[:16]
 
 
-def conditions(a, rows: list[dict]) -> dict:
-    """재현 조건. 결과 파일 머리줄에 싣는다."""
-    import hashlib
+def 코드_상태() -> dict:
+    """지금 어느 커밋에서 도는가. **판을 시작할 때 찍는다**(DECISIONS §81).
+
+    ★ 종전에는 판이 **끝난 뒤** 읽었다. 한 시간짜리 판이 도는 동안 패치를 붙이면, 결과 파일이 그 판을
+      돌리지 않은 커밋을 제 조건이라고 적는다 — **재현 조건이 거짓말을 한다.**
+    ★ 도구가 사람을 기다리게 하지 않는다. 「판이 끝날 때까지 저장소를 건드리지 마라」 는 규칙은
+      사람이 지켜야 하는 규칙이고, 사람은 바쁠 때 어긴다(§72).
+    """
     import subprocess
-    from . import backends
     root = pathlib.Path(__file__).resolve().parent.parent
 
     def git(*args):
@@ -300,10 +304,22 @@ def conditions(a, rows: list[dict]) -> dict:
             return subprocess.run(["git", *args], cwd=root, capture_output=True, text=True, timeout=10).stdout.strip()
         except OSError:
             return ""
+    return {"commit": git("rev-parse", "--short", "HEAD") or None,
+            "dirty": bool(git("status", "--porcelain"))}
+
+
+def conditions(a, rows: list[dict], 코드: dict | None = None) -> dict:
+    """재현 조건. 결과 파일 머리줄에 싣는다.
+
+    ★ `코드` 는 판을 **시작할 때** 찍어 둔 상태다. 안 주면 지금 찍는다 — 짧은 판과 도구용 길이다.
+    """
+    import hashlib
+    from . import backends
+    코드 = 코드 or 코드_상태()
     chars = sum(len(r["src"]) for r in rows)
     out = {"hypothesis": a.hypothesis or None,
-           "commit": git("rev-parse", "--short", "HEAD") or None,
-           "dirty": bool(git("status", "--porcelain")),
+           "commit": 코드["commit"],
+           "dirty": 코드["dirty"],
            "set_sha256": hashlib.sha256(pathlib.Path(a.set).read_bytes()).hexdigest()[:16],
            "onto_sha256": onto_sha256(),
            "chars": chars,
@@ -368,6 +384,7 @@ def main(argv=None) -> int:
         def call(texts):
             return translate(a.url, texts, a.token, a.thoth or bool(a.thoth_token), a.thoth_token)
     outs: list[str] = []
+    코드 = 코드_상태()                                # 판이 끝난 뒤가 아니라 **지금** 찍는다(§81)
     from . import backends as _b
     _b.REPAIR_STATS.update(tried=0, fixed=0)         # 이번 실행의 셈만 센다
     t = time.monotonic()
@@ -383,7 +400,7 @@ def main(argv=None) -> int:
     res["url"] = a.url or f"backend:{a.backend}"
     if model:
         res["model"] = model
-    res.update(conditions(a, rows))
+    res.update(conditions(a, rows, 코드))
 
     runs = pathlib.Path("runs")
     runs.mkdir(exist_ok=True)

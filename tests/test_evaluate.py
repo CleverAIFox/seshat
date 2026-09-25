@@ -199,3 +199,17 @@ def test_진척은_표준_오류로_쓴다(capsys):
     ev._진척(0, 20, 200, 240.0)
     got = capsys.readouterr()
     assert got.out == "" and "20/200" in got.err
+
+
+def test_재현_조건은_판을_시작할_때_찍는다(monkeypatch):
+    """한 시간짜리 판이 도는 동안 패치를 붙이면, 끝에서 읽은 조건은 거짓말이 된다(DECISIONS §81)."""
+    import argparse
+    시작 = {"commit": "aaaaaaa", "dirty": False}
+    지금 = {"commit": "bbbbbbb", "dirty": True}
+    monkeypatch.setattr(ev, "코드_상태", lambda: 지금)
+
+    a = argparse.Namespace(hypothesis="H-001", set="data/eval/seed.jsonl", backend="echo", url="")
+    rows = [{"src": "x"}]
+    assert ev.conditions(a, rows, 시작)["commit"] == "aaaaaaa"
+    assert ev.conditions(a, rows, 시작)["dirty"] is False
+    assert ev.conditions(a, rows)["commit"] == "bbbbbbb"      # 안 주면 지금 찍는다
