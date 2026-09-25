@@ -137,7 +137,12 @@ def validate(onto: list[dict]) -> list[str]:
 
 def find(onto: list[dict], text: str, keep_only: bool = False) -> list[tuple[int, int, Surface]]:
     """본문에서 표기를 찾는다. **긴 것이 이긴다** — `Amazon Kinesis Data Streams` 가 `Kinesis Data
-    Streams` 보다 먼저다. 낱말 경계를 지키고 겹치지 않는다. 개념은 복수 `s` 까지 받는다."""
+    Streams` 보다 먼저다. 낱말 경계를 지키고 겹치지 않는다. 개념은 복수 `s` 까지 받는다.
+
+    ★ **개념은 동사로도 나타난다**(DECISIONS §69). `The catalog is ingested by …` 는 수집을 말하는
+      문장인데 사전에 `ingestion` 만 있으면 못 찾는다. 변화형은 노드의 `aliases` 가 든다 — 여기서
+      어미를 짐작하지 않는다. 짐작하면 `compression` 에서 `compress` 를 만들고 `data` 에서 `dat` 를 만든다.
+    """
     cands = sorted((s for s in surfaces(onto) if s.node["keep"] or not keep_only), key=lambda s: -len(s.text))
     taken = [False] * len(text)
     out = []

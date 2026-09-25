@@ -232,3 +232,22 @@ def test_후처리가_고치는_개념과_지표가_세는_개념이_같다():
     assert hits and 보는것                                # 카나리아 — 둘 다 비면 시험이 죽은 것이다
     고친것 = {h.split(" → ")[1] for h in hits}
     assert 고친것 <= {n["ko"] for n in onto if n["id"] in 보는것}
+
+
+def test_개념이_동사로_나타나도_찾는다():
+    """`ingestion` 은 찾고 `ingested` 는 못 찾으면, 지표의 분모가 실제보다 작다(DECISIONS §69)."""
+    onto = ontology.load()
+    def concepts(src):
+        return {s.node["en"] for _, _, s in ontology.find(onto, src) if not s.node["keep"]}
+    assert "ingestion" in concepts("The catalog is ingested by Kinesis.")
+    assert "throttling" in concepts("If the service throttles the requests, increase the quota.")
+    assert "encryption" in concepts("The role must be encrypted.")
+    assert "compression" in concepts("The data is compressed before upload.")
+
+
+def test_섭취는_수집으로_돌아온다():
+    """`섭취` 는 밥을 먹는다는 뜻이다 — H-036 에서 잃었던 고침이다(DECISIONS §68 · §69)."""
+    onto = ontology.load()
+    got, hits = terms.fix_terms(onto, "카탈로그는 Kinesis에 의해 섭취되고 저장됩니다.",
+                                src="The catalog is ingested by Kinesis and stored in Athena.")
+    assert "수집" in got and "섭취" not in got and hits
