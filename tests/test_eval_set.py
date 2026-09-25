@@ -58,12 +58,16 @@ def test_flores_는_형식을_가정하지_않는다(tmp_path):
 
 
 def test_없는_평가셋은_받는_법을_말한다():
-    """셋은 대개 커밋하지 않는다 — 없을 때 무엇을 치면 되는지 카탈로그가 안다(DECISIONS §72)."""
+    """셋은 대개 커밋하지 않는다 — 없을 때 무엇을 치면 되는지 카탈로그가 안다(DECISIONS §72).
+
+    ★ **있는 이름을 쓰지 않는다**(DECISIONS §78). 처음에는 `flores_plus.dev.jsonl` 로 썼는데, 그 셋을
+      받은 기계에서는 파일이 생겨 시험이 깨졌다. 없음을 재는 시험은 **결코 생기지 않을 이름**을 쓴다.
+    """
     import pytest
 
     from seshat import evaluate as ev
     with pytest.raises(SystemExit) as e:
-        ev.load("data/bench/flores_plus.dev.jsonl")
+        ev.load("data/bench/받은적없는셋.jsonl")
     말 = str(e.value)
     assert "tools/fetch_flores.py" in 말 and "flores-plus" in 말
 
