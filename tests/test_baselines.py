@@ -361,3 +361,35 @@ def test_다른_거절은_그대로_이름을_보인다(monkeypatch):
     with pytest.raises(SystemExit) as e:
         b.aws_translate(["x"], {}, client=가짜())
     assert "UnsupportedLanguagePairException" in str(e.value)
+
+
+def test_한도는_환경이_정한다(monkeypatch):
+    """카드에 안 올라가는 모델은 느리다 — 숫자를 코드에 박지 않는다(DECISIONS §82)."""
+    from seshat import backends as b
+    monkeypatch.delenv("OLLAMA_TIMEOUT", raising=False)
+    assert b._timeout() == b.TIMEOUT
+    monkeypatch.setenv("OLLAMA_TIMEOUT", "2400")
+    assert b._timeout() == 2400
+    monkeypatch.setenv("OLLAMA_TIMEOUT", "0")
+    assert b._timeout() == b.TIMEOUT             # 0 은 한도 없음이 아니라 오타다
+    monkeypatch.setenv("OLLAMA_TIMEOUT", "곧")
+    assert b._timeout() == b.TIMEOUT
+
+
+def test_늦으면_막힌_줄을_말한다(monkeypatch):
+    """16 분 돌던 판이 한 줄에 걸려 죽었는데 어느 줄인지 안 알려 줬다(DECISIONS §82)."""
+    import urllib.request
+
+    import pytest
+
+    from seshat import backends as b
+
+    def 늦다(*a, **k):
+        raise TimeoutError("timed out")
+    monkeypatch.setattr(urllib.request, "urlopen", 늦다)
+    monkeypatch.setenv("OLLAMA_TIMEOUT", "30")
+    req = urllib.request.Request("http://127.0.0.1:11434/api/chat", data=b"{}")
+    with pytest.raises(SystemExit) as e:
+        b._ask(req, "gemma3:12b", "The catalog is ingested by Kinesis.")
+    말 = str(e.value)
+    assert "30초" in 말 and "OLLAMA_TIMEOUT" in 말 and "The catalog" in 말

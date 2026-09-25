@@ -101,19 +101,42 @@ OLLAMA_OF: dict[str, str] = {}
 THINK = re.compile(r"<think>.*?</think>\s*", re.S)
 
 
-def _ask(req, model: str):
-    """ollama 에 묻고 답을 돌려준다. 꺼져 있으면 **한 줄로** 말한다(DECISIONS §51).
+# ★ 한 줄을 기다리는 한도. **카드에 안 올라가는 모델은 느리다** — 12B Q4(8GB)를 6GB 카드에서 돌리면
+#   절반이 CPU 에 있고 한 줄이 10 분을 넘는다. 2026-09-25, 600 초에 걸려 16 분 돌던 판이 통째로 죽었다.
+#   숫자를 코드에 박지 않는다 — 기계마다 다르다(DECISIONS §82).
+TIMEOUT = 600
+
+
+def _timeout() -> int:
+    import os
+    v = os.environ.get("OLLAMA_TIMEOUT", "").strip()
+    return int(v) if v.isdigit() and int(v) > 0 else TIMEOUT
+
+
+def _ask(req, model: str, 무엇: str = ""):
+    """ollama 에 묻고 답을 돌려준다. 꺼져 있거나 늦으면 **한 줄로** 말한다(DECISIONS §51 · §82).
 
     ★ 종전에는 `URLError` 가 40줄 역추적으로 올라왔다. 무엇을 해야 하는지는 그 안에 없다 —
       리전 때와 같다(§36). 원인을 아는 자리에서 말한다.
+    ★ 늦어서 죽을 때는 **어느 줄에서 막혔는지**를 같이 말한다. 그 줄이 유난히 긴 줄일 수도 있다.
     """
     import json as _json
     import urllib.error
     import urllib.request
+    초 = _timeout()
     try:
-        with urllib.request.urlopen(req, timeout=600) as r:
+        with urllib.request.urlopen(req, timeout=초) as r:
             return _json.loads(r.read())
+    except TimeoutError:
+        raise SystemExit(f"{model} 이 {초}초 안에 답하지 않았다\n"
+                         f"    올린다 : OLLAMA_TIMEOUT=2400 uv run python -m seshat.evaluate …\n"
+                         f"    까닭   : 카드에 다 안 올라간 모델은 느리다(`ollama ps` 의 CPU/GPU 를 본다)\n"
+                         f"    막힌 줄 : {무엇[:80]}") from None
     except urllib.error.URLError as e:
+        if isinstance(getattr(e, "reason", None), TimeoutError):
+            raise SystemExit(f"{model} 이 {초}초 안에 답하지 않았다\n"
+                             f"    올린다 : OLLAMA_TIMEOUT=2400 uv run python -m seshat.evaluate …\n"
+                             f"    막힌 줄 : {무엇[:80]}") from None
         raise SystemExit(f"ollama 에 닿지 못한다 — {req.full_url}\n"
                          f"    띄운다 : ollama serve &  (그 뒤 ollama pull {model})\n"
                          f"    까닭   : {e.reason}") from None
@@ -130,7 +153,7 @@ def ollama(model: str, prompt: str, extra: dict | None = None):
             body = _json.dumps({"model": model, "prompt": prompt.format(text=t), "stream": False,
                                 "options": DECODING, **(extra or {})}).encode("utf-8")
             req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"})
-            out.append(THINK.sub("", _ask(req, model)["response"]).strip())
+            out.append(THINK.sub("", _ask(req, model, t)["response"]).strip())
         return out
     return call
 
@@ -164,7 +187,7 @@ def ollama_chat(model: str, system: str, extra: dict | None = None, suffix: str 
                                              {"role": "user", "content": t + suffix}],
                                 **(extra or {})}).encode("utf-8")
             req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"})
-            out.append(THINK.sub("", _ask(req, model)["message"]["content"]).strip())
+            out.append(THINK.sub("", _ask(req, model, t)["message"]["content"]).strip())
         return out
     return call
 
