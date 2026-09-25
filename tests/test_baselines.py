@@ -302,3 +302,23 @@ def test_범용_팔은_문체를_강제하지_않는다():
         assert "endings" not in arm and "terms" not in arm
         assert b.WEIGHTS[arm] == "google/gemma-3-4b-it"
     assert "gemma3-4b+ph+retry" in b.REPAIR_ARMS          # 이름은 그대로 지킨다
+
+
+def test_boto3_가_없으면_그룹을_말한다(monkeypatch):
+    """`uv run --group data` 로 한 번 돌면 환경에서 boto3 가 빠진다(DECISIONS §74)."""
+    import builtins
+
+    import pytest
+
+    from seshat import backends as b
+    monkeypatch.setenv("AWS_REGION", "ap-northeast-2")
+    real = builtins.__import__
+
+    def 없는척(name, *a, **k):
+        if name == "boto3":
+            raise ModuleNotFoundError("No module named 'boto3'")
+        return real(name, *a, **k)
+    monkeypatch.setattr(builtins, "__import__", 없는척)
+    with pytest.raises(SystemExit) as e:
+        b.aws_translate(["x"], {})
+    assert "--group aws" in str(e.value)

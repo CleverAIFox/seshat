@@ -36,7 +36,14 @@ def aws_translate(texts: list[str], terms: dict[str, str], client=None) -> list[
         if not region:                       # 의존성을 들이기 전에 본다 — 설정이 틀린 것을 설치로 덮지 않는다
             raise SystemExit("AWS 리전이 없다 — .env 에 AWS_REGION 을 적는다(예: ap-northeast-2)\n"
                              "    자격증명은 AWS_PROFILE 이나 ~/.aws 가 든다. 이 저장소는 키를 들지 않는다")
-        import boto3  # 무거운 의존성은 함수 안에서(모듈 머리말)
+        try:
+            import boto3  # 무거운 의존성은 함수 안에서(모듈 머리말)
+        except ModuleNotFoundError:
+            # ★ uv 는 부를 때 준 그룹으로 환경을 맞춘다 — `--group data` 로 한 번 돌면 boto3 가 빠진다.
+            #   그 자리에서 무엇을 쳐야 하는지 말한다(DECISIONS §74)
+            raise SystemExit("boto3 가 없다 — AWS 백엔드는 `aws` 그룹이 든다\n"
+                             "    친다 : uv run --group aws python -m seshat.evaluate …\n"
+                             "    까닭 : uv 는 부를 때 준 그룹으로 환경을 맞춘다. 다른 그룹으로 한 번 돌면 빠진다") from None
         client = boto3.client("translate", region_name=region)
     out = []
     for t in texts:
