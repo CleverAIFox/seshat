@@ -112,3 +112,22 @@ def test_패키지를_부르면_env_가_얹힌다():
     code = "import seshat, sys; print('seshat.paths' in sys.modules)"
     r = subprocess.run(["python3", "-c", code], capture_output=True, text=True, cwd=ROOT)
     assert r.stdout.strip() == "True"                 # 패키지를 부르는 순간 .env 가 얹힌다
+
+
+def test_env_에_같은_열쇠가_둘이면_나중_줄이_이기고_말한다(tmp_path, monkeypatch, capsys):
+    """셸 로더는 소싱이라 나중 줄이 이긴다 — 파이썬이 앞줄을 집으면 두 도구가 갈린다(DECISIONS §73)."""
+    env = tmp_path / ".env"
+    env.write_text("HF_TOKEN=hf_죽은것\nSESHAT_INBOX=/x\nHF_TOKEN=hf_새것\n", encoding="utf-8")
+    monkeypatch.delenv("HF_TOKEN", raising=False)
+    monkeypatch.delenv("SESHAT_INBOX", raising=False)
+    paths.load_dotenv(env)
+    assert os.environ["HF_TOKEN"] == "hf_새것"
+    assert "HF_TOKEN" in capsys.readouterr().err        # 조용히 고르지 않는다
+
+
+def test_셸이_이긴다는_규칙은_그대로다(tmp_path, monkeypatch):
+    env = tmp_path / ".env"
+    env.write_text("HF_TOKEN=hf_파일\n", encoding="utf-8")
+    monkeypatch.setenv("HF_TOKEN", "hf_셸")
+    paths.load_dotenv(env)
+    assert os.environ["HF_TOKEN"] == "hf_셸"

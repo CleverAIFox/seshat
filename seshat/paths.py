@@ -24,17 +24,33 @@ TIERS = ("raw", "runs", "cache")
 
 
 def load_dotenv(path: Path | None = None) -> None:
-    """저장소 루트 `.env` 를 환경에 얹는다. 셸에 이미 있는 키는 안 덮는다. 빈 값은 미설정이다."""
+    """저장소 루트 `.env` 를 환경에 얹는다. 셸에 이미 있는 키는 안 덮는다. 빈 값은 미설정이다.
+
+    ★ **같은 열쇠가 두 번 있으면 나중 줄이 이기고, 그 사실을 말한다**(DECISIONS §73). 종전에는 앞줄이
+      조용히 이겼다 — 셸 로더(`tools/lib/env.sh`)는 소싱이라 나중 줄이 이기므로 **같은 파일을 두 도구가
+      반대로 읽었다.** 2026-09-25 폐기한 HF 토큰이 `.env` 첫 줄에 남아 있었고, 새 토큰을 `>>` 로 덧붙인
+      뒤에도 파이썬 도구만 죽은 토큰을 집어 401 을 냈다.
+    ★ 값이 틀린 것도 파일이 깨진 것도 아니다. **조용히 틀린 값이 쓰이는 것**이 가장 찾기 어렵다 — 말한다.
+    """
     p = path or ROOT / ".env"
     if not p.exists():
         return
+    seen: dict[str, str] = {}
+    dup: list[str] = []
     for raw in p.read_text(encoding="utf-8").splitlines():
         line = raw.strip()
         if not line or line.startswith("#"):
             continue
         key, sep, val = line.removeprefix("export ").partition("=")
         key, val = key.strip(), val.strip().strip('"').strip("'")
-        if sep and key and val and key not in os.environ:
+        if sep and key and val:
+            if key in seen:
+                dup.append(key)
+            seen[key] = val                       # 나중 줄이 이긴다 — 셸 소싱과 같게
+    for key in sorted(set(dup)):
+        print(f"  ※ .env 에 {key} 가 여러 줄 있다 — 마지막 줄을 쓴다({p})", file=sys.stderr)
+    for key, val in seen.items():
+        if key not in os.environ:
             os.environ[key] = val
 
 
