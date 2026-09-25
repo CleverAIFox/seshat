@@ -89,8 +89,21 @@ def is_hapsyo(ko: str) -> bool:
 
 
 def load(path: str) -> list[dict]:
+    """평가셋을 읽는다. 없으면 **카탈로그가 아는 것을 말한다**(DECISIONS §72).
+
+    ★ 셋은 대개 커밋하지 않는다 — 받거나(`tools/fetch_flores.py`) 다시 만든다(`tools/make_probes.py`).
+      그 자리를 `data/catalog.toml` 의 `how` 가 이미 들고 있었는데 아무도 묻지 않았다.
+    """
+    p = pathlib.Path(path)
+    if not p.exists():
+        from . import catalog
+        entries = catalog.load()
+        e = catalog.match(entries, "repo", p.as_posix())
+        how = f"\n    얻는다 : {e['how']}" if e and e.get("how") and e["how"] != "사람" else ""
+        who = f"({e['id']} · {e['origin']})" if e else "(카탈로그 밖이다)"
+        raise SystemExit(f"평가셋이 없다 — {path} {who}{how}")
     rows = []
-    for line in pathlib.Path(path).read_text(encoding="utf-8").splitlines():
+    for line in p.read_text(encoding="utf-8").splitlines():
         if line.strip() and not line.lstrip().startswith("//"):
             r = json.loads(line)
             if not r.get("meta"):
