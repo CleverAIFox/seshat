@@ -47,9 +47,28 @@ def aws_translate(texts: list[str], terms: dict[str, str], client=None) -> list[
         client = boto3.client("translate", region_name=region)
     out = []
     for t in texts:
-        r = client.translate_text(Text=t, SourceLanguageCode="en", TargetLanguageCode="ko")
+        try:
+            r = client.translate_text(Text=t, SourceLanguageCode="en", TargetLanguageCode="ko")
+        except Exception as e:                    # noqa: BLE001 — botocore 예외를 이름으로 가른다
+            raise _aws_말(e) from None
         out.append(r["TranslatedText"])
     return out
+
+
+# ★ 자격증명이 만료되면 botocore 가 40 줄을 뱉는다. 두 번째다(2026-09-23 · 09-25) — 도구가 말한다(§75)
+_만료 = ("LoginRefreshRequired", "UnauthorizedSSOTokenError", "TokenRetrievalError",
+         "SSOTokenLoadError", "ExpiredTokenException")
+
+
+def _aws_말(e: Exception) -> SystemExit:
+    import os
+    prof = os.environ.get("AWS_PROFILE", "")
+    꼬리 = f" --profile {prof}" if prof else ""
+    if type(e).__name__ in _만료 or "expired" in str(e).lower():
+        return SystemExit(f"AWS 자격증명이 만료됐다 — 다시 들어간다\n"
+                          f"    친다 : aws login{꼬리}\n"
+                          f"    까닭 : {type(e).__name__}")
+    return SystemExit(f"AWS Translate 가 거절했다 — {type(e).__name__}\n    {e}")
 
 
 # ── 로컬 모델 — ollama ───────────────────────────────────────

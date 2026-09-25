@@ -322,3 +322,42 @@ def test_boto3_가_없으면_그룹을_말한다(monkeypatch):
     with pytest.raises(SystemExit) as e:
         b.aws_translate(["x"], {})
     assert "--group aws" in str(e.value)
+
+
+def test_자격증명이_만료되면_들어가는_법을_말한다(monkeypatch):
+    """botocore 는 40 줄을 뱉고 무엇을 쳐야 하는지 말하지 않는다 — 두 번째다(DECISIONS §75)."""
+    import pytest
+
+    from seshat import backends as b
+    monkeypatch.setenv("AWS_REGION", "ap-northeast-2")
+    monkeypatch.setenv("AWS_PROFILE", "fox")
+
+    class LoginRefreshRequired(Exception):
+        pass
+
+    class 가짜:
+        def translate_text(self, **_):
+            raise LoginRefreshRequired("Your session has expired")
+
+    with pytest.raises(SystemExit) as e:
+        b.aws_translate(["x"], {}, client=가짜())
+    말 = str(e.value)
+    assert "aws login --profile fox" in 말
+
+
+def test_다른_거절은_그대로_이름을_보인다(monkeypatch):
+    import pytest
+
+    from seshat import backends as b
+    monkeypatch.setenv("AWS_REGION", "ap-northeast-2")
+
+    class UnsupportedLanguagePairException(Exception):
+        pass
+
+    class 가짜:
+        def translate_text(self, **_):
+            raise UnsupportedLanguagePairException("en→kr 는 없다")
+
+    with pytest.raises(SystemExit) as e:
+        b.aws_translate(["x"], {}, client=가짜())
+    assert "UnsupportedLanguagePairException" in str(e.value)
