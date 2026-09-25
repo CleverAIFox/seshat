@@ -149,9 +149,12 @@ def term(rows: list[dict], outs: list[str]) -> dict[str, float | None]:
             off += hit_off
             ok += hit
             bad += (not hit) and any(k in o for k in s.node.get("bad_ko", []))
+    # ★ **분모를 함께 싣는다**(DECISIONS §70). 비율만 있으면 사람이 약분해서 분모를 짐작한다 —
+    #   2026-09-25 `0.846` 을 보고 분모를 78 이라 읽었는데 실제는 132/156 이었다. 사전이 넓어지면
+    #   분모가 움직이므로, 분모를 모르면 두 숫자가 같은 것을 재는지조차 알 수 없다.
     if not total:
-        return {"term": None, "term_off": None, "term_bad": None}
-    return {"term": ok / total, "term_off": off / total, "term_bad": bad / total}
+        return {"term": None, "term_off": None, "term_bad": None, "term_n": 0}
+    return {"term": ok / total, "term_off": off / total, "term_bad": bad / total, "term_n": total}
 
 
 def score(rows: list[dict], outs: list[str]) -> dict:

@@ -87,18 +87,29 @@ def test_조사를_끝소리로_잰다(out, want):
 
 
 def test_개념이_번역에_남았는지_잰다():
-    rows = [{"src": "The role must be encrypted."}]
-    assert ev.term(rows, ["역할은 암호화되어야 합니다."]) == {"term": 1.0, "term_off": 1.0, "term_bad": 0.0}
+    # ★ 개념이 하나만 든 원문을 쓴다. `encrypted` 도 이제 개념이다(DECISIONS §69) — 둘이 들면
+    #   무엇이 0.5 를 만들었는지 이 시험이 말해 주지 못한다.
+    rows = [{"src": "The role is ready."}]
+    assert ev.term(rows, ["역할은 준비되었습니다."]) == {"term": 1.0, "term_off": 1.0, "term_bad": 0.0, "term_n": 1}
     # 허용 표기(음차)는 뜻을 지킨 것으로 세고 공식 표기로는 세지 않는다(DECISIONS §25)
-    assert ev.term(rows, ["롤은 암호화되어야 합니다."]) == {"term": 1.0, "term_off": 0.0, "term_bad": 0.0}
-    assert ev.term(rows, ["데이터는 암호화되어야 합니다."]) == {"term": 0.0, "term_off": 0.0, "term_bad": 0.0}
+    assert ev.term(rows, ["롤은 준비되었습니다."]) == {"term": 1.0, "term_off": 0.0, "term_bad": 0.0, "term_n": 1}
+    assert ev.term(rows, ["데이터는 준비되었습니다."]) == {"term": 0.0, "term_off": 0.0, "term_bad": 0.0, "term_n": 1}
 
 
 def test_관측된_오역을_따로_센다():
     rows = [{"src": "Increase the quota."}]
-    assert ev.term(rows, ["쿼리 한도를 늘립니다."]) == {"term": 0.0, "term_off": 0.0, "term_bad": 1.0}
+    assert ev.term(rows, ["쿼리 한도를 늘립니다."]) == {"term": 0.0, "term_off": 0.0, "term_bad": 1.0, "term_n": 1}
     # 맞는 표기가 함께 있으면 오역이 아니다 — 병기한 줄을 벌주지 않는다
-    assert ev.term(rows, ["할당량(쿼리 한도)을 늘립니다."]) == {"term": 1.0, "term_off": 1.0, "term_bad": 0.0}
+    assert ev.term(rows, ["할당량(쿼리 한도)을 늘립니다."]) == {"term": 1.0, "term_off": 1.0, "term_bad": 0.0,
+                                                          "term_n": 1}
+
+
+def test_분모를_결과가_든다():
+    """비율만 있으면 사람이 약분해서 분모를 짐작한다 — 2026-09-25 에 실제로 틀렸다(DECISIONS §70)."""
+    rows = [{"src": "The catalog is ingested by the cluster."}]
+    got = ev.term(rows, ["카탈로그는 클러스터에 의해 수집됩니다."])
+    assert got["term_n"] == 3                       # catalog · ingestion · cluster
+    assert ev.term([], [])["term_n"] == 0
 
 
 def test_머리줄이_온톨로지_해시를_든다():
