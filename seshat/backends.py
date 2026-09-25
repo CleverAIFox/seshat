@@ -248,6 +248,11 @@ _qwen4 = ollama_chat("qwen3:4b", GENERIC_SYSTEM + NO_THINK, {"think": False}, NO
 #   증류도 되고, 학생은 약관을 상속한다(§44).
 _gemma3 = ollama_chat("gemma3:4b", GENERIC_SYSTEM)
 # 고치는 판 — 배선은 같고 복호화만 다르다. 모델도 체계 지시도 그대로여야 무엇이 효과인지 가른다
+# ★ 12B — 6GB 카드에는 안 올라간다. ollama 가 남는 층을 CPU 로 내린다(느리다). 결과 머리줄의
+#   `gpu_share` 가 얼마나 올라갔는지 적는다 — 속도를 읽을 때 그 숫자와 같이 본다(DECISIONS §79)
+_gemma3_12b = ollama_chat("gemma3:12b", GENERIC_SYSTEM)
+_gemma3_12b_repair = (ollama_chat("gemma3:12b", GENERIC_SYSTEM),
+                      ollama_chat("gemma3:12b", GENERIC_SYSTEM, {"options": REPAIR}))
 _gemma3_repair = (ollama_chat("gemma3:4b", GENERIC_SYSTEM),                    # 원문 · 온도 0
                   ollama_chat("gemma3:4b", GENERIC_SYSTEM, {"options": REPAIR}))  # 원문 · 온도 0.4
 _tg_hapsyo = ollama("translategemma:4b", TRANSLATEGEMMA_PROMPT_HAPSYO)
@@ -271,6 +276,11 @@ REGISTRY: dict[str, tuple[Backend, str]] = {
     #   번역 품질이 아니다 — 정답 문장이 있는 셋에서 문체를 강제하면 맞는 문장을 정답에서 멀어지게 한다
     "gemma3-4b": (_gemma3, "gemma3:4b"),
     "gemma3-4b+ph+retry": (with_placeholders(_gemma3, repair=_gemma3_repair), "gemma3:4b+ph+retry"),
+    "gemma3-12b": (_gemma3_12b, "gemma3:12b"),
+    "gemma3-12b+ph+retry": (with_placeholders(_gemma3_12b, repair=_gemma3_12b_repair), "gemma3:12b+ph+retry"),
+    "gemma3-12b+ph+retry+endings+terms": (
+        with_terms(with_endings(with_placeholders(_gemma3_12b, repair=_gemma3_12b_repair))),
+        "gemma3:12b+ph+retry+endings+terms"),
     "gemma3-4b+ph+endings": (with_endings(with_placeholders(_gemma3)), "gemma3:4b+ph+endings"),
     "gemma3-4b+ph+endings+terms": (with_terms(with_endings(with_placeholders(_gemma3))),
                                    "gemma3:4b+ph+endings+terms"),
@@ -291,11 +301,14 @@ OLLAMA_OF.update({"translategemma-4b": "translategemma:4b", "translategemma-4b+p
                   "gemma3-4b+ph+endings": "gemma3:4b",
                   "gemma3-4b+ph+endings+terms": "gemma3:4b",
                   "gemma3-4b+ph+retry+endings+terms": "gemma3:4b",
-                  "gemma3-4b": "gemma3:4b", "gemma3-4b+ph+retry": "gemma3:4b"})
+                  "gemma3-4b": "gemma3:4b", "gemma3-4b+ph+retry": "gemma3:4b",
+                  "gemma3-12b": "gemma3:12b", "gemma3-12b+ph+retry": "gemma3:12b",
+                  "gemma3-12b+ph+retry+endings+terms": "gemma3:12b"})
 
 # ★ **어느 ollama 모델이 어느 가중치인가.** `from_pretrained` 를 거치지 않는 호출은 라이선스 검사의
 #   정규식이 보지 못한다. 선언을 검사가 대장과 대조한다(DECISIONS §14).
 WEIGHTS_OF_MODEL: dict[str, str] = {
+    "gemma3:12b": "google/gemma-3-12b-it",
     "translategemma:4b": "google/translategemma-4b-it",
     "exaone3.5:7.8b": "LGAI-EXAONE/EXAONE-3.5-7.8B-Instruct",
     "qwen3:8b": "Qwen/Qwen3-8B",
@@ -312,7 +325,8 @@ WEIGHTS: dict[str, str] = {arm: WEIGHTS_OF_MODEL[m] for arm, m in OLLAMA_OF.item
 DECODING_OF: dict[str, dict] = {arm: DECODING for arm in OLLAMA_OF}
 
 # ★ 고치는 판을 쓰는 팔은 그 조건도 머리줄에 싣는다 — 안 적으면 되풀이할 수 없다(DECISIONS §57)
-REPAIR_ARMS.update({"gemma3-4b+ph+retry+endings+terms", "gemma3-4b+ph+retry"})
+REPAIR_ARMS.update({"gemma3-4b+ph+retry+endings+terms", "gemma3-4b+ph+retry",
+                    "gemma3-12b+ph+retry", "gemma3-12b+ph+retry+endings+terms"})
 for _arm in REPAIR_ARMS:
     DECODING_OF[_arm] = {**DECODING, "repair": REPAIR}
 

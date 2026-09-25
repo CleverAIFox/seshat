@@ -83,3 +83,13 @@ def test_상업_불가_모델은_서빙_후보가_아니다():
     name = "exaone-3.5-7.8b+ph+endings"
     assert name in b.REGISTRY and name in b.BASELINE_ONLY
     assert b.WEIGHTS[name] == "LGAI-EXAONE/EXAONE-3.5-7.8B-Instruct"
+
+
+def test_12b_후보가_대장과_등록부에_함께_있다():
+    """체급을 올리는 후보도 상업 · 교사가 열려 있어야 쓴다(DECISIONS §79)."""
+    from seshat import backends as b
+    from seshat import licenses as lic
+    w = b.WEIGHTS["gemma3-12b+ph+retry"]
+    assert w == "google/gemma-3-12b-it"
+    assert lic.LEDGER[w][1] == "yes" and lic.can_teach(w)
+    assert b.WEIGHTS["gemma3-12b"] == b.WEIGHTS["gemma3-4b"].replace("4b", "12b")

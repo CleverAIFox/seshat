@@ -32,6 +32,8 @@ LEDGER: dict[str, tuple[str, str, str, str]] = {
     # ★ TranslateGemma 와 같은 약관이다 — 교사로 쓸 수 있고 학생이 Gemma 약관을 상속한다(§44).
     "google/gemma-3-4b-it": ("Gemma Terms of Use", "yes", "yes",
                              "ai.google.dev/gemma/terms · ollama.com/library/gemma3 · 2026-09-23"),
+    "google/gemma-3-12b-it": ("Gemma Terms of Use", "yes", "yes",
+                              "ai.google.dev/gemma/terms · ollama.com/library/gemma3 · 2026-09-25"),
 }
 
 VALID_COMMERCIAL = {"yes", "no", "unknown"}
