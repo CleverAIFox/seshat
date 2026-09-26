@@ -251,3 +251,13 @@ def test_섭취는_수집으로_돌아온다():
     got, hits = terms.fix_terms(onto, "카탈로그는 Kinesis에 의해 섭취되고 저장됩니다.",
                                 src="The catalog is ingested by Kinesis and stored in Athena.")
     assert "수집" in got and "섭취" not in got and hits
+
+
+def test_흔한_말은_그_개념을_말하는_줄에서만_바뀐다():
+    """`제어` 는 throttling 의 오역이자 control 의 바른 번역이다 — 문맥 문이 지킨다(DECISIONS §67 · §86)."""
+    onto = ontology.load()
+    ko = "권한을 제어하는 정책입니다."
+    assert terms.fix_terms(onto, ko, src="A policy that controls permissions.")[0] == ko
+    고침, hits = terms.fix_terms(onto, "요청을 제어하면 늘려야 합니다.",
+                                 src="If the service throttles the requests, increase it.")
+    assert "스로틀링" in 고침 and hits
