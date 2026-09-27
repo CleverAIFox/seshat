@@ -12,6 +12,7 @@
 note = "서빙 후보 — 이 기계에서 도는 4B"
 set = "data/domain/d001.jsonl"
 set_sha256 = ""                      # 표시를 든 d001 로 다시 만든 판. --update 가 박는다
+onto_sha256 = ""                     # 사전이 바뀌면 막지 않고 말한다(DECISIONS §32 · §96)
 arm = "gemma3-4b+ph+retry+endings+terms"
 run = "H-052-rescore-H-045-4b-d001-20260927-140903"
 commit = ""

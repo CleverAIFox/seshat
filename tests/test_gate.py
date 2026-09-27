@@ -102,3 +102,63 @@ def test_머리줄_없는_파일은_안_받는다(tmp_path):
     p.write_text(json.dumps({"id": "a", "out": "x"}) + "\n", encoding="utf-8")
     with pytest.raises(SystemExit, match="머리줄이 없다"):
         G.head_of(str(p))
+
+
+def test_처음_박는_판은_막지_않는다():
+    """`--update` 가 해시를 박으러 왔는데 해시가 없다고 막으면 박을 길이 없다(DECISIONS §132)."""
+    빈 = {**REC, "set_sha256": ""}
+    막, 말 = G.check(빈, 머리(term_off=0.8), pin=True)
+    assert 막 == [] and 말 and "박는다" in 말[0]
+    막2, _ = G.check(빈, 머리(term_off=0.8), pin=False)
+    assert 막2                                   # 그냥 보기만 할 때는 여전히 막는다
+
+
+def test_처음_박을_때는_있는_값을_그대로_쓴다():
+    """어느 셋의 값인지 몰랐으므로 「올랐다 · 내렸다」 를 말할 수 없다. 견주기는 다음 판부터다."""
+    빈 = {**REC, "set_sha256": ""}
+    assert G.올릴_것(빈, 머리(term_off=0.10, lit=0.10), pin=True) == {"term_off": 0.1, "lit": 0.1}
+    assert G.올릴_것(REC, 머리(term_off=0.10, lit=0.10), pin=True) == {}   # 이미 박혔으면 최고만
+
+
+def test_사전_해시도_같이_박는다(tmp_path, monkeypatch):
+    """안 박으면 §96 경고(사전이 바뀌었다)가 영영 안 켜진다."""
+    p = tmp_path / "sb.toml"
+    p.write_text((ROOT / "data/scoreboard.toml").read_text(encoding="utf-8"), encoding="utf-8")
+    monkeypatch.setattr(G.catalog, "gate", lambda *a, **k: None)
+    rec = G.load(p)["record"][0]
+    head = 머리(backend=rec["arm"], set_sha256="새셋", onto_sha256="새사전", term_off=0.9)
+    G._쓴다("runs/x.jsonl", rec, head, {"term_off": 0.9}, p)
+    assert G.load(p)["record"][0]["onto_sha256"] == "새사전"
+
+
+def test_처음부터_끝까지_한_번_돈다(tmp_path, monkeypatch, capsys):
+    """**도구가 실제로 도는 길을 밟는다**(DECISIONS §128). 조각 시험만으로는 §132 를 못 잡았다."""
+    sb = tmp_path / "sb.toml"
+    sb.write_text((ROOT / "data/scoreboard.toml").read_text(encoding="utf-8"), encoding="utf-8")
+    monkeypatch.setattr(G, "PATH", sb)
+    monkeypatch.setattr(G.catalog, "gate", lambda *a, **k: None)
+    arm = G.load(sb)["record"][0]["arm"]
+    run = tmp_path / "H-999-x.jsonl"
+    run.write_text("\n".join(json.dumps(x, ensure_ascii=False) for x in (
+        {"meta": True, "backend": arm, "set_sha256": "셋1", "onto_sha256": "사전1",
+         "term_off": 0.8858, "lit": 0.803, "keep": 0.9853},
+        {"id": "a", "src": "x", "out": "y"})) + "\n", encoding="utf-8")
+
+    assert G.main([str(run), "--update"]) == 0           # ① 처음 박는다
+    rec = G.load(sb)["record"][0]
+    assert rec["set_sha256"] == "셋1" and rec["run"] == "H-999-x"
+
+    assert G.main([str(run)]) == 0                       # ② 같은 값이면 통과
+    좋 = tmp_path / "H-999-y.jsonl"
+    좋.write_text(json.dumps({"meta": True, "backend": arm, "set_sha256": "셋1", "onto_sha256": "사전1",
+                              "term_off": 0.95, "lit": 0.90, "keep": 0.99}, ensure_ascii=False) + "\n",
+                  encoding="utf-8")
+    assert G.main([str(좋), "--update"]) == 0            # ③ 오르면 기록이 바뀐다
+    assert G.load(sb)["record"][0]["term_off"] == 0.95
+
+    나 = tmp_path / "H-999-z.jsonl"
+    나.write_text(json.dumps({"meta": True, "backend": arm, "set_sha256": "셋1", "onto_sha256": "사전1",
+                              "term_off": 0.80, "lit": 0.90, "keep": 0.99}, ensure_ascii=False) + "\n",
+                  encoding="utf-8")
+    assert G.main([str(나)]) == 1                        # ④ 떨어지면 막는다
+    assert G.load(sb)["record"][0]["term_off"] == 0.95   # 막힌 값은 기록에 안 남는다

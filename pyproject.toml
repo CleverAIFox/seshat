@@ -1,6 +1,6 @@
 [project]
 name = "seshat"
-version = "0.2.2"
+version = "0.2.3"
 description = "thoth 에 끼울 영한 번역 모델 — 사전학습 모델을 고르고 좁힌다"
 requires-python = ">=3.12"
 # ★ **기본 의존성은 0 이다.** 서버 · 평가 · 계약 검사가 표준 라이브러리로 선다.

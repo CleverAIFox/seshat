@@ -28,8 +28,11 @@ from seshat import catalog  # noqa: E402
 PATH = ROOT / "data/scoreboard.toml"
 
 
-def load(path: pathlib.Path = PATH) -> dict:
-    return tomllib.loads(path.read_text(encoding="utf-8"))
+def load(path: pathlib.Path | None = None) -> dict:
+    """★ **기본값을 `PATH` 로 묶지 않는다.** 기본 인자는 import 할 때 한 번 값이 박히므로,
+    시험이 `PATH` 를 바꿔도 이 함수는 옛 자리를 본다 — 2026-09-27 그래서 시험이 **진짜 기록판을
+    덮어썼다**(DECISIONS §132). 자리는 부를 때 고른다."""
+    return tomllib.loads((path or PATH).read_text(encoding="utf-8"))
 
 
 def head_of(run: str) -> dict:
@@ -57,11 +60,16 @@ def 고른다(board: dict, head: dict, arm: str | None, 꼭: bool = False) -> di
     return 맞[0] if 맞 else None
 
 
-def check(rec: dict, head: dict) -> tuple[list[str], list[str]]:
-    """(막는 것, 말만 하는 것). **비었으면 통과다.**"""
+def check(rec: dict, head: dict, pin: bool = False) -> tuple[list[str], list[str]]:
+    """(막는 것, 말만 하는 것). **비었으면 통과다.**
+
+    ★ `pin` 은 `--update` 로 부를 때다. 셋 해시가 아직 없는 기록은 **박으러 온 것**이지 어긴 것이
+      아니다 — 막으면 박을 길이 없다(닭과 달걀). 2026-09-27 첫 실행이 여기서 막혔다.
+    """
     막, 말 = [], []
     if not rec.get("set_sha256"):
-        막.append("기록에 셋 해시가 없다 — `--update` 로 박는다. 짐작으로 견주지 않는다")
+        (말 if pin else 막).append(
+            "기록에 셋 해시가 없다" + (" — 이번 실행으로 박는다" if pin else " — `--update` 로 박는다. 짐작으로 견주지 않는다"))
         return 막, 말
     if head.get("set_sha256") != rec["set_sha256"]:
         막.append(f"셋이 다르다 — 기록 {rec['set_sha256']} · 이번 {head.get('set_sha256')}\n"
@@ -86,25 +94,31 @@ def check(rec: dict, head: dict) -> tuple[list[str], list[str]]:
     return 막, 말
 
 
-def 올릴_것(rec: dict, head: dict) -> dict[str, float]:
-    """올라간 지표만. **떨어진 것을 기록판에 쓰지 않는다** — 기록판은 최고를 든다."""
+def 올릴_것(rec: dict, head: dict, pin: bool = False) -> dict[str, float]:
+    """올라간 지표만. **떨어진 것을 기록판에 쓰지 않는다** — 기록판은 최고를 든다.
+
+    ★ `pin` — 셋 해시를 처음 박는 판에서는 **있는 값을 그대로 적는다.** 그 기록은 아직 어느 셋의
+      것인지 몰랐으므로 「올랐다 · 내렸다」 를 말할 수 없다. 견주기는 다음 판부터다.
+    """
+    처음 = pin and not rec.get("set_sha256")
     out = {}
     for m in (*rec.get("guard", []), "term_off", "lit", "keep", "style"):
         새 = head.get(m)
-        if isinstance(새, (int, float)) and (rec.get(m) is None or 새 > rec[m]):
+        if isinstance(새, (int, float)) and (처음 or rec.get(m) is None or 새 > rec[m]):
             out[m] = round(float(새), 4)
     return out
 
 
-def _쓴다(run: str, rec: dict, head: dict, 오른: dict, path: pathlib.Path = PATH) -> None:
+def _쓴다(run: str, rec: dict, head: dict, 오른: dict, path: pathlib.Path | None = None) -> None:
     """**한 줄씩 고쳐 쓴다.** TOML 을 다시 찍으면 주석이 사라지는데, 이 파일은 주석이 절반이다."""
+    path = path or PATH          # import 때 안 묶는다 — 위의 `load` 와 같은 까닭
     catalog.gate(path)
     줄 = path.read_text(encoding="utf-8").splitlines()
     시작 = next(i for i, x in enumerate(줄) if x.strip() == "[[record]]"
                 and any(f'arm = "{rec["arm"]}"' == y.strip() for y in 줄[i:i + 12]))
     끝 = next((i for i in range(시작 + 1, len(줄)) if 줄[i].startswith("[[")), len(줄))
     새값 = {**오른, "set_sha256": head.get("set_sha256", ""), "commit": head.get("commit", ""),
-            "run": pathlib.Path(run).stem}
+            "onto_sha256": head.get("onto_sha256", ""), "run": pathlib.Path(run).stem}
     for i in range(시작, 끝):
         k = 줄[i].split("=", 1)[0].strip()
         if k in 새값:
@@ -125,10 +139,10 @@ def main(argv: list[str] | None = None) -> int:
     board = load()
     if a.show or not a.run:
         for r in board.get("record", []):
-            print(f"  최고  {r['arm']:<40} {r.get("note", "")}")
+            print(f"  최고  {r['arm']:<40} {r.get('note', '')}")
             print(f"        {' · '.join(f'{m} {r[m]}' for m in r.get('guard', []) if m in r)}  ({r.get('run', '?')})")
         for t in board.get("target", []):
-            print(f"  선    {t['arm']:<40} {t.get("note", "")}")
+            print(f"  선    {t['arm']:<40} {t.get('note', '')}")
             print(f"        term_off {t.get('term_off')} · lit {t.get('lit')}  ({t.get('run', '?')})")
         return 0
 
@@ -137,7 +151,7 @@ def main(argv: list[str] | None = None) -> int:
     if rec is None:
         print(f"  기록판에 없는 팔 — 문이 볼 것이 없다 ({head.get('backend') or head.get('model')})")
         return 0
-    막, 말 = check(rec, head)
+    막, 말 = check(rec, head, pin=a.update)
     for x in 말:
         print(f"  ※ {x}")
     for x in 막:
@@ -145,7 +159,7 @@ def main(argv: list[str] | None = None) -> int:
     if 막:
         print(f"\n  문이 막았다 — {pathlib.Path(a.run).name}", file=sys.stderr)
         return 1
-    오른 = 올릴_것(rec, head)
+    오른 = 올릴_것(rec, head, pin=a.update)
     print(f"  통과 — {' · '.join(f'{m} {head.get(m)}' for m in rec.get('guard', []))}")
     for t in board.get("target", []):
         if t.get("set") == rec.get("set"):
