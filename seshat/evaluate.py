@@ -348,7 +348,35 @@ def conditions(a, rows: list[dict], 코드: dict | None = None) -> dict:
         out["ollama"] = ollama_placement()
     if (a.backend or "") in backends.REPAIR_ARMS:   # 처치가 일했는지를 결과가 말한다(DECISIONS §60)
         out["repair"] = dict(backends.REPAIR_STATS)
+    if a.url:                                       # 서버가 스스로 말하는 조건(DECISIONS §115)
+        out["server"] = server_health(a.url, a.token, a.thoth_token)
     return out
+
+
+def server_health(url: str, token: str = "", thoth_token: str = "") -> dict | None:
+    """서버가 스스로 말하는 조건. **`--url` 실행은 이것이 없으면 조건 칸이 빈다**(DECISIONS §115).
+
+    ★ 2026-09-27 H-050 의 결과 파일이 `backend: null` · `weights: null` 이었다. thoth 배포본을 쟀는데
+      **어느 엔진이 낸 수인지 파일이 모른다.** §57 은 「조건을 적지 않은 측정은 재현되지 않는다」 고
+      적어 놓고, `--backend` 쪽만 조건을 실었다.
+    ★ **점수를 바꾸지 않는다.** 조건을 적는 것과 재는 자를 바꾸는 것은 다른 일이다(DECISIONS §96 의 범위).
+    ★ 못 물으면 `None` 이다 — 0 이 아니라 「못 쟀다」 로 남는다.
+    """
+    import urllib.error
+    import urllib.request
+    headers = {}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    if thoth_token:
+        headers["X-Thoth-Token"] = thoth_token
+    req = urllib.request.Request(url.rstrip("/") + "/health", headers=headers)
+    try:
+        with urllib.request.urlopen(req, timeout=10) as r:
+            got = json.loads(r.read())
+    except (OSError, ValueError):
+        return None
+    # 상한 잔량은 잰 시각의 형편이지 재현 조건이 아니다 — 뺀다
+    return {k: v for k, v in got.items() if k not in ("chars_used", "chars_remaining")} or None
 
 
 def ollama_placement() -> dict | None:

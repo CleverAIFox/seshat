@@ -1,6 +1,7 @@
 """사람이 줄마다 내리는 판정 — 눈가림으로 받고 다시 붙인다(DECISIONS §98 · H-046).
 
   python3 tools/labels.py make --set data/domain/d001.jsonl --a <A결과> --b <B결과> --n 60
+  python3 tools/labels.py make --set … --arm 4b=<결과> --arm 12b=<결과> --arm nova=<결과>   # 팔 여럿
   # → /tmp/labels-<이름>.tsv (채점표) · labels/<이름>.key.jsonl (열쇠 · git 밖)
   python3 tools/labels.py read --name d001-60 --judge claude    # 채운 표를 읽어 판정과 비율을 낸다
   python3 tools/labels.py agree --name d001-60 --judges claude,gemini   # 판정자 둘이 얼마나 맞나
@@ -73,24 +74,31 @@ def tag(name: str, rid: str, arm: str) -> str:
     return hashlib.sha256(f"{name}|{rid}|{arm}".encode()).hexdigest()[:8]
 
 
-def make(a: pathlib.Path, b: pathlib.Path, rows: list[dict], name: str, n: int, seed: int) -> tuple[str, list[dict]]:
-    ha, oa = read_run(a)
-    hb, ob = read_run(b)
-    if ha.get("set_sha256") != hb.get("set_sha256"):
-        raise SystemExit(f"두 결과가 다른 셋이다 — {ha.get('set_sha256')} · {hb.get('set_sha256')}")
+def make(arms: dict[str, pathlib.Path], rows: list[dict], name: str, n: int, seed: int) -> tuple[str, list[dict]]:
+    """★ **팔이 둘일 이유가 없다**(DECISIONS §115). 기준선을 같은 표에 얹으면 세 수가 한 자에서 나온다 —
+    따로 재고 나중에 견주면 표본도 판정자도 달라져 있다."""
+    got, shas = {}, {}
+    for arm, path in arms.items():
+        h, o = read_run(path)
+        got[arm], shas[arm] = o, h.get("set_sha256")
+    if len(set(shas.values())) != 1:
+        raise SystemExit("팔들이 다른 셋이다 — " + " · ".join(f"{a} {s}" for a, s in sorted(shas.items())))
     src = {r["id"]: r["src"] for r in rows}
-    both = sorted(set(oa) & set(ob) & set(src))
+    common = set(src)
+    for o in got.values():
+        common &= set(o)
+    both = sorted(common)
     if len(both) < n:
-        raise SystemExit(f"두 팔에 다 있는 줄이 {len(both)} 뿐인데 {n} 을 달라고 했다")
+        raise SystemExit(f"팔 {len(arms)} 에 다 있는 줄이 {len(both)} 뿐인데 {n} 을 달라고 했다")
     rng = random.Random(seed)
     picked = sorted(rng.sample(both, n))          # ★ 줄을 먼저 뽑는다 — 출력을 보기 전에
     sheet, key = [], []
     for rid in picked:
-        for arm, out in (("a", oa[rid]), ("b", ob[rid])):
+        for arm in arms:
             t = tag(name, rid, arm)
-            sheet.append((t, src[rid], out))
+            sheet.append((t, src[rid], got[arm][rid]))
             key.append({"tag": t, "id": rid, "arm": arm})
-    rng.shuffle(sheet)                            # ★ 두 팔이 나란히 서지 않게
+    rng.shuffle(sheet)                            # ★ 같은 줄의 팔들이 나란히 서지 않게
     lines = ["\t".join(HEAD)] + ["\t".join([t, s.replace("\t", " "), o.replace("\t", " "), ""]) for t, s, o in sheet]
     return "\n".join(lines) + "\n", key
 
@@ -188,17 +196,15 @@ def read(name: str, sheet: pathlib.Path, judge: str = "claude") -> int:
                     encoding="utf-8")
     print(f"  {_짧게(path)}  {len(got)}줄")
     print(f"  판정자 {judge}")
-    for arm in ("a", "b"):
+    for arm in sorted({r["arm"] for r in got}):
         mine = [r for r in got if r["arm"] == arm]
-        if not mine:
-            continue
         tally = {v: sum(1 for r in mine if r["verdict"] == v) for v in VERDICTS}
         ok = tally["맞다"] / len(mine)
         print(f"  {arm}  뜻이 맞다 {ok:.3f}  ({' · '.join(f'{v} {tally[v]}' for v in VERDICTS)})")
     return 0
 
 
-def agree(name: str, judges: list[str]) -> int:
+def agree(name: str, judges: list[str]) -> int:   # noqa: C901
     """판정자 둘의 일치. **어긋난 줄을 이름으로 든다** — 거기가 기준이 무른 자리다."""
     got = {}
     for j in judges:
@@ -232,8 +238,10 @@ def main(argv: list[str] | None = None) -> int:
     sub = ap.add_subparsers(dest="cmd", required=True)
     m = sub.add_parser("make")
     m.add_argument("--set", dest="setpath", required=True)
-    m.add_argument("--a", required=True)
-    m.add_argument("--b", required=True)
+    m.add_argument("--a", default="", help="팔 a. `--arm a=<경로>` 와 같다")
+    m.add_argument("--b", default="", help="팔 b")
+    m.add_argument("--arm", action="append", default=[], metavar="이름=경로",
+                   help="팔을 이름으로 준다. 여러 번 쓴다 — 기준선을 같은 표에 얹는다")
     m.add_argument("--name", default="")
     m.add_argument("--n", type=int, default=60)
     m.add_argument("--seed", type=int, default=31)
@@ -258,8 +266,20 @@ def main(argv: list[str] | None = None) -> int:
     if a.cmd == "read":
         return read(a.name, pathlib.Path(a.sheet or f"/tmp/labels-{a.name}.tsv"), a.judge)
 
+    arms: dict[str, pathlib.Path] = {}
+    if a.a:
+        arms["a"] = pathlib.Path(a.a)
+    if a.b:
+        arms["b"] = pathlib.Path(a.b)
+    for spec in a.arm:
+        if "=" not in spec:
+            raise SystemExit(f"--arm 은 이름=경로 다 — {spec}")
+        k, _, v = spec.partition("=")
+        arms[k.strip()] = pathlib.Path(v.strip())
+    if len(arms) < 2:
+        raise SystemExit("팔이 둘 이상이어야 한다 — --a/--b 또는 --arm 이름=경로 를 두 번 이상")
     name = a.name or f"{pathlib.Path(a.setpath).stem}-{a.n}"
-    sheet, key = make(pathlib.Path(a.a), pathlib.Path(a.b), evaluate.load(a.setpath), name, a.n, a.seed)
+    sheet, key = make(arms, evaluate.load(a.setpath), name, a.n, a.seed)
     (out_dir() / f"{name}.key.jsonl").write_text("\n".join(json.dumps(x, ensure_ascii=False) for x in key) + "\n", encoding="utf-8")
     out = pathlib.Path(f"/tmp/labels-{name}.tsv")
     out.write_text(sheet, encoding="utf-8")

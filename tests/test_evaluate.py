@@ -228,3 +228,32 @@ def test_원문에_없는_영어는_빼지_않는다():
     src = "Use Amazon S3."
     assert ev.ko_line(src, "Amazon S3를 씁니다.") is True
     assert ev.ko_line(src, "Amazon S3 is a storage service you should use.") is False
+
+
+def test_서버_조건은_잔량을_빼고_싣는다(monkeypatch):
+    """`--url` 실행이 조건 칸을 비워 두지 않는다(DECISIONS §115).
+
+    ★ 상한 잔량은 **잰 시각의 형편**이지 재현 조건이 아니다 — 같은 실행을 내일 돌리면 다른 값이고,
+      다르다고 해서 조건이 달라진 것이 아니다.
+    """
+    import io
+    import urllib.request as u
+
+    class R(io.BytesIO):
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+
+    body = json.dumps({"status": "ok", "version": "0.1.0", "engine": "bedrock", "cache": "ddb",
+                       "auth": True, "chars_used": 4680, "chars_remaining": 1995320}).encode()
+    monkeypatch.setattr(u, "urlopen", lambda *a, **k: R(body))
+    assert ev.server_health("http://어딘가") == {
+        "status": "ok", "version": "0.1.0", "engine": "bedrock", "cache": "ddb", "auth": True}
+
+
+def test_서버를_못_물으면_0_이_아니라_None(monkeypatch):
+    import urllib.request as u
+
+    def 죽는다(*a, **k):
+        raise OSError("안 열린다")
+    monkeypatch.setattr(u, "urlopen", 죽는다)
+    assert ev.server_health("http://없다") is None

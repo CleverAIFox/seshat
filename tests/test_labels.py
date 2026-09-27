@@ -21,7 +21,7 @@ def _run(tmp, arm, sha="same"):
 
 
 def test_채점표에_팔_이름이_없다(tmp_path):
-    sheet, key = L.make(_run(tmp_path, "4b"), _run(tmp_path, "12b"), ROWS, "t", 5, 31)
+    sheet, key = L.make({"a": _run(tmp_path, "4b"), "b": _run(tmp_path, "12b")}, ROWS, "t", 5, 31)
     assert "4b" not in sheet and "12b" not in sheet
     cols = [ln.split("\t") for ln in sheet.splitlines()[1:]]
     assert all(len(c) == 4 for c in cols)                      # 표 · 원문 · 번역 · 판정. 팔 칸이 없다
@@ -30,7 +30,7 @@ def test_채점표에_팔_이름이_없다(tmp_path):
 
 
 def test_두_팔이_나란히_서지_않는다(tmp_path):
-    sheet, key = L.make(_run(tmp_path, "4b"), _run(tmp_path, "12b"), ROWS, "t", 10, 31)
+    sheet, key = L.make({"a": _run(tmp_path, "4b"), "b": _run(tmp_path, "12b")}, ROWS, "t", 10, 31)
     order = [ln.split("\t")[0] for ln in sheet.splitlines()[1:]]
     by_tag = {r["tag"]: r["id"] for r in key}
     붙은쌍 = sum(by_tag[x] == by_tag[y] for x, y in zip(order, order[1:]))
@@ -39,14 +39,14 @@ def test_두_팔이_나란히_서지_않는다(tmp_path):
 
 def test_seed_가_표본을_정한다(tmp_path):
     a, b = _run(tmp_path, "4b"), _run(tmp_path, "12b")
-    ids = lambda seed: sorted({r["id"] for r in L.make(a, b, ROWS, "t", 5, seed)[1]})  # noqa: E731
+    ids = lambda seed: sorted({r["id"] for r in L.make({"a": a, "b": b}, ROWS, "t", 5, seed)[1]})  # noqa: E731
     assert ids(31) == ids(31)
     assert ids(31) != ids(32)
 
 
 def test_다른_셋이면_멈춘다(tmp_path):
     try:
-        L.make(_run(tmp_path, "4b"), _run(tmp_path, "12b", sha="다르다"), ROWS, "t", 5, 31)
+        L.make({"a": _run(tmp_path, "4b"), "b": _run(tmp_path, "12b", sha="다르다")}, ROWS, "t", 5, 31)
     except SystemExit as e:
         assert "다른 셋" in str(e)
     else:
@@ -66,7 +66,7 @@ def test_줄_id_가_없으면_거절한다(tmp_path):
 
 def test_채점표를_읽어_팔마다_비율을_낸다(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
-    sheet, key = L.make(_run(tmp_path, "4b"), _run(tmp_path, "12b"), ROWS, "t", 5, 31)
+    sheet, key = L.make({"a": _run(tmp_path, "4b"), "b": _run(tmp_path, "12b")}, ROWS, "t", 5, 31)
     (tmp_path / "t.key.jsonl").write_text("\n".join(json.dumps(x, ensure_ascii=False) for x in key) + "\n", encoding="utf-8")
     arm_of = {r["tag"]: r["arm"] for r in key}
     filled = [sheet.splitlines()[0]]
@@ -84,7 +84,7 @@ def test_채점표를_읽어_팔마다_비율을_낸다(tmp_path, monkeypatch, c
 
 def test_모르는_판정은_거절한다(tmp_path, monkeypatch):
     monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
-    sheet, key = L.make(_run(tmp_path, "4b"), _run(tmp_path, "12b"), ROWS, "t", 2, 31)
+    sheet, key = L.make({"a": _run(tmp_path, "4b"), "b": _run(tmp_path, "12b")}, ROWS, "t", 2, 31)
     (tmp_path / "t.key.jsonl").write_text("\n".join(json.dumps(x, ensure_ascii=False) for x in key) + "\n", encoding="utf-8")
     s = tmp_path / "sheet.tsv"
     s.write_text(sheet.splitlines()[0] + "\n" + sheet.splitlines()[1] + "좋음\n", encoding="utf-8")
@@ -195,3 +195,35 @@ def test_make_가_판정_순서를_찍는다(tmp_path, monkeypatch, capsys):
             "--name", "t", "--n", "5"])
     out = capsys.readouterr().out
     assert "한 번에 하나씩" in out and "§108" in out
+
+
+def test_팔이_셋이어도_된다(tmp_path):
+    """기준선을 같은 표에 얹는다 — 따로 재면 표본도 판정자도 달라진다(DECISIONS §115)."""
+    arms = {n: _run(tmp_path, n) for n in ("4b", "12b", "nova")}
+    sheet, key = L.make(arms, ROWS, "t", 5, 31)
+    assert len(key) == 15 and {r["arm"] for r in key} == {"4b", "12b", "nova"}
+    assert len(sheet.splitlines()) == 16          # 머리줄 + 15
+    for n in ("4b", "12b", "nova"):
+        assert n not in sheet                     # 눈가림은 그대로다
+
+
+def test_팔이_하나면_멈춘다(tmp_path, monkeypatch):
+    monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
+    monkeypatch.setattr(L.evaluate, "load", lambda p: ROWS)
+    try:
+        L.main(["make", "--set", "x", "--arm", f"a={_run(tmp_path, '4b')}", "--n", "5"])
+    except SystemExit as e:
+        assert "둘 이상" in str(e)
+    else:
+        raise AssertionError("팔 하나인데 통과했다")
+
+
+def test_arm_형식이_틀리면_말한다(tmp_path, monkeypatch):
+    monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
+    monkeypatch.setattr(L.evaluate, "load", lambda p: ROWS)
+    try:
+        L.main(["make", "--set", "x", "--arm", "그냥경로", "--arm", "b=x", "--n", "5"])
+    except SystemExit as e:
+        assert "이름=경로" in str(e)
+    else:
+        raise AssertionError("형식이 틀린데 통과했다")
