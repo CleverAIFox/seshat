@@ -10,6 +10,7 @@
 from __future__ import annotations
 
 import re
+import sys as _sys
 from typing import Callable
 
 Backend = Callable[[list[str], dict[str, str]], list[str]]
@@ -113,33 +114,61 @@ def _timeout() -> int:
     return int(v) if v.isdigit() and int(v) > 0 else TIMEOUT
 
 
-def _ask(req, model: str, 무엇: str = ""):
-    """ollama 에 묻고 답을 돌려준다. 꺼져 있거나 늦으면 **한 줄로** 말한다(DECISIONS §51 · §82).
+# ★ 잠깐 넘어진 것과 진짜 고장은 다르다(DECISIONS §89). 2026-09-27, 600 줄 판이 540 줄에서 터널의
+#   `Bad Gateway` 하나로 통째로 날아갔다. 20 분이 사라졌고 모델은 멀쩡했다.
+#   **시간 초과는 다시 묻지 않는다** — 그것은 느리다는 말이고, 다시 물으면 그만큼 또 기다린다(§82).
+_잠깐 = {429, 500, 502, 503, 504}
+_시도 = 3
 
-    ★ 종전에는 `URLError` 가 40줄 역추적으로 올라왔다. 무엇을 해야 하는지는 그 안에 없다 —
-      리전 때와 같다(§36). 원인을 아는 자리에서 말한다.
-    ★ 늦어서 죽을 때는 **어느 줄에서 막혔는지**를 같이 말한다. 그 줄이 유난히 긴 줄일 수도 있다.
+
+def _늦다(model: str, 초: int, 무엇: str) -> SystemExit:
+    return SystemExit(f"{model} 이 {초}초 안에 답하지 않았다\n"
+                      f"    올린다 : OLLAMA_TIMEOUT=2400 uv run python -m seshat.evaluate …\n"
+                      f"    까닭   : 카드에 다 안 올라간 모델은 느리다(`ollama ps` 의 CPU/GPU 를 본다)\n"
+                      f"    막힌 줄 : {무엇[:80]}")
+
+
+def _ask(req, model: str, 무엇: str = ""):
+    """ollama 에 묻고 답을 돌려준다. 꺼졌거나 늦으면 **한 줄로** 말한다(DECISIONS §51 · §82 · §89).
+
+    ★ 종전에는 `URLError` 가 40줄 역추적으로 올라왔다. 무엇을 해야 하는지는 그 안에 없다 — 리전 때와
+      같다(§36). 원인을 아는 자리에서 말한다.
+    ★ **일시적인 고장은 다시 묻는다** — 게이트웨이 오류 · 끊긴 연결. 세 번까지, 3 · 6 초 쉬고.
+      빌린 GPU 로 재는 길(§84)은 터널을 하나 더 지나므로 이런 일이 난다.
     """
+    import http.client
     import json as _json
+    import time
     import urllib.error
     import urllib.request
     초 = _timeout()
-    try:
-        with urllib.request.urlopen(req, timeout=초) as r:
-            return _json.loads(r.read())
-    except TimeoutError:
-        raise SystemExit(f"{model} 이 {초}초 안에 답하지 않았다\n"
-                         f"    올린다 : OLLAMA_TIMEOUT=2400 uv run python -m seshat.evaluate …\n"
-                         f"    까닭   : 카드에 다 안 올라간 모델은 느리다(`ollama ps` 의 CPU/GPU 를 본다)\n"
-                         f"    막힌 줄 : {무엇[:80]}") from None
-    except urllib.error.URLError as e:
-        if isinstance(getattr(e, "reason", None), TimeoutError):
-            raise SystemExit(f"{model} 이 {초}초 안에 답하지 않았다\n"
-                             f"    올린다 : OLLAMA_TIMEOUT=2400 uv run python -m seshat.evaluate …\n"
-                             f"    막힌 줄 : {무엇[:80]}") from None
-        raise SystemExit(f"ollama 에 닿지 못한다 — {req.full_url}\n"
-                         f"    띄운다 : ollama serve &  (그 뒤 ollama pull {model})\n"
-                         f"    까닭   : {e.reason}") from None
+    for 번째 in range(_시도):
+        마지막 = 번째 == _시도 - 1
+        try:
+            with urllib.request.urlopen(req, timeout=초) as r:
+                return _json.loads(r.read())
+        except TimeoutError:
+            raise _늦다(model, 초, 무엇) from None
+        except urllib.error.HTTPError as e:
+            if e.code not in _잠깐 or 마지막:
+                raise SystemExit(f"{model} 이 {e.code} 로 거절했다 — {req.full_url}\n"
+                                 f"    막힌 줄 : {무엇[:80]}") from None
+            까닭 = f"{e.code}"
+        except (ConnectionResetError, http.client.RemoteDisconnected) as e:
+            if 마지막:
+                raise SystemExit(f"{model} 과의 연결이 {_시도}번 다 끊겼다 — {req.full_url}\n"
+                                 f"    까닭 : {type(e).__name__}") from None
+            까닭 = "연결이 끊겼다"
+        except urllib.error.URLError as e:
+            if isinstance(getattr(e, "reason", None), TimeoutError):
+                raise _늦다(model, 초, 무엇) from None
+            raise SystemExit(f"ollama 에 닿지 못한다 — {req.full_url}\n"
+                             f"    띄운다 : ollama serve &  (그 뒤 ollama pull {model})\n"
+                             f"    까닭   : {e.reason}") from None
+        쉼 = 3 * 2 ** 번째
+        print(f"  ※ {까닭} — {쉼}초 쉬고 다시 묻는다({번째 + 2}/{_시도})", file=_sys.stderr, flush=True)
+        time.sleep(쉼)
+    raise SystemExit(f"{model} 에 {_시도}번 물었으나 못 받았다 — {req.full_url}")
 
 
 def ollama(model: str, prompt: str, extra: dict | None = None):

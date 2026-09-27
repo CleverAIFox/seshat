@@ -393,3 +393,69 @@ def test_늦으면_막힌_줄을_말한다(monkeypatch):
         b._ask(req, "gemma3:12b", "The catalog is ingested by Kinesis.")
     말 = str(e.value)
     assert "30초" in 말 and "OLLAMA_TIMEOUT" in 말 and "The catalog" in 말
+
+
+def test_잠깐_넘어진_것은_다시_묻는다(monkeypatch, capsys):
+    """600 줄 판이 540 줄에서 터널의 502 하나로 날아갔다(DECISIONS §89)."""
+    import urllib.error
+    import urllib.request
+
+    from seshat import backends as b
+    monkeypatch.setattr(__import__("time"), "sleep", lambda _: None)
+    호출 = {"n": 0}
+
+    def 두_번_넘어진다(req, timeout=None):
+        호출["n"] += 1
+        if 호출["n"] < 3:
+            raise urllib.error.HTTPError(req.full_url, 502, "Bad Gateway", {}, None)
+
+        class 응답:
+            def __enter__(self): return self
+            def __exit__(self, *a): return False
+            def read(self): return '{"message": {"content": "좋다"}}'.encode("utf-8")
+        return 응답()
+    monkeypatch.setattr(urllib.request, "urlopen", 두_번_넘어진다)
+    req = urllib.request.Request("http://127.0.0.1:11434/api/chat", data=b"{}")
+    assert b._ask(req, "gemma3:12b", "x")["message"]["content"] == "좋다"
+    assert 호출["n"] == 3
+    assert "다시 묻는다" in capsys.readouterr().err
+
+
+def test_시간_초과는_다시_묻지_않는다(monkeypatch):
+    """다시 물으면 그만큼 또 기다린다 — 느린 것은 일시적인 고장이 아니다(DECISIONS §82 · §89)."""
+    import urllib.request
+
+    import pytest
+
+    from seshat import backends as b
+    호출 = {"n": 0}
+
+    def 늦다(req, timeout=None):
+        호출["n"] += 1
+        raise TimeoutError("timed out")
+    monkeypatch.setattr(urllib.request, "urlopen", 늦다)
+    monkeypatch.setenv("OLLAMA_TIMEOUT", "30")
+    req = urllib.request.Request("http://127.0.0.1:11434/api/chat", data=b"{}")
+    with pytest.raises(SystemExit) as e:
+        b._ask(req, "gemma3:12b", "The catalog is ingested.")
+    assert 호출["n"] == 1 and "30초" in str(e.value)
+
+
+def test_네_번째는_없다(monkeypatch, capsys):
+    import urllib.error
+    import urllib.request
+
+    import pytest
+
+    from seshat import backends as b
+    monkeypatch.setattr(__import__("time"), "sleep", lambda _: None)
+    호출 = {"n": 0}
+
+    def 늘_넘어진다(req, timeout=None):
+        호출["n"] += 1
+        raise urllib.error.HTTPError(req.full_url, 503, "nope", {}, None)
+    monkeypatch.setattr(urllib.request, "urlopen", 늘_넘어진다)
+    req = urllib.request.Request("http://127.0.0.1:11434/api/chat", data=b"{}")
+    with pytest.raises(SystemExit) as e:
+        b._ask(req, "gemma3:12b", "x")
+    assert 호출["n"] == b._시도 and "503" in str(e.value)
