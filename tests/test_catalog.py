@@ -234,3 +234,39 @@ def test_모든_출처의_디렉터리가_문을_지난다(tmp_path, monkeypatch
         except SystemExit as x:
             막힌.append(f'{e["id"]} → {space}:{자리} — {str(x).splitlines()[0]}')
     assert 막힌 == []
+
+
+def _가짜_proc(tmp_path, pid: str, comm: str, env: dict[str, str] | None):
+    d = tmp_path / pid
+    d.mkdir(parents=True)
+    (d / "comm").write_text(comm + "\n", encoding="utf-8")
+    if env is not None:
+        (d / "environ").write_bytes(("\0".join(f"{k}={v}" for k, v in env.items()) + "\0").encode())
+    return tmp_path
+
+
+def test_가중치_자리는_서버에게_묻는다(tmp_path, monkeypatch):
+    """셸의 값은 서버의 값이 아니다 — systemd 로 뜨면 셸 export 는 안 닿는다(DECISIONS §138)."""
+    proc = _가짜_proc(tmp_path, "4242", "ollama", {"OLLAMA_MODELS": "/서버가/아는/자리", "HOME": "/h"})
+    monkeypatch.setattr(catalog, "Path", lambda p="/": pathlib.Path(proc) if str(p) == "/proc" else pathlib.Path(p))
+    monkeypatch.setenv("OLLAMA_MODELS", "/셸이/아는/자리")
+    자리, 어디서 = catalog.ollama_models_dir()
+    assert 자리 == "/서버가/아는/자리" and "서버" in 어디서 and "4242" in 어디서
+
+
+def test_서버가_안_정했으면_그렇다고_한다(tmp_path, monkeypatch):
+    """서버가 기본 자리(`~/.ollama/models`)를 쓴다는 뜻이다 — 셸 값으로 덮어 읽지 않는다."""
+    proc = _가짜_proc(tmp_path, "7", "ollama", {"HOME": "/h"})
+    monkeypatch.setattr(catalog, "Path", lambda p="/": pathlib.Path(proc) if str(p) == "/proc" else pathlib.Path(p))
+    monkeypatch.setenv("OLLAMA_MODELS", "/셸이/아는/자리")
+    자리, 어디서 = catalog.ollama_models_dir()
+    assert 자리 == "" and "안 정했다" in 어디서
+
+
+def test_못_물으면_셸_값을_쓰되_그렇다고_적는다(tmp_path, monkeypatch):
+    """「못 물었다」 와 「서버가 그렇다고 했다」 를 같은 문장으로 내지 않는다(§110)."""
+    proc = _가짜_proc(tmp_path, "9", "다른프로그램", {"OLLAMA_MODELS": "/남의것"})
+    monkeypatch.setattr(catalog, "Path", lambda p="/": pathlib.Path(proc) if str(p) == "/proc" else pathlib.Path(p))
+    monkeypatch.setenv("OLLAMA_MODELS", "/셸이/아는/자리")
+    자리, 어디서 = catalog.ollama_models_dir()
+    assert 자리 == "/셸이/아는/자리" and "못 물었다" in 어디서

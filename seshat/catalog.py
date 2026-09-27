@@ -209,6 +209,36 @@ def allowed(source_id: str, use: str, entries: list[dict] | None = None) -> bool
     return False
 
 
+def ollama_models_dir() -> tuple[str, str]:
+    """ollama 가 **실제로** 쓰는 가중치 자리와, 그것을 어디서 알았는지(DECISIONS §138).
+
+    ★ **셸의 값은 서버의 값이 아니다.** `os.environ` 은 이 파이썬을 띄운 셸이 보는 값이고,
+      ollama 서버는 **다른 프로세스**다. systemd 로 뜨면 셸의 `export` 는 그 서버에 안 닿는다 —
+      그때 이 검사는 「선언한 자리에 있다」 고 통과하면서 가중치는 딴 데 쌓인다. §111 이 그 모양이었고,
+      고친 뒤에도 **묻는 상대가 틀린 채로** 남아 있었다.
+    ★ **서버 프로세스에게 묻는다** — `/proc/<pid>/environ`. 못 물으면 셸 값을 쓰되 **그렇다고 적는다**.
+      「못 물었다」 와 「서버가 그렇다고 했다」 를 같은 문장으로 내지 않는다(§110 과 같은 규율).
+    """
+    import os
+    try:
+        for d in Path("/proc").iterdir():
+            if not d.name.isdigit():
+                continue
+            try:
+                if (d / "comm").read_text().strip() != "ollama":
+                    continue
+                env = (d / "environ").read_bytes().decode("utf-8", "replace")
+            except OSError:
+                continue
+            for kv in env.split("\0"):
+                if kv.startswith("OLLAMA_MODELS="):
+                    return kv.split("=", 1)[1].strip(), f"서버(pid {d.name})"
+            return "", f"서버(pid {d.name}) — 안 정했다"
+    except OSError:
+        pass
+    return os.environ.get("OLLAMA_MODELS", "").strip(), "셸 — 서버에 못 물었다"
+
+
 def weights_outside(entries: list[dict], root: Path = ROOT) -> list[str]:
     """가중치가 카탈로그가 적은 자리 밖에 있는가(DECISIONS §106).
 
@@ -226,7 +256,7 @@ def weights_outside(entries: list[dict], root: Path = ROOT) -> list[str]:
     if not want:
         return []
     root = Path(lake).expanduser()
-    said = os.environ.get("OLLAMA_MODELS", "").strip()
+    said, 어디서 = ollama_models_dir()
     # ★ **선언한 자리에 있는지만 묻지 않는다**(DECISIONS §111). 2026-09-27 에 `.env` 에
     #   `OLLAMA_MODELS` 를 적고 파일을 옮겼는데 **ollama 는 `.env` 를 안 읽는다.** 기본 자리에서
     #   3.3GB 를 다시 받아 둘로 쪼개졌고, 이 검사는 선언한 자리만 보고 통과시켰다.
@@ -244,7 +274,7 @@ def weights_outside(entries: list[dict], root: Path = ROOT) -> list[str]:
         why = ("셸이 OLLAMA_MODELS 를 모른다 — `.env` 는 파이썬만 읽는다. ~/.bashrc 에 export 한다"
                if said else ".env 에 OLLAMA_MODELS 를 적거나 카탈로그를 고친다")
         out.append(f"weights: 카탈로그는 {want['where']} 라는데 가중치 {n}개가 {here} 에 있다 — {why}"
-                   f"(DECISIONS §106 · §111)")
+                   f" (자리는 {어디서} 가 말한다 · DECISIONS §106 · §111 · §138)")
     return out
 
 
