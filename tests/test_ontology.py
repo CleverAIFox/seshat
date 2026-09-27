@@ -277,3 +277,26 @@ def test_제품_이름이_개념으로_쪼개지지_않는다():
     # 홀로 선 serverless 는 여전히 개념이다
     hits = ontology.find(onto, "The pipeline is serverless.")
     assert [s.node["id"] for _, _, s in hits] == ["con.serverless"]
+
+
+def test_식별자는_사전에_못_들어온다():
+    """`bucket-owner-full-control` 을 노드로 올리면 사전이 API 참조가 되고도 여전히 모자란다.
+    **원문이 `` ` `` 로 이미 표시한다** — 자는 `lit` 이다(DECISIONS §122)."""
+    바른 = {"id": "con.x", "kind": "concept", "en": "throughput", "keep": False, "ko": "처리량",
+            "ko_ref": "streams/key-concepts", "src": "author"}
+    assert ontology.validate([바른]) == []
+    for 나쁜 in ("bucket-owner-full-control", "search_path", "KEYS_ONLY", "tasks.max"):
+        fails = ontology.validate([{**바른, "aliases": [나쁜]}])
+        assert any("식별자 모양이다" in f for f in fails), 나쁜
+
+
+def test_평범한_붙임표_영어는_식별자가_아니다():
+    """`server-side` · `cross-account` 는 산문이다 — 두 마디짜리를 막으면 사전이 못 자란다."""
+    바른 = {"id": "con.x", "kind": "concept", "en": "throughput", "keep": False, "ko": "처리량",
+            "ko_ref": "streams/key-concepts", "src": "author"}
+    for 괜찮은 in ("server-side", "cross-account", "fan-out"):
+        assert not any("식별자" in f for f in ontology.validate([{**바른, "aliases": [괜찮은]}])), 괜찮은
+
+
+def test_지금_사전에_식별자가_없다():
+    assert not [f for f in ontology.validate(ontology.load()) if "식별자" in f]

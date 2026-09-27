@@ -13,6 +13,8 @@
 ★ 별칭은 온톨로지 전체에서 유일하다(대소문자 무시). 한 표기가 두 노드를 가리키면 자리표시가 흔들린다.
 ★ **개념의 한국어는 셋이다** — `ko`(공식) · `alt_ko`(허용) · `bad_ko`(관측된 오역). `ko_ref` 가 있으면 AWS 한국어
   문서와 대조한 것이고, 없으면 아직 대조 전이다(DECISIONS §34).
+★ **식별자는 여기 살지 않는다**(DECISIONS §122). `bucket-owner-full-control` 처럼 타이핑하는 값은 무한하고
+  원문이 `` ` `` 로 이미 표시한다. 사전에 적으려 들면 API 참조가 되고도 여전히 모자란다 — `lit` 이 잰다.
 """
 from __future__ import annotations
 
@@ -33,6 +35,14 @@ KO_REF = re.compile(r"[a-z0-9_-]+/[A-Za-z0-9._-]+")
 # 영어 글자 · 숫자를 한국어로 읽은 끝소리. 엘 · 알 은 ㄹ, 엠 · 엔 은 받침
 _LETTER = {"L": "rieul", "R": "rieul", "M": "closed", "N": "closed"}
 _DIGIT = {"1": "closed", "7": "closed", "9": "closed"}   # 원 · 세븐 · 나인
+# ★ **식별자는 사전에 들어오지 않는다**(DECISIONS §122). 무한하고, 원문이 이미 `` ` `` 로 표시한다.
+#   `search_path` · `KEYS_ONLY` · `tasks.max` · `bucket-owner-full-control` 을 노드로 올리기 시작하면
+#   사전이 API 참조가 되고, 그래도 다음 문서의 새 식별자는 여전히 밖에 있다. **자는 `lit` 이 든다.**
+#   붙임표 두 마디(`server-side` · `cross-account`)는 평범한 영어라서 세 마디부터 본다.
+IDENTIFIER = (re.compile(r"^[a-z][a-z0-9]*(?:_[a-z0-9]+)+$"),          # search_path
+              re.compile(r"^[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+$"),          # KEYS_ONLY
+              re.compile(r"^[a-z][a-z0-9]*(?:\.[a-z][a-z0-9]*)+$"),    # tasks.max
+              re.compile(r"^[a-z][a-z0-9]*(?:-[a-z0-9]+){2,}$"))       # bucket-owner-full-control
 
 
 @dataclass(frozen=True)
@@ -128,6 +138,9 @@ def validate(onto: list[dict]) -> list[str]:
             cur = ids.get(cur["parent"])
     owner: dict[str, str] = {}
     for s in surfaces(onto):
+        if any(p.match(s.text) for p in IDENTIFIER):
+            fails.append(f"'{s.text}' 는 식별자 모양이다({s.node['id']}) — 사전이 아니라 원문의 "
+                         f"`코드` 표시가 든다(DECISIONS §122). 자는 `lit` 이다")
         k = s.text.lower()
         if k in owner and owner[k] != s.node["id"]:
             fails.append(f"표기 '{s.text}' 가 {owner[k]} 와 {s.node['id']} 둘을 가리킨다")

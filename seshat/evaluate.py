@@ -19,12 +19,13 @@
 
   style   마지막 문장이 합쇼체로 끝나는 비율. 정답 없이 잰다
   keep    `keep` 에 적은 영어 이름이 번역에 그대로 남은 비율. 정답 없이 잰다
+  lit     원문이 **코드로 표시한** 글자가 그대로 남은 비율. 사전이 아니라 문서가 근거다(DECISIONS §122)
   chrf    chrF++ (sacrebleu). `ref` 가 있는 줄만. 없으면 건너뛴다
   ms      문장당 지연
 
   josa    `keep` 이름 바로 뒤 조사가 그 이름의 끝소리와 맞는 비율(온톨로지 `coda`, H-001)
   term    원문에 나온 온톨로지 개념의 한국어(`ko` · `alt_ko`)가 번역에 있는 비율. 관계절의 머리 명사가
-          사라지는지를 이것으로 본다(H-012)
+          사라지는지를 이것으로 본다(H-012). **코드로 표시된 자리는 개념이 아니다** — 분모에서 뺀다
 
   COMET 같은 신경망 지표는 torch 를 요구하므로 여기 넣지 않는다(PLAN #3).
 
@@ -142,6 +143,43 @@ def load(path: str) -> list[dict]:
     return rows
 
 
+def marked(row: dict) -> list[tuple[int, int]]:
+    """원문에서 **문서가 코드로 표시한** 자리(DECISIONS §122).
+
+    ★ `` `PARTITION` `` 안의 `partition` 은 개념이 아니라 SQL 낱말이다. `` `snapshot-repo` `` 안의
+      `snapshot` 도 마찬가지다 — 「스냅샷-리포」로 바꾸면 그 지시는 안 먹는다. **여기 든 자리는
+      개념 채점에서 뺀다.**
+    ★ 굵은 글씨(`ui`)는 안 뺀다. 한국어 콘솔이 라벨을 현지화하는지 아직 확인하지 않았고,
+      **확인 안 한 것으로 자를 바꾸지 않는다**(DECISIONS §65).
+    ★ **줄은 표시를 글자로 들고 자리는 모른다.** 같은 글자가 표시 밖에 또 있으면 그것도 빠진다 —
+      실문서 600줄에서 그렇게 잘못 빠지는 개념은 690 중 1 이었다. 자리를 적으면 정확해지지만
+      줄을 사람이 못 읽는다. **값을 재고 글자를 택했다.**
+    """
+    src, out = row.get("src", ""), []
+    for t in row.get("lit", []):
+        i = src.find(t)
+        while i >= 0:
+            out.append((i, i + len(t)))
+            i = src.find(t, i + 1)
+    return out
+
+
+def literal(rows: list[dict], outs: list[str]) -> dict[str, float | int | None]:
+    """문서가 코드로 표시한 글자가 번역에 **그대로** 남았나(DECISIONS §122).
+
+    ★ **`keep` 과 근거가 다르다.** `keep` 은 사전이 아는 영어 이름이고 `lit` 은 문서가 표시한 글자다.
+      식별자는 무한하다 — `bucket-owner-full-control` · `snapshot-repo` · `search_path` 를 사전에
+      다 적을 수 없고 적어서도 안 된다. **수확기가 원문의 표시를 지우고 있었던 것이 문제였지,
+      사전이 좁았던 것이 아니다.**
+    """
+    ok = total = 0
+    for r, o in zip(rows, outs):
+        for t in r.get("lit", []):
+            total += 1
+            ok += t in o
+    return {"lit": ok / total if total else None, "lit_n": total}
+
+
 _JOSA = re.compile(r"^(으로|이나|이라|을|를|이|가|은|는|과|와|나|라|로)(?![가-힣])")
 
 
@@ -182,8 +220,11 @@ def term(rows: list[dict], outs: list[str]) -> dict[str, float | None]:
     ok = off = bad = total = 0
     for r, o in zip(rows, outs):
         translated = ko_line(r["src"], o)
-        for _, _, s in ontology.find(onto, r["src"]):
+        마크 = marked(r)
+        for a, b, s in ontology.find(onto, r["src"]):
             if s.node["keep"]:
+                continue
+            if any(a >= x and b <= y for x, y in 마크):   # 코드로 표시된 자리는 개념이 아니다(§122)
                 continue
             total += 1
             if not translated:      # 번역이 아닌 줄에서는 어떤 표기도 맞은 것이 아니다(DECISIONS §52)
@@ -210,7 +251,7 @@ def score(rows: list[dict], outs: list[str]) -> dict:
             total += 1
             kept += k in o
     res = {"n": n, "style": style, "hangul": hangul(rows, outs), "keep": kept / total if total else None, "chrf": None,
-           "josa": josa(rows, outs) if total else None, **term(rows, outs)}
+           "josa": josa(rows, outs) if total else None, **term(rows, outs), **literal(rows, outs)}
     pairs = [(o, r["ref"]) for r, o in zip(rows, outs) if r.get("ref")]
     if pairs:
         try:
@@ -304,6 +345,13 @@ def onto_sha256() -> str:
     return hashlib.sha256(ontology.DEFAULT.read_bytes()).hexdigest()[:16]
 
 
+def set_sha256(path: str | pathlib.Path) -> str:
+    """평가셋 파일의 해시. **머리줄에 적는 쪽이 한 군데여야 한다** — `rescore` 가 다른 셋을 대고도
+    옛 해시를 그대로 옮겨 적고 있었다(DECISIONS §122)."""
+    import hashlib
+    return hashlib.sha256(pathlib.Path(path).read_bytes()).hexdigest()[:16]
+
+
 def 코드_상태() -> dict:
     """지금 어느 커밋에서 도는가. **판을 시작할 때 찍는다**(DECISIONS §81).
 
@@ -329,14 +377,13 @@ def conditions(a, rows: list[dict], 코드: dict | None = None) -> dict:
 
     ★ `코드` 는 판을 **시작할 때** 찍어 둔 상태다. 안 주면 지금 찍는다 — 짧은 판과 도구용 길이다.
     """
-    import hashlib
     from . import backends
     코드 = 코드 or 코드_상태()
     chars = sum(len(r["src"]) for r in rows)
     out = {"hypothesis": a.hypothesis or None,
            "commit": 코드["commit"],
            "dirty": 코드["dirty"],
-           "set_sha256": hashlib.sha256(pathlib.Path(a.set).read_bytes()).hexdigest()[:16],
+           "set_sha256": set_sha256(a.set),
            "onto_sha256": onto_sha256(),
            "chars": chars,
            "backend": a.backend or None,

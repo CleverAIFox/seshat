@@ -39,7 +39,15 @@ Table: The tables that this resource policy applies to in the current account.
 
 
 def _sent():
-    return aws.sentences(MD)
+    return [ln.text for ln in aws.sentences(MD)]
+
+
+def _line(md: str, 안: str):
+    return next(ln for ln in aws.sentences(md) if 안 in ln.text)
+
+
+def _found(g: str, texts):
+    return {g: [aws.Line(t, (), (), "", "d.md") for t in texts]}
 
 
 def test_코드_표_제목은_문장이_아니다():
@@ -77,7 +85,7 @@ def test_도메인_낱말이_없는_줄은_버린다(tmp_path):
         "Amazon DynamoDB replicates the table across three Availability Zones automatically.\n\n"
         "The quick brown fox jumped over the lazy dog and then went home to sleep.\n",
         encoding="utf-8")
-    got = [s for s, _ in aws.harvest(onto, tmp_path)]
+    got = [ln.text for ln in aws.harvest(onto, tmp_path)]
     assert len(got) == 1 and "DynamoDB" in got[0]
 
 
@@ -88,23 +96,23 @@ def test_README_는_읽지_않는다(tmp_path):
 
 
 def test_같은_seed_면_같은_셋이고_다르면_다르다():
-    found = {"g": [(f"Amazon S3 stores object number {i:03d} in the bucket for a long time.", "d.md") for i in range(50)]}
+    found = _found("g", [f"Amazon S3 stores object number {i:03d} in the bucket for a long time." for i in range(50)])
     a = aws.choose(found, 10, 21, 400)
     assert a == aws.choose(found, 10, 21, 400)
     assert a != aws.choose(found, 10, 22, 400)
 
 
 def test_안내서마다_상한이_걸린다():
-    found = {g: [(f"Amazon S3 keeps object {g} number {i:03d} in the bucket for a while.", "d.md") for i in range(50)]
-             for g in ("a", "b")}
+    found = {g: [aws.Line(f"Amazon S3 keeps object {g} number {i:03d} in the bucket for a while.", (), (), "", "d.md")
+                 for i in range(50)] for g in ("a", "b")}
     picked = aws.choose(found, 6, 21, 3)
-    assert len({g for _, g, _ in aws.choose(found, 6, 21, 3)}) == 2
+    assert len({ln.guide for ln in picked}) == 2
     assert len(picked) == 6
 
 
 def test_문장이_모자라면_말한다():
     try:
-        aws.choose({"g": [("Amazon S3 stores the object in a bucket for a long time here.", "d.md")]}, 5, 21, 400)
+        aws.choose(_found("g", ["Amazon S3 stores the object in a bucket for a long time here."]), 5, 21, 400)
     except SystemExit as e:
         assert "1 뿐인데 5" in str(e)
     else:
@@ -113,9 +121,55 @@ def test_문장이_모자라면_말한다():
 
 def test_keep_은_온톨로지가_영어로_남기라는_표기다():
     onto = ontology.load()
-    got = aws.rows(onto, [("Amazon DynamoDB writes the stream record to Amazon Kinesis Data Streams now.", "g", "d.md")])
+    got = aws.rows(onto, [aws.Line("Amazon DynamoDB writes the stream record to Amazon Kinesis Data Streams now.",
+                                   (), (), "g", "d.md")])
     assert got[0]["keep"] == ["Amazon DynamoDB", "Amazon Kinesis Data Streams"]
     assert got[0]["id"] == "awsdocs-0001" and got[0]["guide"] == "g"
+
+
+MARKED = """\
+All S3 PUT requests must either specify the `bucket-owner-full-control` canned ACL or fail here.
+
+In the navigation pane, choose **Dev endpoints**, and then choose **Add endpoint** in the console.
+
+You can replace `snapshot-repo` with your own bucket name. The next stream sentence has no marking on it here.
+"""
+
+
+def test_원문이_코드로_표시한_글자를_들고_나온다():
+    """**문서가 이미 적어놨다** — 수확기가 그것을 지우고 있었다(DECISIONS §122)."""
+    ln = _line(MARKED, "canned ACL")
+    assert ln.lit == ("bucket-owner-full-control",)
+    assert "`" not in ln.text and "bucket-owner-full-control" in ln.text
+
+
+def test_굵은_글씨는_콘솔_라벨로_따로_든다():
+    ln = _line(MARKED, "navigation pane")
+    assert ln.ui == ("Add endpoint", "Dev endpoints")
+    assert ln.lit == () and "*" not in ln.text
+
+
+def test_같은_줄의_옆_문장에_표시를_안_붙인다():
+    """한 줄이 두 문장으로 쪼개지면 표시는 그것이 실제로 든 문장에만 간다."""
+    앞 = _line(MARKED, "replace snapshot-repo")
+    뒤 = _line(MARKED, "no marking on it")
+    assert 앞.lit == ("snapshot-repo",) and 뒤.lit == ()
+
+
+def test_표시는_뽑히는_문장을_안_바꾼다():
+    """`choose` 의 열쇠는 글자뿐이다 — 표시를 붙이는 일이 셋을 흔들면 옛 결과와 못 잇는다."""
+    민 = _found("g", [f"Amazon S3 stores object number {i:03d} in the bucket for a long time." for i in range(50)])
+    표시 = {"g": [ln._replace(lit=("x",), ui=("y",)) for ln in 민["g"]]}
+    assert [x.text for x in aws.choose(민, 10, 21, 400)] == [x.text for x in aws.choose(표시, 10, 21, 400)]
+
+
+def test_lit_은_keep_과_겹치지_않는다():
+    """같은 글자를 두 지표가 세면 분모만 부푼다."""
+    onto = ontology.load()
+    got = aws.rows(onto, [aws.Line("Amazon DynamoDB writes the record to the table with a search_path now.",
+                                   ("Amazon DynamoDB", "search_path"), (), "g", "d.md")])
+    assert "Amazon DynamoDB" in got[0]["keep"]
+    assert got[0]["lit"] == ["search_path"]
 
 
 def test_카탈로그가_이_도구를_안다():

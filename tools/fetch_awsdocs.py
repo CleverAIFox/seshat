@@ -23,6 +23,10 @@
   미확인 쪽으로 간다 — 카탈로그가 그 문을 지킨다(`uses`).
 ★ **커밋 sha 를 적는다.** 얼린 저장소라 안 바뀌지만, 바뀌면 같은 인자에서 다른 셋이 나온다. 머리줄이
   sha 를 들어서 그때 무엇이 달라졌는지 말할 수 있게 한다.
+★ **문서의 표시를 들고 나온다**(DECISIONS §122). 마크다운의 `` `코드` `` 는 **손대면 안 되는 글자**이고
+  `**굵게**` 는 콘솔 라벨이다. 2026-09-27 까지 이 도구는 둘을 지우기만 했고, 그래서
+  `bucket-owner-full-control` 이 산문과 구별되지 않아 지표가 그것을 「개념」으로 셌다. 줄이 `lit` · `ui` 를
+  든다. **식별자를 사전에 적으려 하지 않는다 — 무한하고, 문서가 이미 적어놨다.**
 """
 from __future__ import annotations
 
@@ -34,6 +38,7 @@ import random
 import re
 import subprocess
 import sys
+import typing
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
@@ -71,6 +76,7 @@ _IMG = re.compile(r"!\[[^\]]*\]\([^)]*\)")
 _LINK = re.compile(r"\[([^\]]*)\]\([^)]*\)")
 _CODE = re.compile(r"`([^`]*)`")
 _BULLET = re.compile(r"^\s*[-+*]\s+")
+_BOLD = re.compile(r"\*\*([^*]+)\*\*")      # 콘솔 라벨. `_EMPH` 가 별표를 지우기 **전에** 집는다
 _EMPH = re.compile(r"\*\*|__|\*")
 _ESCAPED = re.compile(r"\\([-.\[\]()*_+#!<>|])")
 _SPLIT = re.compile(r"(?<=[.!?])\s+(?=[A-Z\"'(])")
@@ -102,21 +108,51 @@ def _body(md: str) -> list[str]:
     return out
 
 
-def _plain(ln: str) -> str:
-    """마크다운 표시를 걷는다. **링크는 글자만 남긴다** — 주소는 문장이 아니다."""
+class Line(typing.NamedTuple):
+    """문장 하나와 **원문이 그 문장에 해 둔 표시**."""
+    text: str
+    lit: tuple[str, ...] = ()       # `` `코드` `` — 식별자 · 값 · API 이름. 그대로 남아야 한다
+    ui: tuple[str, ...] = ()        # `**굵게**` — 콘솔 라벨. 지금은 기록만 한다
+    guide: str = ""
+    doc: str = ""
+
+
+def _grab(pat: re.Pattern, ln: str, into: list[str]) -> str:
+    """표시를 걷되 **걷어 낸 글자를 `into` 에 담는다.** 지우기와 기억하기를 한 번에 한다."""
+    def keep(m: re.Match) -> str:
+        into.append(m.group(1))
+        return m.group(1)
+    return pat.sub(keep, ln)
+
+
+def plain(ln: str) -> tuple[str, list[str], list[str]]:
+    """마크다운 표시를 걷는다. **링크는 글자만 남긴다** — 주소는 문장이 아니다.
+
+    ★ **지우기만 하던 함수였다.** `_CODE.sub(r"\\1", ln)` 한 줄이 `` `bucket-owner-full-control` `` 의
+      백틱을 없앴고, 그 뒤로는 그것이 산문인지 타이핑할 값인지 아무도 몰랐다. 지표는 몰라서 개념으로
+      셌다(DECISIONS §98 · §122). **문서가 이미 답을 적어놨는데 수확기가 그것을 지웠다.**
+    """
     ln = _IMG.sub("", ln)
     ln = _LINK.sub(r"\1", ln)
-    ln = _CODE.sub(r"\1", ln)
+    lit: list[str] = []
+    ui: list[str] = []
+    ln = _grab(_CODE, ln, lit)
     ln = _BULLET.sub("", ln)
+    ln = _grab(_BOLD, ln, ui)           # `_EMPH` 가 별표를 지우기 전이다
     ln = _EMPH.sub("", ln)
-    return _ESCAPED.sub(r"\1", ln).strip()
+    씻기 = lambda xs: [t for t in (_ESCAPED.sub(r"\1", _EMPH.sub("", x)).strip() for x in xs) if t]  # noqa: E731
+    return _ESCAPED.sub(r"\1", ln).strip(), 씻기(lit), 씻기(ui)
 
 
-def sentences(md: str) -> list[str]:
-    """한 문서에서 산문 문장만. 모양으로만 거르고 뜻은 보지 않는다."""
+def sentences(md: str) -> list[Line]:
+    """한 문서에서 산문 문장만. 모양으로만 거르고 뜻은 보지 않는다.
+
+    ★ **한 줄이 여러 문장으로 쪼개진다.** 표시는 그것이 실제로 든 문장에만 붙인다 — 같은 줄의
+      옆 문장에 붙이면 있지도 않은 글자가 남았는지 묻게 된다.
+    """
     out = []
     for ln in _body(md):
-        c = _plain(ln)
+        c, lit, ui = plain(ln)
         if not c:
             continue
         for s in _SPLIT.split(c):
@@ -129,7 +165,8 @@ def sentences(md: str) -> list[str]:
                 continue
             if sum(ch.isascii() for ch in s) / len(s) < 0.99:
                 continue
-            out.append(s)
+            out.append(Line(s, tuple(sorted({t for t in lit if t in s})),
+                            tuple(sorted({t for t in ui if t in s}))))
     return out
 
 
@@ -164,35 +201,45 @@ def clone(cache: pathlib.Path, guide: str) -> str:
                           capture_output=True, text=True, check=True).stdout.strip()
 
 
-def harvest(onto: list[dict], root: pathlib.Path) -> list[tuple[str, str]]:
-    """(문장, 문서 이름). **온톨로지가 든 줄만** 남긴다."""
+def harvest(onto: list[dict], root: pathlib.Path) -> list[Line]:
+    """문서 이름을 붙인 문장. **온톨로지가 든 줄만** 남긴다."""
     out, seen = [], set()
     for p in sorted(root.rglob("*.md")):
         if p.name in ("README.md", "CONTRIBUTING.md", "LICENSE-SUMMARY.md"):
             continue
-        for s in sentences(p.read_text(encoding="utf-8", errors="replace")):
-            if s in seen or not ontology.find(onto, s):
+        for ln in sentences(p.read_text(encoding="utf-8", errors="replace")):
+            if ln.text in seen or not ontology.find(onto, ln.text):
                 continue
-            seen.add(s)
-            out.append((s, p.name))
+            seen.add(ln.text)
+            out.append(ln._replace(doc=p.name))
     return out
 
 
-def rows(onto: list[dict], picked: list[tuple[str, str, str]]) -> list[dict]:
-    """평가셋 줄. `keep` 은 **온톨로지가 영어로 남기라고 한 표기**다 — 탐침과 같은 근거다."""
+def rows(onto: list[dict], picked: list[Line]) -> list[dict]:
+    """평가셋 줄. `keep` 은 **온톨로지가 영어로 남기라고 한 표기**다 — 탐침과 같은 근거다.
+
+    ★ `lit` 에서 `keep` 과 겹치는 것을 뺀다. 같은 글자를 두 지표가 세면 분모만 부푼다 —
+      `keep` 은 사전이 아는 이름이고 `lit` 은 문서가 표시한 나머지다(DECISIONS §122).
+    """
     out = []
-    for i, (src, guide, doc) in enumerate(picked, 1):
-        keep = sorted({src[a:b] for a, b, _ in ontology.find(onto, src, keep_only=True)})
-        out.append({"id": f"awsdocs-{i:04d}", "src": src, "keep": keep, "guide": guide, "doc": doc})
+    for i, ln in enumerate(picked, 1):
+        keep = sorted({ln.text[a:b] for a, b, _ in ontology.find(onto, ln.text, keep_only=True)})
+        out.append({"id": f"awsdocs-{i:04d}", "src": ln.text, "keep": keep,
+                    "lit": [t for t in ln.lit if t not in keep], "ui": list(ln.ui),
+                    "guide": ln.guide, "doc": ln.doc})
     return out
 
 
-def choose(found: dict[str, list[tuple[str, str]]], n: int, seed: int, cap: int) -> list[tuple[str, str, str]]:
-    """안내서마다 `cap` 까지 자르고 합쳐서 `n` 을 뽑는다. **해시로 정렬한다** — 순서가 기계를 안 탄다."""
-    pool: list[tuple[str, str, str]] = []
+def choose(found: dict[str, list[Line]], n: int, seed: int, cap: int) -> list[Line]:
+    """안내서마다 `cap` 까지 자르고 합쳐서 `n` 을 뽑는다. **해시로 정렬한다** — 순서가 기계를 안 탄다.
+
+    ★ **뽑는 열쇠는 문장 글자뿐이다**(`t[0]` = `Line.text`). 줄이 표시를 더 들고 다녀도 같은 인자면
+      같은 문장이 나온다 — 표시를 붙이는 일이 셋을 바꾸지 않는다.
+    """
+    pool: list[Line] = []
     for guide in sorted(found):
         got = sorted(found[guide], key=lambda t: hashlib.sha256(t[0].encode()).hexdigest())
-        pool += [(s, guide, doc) for s, doc in got[:cap]]
+        pool += [ln._replace(guide=guide) for ln in got[:cap]]
     pool.sort(key=lambda t: hashlib.sha256(t[0].encode()).hexdigest())
     if len(pool) < n:
         raise SystemExit(f"문장이 {len(pool)} 뿐인데 {n} 을 달라고 했다 — `--cap` 을 올리거나 `--n` 을 내린다")
@@ -237,6 +284,8 @@ def main(argv: list[str] | None = None) -> int:
             "attribution": f"© Amazon Web Services, Inc. · {ORG} · {LICENSE}",
             "sources": {g: shas[g] for g in sorted(shas)},
             "made_by": "tools/fetch_awsdocs.py",
+            "marks": "lit 은 원문의 `코드` — 그대로 남아야 한다(지표 lit). ui 는 **굵게** — 콘솔 라벨이고 "
+                     "지금은 기록만 한다. 한국어 콘솔이 라벨을 현지화하는지 확인 전이다(DECISIONS §122)",
             "note": "참조(ref)가 없다 — 도메인 지표는 참조 없이 센다. chrF 는 FLORES+ 가 든다"}
     OUT.mkdir(parents=True, exist_ok=True)
     out = OUT / f"{a.name}.jsonl"

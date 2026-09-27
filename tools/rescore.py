@@ -36,8 +36,13 @@ def rescore(run_path: str, set_path: str, post: str = "none") -> tuple[dict, lis
         outs.append(fixed)
         out_lines.append({**x, "out": fixed, "missing": missing})
     res = evaluate.score(rows, outs)
-    keep = {k: head[k] for k in ("commit", "set_sha256", "chars", "backend", "weights", "decoding", "model", "ms") if k in head}
+    keep = {k: head[k] for k in ("commit", "chars", "backend", "weights", "decoding", "model", "ms") if k in head}
     keep["onto_sha256"] = evaluate.onto_sha256()      # 지금 사전으로 다시 쟀다(DECISIONS §32)
+    # ★ **쓴 셋을 적는다.** 2026-09-27 까지 이 줄은 옛 머리줄의 `set_sha256` 을 그대로 옮겼다 —
+    #   `--set` 으로 다른 셋을 대도 결과는 옛 셋을 쟀다고 말했다. §106 과 같은 병이다(DECISIONS §122).
+    keep["set_sha256"] = evaluate.set_sha256(set_path)
+    if head.get("set_sha256") and head["set_sha256"] != keep["set_sha256"]:
+        keep["set_was"] = head["set_sha256"]          # 원래 어느 셋이었는지도 남긴다
     return {"meta": True, **res, **keep, "post": post, "rescored_from": Path(run_path).name}, out_lines
 
 
