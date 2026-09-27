@@ -58,6 +58,7 @@ uv run pytest                                     # 계약 · 평가 · 평가�
 uv run python -m seshat.serve                     # echo 백엔드 · 127.0.0.1:8100
 uv run --group eval python -m seshat.evaluate \
     --url http://127.0.0.1:8100 --set data/eval/seed.jsonl
+python3 tools/doctor.py                           # 이 기계 — 레이크 · 가중치 · 작업대 · .env · 디스크
 python3 tools/check_docs.py                       # 문서 ↔ 문서 (규약은 docs/MASTER.md §0)
 python3 tools/doc_fsck.py                         # 문서 ↔ 실물
 python3 tools/check_model_licenses.py --list      # 가중치 라이선스 대장

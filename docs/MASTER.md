@@ -64,6 +64,7 @@ seshat/
 tests/
   thoth_conformance.py   thoth 의 적합성 검사 사본. 여기서 고치지 않는다
 data/eval/seed.jsonl     평가셋 0판 12줄
+tools/doctor.py          **이 기계**를 센다 — 레이크 · 가중치 자리 · 작업대 잔재 · .env · 디스크 (verify 는 저장소를 본다)
 tools/fetch_flores.py    FLORES+ 영→한을 data/bench/ 에 받는다 (커밋하지 않는다)
 tools/fetch_awsdocs.py   AWS 공식 안내서(CC BY-SA 4.0)에서 도메인 문장을 뽑는다 → data/domain/ (커밋하지 않는다)
 ```
