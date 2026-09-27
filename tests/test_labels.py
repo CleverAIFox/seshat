@@ -76,10 +76,10 @@ def test_채점표를_읽어_팔마다_비율을_낸다(tmp_path, monkeypatch, c
         filled.append(ln + ("맞다" if arm_of[t] == "b" else "어긋난다"))
     s = tmp_path / "sheet.tsv"
     s.write_text("\n".join(filled) + "\n", encoding="utf-8")
-    L.read("t", s)
+    L.read("t", s, "claude")
     out = capsys.readouterr().out
     assert "a  뜻이 맞다 0.000" in out and "b  뜻이 맞다 1.000" in out
-    saved = [json.loads(x) for x in (L.OUT / "t.jsonl").read_text(encoding="utf-8").splitlines()]
+    saved = [json.loads(x) for x in (L.OUT / "t.claude.jsonl").read_text(encoding="utf-8").splitlines()]
     assert all("src" not in r and "out" not in r for r in saved), "원문이나 출력이 저장소에 남았다"
 
 
@@ -91,8 +91,59 @@ def test_모르는_판정은_거절한다(tmp_path, monkeypatch):
     s = tmp_path / "sheet.tsv"
     s.write_text(sheet.splitlines()[0] + "\n" + sheet.splitlines()[1] + "좋음\n", encoding="utf-8")
     try:
-        L.read("t", s)
+        L.read("t", s, "claude")
     except SystemExit as e:
         assert "모르는 판정" in str(e)
     else:
         raise AssertionError("아무 말이나 판정으로 받았다")
+
+
+def test_두_칸짜리_판정도_받는다():
+    """다른 판정자는 표 전체가 아니라 태그와 판정만 돌려준다."""
+    assert L.verdict_of(["8d6722bc", "맞다"]) == "맞다"
+    assert L.verdict_of(["8d6722bc", "원문", "번역", "어긋난다"]) == "어긋난다"
+    assert L.verdict_of(["8d6722bc", "원문", "번역"]) == ""
+
+
+def test_카파는_쏠린_판정을_벌준다():
+    """한쪽으로 쏠리면 일치율은 높고 카파는 낮다 — 「맞다」 만 찍어도 일치율이 오른다."""
+    x = ["맞다"] * 18 + ["어긋난다"] * 2
+    y = ["맞다"] * 20
+    assert sum(a == b for a, b in zip(x, y)) / 20 == 0.9
+    assert L.cohen_kappa(x, y) == 0.0                    # 우연을 빼면 0
+    assert L.cohen_kappa(x, x) == 1.0
+    갈림 = ["맞다"] * 10 + ["어긋난다"] * 10
+    assert L.cohen_kappa(갈림, 갈림[::-1]) < 0           # 반대로 찍으면 음수
+
+
+def test_두_판정자의_일치를_낸다(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(L, "OUT", tmp_path)
+    for judge, v2 in (("claude", "맞다"), ("gemini", "어긋난다")):
+        rows = [{"meta": True}]
+        rows += [{"tag": f"t{i}", "id": f"x{i:03d}", "arm": "a",
+                  "verdict": "맞다" if i else v2} for i in range(5)]
+        (tmp_path / f"t.{judge}.jsonl").write_text(
+            "\n".join(json.dumps(r, ensure_ascii=False) for r in rows) + "\n", encoding="utf-8")
+    L.agree("t", ["claude", "gemini"])
+    out = capsys.readouterr().out
+    assert "같은 줄 5 · 일치 4" in out
+    assert "갈린 줄 1" in out and "x000 [a]" in out
+
+
+def test_없는_판정자는_말한다(tmp_path, monkeypatch):
+    monkeypatch.setattr(L, "OUT", tmp_path)
+    (tmp_path / "t.claude.jsonl").write_text(json.dumps({"meta": True}) + "\n", encoding="utf-8")
+    try:
+        L.agree("t", ["claude", "gemini"])
+    except SystemExit as e:
+        assert "read --judge gemini" in str(e)
+    else:
+        raise AssertionError("없는 판정자인데 통과했다")
+
+
+def test_지시문이_규칙_넷을_든다():
+    """다른 판정자에게 주는 지시문 — **표기는 맞다** 와 **맞히려 하지 마라** 가 빠지면 자가 달라진다."""
+    for must in ("맞다", "어긋난다", "아니다", "표기가 공식 표기와 달라도", "맞히려 하지 마세요",
+                 "태그<탭>판정", "120줄"):
+        assert must in L.PROMPT, must
+    assert "4B" not in L.PROMPT and "12B" not in L.PROMPT and "gemma" not in L.PROMPT.lower()

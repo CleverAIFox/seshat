@@ -2,8 +2,15 @@
 
   python3 tools/labels.py make --set data/domain/d001.jsonl --a <A결과> --b <B결과> --n 60
   # → /tmp/labels-<이름>.tsv (채점표) · data/labels/<이름>.key.jsonl (열쇠)
-  python3 tools/labels.py read --name d001-60      # 채운 표를 읽어 판정과 비율을 낸다
+  python3 tools/labels.py read --name d001-60 --judge claude    # 채운 표를 읽어 판정과 비율을 낸다
+  python3 tools/labels.py agree --name d001-60 --judges claude,gemini   # 판정자 둘이 얼마나 맞나
+  python3 tools/labels.py prompt > /tmp/judge.txt    # 다른 판정자에게 줄 지시문
 
+★ **판정자는 여럿이다.** 한 명의 판정을 자로 쓰면 앞으로 그 자로 검증하는 모든 지표가 「그 판정자와
+  얼마나 맞나」 를 재게 된다. `--judge` 가 판정자마다 파일을 나누고 `agree` 가 일치율과 카파를 낸다.
+  **일치하지 않는 줄이 기준이 무른 자리**다 — 거기서 기준을 좁힌다.
+★ **판정자는 교사가 아니다.** 판정은 평가에만 쓰고 학습 데이터로 넘기지 않는다. 그래서 가중치 대장의
+  교사 가부(`seshat/licenses.py`)가 판정자를 가리지 않는다 — 학습에 쓰려면 그때 대장을 본다.
 ★ **눈가림이다.** 채점표는 어느 팔의 출력인지 적지 않는다. 알면 큰 모델에 후하게 준다 — 사람이
   정직하지 않아서가 아니라 **기대가 채점을 민다.** 팔 이름은 열쇠 파일에만 있고, `read` 가 붙인다.
 ★ **줄을 먼저 뽑고 출력을 나중에 본다.** seed 로 뽑으므로 무엇이 나올지 모르는 채로 표본이 정해진다.
@@ -76,14 +83,65 @@ def make(a: pathlib.Path, b: pathlib.Path, rows: list[dict], name: str, n: int, 
     return "\n".join(lines) + "\n", key
 
 
-def read(name: str, sheet: pathlib.Path) -> int:
+PROMPT = """아래 표는 영어 기술 문서를 한국어로 옮긴 결과입니다. 각 줄을 셋 중 하나로 판정해 주세요.
+
+판정
+  맞다      원문의 뜻이 그대로 전달된다
+  어긋난다  뜻이 틀렸거나, 원문에 없는 말을 지어냈거나, 있던 내용이 빠졌다
+  아니다    번역이 아니다 (영어를 그대로 돌려줬거나, 되묻거나, 딴소리)
+
+규칙
+1. **용어 표기가 공식 표기와 달라도 뜻이 통하면 「맞다」** 입니다.
+   「할당량」 대신 「쿼타」, 「레코드」 대신 「기록」, 「프로듀서」 대신 「생산자」 — 전부 맞다입니다.
+   표기는 다른 자가 이미 세고 있습니다. 여기서 보는 것은 **뜻** 하나뿐입니다.
+2. 문장이 어색하거나 딱딱해도 뜻이 맞으면 「맞다」 입니다. 유창함을 보지 않습니다.
+3. 다음은 「어긋난다」 입니다.
+   - 한국어에 없는 낱말을 만들었다 (보기: snapshot → 「캡샷」)
+   - 뜻이 뒤집혔다 (보기: 「~이다」 가 「~이 아닌」 이 됐다)
+   - A를 B로 바꾸라는 지시에서 A와 B가 뒤바뀌었다
+   - 원문에 있던 항목이 통째로 빠졌다
+   - 서로 다른 것을 같은 것으로 합쳤다 (보기: fleet → 리전)
+4. 두 모델의 출력이 섞여 있고 어느 줄이 어느 모델인지는 표에 없습니다.
+   **맞히려 하지 마세요.** 알 수 없게 섞은 것이 이 시험의 일부입니다.
+
+답
+  줄마다 `태그<탭>판정` 한 줄씩, 표에 나온 순서 그대로, 120줄.
+  설명·머리말·번호를 붙이지 마세요. 판정은 위 셋 중 하나의 글자 그대로만.
+
+보기
+  8d6722bc\t맞다
+  3476df3d\t아니다
+"""
+
+
+def cohen_kappa(x: list[str], y: list[str]) -> float:
+    """두 판정자의 일치를 **우연을 뺀 뒤** 잰다. 한쪽으로 쏠린 판정은 그냥 일치율이 높게 나온다 —
+    「맞다」 만 찍어도 0.8 이 넘는다. 카파는 그 몫을 뺀다."""
+    n = len(x)
+    cats = sorted(set(x) | set(y))
+    po = sum(a == b for a, b in zip(x, y)) / n
+    pe = sum((x.count(c) / n) * (y.count(c) / n) for c in cats)
+    return 1.0 if pe == 1 else (po - pe) / (1 - pe)
+
+
+def verdict_of(cols: list[str]) -> str:
+    """채점표의 판정 칸. 네 칸짜리 표(사람이 채운 것)와 두 칸짜리(태그 · 판정)를 둘 다 받는다 —
+    다른 판정자는 표 전체를 돌려주지 않고 판정만 돌려준다."""
+    if len(cols) >= 4:
+        return cols[3].strip()
+    return cols[1].strip() if len(cols) == 2 else ""
+
+
+def read(name: str, sheet: pathlib.Path, judge: str = "claude") -> int:
     key = {r["tag"]: r for r in (json.loads(x) for x in (OUT / f"{name}.key.jsonl").read_text(encoding="utf-8").splitlines() if x.strip())}
     got, blank = [], 0
     for ln in sheet.read_text(encoding="utf-8").splitlines()[1:]:
         if not ln.strip():
             continue
         cols = ln.split("\t")
-        t, verdict = cols[0].strip(), (cols[3].strip() if len(cols) > 3 else "")
+        t, verdict = cols[0].strip(), verdict_of(cols)
+        if t in ("표", "tag"):
+            continue
         if not verdict:
             blank += 1
             continue
@@ -96,12 +154,13 @@ def read(name: str, sheet: pathlib.Path) -> int:
         print(f"  ※ 아직 안 매긴 줄 {blank}", file=sys.stderr)
     if not got:
         raise SystemExit("매긴 줄이 없다")
-    path = OUT / f"{name}.jsonl"
-    meta = {"meta": True, "about": f"{name} 사람 판정 — 뜻만 본다. 표기는 term_off 가 센다(H-046)",
-            "license": "자체 — 판정만 든다", "made_by": "tools/labels.py"}
+    path = OUT / f"{name}.{judge}.jsonl"
+    meta = {"meta": True, "about": f"{name} · 판정자 {judge} — 뜻만 본다. 표기는 term_off 가 센다(H-046)",
+            "judge": judge, "license": "자체 — 판정만 든다", "made_by": "tools/labels.py"}
     path.write_text("\n".join(json.dumps(x, ensure_ascii=False) for x in [meta, *sorted(got, key=lambda r: (r["id"], r["arm"]))]) + "\n",
                     encoding="utf-8")
     print(f"  {_짧게(path)}  {len(got)}줄")
+    print(f"  판정자 {judge}")
     for arm in ("a", "b"):
         mine = [r for r in got if r["arm"] == arm]
         if not mine:
@@ -109,6 +168,35 @@ def read(name: str, sheet: pathlib.Path) -> int:
         tally = {v: sum(1 for r in mine if r["verdict"] == v) for v in VERDICTS}
         ok = tally["맞다"] / len(mine)
         print(f"  {arm}  뜻이 맞다 {ok:.3f}  ({' · '.join(f'{v} {tally[v]}' for v in VERDICTS)})")
+    return 0
+
+
+def agree(name: str, judges: list[str]) -> int:
+    """판정자 둘의 일치. **어긋난 줄을 이름으로 든다** — 거기가 기준이 무른 자리다."""
+    got = {}
+    for j in judges:
+        p = OUT / f"{name}.{j}.jsonl"
+        if not p.exists():
+            raise SystemExit(f"{_짧게(p)} 가 없다 — 먼저 read --judge {j} 로 읽는다")
+        got[j] = {(r["id"], r["arm"]): r["verdict"]
+                  for r in (json.loads(x) for x in p.read_text(encoding="utf-8").splitlines() if x.strip())
+                  if not r.get("meta")}
+    a, b = judges
+    keys = sorted(set(got[a]) & set(got[b]))
+    if not keys:
+        raise SystemExit("두 판정자가 같은 줄을 안 봤다")
+    xs, ys = [got[a][k] for k in keys], [got[b][k] for k in keys]
+    same = sum(x == y for x, y in zip(xs, ys))
+    k = cohen_kappa(xs, ys)
+    판정 = "자로 쓸 만하다" if k >= 0.7 else ("무르다 — 기준을 좁힌다" if k >= 0.4 else "안 맞는다 — 기준이 틀렸다")
+    print(f"  {a} 대 {b} · 같은 줄 {len(keys)} · 일치 {same} ({same / len(keys):.3f}) · 카파 {k:.3f} → {판정}")
+    for v in VERDICTS:
+        print(f"    {v:5} {a} {xs.count(v):>3} · {b} {ys.count(v):>3}")
+    갈림 = [(k_, got[a][k_], got[b][k_]) for k_ in keys if got[a][k_] != got[b][k_]]
+    if 갈림:
+        print(f"  갈린 줄 {len(갈림)}")
+        for (rid, arm), va, vb in 갈림[:40]:
+            print(f"    {rid} [{arm}]  {a} {va} · {b} {vb}")
     return 0
 
 
@@ -125,10 +213,23 @@ def main(argv: list[str] | None = None) -> int:
     r = sub.add_parser("read")
     r.add_argument("--name", required=True)
     r.add_argument("--sheet", default="")
+    r.add_argument("--judge", default="claude")
+    sub.add_parser("prompt")
+    g = sub.add_parser("agree")
+    g.add_argument("--name", required=True)
+    g.add_argument("--judges", required=True, help="쉼표로 둘")
     a = ap.parse_args(argv)
 
+    if a.cmd == "prompt":
+        print(PROMPT)
+        return 0
+    if a.cmd == "agree":
+        js = [x.strip() for x in a.judges.split(",") if x.strip()]
+        if len(js) != 2:
+            raise SystemExit("--judges 는 둘이다 — 보기: claude,gemini")
+        return agree(a.name, js)
     if a.cmd == "read":
-        return read(a.name, pathlib.Path(a.sheet or f"/tmp/labels-{a.name}.tsv"))
+        return read(a.name, pathlib.Path(a.sheet or f"/tmp/labels-{a.name}.tsv"), a.judge)
 
     name = a.name or f"{pathlib.Path(a.setpath).stem}-{a.n}"
     sheet, key = make(pathlib.Path(a.a), pathlib.Path(a.b), evaluate.load(a.setpath), name, a.n, a.seed)
@@ -138,7 +239,7 @@ def main(argv: list[str] | None = None) -> int:
     out.write_text(sheet, encoding="utf-8")
     print(f"  {out}  {len(key)}줄 (눈가림 · 어느 팔인지 안 적혀 있다)")
     print(f"  {_짧게(OUT / f'{name}.key.jsonl')}  열쇠 — 다 매기기 전에 열지 않는다")
-    print(f"  다 매기면 : python3 tools/labels.py read --name {name}")
+    print(f"  다 매기면 : python3 tools/labels.py read --name {name} --judge <판정자>")
     return 0
 
 
