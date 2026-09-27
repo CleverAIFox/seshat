@@ -28,7 +28,8 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 from seshat import catalog, paths  # noqa: E402
 
-MANAGED = ("raw", "runs")
+# ★ **손으로 적지 않는다** — 층 선언이 정본이다(DECISIONS §114 · catalog.toml `[layers]`)
+MANAGED = catalog.managed_tiers()
 HEADER = "sha256\tpath\tbytes\tadded\torigin"
 # 가설 대장이 근거로 드는 결과 파일
 EVIDENCE = re.compile(r"\bruns/([\w.-]+\.jsonl)\b")

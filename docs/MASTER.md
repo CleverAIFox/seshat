@@ -302,11 +302,22 @@ mkdir -p ~/actions-runner && cd ~/actions-runner      # 저장소 밖 · 한 번
 `/mnt/f/projects/thoth` 옆 `/mnt/f/projects/seshat`. 경로 정본은 `seshat/paths.py` 이고 **셸이 `.env` 를 이긴다.**
 심링크는 쓰지 않는다.
 
-| 층 | 무엇 | 대장 | 백업 |
-|---|---|---|---|
-| `raw` | 바꾸지 않는 원본 — thoth 쌍(원문) · 도메인 문서 스냅숏 · 수집한 공식 용어집 | `MANIFEST.tsv` | 한다 |
-| `runs` | 실험 결과. 다시 만들 수 없다 — 그날의 가중치 · 서버 · GPU 시간. 가설 대장의 `runs/…` 근거가 여기 있다 | `MANIFEST.tsv` | 한다 |
-| `cache` | 다시 받는 것 — FLORES+ · 논문 PDF · 가중치 | 없다 | 안 한다 |
+★ **층 정책의 정본은 `data/catalog.toml` 의 `[layers]` 블록이다**(DECISIONS §114). 이 절은 그것을
+가리키기만 한다 — 표를 여기 두면 정본이 둘이 되고, 실제로 그래서 판정 파일 자리를 하루에 세 번 옮겼다.
+
+    data/catalog.toml [layers]   정책. base · dirs · committed · regenerable · managed
+    seshat/paths.py              경로 해석. 기계마다 다르다(`.env`)
+    seshat/catalog.py            둘을 이름으로 묶는다 — `layers()` · `managed_tiers()` · `check_layers()`
+    tools/check_catalog.py       선언 ↔ `.gitignore` · `paths.TIERS` · `lake.MANAGED`
+    tools/doctor.py              선언 ↔ **이 기계의 실물**(DECISIONS §110)
+
+```bash
+uv run python tools/check_catalog.py --list     # 층과 출처를 표로
+```
+
+★ **`.gitignore` 의 근거는 `regenerable` 이다**(파이어레인 MASTER §18-1a R2). 한 명령으로 다시 만들 수
+있어서 빼는 것이지 크거나 지저분해서가 아니다. **다시 못 만드는 것을 ignore 하면 그 파일은 사실상
+소실된다** — `작업대`(`runs/` · `labels/`)가 그 경계에 있고, 레이크가 `put` 으로 받아서 지킨다.
 
 | 저장소 안에 남는 것 | 이유 |
 |---|---|

@@ -16,12 +16,17 @@ from seshat import catalog  # noqa: E402
 def main(argv: list[str]) -> int:
     entries = catalog.load()
     if "--list" in argv:
+        for n, d in catalog.layers().items():
+            깃 = "커밋" if d["committed"] else ("다시 만든다" if d["regenerable"] else "레이크가 지킨다")
+            print(f"  층 {n:<6} {d['base']:<5} {' '.join(d['dirs']):<38} {깃}")
+        print()
         for e in entries:
             print(f"  {e['id']:<14} {e['where']:<30} {','.join(e['uses']):<16} {e['license']}")
         return 0
     fails = (catalog.validate(entries)
              + [f"카탈로그 밖 {r}" for r in catalog.unlisted_repo_files(entries)]
-             + catalog.weights_outside(entries))
+             + catalog.weights_outside(entries)
+             + catalog.check_layers())
     for f in fails:
         print(f"  {f}")
     print(f"  카탈로그 {len(entries)}출처 · 실패 {len(fails)}")

@@ -16,8 +16,64 @@ UNKNOWN = "미확인"
 LEDGER = "seshat/licenses.py"
 
 
+def _toml(path: Path = PATH) -> dict:
+    return tomllib.loads(path.read_text(encoding="utf-8"))
+
+
 def load(path: Path = PATH) -> list[dict]:
-    return tomllib.loads(path.read_text(encoding="utf-8"))["source"]
+    return _toml(path)["source"]
+
+
+def layers(path: Path = PATH) -> dict[str, dict]:
+    """층 정책. **여기가 정본이다**(DECISIONS §114). `paths.TIERS` · `lake.MANAGED` · `.gitignore` 가 따라온다."""
+    return _toml(path)["layers"]
+
+
+def managed_tiers(path: Path = PATH) -> tuple[str, ...]:
+    """해시 대장이 지키는 레이크 층. `lake.py` 가 손으로 적지 않고 여기서 끌어온다."""
+    return tuple(d for L in layers(path).values() if L["base"] == "lake" and L["managed"] for d in L["dirs"])
+
+
+def lake_tiers(path: Path = PATH) -> tuple[str, ...]:
+    return tuple(d for L in layers(path).values() if L["base"] == "lake" for d in L["dirs"])
+
+
+LAYER_FIELDS = ("base", "dirs", "committed", "regenerable", "managed", "what")
+
+
+def check_layers(root: Path = ROOT, path: Path = PATH) -> list[str]:
+    """선언 ↔ 실물. **`.gitignore` 의 근거가 `regenerable` 이라는 말을 강제한다**(DECISIONS §114).
+
+    ★ 다시 못 만드는 자리(`작업대` · `raw` · `runs`)도 커밋하지 않는다 — 그것은 **레이크가 지킨다.**
+      그래서 `committed` 와 `regenerable` 은 다른 축이고, ignore 여부는 `committed` 가 정한다.
+      `regenerable` 은 **ignore 해도 잃을 것이 없는가**를 답한다 — 아니면 레이크가 받아야 한다.
+    """
+    from . import paths
+    fails, L = [], layers(path)
+    for name, d in L.items():
+        for f in LAYER_FIELDS:
+            if f not in d:
+                fails.append(f"층 {name}: `{f}` 가 없다")
+        if d.get("base") not in ("repo", "lake"):
+            fails.append(f"층 {name}: base 는 repo · lake 다 — {d.get('base')}")
+        # 다시 못 만드는데 레이크도 안 지키면 그 파일은 사라질 수 있다
+        if d.get("base") == "repo" and not d.get("committed") and not d.get("regenerable"):
+            if name != "작업대":
+                fails.append(f"층 {name}: 커밋도 안 하고 다시 만들지도 못한다 — 잃을 자리다")
+    ignored = {ln.strip().rstrip("/") for ln in (root / ".gitignore").read_text(encoding="utf-8").splitlines()
+               if ln.strip() and not ln.lstrip().startswith("#")}
+    for name, d in L.items():
+        if d.get("base") != "repo":
+            continue
+        for sub in d.get("dirs", []):
+            got = sub in ignored
+            if d.get("committed") and got:
+                fails.append(f"층 {name}: committed 인데 .gitignore 가 {sub} 를 뺀다")
+            if not d.get("committed") and not got:
+                fails.append(f"층 {name}: committed 가 아닌데 .gitignore 에 {sub} 가 없다")
+    if set(paths.TIERS) != set(lake_tiers(path)):
+        fails.append(f"paths.TIERS {paths.TIERS} 가 선언 {lake_tiers(path)} 와 다르다")
+    return fails
 
 
 def validate(entries: list[dict], root: Path = ROOT) -> list[str]:

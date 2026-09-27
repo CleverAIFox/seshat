@@ -1,5 +1,9 @@
 """카탈로그 — 칸 · 쓰임 · 미확인 라이선스는 학습 불가 · data/ 의 카탈로그 밖 파일(DECISIONS §22)."""
+import pathlib
+
 from seshat import catalog
+
+ROOT = pathlib.Path(__file__).resolve().parent.parent
 
 OK = {"id": "a", "where": "lake:raw/a/*", "origin": "o", "license": "CC BY 4.0", "uses": ["eval"], "how": "사람"}
 
@@ -92,3 +96,39 @@ def test_옮겼는데_기본_자리에_다시_받은_것을_짚는다(tmp_path, 
     # 기본 자리를 치우면 조용해진다
     (default / "blob").unlink()
     assert catalog.weights_outside(catalog.load()) == []
+
+
+def test_층_선언이_실물과_맞는다():
+    """선언이 정본이고 `.gitignore` · `paths.TIERS` · `lake.MANAGED` 가 따라온다(DECISIONS §114)."""
+    assert catalog.check_layers() == []
+    from seshat import paths
+    assert set(paths.TIERS) == set(catalog.lake_tiers())
+    assert set(catalog.managed_tiers()) == {"raw", "runs"}
+
+
+def test_커밋하는_층을_ignore_하면_짚는다(tmp_path):
+    t = (tmp_path / "c.toml")
+    t.write_text('[layers."정본"]\nbase="repo"\ndirs=["data/ontology"]\ncommitted=true\n'
+                 'regenerable=false\nmanaged=false\nwhat="x"\n[[source]]\nid="a"\n'
+                 'where="repo:x"\norigin="o"\nlicense="l"\nuses=["eval"]\nhow="사람"\n', encoding="utf-8")
+    root = tmp_path
+    (root / ".gitignore").write_text("data/ontology/\n", encoding="utf-8")
+    fails = catalog.check_layers(root, t)
+    assert any("committed 인데 .gitignore 가" in f for f in fails)
+
+
+def test_안_커밋하는_층이_ignore_밖이면_짚는다(tmp_path):
+    t = (tmp_path / "c.toml")
+    t.write_text('[layers."셋"]\nbase="repo"\ndirs=["data/bench"]\ncommitted=false\n'
+                 'regenerable=true\nmanaged=false\nwhat="x"\n[[source]]\nid="a"\n'
+                 'where="repo:x"\norigin="o"\nlicense="l"\nuses=["eval"]\nhow="사람"\n', encoding="utf-8")
+    (tmp_path / ".gitignore").write_text("# 비었다\n", encoding="utf-8")
+    fails = catalog.check_layers(tmp_path, t)
+    assert any(".gitignore 에 data/bench 가 없다" in f for f in fails)
+
+
+def test_lake_의_MANAGED_는_선언에서_온다():
+    """손으로 적으면 선언과 갈린다 — §57 의 「배선에서 끌어온다」와 같은 규칙이다."""
+    src = (ROOT / "tools/lake.py").read_text(encoding="utf-8")
+    assert "MANAGED = catalog.managed_tiers()" in src
+    assert 'MANAGED = ("raw", "runs")' not in src
