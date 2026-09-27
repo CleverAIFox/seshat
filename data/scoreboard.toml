@@ -11,16 +11,16 @@
 [[record]]
 note = "서빙 후보 — 이 기계에서 도는 4B"
 set = "data/domain/d001.jsonl"
-set_sha256 = ""                      # 표시를 든 d001 로 다시 만든 판. --update 가 박는다
-onto_sha256 = ""                     # 사전이 바뀌면 막지 않고 말한다(DECISIONS §32 · §96)
+set_sha256 = "f72846dd0b143d43"  # 표시를 든 d001 로 다시 만든 판. --update 가 박는다
+onto_sha256 = "01f6331febe134b6"  # 사전이 바뀌면 막지 않고 말한다(DECISIONS §32 · §96)
 arm = "gemma3-4b+ph+retry+endings+terms"
-run = "H-052-rescore-H-045-4b-d001-20260927-140903"
-commit = ""
+run = "H-052-rescore-H-045-4b-d001-20260927-140903-20260927-223426"
+commit = "1a8b8c1"
 date = "2026-09-27"
 term_off = 0.8858
-lit = 0.803
+lit = 0.8028
 keep = 0.9853
-style = 0.970
+style = 0.97
 guard = ["term_off", "lit", "keep"]
 tol = 0.01                           # 이만큼까지는 잡음으로 본다
 
