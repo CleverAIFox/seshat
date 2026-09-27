@@ -2,6 +2,8 @@
 import importlib.util
 import pathlib
 
+from seshat import licenses
+
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 _spec = importlib.util.spec_from_file_location("cml", ROOT / "tools/check_model_licenses.py")
 cml = importlib.util.module_from_spec(_spec)
@@ -93,3 +95,14 @@ def test_12b_후보가_대장과_등록부에_함께_있다():
     assert w == "google/gemma-3-12b-it"
     assert lic.LEDGER[w][1] == "yes" and lic.can_teach(w)
     assert b.WEIGHTS["gemma3-12b"] == b.WEIGHTS["gemma3-4b"].replace("4b", "12b")
+
+
+def test_Bedrock_출력은_교사가_아니다():
+    """§50 원문을 못 읽었다 — 모르면 못 쓴다(DECISIONS §130).
+
+    thoth 배포본이 Nova Lite 로 돌므로 쌍의 정답이 그 출력이다. 교사 문이 열려 있으면
+    누군가 그것으로 학생을 학습시키고, 그때는 되돌릴 수 없다.
+    """
+    row = licenses.LEDGER["amazon.nova-lite-v1:0"]
+    assert row[2] == "unknown" and not licenses.can_teach("amazon.nova-lite-v1:0")
+    assert "미독" in row[0] or "미독" in row[3]      # 왜 모르는지가 대장에 있다

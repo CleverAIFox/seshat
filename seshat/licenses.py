@@ -34,6 +34,15 @@ LEDGER: dict[str, tuple[str, str, str, str]] = {
                              "ai.google.dev/gemma/terms · ollama.com/library/gemma3 · 2026-09-23"),
     "google/gemma-3-12b-it": ("Gemma Terms of Use", "yes", "yes",
                               "ai.google.dev/gemma/terms · ollama.com/library/gemma3 · 2026-09-25"),
+    # ★ **가중치가 아니라 API 다.** 그래도 여기 올린다 — 이 대장이 묻는 것은 「출력을 학생 학습에 쓸 수
+    #   있는가」 이고 그 물음에는 API 도 답해야 한다(DECISIONS §130). thoth 배포본이 이것으로 돈다.
+    # ★ **교사 가부는 `unknown` 이다.** AWS Service Terms §50(Bedrock)의 원문을 못 읽었다 —
+    #   `aws.amazon.com/service-terms` 한 장이 너무 커서 도구가 20절쯤에서 끊고, 컨테이너의 curl 은
+    #   프록시가 막는다. 확인된 것은 **AWS 쪽**이 고객 입출력으로 자사 모델을 학습하지 않는다는 것뿐이고,
+    #   **고객이 출력으로 학습해도 되는가**는 그 문서에 없다. **모르면 못 쓴다**(§6 · §44).
+    "amazon.nova-lite-v1:0": ("AWS Service Terms §50(미독) · Bedrock", "yes", "unknown",
+                              "aws.amazon.com/bedrock/amazon-models/privacy (AWS 쪽 학습만 답한다) · "
+                              "§50 원문 미독 · 2026-09-27"),
 }
 
 VALID_COMMERCIAL = {"yes", "no", "unknown"}
