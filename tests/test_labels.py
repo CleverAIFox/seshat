@@ -142,7 +142,10 @@ def test_없는_판정자는_말한다(tmp_path, monkeypatch):
 def test_지시문이_규칙_넷을_든다():
     """다른 판정자에게 주는 지시문 — **표기는 맞다** 와 **맞히려 하지 마라** 가 빠지면 자가 달라진다."""
     for must in ("맞다", "어긋난다", "아니다", "표기가 공식 표기와 달라도", "맞히려 하지 마세요",
-                 "태그<탭>판정", "120줄"):
+                 "태그<탭>판정", "120줄",
+                 # 판정자 둘이 갈린 자리를 예시로 못 박았다(DECISIONS §105)
+                 "낱말 하나가 망가진 것만으로는", "조각이 빠졌거나 관계가 바뀌면",
+                 "다르게 행동하거나"):
         assert must in L.PROMPT, must
     assert "4B" not in L.PROMPT and "12B" not in L.PROMPT and "gemma" not in L.PROMPT.lower()
 
@@ -159,3 +162,26 @@ def test_카탈로그가_라벨을_레이크에_둔다():
     from seshat import catalog
     e = next(x for x in catalog.load() if x["id"] == "labels")
     assert e["where"].startswith("lake:"), e["where"]
+
+
+def test_채점표가_없으면_한_줄로_말한다(tmp_path, monkeypatch):
+    """파이썬 스택을 뱉지 않는다 — 막힌 줄과 다음 명령을 든다(DECISIONS §51)."""
+    monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
+    try:
+        L.read("t", tmp_path / "없다.tsv", "claude")
+    except SystemExit as e:
+        assert "채점표가 없다" in str(e) and "labels.py make" in str(e)
+    else:
+        raise AssertionError("없는 파일인데 통과했다")
+
+
+def test_열쇠가_없으면_한_줄로_말한다(tmp_path, monkeypatch):
+    monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
+    s = tmp_path / "s.tsv"
+    s.write_text("표\t판정\n", encoding="utf-8")
+    try:
+        L.read("t", s, "claude")
+    except SystemExit as e:
+        assert "열쇠가 없다" in str(e)
+    else:
+        raise AssertionError("열쇠 없는데 통과했다")

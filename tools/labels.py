@@ -105,13 +105,21 @@ PROMPT = """아래 표는 영어 기술 문서를 한국어로 옮긴 결과입�
    「할당량」 대신 「쿼타」, 「레코드」 대신 「기록」, 「프로듀서」 대신 「생산자」 — 전부 맞다입니다.
    표기는 다른 자가 이미 세고 있습니다. 여기서 보는 것은 **뜻** 하나뿐입니다.
 2. 문장이 어색하거나 딱딱해도 뜻이 맞으면 「맞다」 입니다. 유창함을 보지 않습니다.
-3. 다음은 「어긋난다」 입니다.
-   - 한국어에 없는 낱말을 만들었다 (보기: snapshot → 「캡샷」)
+3. **낱말 하나가 망가진 것만으로는 「어긋난다」 가 아닙니다.** 그 낱말이 무엇을 가리키는지
+   읽는 사람이 알아볼 수 있으면 「맞다」 입니다.
+     SparkMagic → 「스파크 마직」 · canned ACL → 「캔드된 ACL」 · producer → 「프로듀서」   → 전부 맞다
+   알아볼 수 없게 다른 것이 되면 그때 어긋난다입니다.
+     snapshot → 「캡샷」 · secondary → 「서브다큐먼트」 · shard → 「덩이」 · at rest → 「휴대폰에서」
+4. **원문에 있던 조각이 빠졌거나 관계가 바뀌면 「어긋난다」 입니다.** 이쪽이 더 무겁습니다.
+   - 수식어 · 조건절이 통째로 빠졌다 (보기: `that doesn't exist before the update` 가 사라졌다)
+   - 관계말이 바뀌었다 (보기: `among multiple users` → 「여러 사용자**와**」)
+   - 누가 무엇을 하는지가 바뀌었다 (보기: 「당신이 다시 시작할 때」 → 「그것이 다시 시작하므로」)
    - 뜻이 뒤집혔다 (보기: 「~이다」 가 「~이 아닌」 이 됐다)
    - A를 B로 바꾸라는 지시에서 A와 B가 뒤바뀌었다
-   - 원문에 있던 항목이 통째로 빠졌다
-   - 서로 다른 것을 같은 것으로 합쳤다 (보기: fleet → 리전)
-4. 두 모델의 출력이 섞여 있고 어느 줄이 어느 모델인지는 표에 없습니다.
+   - 서로 다른 개념을 같은 것으로 합쳤다 (보기: fleet → 「리전」 · throughput → 「대역폭」)
+5. 헷갈리면 이렇게 물으십시오 — **번역만 읽은 사람이 원문만 읽은 사람과 다르게 행동하거나
+   다른 사실을 믿게 되는가.** 그러면 어긋난다, 아니면 맞다.
+6. 두 모델의 출력이 섞여 있고 어느 줄이 어느 모델인지는 표에 없습니다.
    **맞히려 하지 마세요.** 알 수 없게 섞은 것이 이 시험의 일부입니다.
 
 답
@@ -143,7 +151,14 @@ def verdict_of(cols: list[str]) -> str:
 
 
 def read(name: str, sheet: pathlib.Path, judge: str = "claude") -> int:
-    key = {r["tag"]: r for r in (json.loads(x) for x in (out_dir() / f"{name}.key.jsonl").read_text(encoding="utf-8").splitlines() if x.strip())}
+    if not sheet.exists():
+        raise SystemExit(f"채점표가 없다 — {sheet}\n"
+                         f"    만든다 : python3 tools/labels.py make --set <셋> --a <A> --b <B>\n"
+                         f"    다른 자리면 : --sheet <경로>")
+    kp = out_dir() / f"{name}.key.jsonl"
+    if not kp.exists():
+        raise SystemExit(f"열쇠가 없다 — {_짧게(kp)}. `make` 가 채점표와 함께 낸다 (seed 가 같으면 같은 표다)")
+    key = {r["tag"]: r for r in (json.loads(x) for x in kp.read_text(encoding="utf-8").splitlines() if x.strip())}
     got, blank = [], 0
     for ln in sheet.read_text(encoding="utf-8").splitlines()[1:]:
         if not ln.strip():
