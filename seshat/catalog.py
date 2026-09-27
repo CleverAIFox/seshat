@@ -239,7 +239,8 @@ def ollama_models_dir() -> tuple[str, str]:
     return os.environ.get("OLLAMA_MODELS", "").strip(), "셸 — 서버에 못 물었다"
 
 
-def weights_outside(entries: list[dict], root: Path = ROOT) -> list[str]:
+def weights_outside(entries: list[dict], root: Path = ROOT,
+                    where: tuple[str, str] | None = None) -> list[str]:
     """가중치가 카탈로그가 적은 자리 밖에 있는가(DECISIONS §106).
 
     ★ **카탈로그는 파일을 못 본다.** `where` 는 약속이고, ollama 는 그 약속을 모른 채 자기 자리에
@@ -247,6 +248,9 @@ def weights_outside(entries: list[dict], root: Path = ROOT) -> list[str]:
       에 있었다. **제일 큰 데이터가 정본 밖에 있었다.**
     ★ 자리를 정하는 것은 `OLLAMA_MODELS` 다. 비어 있으면 ollama 는 `~/.ollama/models` 를 쓴다.
     ★ **레이크가 없는 기계(CI)에서는 묻지 않는다.** 거기엔 ollama 도 없다.
+    ★ **`where` 로 자리를 넣을 수 있다**(DECISIONS §138). 안 주면 서버에게 묻는다 — 그런데 그러면
+      **시험이 그 기계의 진짜 ollama 를 읽는다.** 2026-09-28 에 그렇게 만들었고, ollama 가 없는
+      컨테이너에서는 통과하고 있는 기계에서는 터졌다. **기계를 읽는 시험은 시험이 아니다.**
     """
     import os
     lake = os.environ.get("SESHAT_DATA", "").strip()
@@ -256,7 +260,7 @@ def weights_outside(entries: list[dict], root: Path = ROOT) -> list[str]:
     if not want:
         return []
     root = Path(lake).expanduser()
-    said, 어디서 = ollama_models_dir()
+    said, 어디서 = where or ollama_models_dir()
     # ★ **선언한 자리에 있는지만 묻지 않는다**(DECISIONS §111). 2026-09-27 에 `.env` 에
     #   `OLLAMA_MODELS` 를 적고 파일을 옮겼는데 **ollama 는 `.env` 를 안 읽는다.** 기본 자리에서
     #   3.3GB 를 다시 받아 둘로 쪼개졌고, 이 검사는 선언한 자리만 보고 통과시켰다.

@@ -59,24 +59,21 @@ def test_가중치가_카탈로그_밖에_있으면_짚는다(tmp_path, monkeypa
     entries = catalog.load()
     monkeypatch.setenv("SESHAT_DATA", str(lake))
 
-    monkeypatch.setenv("OLLAMA_MODELS", str(outside))
-    got = catalog.weights_outside(entries)
+    got = catalog.weights_outside(entries, where=(str(outside), "시험"))
     assert got and "카탈로그는 lake:cache/models/*" in got[0] and str(outside) in got[0]
 
     inside = lake / "cache/models/ollama"; inside.mkdir(parents=True)
     (inside / "blob").write_text("가중치인 척", encoding="utf-8")
-    monkeypatch.setenv("OLLAMA_MODELS", str(inside))
-    assert catalog.weights_outside(entries) == []
+    (outside / "blob").unlink()                       # 기본 자리를 비운다 — 옮긴 상태다
+    assert catalog.weights_outside(entries, where=(str(inside), "시험")) == []
 
     # 빈 자리는 짚지 않는다 — 아직 아무것도 안 받은 기계다
     empty = tmp_path / "empty"; empty.mkdir()
-    monkeypatch.setenv("OLLAMA_MODELS", str(empty))
-    assert catalog.weights_outside(entries) == []
+    assert catalog.weights_outside(entries, where=(str(empty), "시험")) == []
 
     # 레이크가 없는 기계(CI)에서는 묻지 않는다
-    monkeypatch.setenv("OLLAMA_MODELS", str(outside))
     monkeypatch.setenv("SESHAT_DATA", "")
-    assert catalog.weights_outside(entries) == []
+    assert catalog.weights_outside(entries, where=(str(outside), "시험")) == []
 
 
 def test_옮겼는데_기본_자리에_다시_받은_것을_짚는다(tmp_path, monkeypatch):
@@ -91,14 +88,13 @@ def test_옮겼는데_기본_자리에_다시_받은_것을_짚는다(tmp_path, 
     (default / "blob").write_text("다시 받은 것", encoding="utf-8")
     monkeypatch.setenv("HOME", str(home))
     monkeypatch.setenv("SESHAT_DATA", str(lake))
-    monkeypatch.setenv("OLLAMA_MODELS", str(inside))
-    got = catalog.weights_outside(catalog.load())
+    got = catalog.weights_outside(catalog.load(), where=(str(inside), "시험"))
     assert len(got) == 1 and str(default) in got[0]
     assert "셸이 OLLAMA_MODELS 를 모른다" in got[0]
 
     # 기본 자리를 치우면 조용해진다
     (default / "blob").unlink()
-    assert catalog.weights_outside(catalog.load()) == []
+    assert catalog.weights_outside(catalog.load(), where=(str(inside), "시험")) == []
 
 
 def test_층_선언이_실물과_맞는다():
@@ -270,3 +266,16 @@ def test_못_물으면_셸_값을_쓰되_그렇다고_적는다(tmp_path, monkey
     monkeypatch.setenv("OLLAMA_MODELS", "/셸이/아는/자리")
     자리, 어디서 = catalog.ollama_models_dir()
     assert 자리 == "/셸이/아는/자리" and "못 물었다" in 어디서
+
+
+def test_가중치_검사가_기계를_안_읽는다():
+    """**시험이 그 기계의 진짜 ollama 를 읽으면 시험이 아니다**(DECISIONS §138).
+
+    2026-09-28 에 `weights_outside` 가 서버에게 묻게 만들었더니, `monkeypatch.setenv` 가 안 먹고
+    시험이 실제 가중치를 셌다 — ollama 가 없는 컨테이너에서는 통과하고 있는 기계에서는 터졌다.
+    **자리를 인자로 받는다.** 이 시험은 `where` 없이 부르는 곳이 시험에 없는지 센다.
+    """
+    src = (ROOT / "tests/test_catalog.py").read_text(encoding="utf-8")
+    맨몸 = [ln.strip() for ln in src.splitlines()
+            if "weights_outside(" in ln and "where=" not in ln and "def " not in ln and "맨몸" not in ln]
+    assert 맨몸 == [], f"시험이 기계를 읽는다 — where= 로 자리를 준다: {맨몸}"
