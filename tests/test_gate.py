@@ -2,6 +2,7 @@
 import importlib.util
 import json
 import pathlib
+import re
 
 import pytest
 
@@ -133,8 +134,12 @@ def test_사전_해시도_같이_박는다(tmp_path, monkeypatch):
 
 def test_처음부터_끝까지_한_번_돈다(tmp_path, monkeypatch, capsys):
     """**도구가 실제로 도는 길을 밟는다**(DECISIONS §128). 조각 시험만으로는 §132 를 못 잡았다."""
+    # ★ **살아 있는 기록판의 상태에 기대지 않는다**(DECISIONS §132 와 같은 병). 해시가 박히기 전에는
+    #   통과하고 박힌 뒤에는 깨지는 시험은, 저장소가 정상으로 갈수록 빨개진다. 여기서 비우고 시작한다
     sb = tmp_path / "sb.toml"
-    sb.write_text((ROOT / "data/scoreboard.toml").read_text(encoding="utf-8"), encoding="utf-8")
+    sb.write_text(re.sub(r'^(set_sha256|onto_sha256) = "[^"]*"', r'\1 = ""',
+                         (ROOT / "data/scoreboard.toml").read_text(encoding="utf-8"), flags=re.M),
+                  encoding="utf-8")
     monkeypatch.setattr(G, "PATH", sb)
     monkeypatch.setattr(G.catalog, "gate", lambda *a, **k: None)
     arm = G.load(sb)["record"][0]["arm"]

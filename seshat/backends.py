@@ -221,6 +221,25 @@ def ollama_chat(model: str, system: str, extra: dict | None = None, suffix: str 
     return call
 
 
+def nbest(model: str, system: str, n: int = 8, temp: float = 0.8, seed0: int = 101):
+    """같은 모델을 **N 번** 부르고 MBR 로 하나를 고른다(DECISIONS §133 · `seshat/mbr.py`).
+
+    ★ **온도를 올려야 후보가 갈린다.** `DECODING` 은 온도 0 이라 여덟 번 불러도 같은 문장이 여덟 개다.
+      `temp` 와 **seed 를 후보마다 다르게** 준다 — 온도만 올리고 seed 를 고정하면 ollama 가 같은 것을 준다.
+    ★ **N 배 느리다.** 600 줄 × 8 이면 이 기계에서 한 시간이 넘는다. 값은 0 이다 — 시간으로 품질을 산다.
+    ★ 자리표시 안쪽에 둔다 — `with_placeholders(nbest(...))`. 후보들이 같은 `⟦Tn⟧` 를 들고 있어
+      고르기가 이름에 흔들리지 않는다.
+    """
+    from . import mbr
+    arms = [ollama_chat(model, system, {"options": {**DECODING, "temperature": temp, "seed": seed0 + i}})
+            for i in range(n)]
+
+    def call(texts: list[str], terms: dict[str, str]) -> list[str]:
+        판 = [f(texts, terms) for f in arms]            # n × 줄
+        return [mbr.pick([p[i] for p in 판]) for i in range(len(texts))]
+    return call
+
+
 # ★ **고친 줄만 다시 묻는다**(H-034 · DECISIONS §59 · §60). 되돌리기가 `missing` 을 돌려주므로 이름이
 #   사라진 줄은 도구가 **안다**. 고치는 판은 **자리표시를 빼고 원문 그대로** 묻는다 — 버려지는 것이
 #   `of ⟦T⟧` 라는 모양 자체이므로, 온도를 흔드는 것이 아니라 그 모양을 없앤다(§60).
@@ -341,6 +360,14 @@ REGISTRY: dict[str, tuple[Backend, str]] = {
         "gemma3:4b+ph+retry+endings+terms"),
     "aws-translate+ph+endings+terms": (with_terms(with_endings(with_placeholders(aws_translate))),
                                        "aws-translate+ph+endings+terms"),
+    # ★ **학습 없이 시간으로 품질을 산다**(DECISIONS §133). 서빙 후보와 같은 후처리를 얹고
+    #   안쪽만 N-best + MBR 로 바꾼다 — 그래야 달라진 것이 고르기 하나다
+    "gemma3-4b+ph+mbr8+endings+terms": (
+        with_terms(with_endings(with_placeholders(nbest("gemma3:4b", GENERIC_SYSTEM, n=8)))),
+        "gemma3:4b+ph+mbr8+endings+terms"),
+    "gemma3-4b+ph+mbr4+endings+terms": (
+        with_terms(with_endings(with_placeholders(nbest("gemma3:4b", GENERIC_SYSTEM, n=4)))),
+        "gemma3:4b+ph+mbr4+endings+terms"),
 }
 
 # ★ 이름으로 짐작하지 않는다 — 어느 백엔드가 ollama 위에 서는지 여기 적는다. 종전에는 `translategemma` 로
@@ -355,7 +382,9 @@ OLLAMA_OF.update({"translategemma-4b": "translategemma:4b", "translategemma-4b+p
                   "gemma3-4b+ph+retry+endings+terms": "gemma3:4b",
                   "gemma3-4b": "gemma3:4b", "gemma3-4b+ph+retry": "gemma3:4b",
                   "gemma3-12b": "gemma3:12b", "gemma3-12b+ph+retry": "gemma3:12b",
-                  "gemma3-12b+ph+retry+endings+terms": "gemma3:12b"})
+                  "gemma3-12b+ph+retry+endings+terms": "gemma3:12b",
+                  "gemma3-4b+ph+mbr8+endings+terms": "gemma3:4b",
+                  "gemma3-4b+ph+mbr4+endings+terms": "gemma3:4b"})
 
 # ★ **어느 ollama 모델이 어느 가중치인가.** `from_pretrained` 를 거치지 않는 호출은 라이선스 검사의
 #   정규식이 보지 못한다. 선언을 검사가 대장과 대조한다(DECISIONS §14).
@@ -375,6 +404,11 @@ WEIGHTS: dict[str, str] = {arm: WEIGHTS_OF_MODEL[m] for arm, m in OLLAMA_OF.item
 
 # 결과 파일 머리줄에 싣는 디코딩 조건
 DECODING_OF: dict[str, dict] = {arm: DECODING for arm in OLLAMA_OF}
+# ★ **N-best 는 온도 0 이 아니다.** 여기 안 적으면 머리줄이 「온도 0」 이라고 거짓말하고, 그 조건으로는
+#   되풀이해도 다른 수가 나온다(DECISIONS §57 · §133). 팔마다 후보 수 · 온도 · 첫 seed 를 적는다
+MBR_ARMS: dict[str, int] = {"gemma3-4b+ph+mbr8+endings+terms": 8, "gemma3-4b+ph+mbr4+endings+terms": 4}
+DECODING_OF.update({arm: {"temperature": 0.8, "seed0": 101, "num_predict": 512, "nbest": n}
+                    for arm, n in MBR_ARMS.items()})
 
 # ★ 고치는 판을 쓰는 팔은 그 조건도 머리줄에 싣는다 — 안 적으면 되풀이할 수 없다(DECISIONS §57)
 REPAIR_ARMS.update({"gemma3-4b+ph+retry+endings+terms", "gemma3-4b+ph+retry",

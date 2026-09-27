@@ -405,6 +405,11 @@ def conditions(a, rows: list[dict], 코드: dict | None = None) -> dict:
         out["ollama"] = ollama_placement()
     if (a.backend or "") in backends.REPAIR_ARMS:   # 처치가 일했는지를 결과가 말한다(DECISIONS §60)
         out["repair"] = dict(backends.REPAIR_STATS)
+    if (a.backend or "") in backends.MBR_ARMS:      # 고르기가 일했는가 — 첫째를 안 고른 비율이 말한다
+        from . import mbr
+        n = max(mbr.STATS["판"], 1)
+        out["mbr"] = {**{k: v for k, v in mbr.STATS.items() if k != "퍼짐_합"},
+                      "퍼짐_평균": round(mbr.STATS["퍼짐_합"] / n, 2)}
     if a.url:                                       # 서버가 스스로 말하는 조건(DECISIONS §115)
         out["server"] = server_health(a.url, a.token, a.thoth_token)
     return out

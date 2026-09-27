@@ -226,7 +226,13 @@ def test_재현_조건은_배선에서_나온다():
     assert set(b.DECODING_OF) == set(b.OLLAMA_OF)
     for arm, model in b.OLLAMA_OF.items():
         assert b.WEIGHTS[arm] == b.WEIGHTS_OF_MODEL[model]
-        assert b.DECODING_OF[arm]["temperature"] == 0
+        # ★ **온도 0 이 더는 전부가 아니다**(DECISIONS §133). N-best 는 후보가 갈려야 고를 것이 생기므로
+        #   온도를 올린다 — 그 팔은 **후보 수와 첫 seed 까지** 적어야 되풀이된다
+        d = b.DECODING_OF[arm]
+        if arm in b.MBR_ARMS:
+            assert d["temperature"] > 0 and d["nbest"] == b.MBR_ARMS[arm] and "seed0" in d
+        else:
+            assert d["temperature"] == 0
 
 
 def test_사전_후처리_팔이_등록부와_표에_함께_있다():
