@@ -75,6 +75,24 @@ how = "사람"
 note = "학습에 쓰려면 약관을 먼저 읽고 license 를 채운다"
 
 [[source]]
+id = "awsdocs-guides"
+where = "lake:cache/awsdocs/*"
+origin = "AWS 공식 안내서의 GitHub 저장소 14권(awsdocs/*, master 가지) — 2023-06 에 얼린 마크다운 본문"
+license = "CC BY-SA 4.0"
+uses = ["eval", "ontology"]
+how = "tools/fetch_awsdocs.py"
+note = "cache 층이라 해시 대장 밖이다 — 다시 받을 수 있다. train 을 안 단다(동일 조건이 학습 산출물에 미치는지 안 읽었다)"
+
+[[source]]
+id = "awsdocs-domain"
+where = "repo:data/domain/*.jsonl"
+origin = "위 안내서에서 뽑은 도메인 문장 — 온톨로지가 든 줄만. 정답(ref)이 없다"
+license = "CC BY-SA 4.0"
+uses = ["eval"]
+how = "tools/fetch_awsdocs.py"
+note = "커밋하지 않는다 — 나눠 줄 때 저작자 표시와 동일 조건이 붙는다. 머리줄이 출처 sha 와 표시를 든다"
+
+[[source]]
 id = "papers"
 where = "lake:cache/papers/*"
 origin = "논문 PDF — 읽은 결과는 docs/papers.md 가 든다"

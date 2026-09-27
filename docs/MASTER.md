@@ -65,6 +65,7 @@ tests/
   thoth_conformance.py   thoth 의 적합성 검사 사본. 여기서 고치지 않는다
 data/eval/seed.jsonl     평가셋 0판 12줄
 tools/fetch_flores.py    FLORES+ 영→한을 data/bench/ 에 받는다 (커밋하지 않는다)
+tools/fetch_awsdocs.py   AWS 공식 안내서(CC BY-SA 4.0)에서 도메인 문장을 뽑는다 → data/domain/ (커밋하지 않는다)
 ```
 
 ## 2. thoth 와의 계약
@@ -131,6 +132,11 @@ AWS_PROFILE=<프로파일> uv run --group eval --group aws python -m seshat.eval
 
 탐침은 `tools/make_probes.py` 가 만든다 — 문형 템플릿 14 × 온톨로지 어휘, 결정적(`--seed`). 의미가 어색한 문장도
 나온다(`move the encryption at rest from …`). 탐침은 이름 · 조사 · 구문을 보고 뜻의 그럴듯함은 보지 않는다.
+
+**실문서 도메인셋**은 `tools/fetch_awsdocs.py` 가 만든다 — AWS 공식 안내서 14권(`awsdocs/*` · **CC BY-SA 4.0** ·
+DECISIONS §92)에서 산문 문장만 꺼내고 **온톨로지가 든 줄만** 남긴다. 온톨로지가 든 문장이 59,145 다. 정답이 없다 —
+도메인 지표는 참조 없이 센다. 안내서마다 상한을 두고(`--cap`) 문장 해시로 정렬한 뒤 `--seed` 로 뽑아 결정적이다.
+**탐침과 실문서 중 무엇이 맞는 자인지는 아직 모른다**(H-045 · DECISIONS §93).
 
 결과는 `runs/<이름>-<시각>.jsonl` 에 머리줄(지표)과 줄마다의 출력으로 남는다.
 
@@ -304,7 +310,7 @@ mkdir -p ~/actions-runner && cd ~/actions-runner      # 저장소 밖 · 한 번
 | 저장소 안에 남는 것 | 이유 |
 |---|---|
 | `data/ontology/` · `data/eval/seed.jsonl` | 사람이 고치는 작은 정본이다. diff 로 봐야 한다 |
-| 받는 도구(`fetch_flores.py`) · 만드는 도구(`make_probes.py`) | 산출물은 다시 만든다 |
+| 받는 도구(`fetch_flores.py` · `fetch_awsdocs.py`) · 만드는 도구(`make_probes.py`) | 산출물은 다시 만든다 |
 | `docs/papers.md` | 논문의 **읽은 결과**가 자산이다. PDF 는 cache 다 |
 
 ```bash

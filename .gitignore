@@ -18,3 +18,5 @@ checkpoints/
 data/bench/
 # 문형 탐침 — 결정적이라 다시 만든다(tools/make_probes.py)
 data/probes/
+# AWS 문서에서 뽑은 도메인셋 — CC BY-SA 라 나눠 줄 때 조건이 붙는다. 받는 도구만 커밋한다(DECISIONS §92)
+data/domain/

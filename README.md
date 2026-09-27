@@ -63,6 +63,7 @@ python3 tools/doc_fsck.py                         # 문서 ↔ 실물
 python3 tools/check_model_licenses.py --list      # 가중치 라이선스 대장
 python3 tools/check_hypotheses.py                 # 가설 대장 — 실험의 문
 python3 tools/make_probes.py --name h001          # 문형 탐침 200줄 → data/probes/
+python3 tools/fetch_awsdocs.py --name d001        # AWS 공식 문서(CC BY-SA) → data/domain/
 python3 tools/compare_runs.py <A> <B> --set <셋>   # 두 결과를 줄 단위로 대조
 python3 tools/rescore.py <결과> --set <셋> --hypothesis H-NNN   # GPU 없이 다시 채점
 python3 tools/show_misses.py <결과> [--what keep|term|hangul|style]  # 숫자 뒤의 줄을 본다
