@@ -1,7 +1,9 @@
 """카탈로그 — 칸 · 쓰임 · 미확인 라이선스는 학습 불가 · data/ 의 카탈로그 밖 파일(DECISIONS §22)."""
 import pathlib
 
-from seshat import catalog
+import pytest
+
+from seshat import catalog, paths
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 
@@ -183,3 +185,50 @@ def test_쓰는_도구는_전부_문을_부른다():
     for f in 문:
         src = (ROOT / f).read_text(encoding="utf-8")
         assert "catalog.gate(" in src, f"{f} 가 문을 안 부른다"
+
+
+def test_등록된_파일이_사는_디렉터리는_등록된_자리다(tmp_path, monkeypatch):
+    """`lake:cache/awsdocs/*` 가 대장에 있으면 그 디렉터리를 만드는 일도 허락된 일이다.
+
+    2026-09-27 `fetch_awsdocs.py` 가 첫 줄에서 죽었다 — `catalog.gate(cache)` 가 디렉터리를
+    물었는데 `fnmatch("cache/awsdocs", "cache/awsdocs/*")` 가 거짓이었다(DECISIONS §128).
+    """
+    lake = tmp_path / "lake"
+    (lake / "cache").mkdir(parents=True)
+    (lake / "MANIFEST.tsv").write_text("sha256\tpath\tbytes\tadded\torigin\n", encoding="utf-8")
+    monkeypatch.setattr(paths, "data", lambda: lake)
+    assert catalog.gate(lake / "cache/awsdocs")["id"] == "awsdocs-guides"
+    assert catalog.gate(lake / "cache/awsdocs/amazon-athena-user-guide")["id"] == "awsdocs-guides"
+    with pytest.raises(SystemExit, match="카탈로그 밖에"):
+        catalog.gate(lake / "cache/몰래")
+
+
+def test_홀드는_형제_디렉터리를_안_먹는다():
+    e = [{"id": "x", "where": "lake:cache/awsdocs/*"}]
+    assert catalog.holds(e, "lake", "cache/awsdocs")["id"] == "x"
+    assert catalog.holds(e, "lake", "cache/awsdoc") is None      # 접두사만 같은 남의 자리
+    assert catalog.holds(e, "repo", "cache/awsdocs") is None
+
+
+def test_모든_출처의_디렉터리가_문을_지난다(tmp_path, monkeypatch):
+    """**시험이 「문을 부르는가」 만 보고 「문을 지나는가」 를 안 봤다**(DECISIONS §128).
+
+    도구는 파일을 쓰기 전에 디렉터리를 만든다. 대장의 모든 자리에 대해 그 디렉터리가 문을
+    지나는지 여기서 한꺼번에 센다 — 한 출처를 더할 때마다 같은 사고가 나지 않게.
+    """
+    lake = tmp_path / "lake"
+    lake.mkdir()
+    (lake / "MANIFEST.tsv").write_text("sha256\tpath\tbytes\tadded\torigin\n", encoding="utf-8")
+    monkeypatch.setattr(paths, "data", lambda: lake)
+    막힌 = []
+    for e in catalog.load():
+        space, _, pat = e["where"].partition(":")
+        d = pathlib.PurePosixPath(pat).parent.as_posix()
+        if d in (".", ""):
+            continue
+        base = ROOT if space == "repo" else lake
+        try:
+            catalog.gate(base / d)
+        except SystemExit as x:
+            막힌.append(f'{e["id"]} → {space}:{d} — {str(x).splitlines()[0]}')
+    assert 막힌 == []

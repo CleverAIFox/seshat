@@ -168,7 +168,9 @@ def gate(path: Path, root: Path = ROOT, cat: Path = PATH) -> dict | None:
         raise SystemExit(f"선언 밖에 쓰려고 한다 — {space}:{rel}\n"
                          f"    `data/catalog.toml` 의 [layers] 에 자리를 적는다(DECISIONS §114)")
     name, layer = 안[0]
-    got = match(load(cat), space, rel)
+    entries = load(cat)
+    # 그 자리 자체이거나, **등록된 파일이 사는 디렉터리**이거나(DECISIONS §128)
+    got = match(entries, space, rel) or holds(entries, space, rel)
     if got is None and (layer["managed"] or space == "lake" or rel.startswith("data/")):
         raise SystemExit(f"카탈로그 밖에 쓰려고 한다 — {space}:{rel} (층 {name})\n"
                          f"    `data/catalog.toml` 에 [[source]] 를 적는다. **파일을 옮기기 전에 대장부터** 쓴다")
@@ -180,6 +182,21 @@ def match(entries: list[dict], space: str, rel: str) -> dict | None:
     for e in entries:
         kind, _, pat = e["where"].partition(":")
         if kind == space and fnmatch.fnmatch(rel, pat):
+            return e
+    return None
+
+
+def holds(entries: list[dict], space: str, rel: str) -> dict | None:
+    """`rel` **아래에** 등록된 자리가 있으면 그 출처(DECISIONS §128).
+
+    ★ **등록된 파일이 사는 디렉터리는 등록된 자리다.** `lake:cache/awsdocs/*` 가 대장에 있으면
+      `cache/awsdocs` 를 만드는 일도 허락된 일이다 — 그 디렉터리를 만들어야 그 파일이 생긴다.
+      `match` 로는 안 걸린다(`fnmatch("cache/awsdocs", "cache/awsdocs/*")` 는 거짓이다).
+    """
+    앞 = rel.rstrip("/") + "/"
+    for e in entries:
+        kind, _, pat = e["where"].partition(":")
+        if kind == space and pat.startswith(앞):
             return e
     return None
 
