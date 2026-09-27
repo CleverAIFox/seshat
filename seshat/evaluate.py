@@ -106,19 +106,46 @@ def is_hapsyo(ko: str) -> bool:
     return bool(_HAPSYO.search(last))
 
 
+_찍은 = [0.0]          # 마지막으로 진척을 찍은 때(경과 초). 시간으로도 찍으려고 든다
+말없이 = 45.0          # 이 초만큼 조용하면 찍는다
+
+
 def _진척(before: int, done: int, total: int, elapsed: float) -> None:
-    """긴 판이 말없이 도는 것을 막는다(DECISIONS §80).
+    """긴 판이 말없이 도는 것을 막는다(DECISIONS §80 · §135).
 
     ★ 12B 를 CPU 로 내려 재는 판이 한 시간 돌면서 로그에 한 줄도 안 남겼다. 살아 있는지 죽었는지
       `ollama ps` 로 밖에서 물어야 했다 — **도구가 제 상태를 말하는 것이 도구의 일이다**(§51 · §60).
+    ★ **열에 한 번으로는 모자랐다**(§135). N-best 는 줄당 4.4 초여서 열에 한 번이 **4.6 분에 한 번**이
+      됐고, 사람이 멈춘 줄 알고 끊었다. 줄 수가 아니라 **시간으로도** 찍는다.
     ★ 표준 오류로 쓴다. 표준 출력은 결과 JSON 의 자리다 — 파이프로 받는 쪽을 깨뜨리지 않는다.
     """
     step = max(total // 10, 1)                 # 열에 한 번. 묶음 크기가 나누어떨어지지 않아도 선다
-    if total < 20 or done <= 0 or done >= total or before // step == done // step:
+    if total < 20 or done <= 0 or done >= total:
         return
+    if before // step == done // step and elapsed - _찍은[0] < 말없이:
+        return
+    _찍은[0] = elapsed
     남은 = elapsed / done * (total - done)
     print(f"  {done}/{total} · 줄당 {elapsed / done:.1f}초 · 남은 시간 약 {남은 / 60:.0f}분",
           file=sys.stderr, flush=True)
+
+
+def part_path(name: str) -> pathlib.Path:
+    """중간 결과의 자리. **이름당 하나**다 — 시각을 안 붙여야 다음 판이 찾는다."""
+    return pathlib.Path("runs") / f"{name or 'eval'}.part.jsonl"
+
+
+def part_read(path: pathlib.Path, 조건: dict) -> dict[str, str]:
+    """중간 결과를 읽는다. **조건이 다르면 안 잇는다** — 다른 자로 잰 줄을 한 파일에 섞지 않는다(§45)."""
+    줄 = [json.loads(x) for x in path.read_text(encoding="utf-8").splitlines() if x.strip()]
+    머리 = next((x for x in 줄 if x.get("meta")), {})
+    다름 = [k for k, v in 조건.items() if 머리.get(k) != v]
+    if 다름:
+        raise SystemExit(
+            f"중간 결과가 다른 조건에서 만들어졌다 — {' · '.join(다름)}\n"
+            + "".join(f"    {k}: 그때 {머리.get(k)!r} · 지금 {v!r}\n" for k, v in 조건.items() if k in 다름)
+            + f"    이으려면 같은 조건으로 부르고, 아니면 {path} 를 지운다")
+    return {x["id"]: x["out"] for x in 줄 if not x.get("meta") and x.get("id")}
 
 
 def load(path: str) -> list[dict]:
@@ -471,6 +498,7 @@ def main(argv=None) -> int:
     ap.add_argument("--smoke", action="store_true", help="배선만 본다. 가설을 요구하지 않는다")
     ap.add_argument("--limit", type=int, default=0, help="앞에서 N줄만 잰다 — 돈이 드는 백엔드의 첫 판에 쓴다")
     ap.add_argument("--max-usd", type=float, default=1.0, help="이 실행이 쓸 수 있는 돈의 상한")
+    ap.add_argument("--resume", action="store_true", help="같은 이름의 중간 결과를 이어받는다")
     a = ap.parse_args(argv)
     if not (a.smoke or a.backend == "echo"):
         door(a.hypothesis)
@@ -489,29 +517,57 @@ def main(argv=None) -> int:
         model = ""
         def call(texts):
             return translate(a.url, texts, a.token, a.thoth or bool(a.thoth_token), a.thoth_token)
-    outs: list[str] = []
     코드 = 코드_상태()                                # 판이 끝난 뒤가 아니라 **지금** 찍는다(§81)
     from . import backends as _b
     _b.REPAIR_STATS.update(tried=0, fixed=0)         # 이번 실행의 셈만 센다
+
+    # ★ **중간 결과를 나오는 대로 쓴다**(DECISIONS §135). 끝나야 쓰면 26 분짜리 판이 끊길 때
+    #   GPU 시간이 통째로 사라진다 — 그 시간은 다시 못 만든다(§28 과 같은 까닭)
+    runs = pathlib.Path("runs")
+    runs.mkdir(exist_ok=True)
+    from . import catalog
+    catalog.gate(runs)                  # 선언 안에 쓴다(DECISIONS §121)
+    part = part_path(a.name)
+    조건 = {"backend": a.backend or None, "url": a.url or "", "set_sha256": set_sha256(a.set),
+            "onto_sha256": onto_sha256()}
+    이미: dict[str, str] = {}
+    if part.exists():
+        if not a.resume:
+            raise SystemExit(f"중간 결과가 남아 있다 — {part}\n"
+                             f"    이어서 돌린다 : 같은 명령에 --resume 을 붙인다\n"
+                             f"    처음부터     : 그 파일을 지운다")
+        이미 = part_read(part, 조건)
+        print(f"  이어서 돈다 — {len(이미)}/{len(rows)} 줄은 이미 있다", file=sys.stderr, flush=True)
+    else:
+        part.write_text(json.dumps({"meta": True, **조건}, ensure_ascii=False) + "\n", encoding="utf-8")
+
+    남은줄 = [r for r in rows if r.get("id") not in 이미]
+    새것: dict[str, str] = {}
+    _찍은[0] = 0.0                # 판마다 진척 시계를 되돌린다 — 앞 판의 시계를 물려받으면 안 찍는다
     t = time.monotonic()
-    for i in range(0, len(rows), BATCH):
-        before = len(outs)
-        outs += call([r["src"] for r in rows[i:i + BATCH]])
-        _진척(before, len(outs), len(rows), time.monotonic() - t)
-    ms = (time.monotonic() - t) * 1000 / max(len(rows), 1)
+    with part.open("a", encoding="utf-8") as pf:
+        for i in range(0, len(남은줄), BATCH):
+            묶음 = 남은줄[i:i + BATCH]
+            before = len(새것)
+            for r, o in zip(묶음, call([r["src"] for r in 묶음])):
+                새것[r.get("id")] = o
+                pf.write(json.dumps({"id": r.get("id"), "out": o}, ensure_ascii=False) + "\n")
+            pf.flush()
+            _진척(before, len(새것), len(남은줄), time.monotonic() - t)
+    # ★ **`ms` 는 이번 판에 실제로 부른 줄만 센다.** 이어 돌린 판에서 전체로 나누면 빨라 보인다
+    ms = (time.monotonic() - t) * 1000 / max(len(남은줄), 1)
+    outs = [{**이미, **새것}[r.get("id")] for r in rows]
 
     res = score(rows, outs)
     res["ms"] = round(ms)
+    if 이미:
+        res["resumed"] = len(이미)          # 몇 줄을 이어받았나 — `ms` 는 나머지만 잰 값이다
     res["set"] = a.set
     res["url"] = a.url or f"backend:{a.backend}"
     if model:
         res["model"] = model
     res.update(conditions(a, rows, 코드))
 
-    runs = pathlib.Path("runs")
-    runs.mkdir(exist_ok=True)
-    from . import catalog
-    catalog.gate(runs)                  # 선언 안에 쓴다(DECISIONS §121)
     stamp = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
     out = runs / f"{a.name or 'eval'}-{stamp}.jsonl"
     with out.open("w", encoding="utf-8") as f:
@@ -519,6 +575,7 @@ def main(argv=None) -> int:
         for r, o in zip(rows, outs):
             f.write(json.dumps({"id": r.get("id"), "src": r["src"], "out": o,
                                 "ref": r.get("ref")}, ensure_ascii=False) + "\n")
+    part.unlink(missing_ok=True)        # 온전한 결과가 생겼으니 중간 것은 없앤다
     print(json.dumps(res, ensure_ascii=False, indent=1))
     print(f"→ {out}", file=sys.stderr)
     return 0

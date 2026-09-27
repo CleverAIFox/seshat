@@ -176,15 +176,30 @@ def test_term_은_번역이_아닌_줄에서_점수를_주지_않는다():
     assert ev.term(rows, [real])["term"] == 1.0
 
 
-def test_긴_판은_열에_한_번_제_상태를_말한다(capsys):
-    """12B 를 CPU 로 내려 재는 판이 한 시간 동안 로그에 한 줄도 안 남겼다(DECISIONS §80)."""
+def test_긴_판은_제_상태를_말한다(capsys):
+    """12B 를 CPU 로 내려 재는 판이 한 시간 동안 로그에 한 줄도 안 남겼다(DECISIONS §80).
+
+    ★ **열에 한 번은 모자랐다**(§135). 느린 팔에서는 열에 한 번이 몇 분에 한 번이 된다 —
+      줄 수로도 찍고 **시간으로도** 찍는다. 마지막 칸은 안 찍는다(곧 결과가 나온다).
+    """
+    ev._찍은[0] = 0.0
     done = 0
     for _ in range(0, 200, 9):                      # BATCH 가 9 라 200 을 나누어떨어뜨리지 않는다
         before, done = done, min(done + 9, 200)
-        ev._진척(before, done, 200, done * 12.0)
+        ev._진척(before, done, 200, done * 12.0)    # 묶음마다 108 초 — 시간으로 매번 걸린다
     말 = capsys.readouterr().err
-    assert 말.count("남은 시간") == 9                # 열 칸 중 마지막은 안 찍는다(곧 결과가 나온다)
+    assert 말.count("남은 시간") == 22               # 23 묶음 중 마지막(200/200)은 안 찍는다
     assert "줄당 12.0초" in 말
+
+
+def test_빠른_판은_열에_한_번만_찍는다(capsys):
+    """시간으로도 찍는다고 해서 빠른 판이 수다스러워지면 안 된다."""
+    ev._찍은[0] = 0.0
+    done = 0
+    for _ in range(0, 200, 9):
+        before, done = done, min(done + 9, 200)
+        ev._진척(before, done, 200, done * 0.05)    # 줄당 0.05 초 — 다 돌아도 10 초다
+    assert capsys.readouterr().err.count("남은 시간") == 9
 
 
 def test_짧은_판은_조용하다(capsys):
@@ -333,3 +348,90 @@ def test_재채점은_쓴_셋을_적는다(tmp_path):
     head, _ = R.rescore(str(run), str(s))
     assert head["set_sha256"] == ev.set_sha256(s) != "옛해시0000000000"
     assert head["set_was"] == "옛해시0000000000"
+
+
+def _셋(tmp_path, n=30):
+    p = tmp_path / "s.jsonl"
+    p.write_text("\n".join(json.dumps({"id": f"r{i}", "src": f"Store object number {i} in the bucket."},
+                                      ensure_ascii=False) for i in range(n)) + "\n", encoding="utf-8")
+    return str(p)
+
+
+def test_판이_끊겨도_중간_결과가_남는다(tmp_path, monkeypatch):
+    """26 분짜리 판이 끊겨 GPU 시간이 통째로 날아갔다(DECISIONS §135). 나오는 대로 쓴다."""
+    monkeypatch.chdir(tmp_path)
+    셋 = _셋(tmp_path)
+    진짜 = ev.via_backend
+
+    def 도중에_죽는다(name):
+        fn, model = 진짜(name)
+        센다 = [0]
+
+        def call(texts):
+            센다[0] += len(texts)
+            if 센다[0] > 18:
+                raise KeyboardInterrupt
+            return fn(texts)
+        return call, model
+    monkeypatch.setattr(ev, "via_backend", 도중에_죽는다)
+    with pytest.raises(KeyboardInterrupt):
+        ev.main(["--backend", "echo", "--set", 셋, "--name", "끊김"])
+    part = tmp_path / "runs/끊김.part.jsonl"
+    assert part.exists()
+    줄 = [x for x in part.read_text(encoding="utf-8").splitlines() if x.strip()]
+    assert len(줄) == 1 + 18                       # 머리줄 + 살아남은 줄
+
+
+def test_중간_결과가_있으면_말하고_멈춘다(tmp_path, monkeypatch):
+    """조용히 덮어쓰면 남아 있던 줄이 사라진다 — 무엇을 할지 말하고 멈춘다."""
+    monkeypatch.chdir(tmp_path)
+    셋 = _셋(tmp_path)
+    (tmp_path / "runs").mkdir()
+    ev.part_path("t").write_text('{"meta": true}\n', encoding="utf-8")
+    with pytest.raises(SystemExit, match="--resume"):
+        ev.main(["--backend", "echo", "--set", 셋, "--name", "t"])
+
+
+def test_이어받으면_이미_있는_줄을_안_부른다(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    셋 = _셋(tmp_path)
+    (tmp_path / "runs").mkdir()
+    조건 = {"backend": "echo", "url": "", "set_sha256": ev.set_sha256(셋), "onto_sha256": ev.onto_sha256()}
+    ev.part_path("t").write_text("\n".join([json.dumps({"meta": True, **조건}, ensure_ascii=False),
+                                            json.dumps({"id": "r0", "out": "이미 있던 줄"}, ensure_ascii=False)]) + "\n",
+                                 encoding="utf-8")
+    부른것 = []
+    진짜 = ev.via_backend
+
+    def 센다(name):
+        fn, model = 진짜(name)
+        return (lambda texts: (부른것.extend(texts), fn(texts))[1]), model
+    monkeypatch.setattr(ev, "via_backend", 센다)
+    assert ev.main(["--backend", "echo", "--set", 셋, "--name", "t", "--resume"]) == 0
+    assert len(부른것) == 29                                   # 30 중 하나는 안 불렀다
+    out = next((tmp_path / "runs").glob("t-*.jsonl"))
+    줄 = [json.loads(x) for x in out.read_text(encoding="utf-8").splitlines() if x.strip()]
+    assert 줄[0]["resumed"] == 1
+    assert next(x for x in 줄 if x.get("id") == "r0")["out"] == "이미 있던 줄"
+    assert not ev.part_path("t").exists()                     # 온전한 결과가 생기면 없앤다
+
+
+def test_조건이_다르면_안_잇는다(tmp_path, monkeypatch):
+    """다른 자로 잰 줄을 한 파일에 섞지 않는다(DECISIONS §45)."""
+    monkeypatch.chdir(tmp_path)
+    셋 = _셋(tmp_path)
+    (tmp_path / "runs").mkdir()
+    ev.part_path("t").write_text(json.dumps({"meta": True, "backend": "딴백엔드", "url": "",
+                                             "set_sha256": "딴셋", "onto_sha256": "딴사전"},
+                                            ensure_ascii=False) + "\n", encoding="utf-8")
+    with pytest.raises(SystemExit, match="다른 조건에서 만들어졌다"):
+        ev.main(["--backend", "echo", "--set", 셋, "--name", "t", "--resume"])
+
+
+def test_진척은_시간으로도_찍는다(capsys):
+    """N-best 는 줄당 4.4 초여서 열에 한 번이 4.6 분에 한 번이 됐다 — 사람이 멈춘 줄 알고 끊었다."""
+    ev._찍은[0] = 0.0
+    ev._진척(100, 101, 600, 1.0)                  # 열에 한 번에도 안 걸리고 시간도 안 됐다
+    assert capsys.readouterr().err == ""
+    ev._진척(100, 101, 600, ev.말없이 + 1)         # 조용한 지 오래됐다
+    assert "101/600" in capsys.readouterr().err
