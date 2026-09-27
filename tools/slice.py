@@ -23,7 +23,21 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 from seshat import evaluate, grammar  # noqa: E402
 
-SHOW = ("term_off", "term", "keep", "lit", "hangul", "style")
+SHOW = ("term_off", "term", "keep", "lit", "ui", "hangul", "style")
+# 제 분모를 드는 지표. 나머지는 줄 수가 분모다
+SHOW_N = ("term_n", "lit_n", "ui_n")
+
+
+def 이름(path: str, head: dict) -> str:
+    """팔의 이름. **파일 이름 앞머리는 셋 다 같다** — `H-052-rescore-…` 만 찍으면 열을 못 읽는다.
+
+    머리줄의 `model` · `backend` 를 먼저 쓰고, 없으면 파일 이름에서 **뒤쪽**을 쓴다.
+    """
+    if (m := head.get("model") or head.get("backend")):
+        return str(m)
+    stem = pathlib.Path(path).stem
+    조각 = [x for x in stem.split("-") if not x.isdigit() and x not in ("rescore", "H")]
+    return "-".join(조각[-3:]) or stem
 
 
 def 축_of(rows: list[dict]) -> dict[str, tuple[str, ...]]:
@@ -111,24 +125,28 @@ def main(argv: list[str] | None = None) -> int:
                 continue
             print(f"  {ax:<8}" + "".join(_맞다칸(v.get(ax)) for v in 표.values()))
 
-    for p in a.runs:
-        head, outs = read_run(p)
-        got = by_axis(rows, outs)
-        if len(a.runs) == 1:
-            print(f"\n  {pathlib.Path(p).name}  {head.get('model') or head.get('backend') or ''}")
-            print(f"  {'축':<8}{'n':>5}" + "".join(f"{m:>9}" for m in SHOW))
-            for ax, s in got.items():
-                print(f"  {ax:<8}{s['n']:>5}" + "".join(_칸(s.get(m)).rjust(9) for m in SHOW))
-        else:
-            if p == a.runs[0]:
-                print(f"\n  {a.metric} — 축마다")
-                print(f"  {'축':<8}{'n':>5}" + "".join(f"{pathlib.Path(x).stem[:14]:>16}" for x in a.runs))
-            # 여러 팔은 아래에서 한 번에 찍는다
-    if len(a.runs) > 1:
-        모 = {p: by_axis(rows, read_run(p)[1]) for p in a.runs}
-        첫 = next(iter(모.values()))
-        for ax in 첫:
-            print(f"  {ax:<8}{첫[ax]['n']:>5}" + "".join(_칸(모[p].get(ax, {}).get(a.metric)).rjust(16) for p in a.runs))
+    if len(a.runs) == 1:
+        head, outs = read_run(a.runs[0])
+        print(f"\n  {pathlib.Path(a.runs[0]).name}  {이름(a.runs[0], head)}")
+        print(f"  {'축':<8}{'줄':>5}" + "".join(f"{m:>9}" for m in SHOW))
+        for ax, s in by_axis(rows, outs).items():
+            print(f"  {ax:<8}{s['n']:>5}" + "".join(_칸(s.get(m)).rjust(9) for m in SHOW))
+    elif a.runs:
+        모, 이름들 = {}, {}
+        for p in a.runs:
+            head, outs = read_run(p)
+            모[p], 이름들[p] = by_axis(rows, outs), 이름(p, head)
+        분모 = f"{a.metric}_n"
+        print(f"\n  {a.metric} — 축마다")
+        # ★ **분모는 그 지표의 분모다**(DECISIONS §129). 줄 수를 분모로 찍으면 `lit` 0.78 을 64 줄
+        #   위의 수로 읽는데 실제로는 표시가 9 개뿐일 수 있다. 지표가 제 분모를 들면 그것을 쓴다
+        print(f"  {'축':<8}{'줄':>5}{('/' + 분모 if 분모 in SHOW_N else ''):>9}"
+              + "".join(f"{이름들[x][:14]:>16}" for x in a.runs))
+        for ax, 첫 in next(iter(모.values())).items():
+            n = f"{첫['n']:>5}"
+            if 분모 in SHOW_N:
+                n += f"{'/' + str(모[a.runs[0]][ax].get(분모, '?')):>9}"
+            print(f"  {ax:<8}{n}" + "".join(_칸(모[p].get(ax, {}).get(a.metric)).rjust(16) for p in a.runs))
     return 0
 
 
