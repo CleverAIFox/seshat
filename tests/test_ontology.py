@@ -261,3 +261,19 @@ def test_흔한_말은_그_개념을_말하는_줄에서만_바뀐다():
     고침, hits = terms.fix_terms(onto, "요청을 제어하면 늘려야 합니다.",
                                  src="If the service throttles the requests, increase it.")
     assert "스로틀링" in 고침 and hits
+
+
+def test_제품_이름이_개념으로_쪼개지지_않는다():
+    """`X Serverless` 는 제품이다. 뒷말이 개념이라고 갈라지면 지표가 **제품 이름을 번역하라고 요구한다**
+    (DECISIONS §94). `Amazon OpenSearch Serverless` 를 「OpenSearch 서버리스」 로 쓴 쪽에 점수를 줬다."""
+    onto = ontology.load()
+    for text, want in (("OpenSearch Serverless", "feat.opensearch-serverless"),
+                       ("Amazon EMR Serverless", "feat.emr-serverless"),
+                       ("Aurora Serverless v2", "feat.aurora-serverless"),
+                       ("Amazon Redshift Serverless", "feat.redshift-serverless")):
+        hits = ontology.find(onto, f"Use {text} for this workload.")
+        assert [s.node["id"] for _, _, s in hits] == [want], text
+        assert all(s.node["keep"] for _, _, s in hits), text
+    # 홀로 선 serverless 는 여전히 개념이다
+    hits = ontology.find(onto, "The pipeline is serverless.")
+    assert [s.node["id"] for _, _, s in hits] == ["con.serverless"]

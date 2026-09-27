@@ -38,6 +38,9 @@
 {"id": "svc.redshift", "kind": "service", "en": "Amazon Redshift", "keep": true, "coda": "none", "aliases": ["Redshift"], "parent": null, "category": "analytics", "src": "author"}
 {"id": "feat.redshift-spectrum", "kind": "feature", "en": "Amazon Redshift Spectrum", "keep": true, "coda": "closed", "aliases": ["Redshift Spectrum"], "parent": "svc.redshift", "src": "author"}
 {"id": "feat.redshift-serverless", "kind": "feature", "en": "Amazon Redshift Serverless", "keep": true, "coda": "none", "aliases": ["Redshift Serverless"], "parent": "svc.redshift", "src": "author"}
+{"id": "feat.opensearch-serverless", "kind": "feature", "en": "Amazon OpenSearch Serverless", "keep": true, "coda": "none", "aliases": ["OpenSearch Serverless"], "parent": "svc.opensearch", "src": "author"}
+{"id": "feat.emr-serverless", "kind": "feature", "en": "Amazon EMR Serverless", "keep": true, "coda": "none", "aliases": ["EMR Serverless"], "parent": "svc.emr", "src": "author"}
+{"id": "feat.aurora-serverless", "kind": "feature", "en": "Amazon Aurora Serverless", "keep": true, "coda": "none", "aliases": ["Aurora Serverless", "Aurora Serverless v2"], "parent": "svc.aurora", "src": "author"}
 {"id": "svc.emr", "kind": "service", "en": "Amazon EMR", "keep": true, "coda": "rieul", "aliases": ["EMR", "Amazon Elastic MapReduce", "Elastic MapReduce"], "parent": null, "category": "analytics", "src": "author"}
 {"id": "svc.lake-formation", "kind": "service", "en": "AWS Lake Formation", "keep": true, "coda": "closed", "aliases": ["Lake Formation"], "parent": null, "category": "governance", "src": "author"}
 {"id": "svc.quicksight", "kind": "service", "en": "Amazon QuickSight", "keep": true, "coda": "none", "aliases": ["QuickSight"], "parent": null, "category": "analytics", "src": "author"}
