@@ -1,4 +1,4 @@
-"""문형 탐침 — 문형 템플릿 × 온톨로지 어휘로 통제된 영어 문장을 만든다(PLAN #23 · MASTER §7 R5).
+"""문형 탐침 — 문형 템플릿 × 온톨로지 어휘로 통제된 영어 문장을 만든다(MASTER §7 R5).
 
   python3 tools/make_probes.py --name h001 --n 200      → data/probes/h001.jsonl
 

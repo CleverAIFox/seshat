@@ -146,7 +146,7 @@ DECISIONS §92)에서 산문 문장만 꺼내고 **온톨로지가 든 줄만** 
 
 | 평가셋 | 줄 | 정답 |
 |---|---|---|
-| `data/eval/seed.jsonl` | 12 | 초안. 사람이 쓰지 않는다 — 교사 합의 + 검사기로 만든다(PLAN #1) |
+| `data/eval/seed.jsonl` | 12 | 초안. 사람이 쓰지 않는다 — 교사 합의 + 검사기로 만든다(PLAN #18 · #3) |
 | `data/bench/flores_plus.dev.jsonl` · `.devtest.jsonl` | 997 · 1,012 | FLORES+ 정답(평어체) · CC BY-SA 4.0 · 받아서 쓴다 |
 
 ## 4. 기계

@@ -1,4 +1,4 @@
-"""용어 자리표시 — 서비스명을 모델 밖에서 지킨다(H-001 · PLAN #15).
+"""용어 자리표시 — 서비스명을 모델 밖에서 지킨다(H-001 · H-016 채택 · DECISIONS §17).
 
   masked, slots = terms.mask(onto, "Load data into Amazon S3 with AWS Glue.")
   # "Load data into ⟦T1⟧ with ⟦T2⟧."
