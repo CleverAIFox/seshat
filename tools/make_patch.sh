@@ -25,3 +25,18 @@ if [ -n "$PROPOSED" ]; then
   echo "  ※ 이 패치가 제안 상태로 더하는 가설 : ${PROPOSED}" >&2
   echo "    지금 돌릴 것이면 이 패치에서 '실험' 으로 올린다 — 안 그러면 문이 막는다" >&2
 fi
+
+# ★ **기계마다 다른 파일은 패치에 싣지 않는다**(DECISIONS §96). 사본에서 `uv run` 을 돌리면 uv.lock 이
+#   갱신되고 `git add -A` 가 담는다. 붙이는 쪽에서 반드시 충돌한다 — 두 번 겪었다
+if grep -q '^diff --git a/uv.lock' "$OUT"; then
+  echo "  ※ 이 패치가 uv.lock 을 담았다 — 붙이는 쪽에서 충돌한다" >&2
+  echo "    빼고 다시 만든다 : git checkout HEAD~1 -- uv.lock && git commit --amend --no-edit" >&2
+fi
+
+# ★ **재는 자를 바꾸는 일과 그 자로 판정하는 일을 같이 두지 않는다**(DECISIONS §96 · §86).
+#   붙이는 사람이 둘을 순서대로 할 방법이 없다 — 근거 숫자가 없어진 사전으로 잰 것이 된다
+VERDICT="$(grep -cE '^\+\| H-[0-9]+ \| (채택|기각) \|' "$OUT" || true)"
+if [ "$VERDICT" -gt 0 ] && grep -q '^diff --git a/data/ontology/' "$OUT"; then
+  echo "  ※ 이 패치가 판정과 온톨로지를 같이 바꾼다 — 근거 숫자를 없어진 사전으로 잰 것이 된다" >&2
+  echo "    사전 먼저 · 다시 재고 · 그다음 판정. 셋으로 나눈다(DECISIONS §96)" >&2
+fi
