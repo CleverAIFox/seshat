@@ -221,6 +221,35 @@ def ollama_chat(model: str, system: str, extra: dict | None = None, suffix: str 
     return call
 
 
+def ollama_chat_ref(model: str, system: str, cap: int = 12, extra: dict | None = None):
+    """줄마다 **그 줄의 용어집**을 체계 지시에 붙여 부른다(DECISIONS §134 · `seshat/glossary.py`).
+
+    ★ `ollama_chat` 과 배선이 같고 **체계 지시만 줄마다 다르다.** 달라진 것이 하나여야 무엇이
+      효과인지 가른다 — 모델도 복호화도 그대로다.
+    ★ 사전이 빈 줄은 **원래 지시 그대로** 간다. 빈 사전을 실으면 모델이 없는 것을 찾는다.
+    """
+    def call(texts: list[str], terms: dict[str, str]) -> list[str]:
+        import json as _json
+        import os
+        import urllib.request
+
+        from . import glossary, ontology
+        onto = ontology.load()
+        url = os.environ.get("OLLAMA_URL", OLLAMA_URL).rstrip("/") + "/api/chat"
+        out = []
+        for t in texts:
+            토막 = glossary.block(glossary.for_line(onto, t, cap))
+            body = _json.dumps({"model": model, "stream": False, "options": DECODING,
+                                "messages": [{"role": "system",
+                                              "content": system + ("\n\n" + 토막 if 토막 else "")},
+                                             {"role": "user", "content": t}],
+                                **(extra or {})}).encode("utf-8")
+            req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"})
+            out.append(THINK.sub("", _ask(req, model, t)["message"]["content"]).strip())
+        return out
+    return call
+
+
 def nbest(model: str, system: str, n: int = 8, temp: float = 0.8, seed0: int = 101):
     """같은 모델을 **N 번** 부르고 MBR 로 하나를 고른다(DECISIONS §133 · `seshat/mbr.py`).
 
@@ -368,6 +397,14 @@ REGISTRY: dict[str, tuple[Backend, str]] = {
     "gemma3-4b+ph+mbr4+endings+terms": (
         with_terms(with_endings(with_placeholders(nbest("gemma3:4b", GENERIC_SYSTEM, n=4)))),
         "gemma3:4b+ph+mbr4+endings+terms"),
+    # ★ **줄마다 그 줄의 용어집을 미리 준다**(#16 · DECISIONS §134). 지금까지 모델은 공식 표기를
+    #   한 번도 못 봤다 — 자리표시는 감추고 `+terms` 는 틀린 뒤에 고친다. 둘을 가르려고 팔이 둘이다
+    "gemma3-4b+ph+gloss+endings": (
+        with_endings(with_placeholders(ollama_chat_ref("gemma3:4b", GENERIC_SYSTEM))),
+        "gemma3:4b+ph+gloss+endings"),
+    "gemma3-4b+ph+gloss+endings+terms": (
+        with_terms(with_endings(with_placeholders(ollama_chat_ref("gemma3:4b", GENERIC_SYSTEM)))),
+        "gemma3:4b+ph+gloss+endings+terms"),
 }
 
 # ★ 이름으로 짐작하지 않는다 — 어느 백엔드가 ollama 위에 서는지 여기 적는다. 종전에는 `translategemma` 로
@@ -384,7 +421,9 @@ OLLAMA_OF.update({"translategemma-4b": "translategemma:4b", "translategemma-4b+p
                   "gemma3-12b": "gemma3:12b", "gemma3-12b+ph+retry": "gemma3:12b",
                   "gemma3-12b+ph+retry+endings+terms": "gemma3:12b",
                   "gemma3-4b+ph+mbr8+endings+terms": "gemma3:4b",
-                  "gemma3-4b+ph+mbr4+endings+terms": "gemma3:4b"})
+                  "gemma3-4b+ph+mbr4+endings+terms": "gemma3:4b",
+                  "gemma3-4b+ph+gloss+endings": "gemma3:4b",
+                  "gemma3-4b+ph+gloss+endings+terms": "gemma3:4b"})
 
 # ★ **어느 ollama 모델이 어느 가중치인가.** `from_pretrained` 를 거치지 않는 호출은 라이선스 검사의
 #   정규식이 보지 못한다. 선언을 검사가 대장과 대조한다(DECISIONS §14).
