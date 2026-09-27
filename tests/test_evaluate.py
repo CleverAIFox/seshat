@@ -213,3 +213,18 @@ def test_재현_조건은_판을_시작할_때_찍는다(monkeypatch):
     assert ev.conditions(a, rows, 시작)["commit"] == "aaaaaaa"
     assert ev.conditions(a, rows, 시작)["dirty"] is False
     assert ev.conditions(a, rows)["commit"] == "bbbbbbb"      # 안 주면 지금 찍는다
+
+
+def test_지킨_이름이_많은_줄을_떨어뜨리지_않는다():
+    """600 줄 중 이 한 줄이 「번역이 아니다」 로 걸렸다. 완벽한 번역이다(DECISIONS §91)."""
+    src = "Configure S3 Glacier Instant Retrieval, and then connect it to Amazon Simple Notification Service."
+    좋은 = "S3 Glacier Instant Retrieval을 구성한 다음, Amazon Simple Notification Service에 연결하십시오."
+    assert ev.ko_line(src, 좋은) is True
+    # 원문에 없는 영어는 그대로 둔다 — 영어로 답한 것은 여전히 번역이 아니다
+    assert ev.ko_line(src, "Configure it and connect to the service afterwards.") is False
+
+
+def test_원문에_없는_영어는_빼지_않는다():
+    src = "Use Amazon S3."
+    assert ev.ko_line(src, "Amazon S3를 씁니다.") is True
+    assert ev.ko_line(src, "Amazon S3 is a storage service you should use.") is False

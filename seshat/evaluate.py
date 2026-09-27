@@ -57,16 +57,32 @@ _LATIN = re.compile(r"[A-Za-z]")
 _HANGUL_CH = re.compile(r"[가-힣]")
 
 
-def ko_line(src: str, out: str) -> bool:
-    """이 줄이 번역처럼 보이는가(DECISIONS §50). 두 가지를 함께 본다.
+_WORD = re.compile(r"[A-Za-z][A-Za-z0-9.\-]*")
 
-    ① 한글이 글자(한글 + 로마자) 중 20% 이상이다 — 이름을 영어로 남기는 이 저장소의 번역도 30% 대는 된다.
+
+def 지킨_이름_뺀다(src: str, out: str) -> str:
+    """원문에 그대로 있는 영어 낱말을 출력에서 뺀다 — **지킨 이름은 번역이 아닌 증거가 아니다**(§91).
+
+    ★ 2026-09-27, `S3 Glacier Instant Retrieval 을 구성한 다음 Amazon Simple Notification Service 에
+      연결하십시오.` 가 「번역이 아니다」 로 걸렸다. 완벽한 번역인데 이름이 길어 로마자가 한글보다 많았다.
+    ★ 원문에 **없는** 영어는 그대로 둔다 — 모델이 영어로 답한 것은 여전히 번역이 아니다.
+    """
+    쓴것 = set(_WORD.findall(src))
+    return _WORD.sub(lambda m: "" if m.group(0) in 쓴것 else m.group(0), out)
+
+
+def ko_line(src: str, out: str) -> bool:
+    """이 줄이 번역처럼 보이는가(DECISIONS §50 · §91). 두 가지를 함께 본다.
+
+    ① **지킨 이름을 뺀 뒤** 한글이 글자(한글 + 로마자) 중 20% 이상이다.
     ② 길이가 원문의 세 배를 넘지 않는다 — 사고문은 길다.
 
     ★ 처음에는 「한글이 두 자 이상인 줄」 로 셌다. 사고문이 한국어 낱말을 인용하자 그것도 1.0 이 됐다
       (2026-09-23 · Qwen3). **속은 지표를 고칠 때는 속인 예를 시험에 넣는다.**
+    ★ 그 규칙이 이번에는 반대로 틀렸다 — 이름이 많은 줄의 바른 번역을 떨어뜨렸다. 지표는 양쪽으로 틀린다.
     """
-    ko, en = len(_HANGUL_CH.findall(out)), len(_LATIN.findall(out))
+    남은 = 지킨_이름_뺀다(src, out)
+    ko, en = len(_HANGUL_CH.findall(남은)), len(_LATIN.findall(남은))
     share = ko / (ko + en) if ko + en else 1.0
     return share >= 0.2 and len(out) <= 3 * len(src) + 40
 
