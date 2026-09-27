@@ -1,0 +1,40 @@
+# 지금까지의 최고와 넘어야 할 선 — `tools/gate.py` 가 읽는다(DECISIONS §131).
+#
+# ★ **이 파일은 값을 만들지 않는다.** 레이크의 결과 파일이 값을 만들고 여기는 그것을 가리킨다.
+#   `run` 칸이 어느 실행인지 적고, 그 파일이 레이크에 있어야 이 줄이 참이다.
+# ★ **`guard = true` 인 줄만 막는다.** 나머지는 찍기만 한다 — 지표 여섯을 전부 막으면 잡음에 막힌다.
+# ★ **셋이 다르면 비교하지 않는다.** `set_sha256` 이 빈 줄은 아직 못 박은 것이고, 문이 비교를 거절한다.
+#   `--update` 가 박는다. 짐작으로 채우지 않는다.
+# ★ **사전이 바뀌면 막지 않고 말한다.** 사전을 고치면 같은 번역의 점수가 바뀐다(DECISIONS §32 · §96) —
+#   그것을 회귀로 읽으면 사전을 못 고친다. 그때는 재채점으로 기준을 다시 박는다.
+
+[[record]]
+note = "서빙 후보 — 이 기계에서 도는 4B"
+set = "data/domain/d001.jsonl"
+set_sha256 = ""                      # 표시를 든 d001 로 다시 만든 판. --update 가 박는다
+arm = "gemma3-4b+ph+retry+endings+terms"
+run = "H-052-rescore-H-045-4b-d001-20260927-140903"
+commit = ""
+date = "2026-09-27"
+term_off = 0.8858
+lit = 0.803
+keep = 0.9853
+style = 0.970
+guard = ["term_off", "lit", "keep"]
+tol = 0.01                           # 이만큼까지는 잡음으로 본다
+
+[[target]]
+note = "배포본 — thoth 가 지금 쓰는 것. 이것을 넘어야 engine=http 슬롯이 열린다(thoth PLAN #59)"
+set = "data/domain/d001.jsonl"
+arm = "nova-lite (thoth 워커)"
+run = "H-050-nova-d001-20260927-181909"
+term_off = 0.9163
+lit = 0.923
+
+[[target]]
+note = "체급 — 6GB 에 안 올라간다. 살 값어치를 재는 선이다"
+set = "data/domain/d001.jsonl"
+arm = "gemma3-12b+ph+retry+endings+terms"
+run = "H-052-rescore-H-045-12b-d001-20260927-135211"
+term_off = 0.9254
+lit = 0.894

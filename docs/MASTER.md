@@ -230,7 +230,7 @@ bash tools/verify.sh --only=pytest  # 부분 실행 — 마지막에 일부러 �
 | thoth 와의 경계 | HTTP JSON — `POST /translate` · `GET /health`(§2). thoth 워커(Lambda)가 서버 대 서버로 부른다 | 스트리밍이 필요하면 같은 경로에 SSE(thoth PLAN #38) |
 | 서빙 | `serve.py` · 표준 라이브러리 · echo | 이미지 → ECR → Lambda 컨테이너(PLAN #27) · **유휴 비용 0** 이 조건이다(§13). 집의 장비로 서빙하지 않는다 — 꺼지면 thoth 번역이 죽는다 |
 | 환경 | uv · ollama | 컨테이너(PLAN #26) — torch 가 들어올 때 |
-| 실험 | `evaluate.py` → `runs/`(커밋 밖) · 머리줄에 재현 조건 · 견적과 상한(`--max-usd` · DECISIONS §35) · GPU 러너(§10) | 평가 게이트(PLAN #28) · 비용 장부 |
+| 실험 | `evaluate.py` → `runs/`(커밋 밖) · 머리줄에 재현 조건 · 견적과 상한(`--max-usd` · DECISIONS §35) · GPU 러너(§10) | 평가 게이트(`tools/gate.py` · `data/scoreboard.toml` · DECISIONS §131) · 비용 장부 |
 | 학습 | 없다 | ② 원격 T4 · 스팟 → ③ 학습용 데스크탑 |
 | 데이터 | 저장소의 `data/`(작은 정본 · 받는 도구) · SSD 레이크 `SESHAT_DATA`(raw · runs · cache — §11) | thoth 쌍(원문만) · 교사 공장 산출 · 온톨로지 2판 원천 |
 

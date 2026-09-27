@@ -1,4 +1,4 @@
-# GPU 평가 — 셀프 호스티드 러너에서 가설 하나를 잰다(DECISIONS §14 · PLAN #28).
+# GPU 평가 — 셀프 호스티드 러너에서 가설 하나를 잰다(DECISIONS §14 · §131).
 #
 # ★ 러너는 `gpu` 라벨을 단 기계다. 지금은 GTX 1660 Ti 노트북(WSL2)이고, 새 장비가 오면 같은 라벨로
 #   갈아 끼운다 — 이 파일은 바뀌지 않는다.
@@ -65,7 +65,20 @@ jobs:
           if-no-files-found: ignore
       # ★ 러너가 이 기계라서 SSD 레이크에 바로 넣는다(DECISIONS §21). 러너는 `~/actions-runner/.env` 의
       #   SESHAT_DATA 를 받는다. 없으면 이 단계는 실패한다 — 조용히 지나가지 않는다
+      # ★ **문이 마지막이 아니라 레이크 앞이다**(DECISIONS §131). 막혀도 결과는 남겨야 한다 —
+      #   GPU 시간은 다시 못 만든다. 그래서 아티팩트가 먼저고, 문은 보기만 하고, 레이크는 그대로 넣는다.
+      #   **문이 막았다는 사실은 작업을 빨갛게 만들어 남는다**(`continue-on-error` 를 안 쓴다).
+      - name: 문 — 지금까지의 최고보다 떨어졌나
+        if: always()
+        run: |
+          for f in runs/*.jsonl; do
+            case "$f" in *probes*) continue ;; esac
+            uv run python3 tools/gate.py "$f" || blocked=1
+          done
+          [ -z "${blocked:-}" ] || { echo "문이 막았다 — 기록판보다 떨어진 실행이 있다"; exit 1; }
+
       - name: 레이크에 넣는다
+        if: always()
         run: |
           [ -n "${SESHAT_DATA:-}" ] || { echo "러너에 SESHAT_DATA 가 없다 — ~/actions-runner/.env 에 적고 러너를 다시 띄운다"; exit 1; }
           python3 tools/lake.py put runs runs/*.jsonl

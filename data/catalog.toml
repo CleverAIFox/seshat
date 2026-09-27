@@ -35,11 +35,11 @@
 
 [layers."정본"]
 base = "repo"
-dirs = ["data/ontology", "data/eval"]
+dirs = ["data/ontology", "data/eval", "data/scoreboard.toml"]
 committed = true
 regenerable = false
 managed = false
-what = "사람이 손으로 고치는 작은 정본 — 온톨로지 · 평가셋 0판. diff 로 봐야 한다"
+what = "사람이 손으로 고치는 작은 정본 — 온톨로지 · 평가셋 0판 · 기록판. diff 로 봐야 한다"
 
 [layers."셋"]
 base = "repo"
@@ -196,3 +196,13 @@ uses = ["eval", "serve"]
 how = "사람"
 feeds = ["seshat/backends.py — ollama 로 부른다"]
 note = "라이선스 정본은 대장이다. 대장에 없는 가중치는 서빙에 쓰지 않는다"
+
+[[source]]
+id = "scoreboard"
+where = "repo:data/scoreboard.toml"
+origin = "지금까지의 최고 점수와 넘어야 할 선 — tools/gate.py 가 읽고 --update 로 쓴다"
+license = "자체"
+uses = ["evidence"]
+how = "tools/gate.py"
+feeds = ["tools/gate.py — 회귀를 막는 문(PLAN #28)"]
+note = "값은 레이크의 결과 파일에서 온다. 여기 적힌 것은 그 결과를 가리키는 숫자와 이름뿐이다"

@@ -223,12 +223,14 @@ def test_모든_출처의_디렉터리가_문을_지난다(tmp_path, monkeypatch
     막힌 = []
     for e in catalog.load():
         space, _, pat = e["where"].partition(":")
-        d = pathlib.PurePosixPath(pat).parent.as_posix()
-        if d in (".", ""):
+        # ★ 도구가 실제로 무엇을 묻는가 — **글로브면 그 디렉터리**를 만들고, 파일 하나면 **그 파일**을
+        #   쓴다. 파일 하나짜리 출처에 부모 디렉터리를 물으면 묻지도 않는 것을 시험하는 것이다
+        자리 = pathlib.PurePosixPath(pat).parent.as_posix() if "*" in pat else pat
+        if 자리 in (".", ""):
             continue
         base = ROOT if space == "repo" else lake
         try:
-            catalog.gate(base / d)
+            catalog.gate(base / 자리)
         except SystemExit as x:
-            막힌.append(f'{e["id"]} → {space}:{d} — {str(x).splitlines()[0]}')
+            막힌.append(f'{e["id"]} → {space}:{자리} — {str(x).splitlines()[0]}')
     assert 막힌 == []
