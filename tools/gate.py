@@ -160,7 +160,10 @@ def main(argv: list[str] | None = None) -> int:
         print(f"\n  문이 막았다 — {pathlib.Path(a.run).name}", file=sys.stderr)
         return 1
     오른 = 올릴_것(rec, head, pin=a.update)
-    print(f"  통과 — {' · '.join(f'{m} {head.get(m)}' for m in rec.get('guard', []))}")
+    def _값(m):
+        v = head.get(m)
+        return f"{v:.4f}" if isinstance(v, float) else str(v)
+    print("  통과 — " + " · ".join(f"{m} {_값(m)}" for m in rec.get("guard", [])))
     for t in board.get("target", []):
         if t.get("set") == rec.get("set"):
             남 = {m: round(t[m] - head[m], 4) for m in ("term_off", "lit") if m in t and head.get(m) is not None}
