@@ -43,6 +43,15 @@ def sha256(p: Path) -> str:
     return h.hexdigest()
 
 
+def has(have: dict[str, str], 자리: str, p: Path) -> bool:
+    """레이크에 **같은 자리에 같은 해시로** 있는가(DECISIONS §136).
+
+    ★ **이름만 보면 안 된다.** 같은 이름으로 내용이 바뀐 파일을 「이미 넣었다」 로 읽으면, 치우는 쪽이
+      레이크에 없는 것을 지운다. 판정 규칙은 여기 하나다 — `sweep` 과 `doctor` 가 같은 것을 쓴다.
+    """
+    return have.get(f"{자리}/{p.name}") == sha256(p)
+
+
 def manifest(lake: Path) -> dict[str, str]:
     """경로 → 해시. 같은 경로가 두 번이면 마지막이 아니라 **실패**다 — 넣기만 하는 대장이다."""
     out: dict[str, str] = {}

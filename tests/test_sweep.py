@@ -68,11 +68,11 @@ def test_작업대_결과는_레이크에_같은_해시일_때만_지운다(tmp_
     (bench / "H-001-ph-1.jsonl").write_text("b\n")
     lake.put(d, "runs", [bench / "H-001-base-1.jsonl"])
     (bench / "H-001-ph-1.jsonl").write_text("b\n")
-    kill, keep, u = sweep.scan_bench(lake.manifest(d), [bench])
+    kill, keep, u = sweep.scan_bench(lake.manifest(d), [(bench, "runs")])
     assert [p.name for p, _ in kill] == ["H-001-base-1.jsonl"]
     assert [p.name for p, _ in keep] == ["H-001-ph-1.jsonl"]
     (bench / "H-001-base-1.jsonl").write_text("바뀜\n")                 # 이름이 같아도 내용이 다르면 남긴다
-    kill, _, _ = sweep.scan_bench(lake.manifest(d), [bench])
+    kill, _, _ = sweep.scan_bench(lake.manifest(d), [(bench, "runs")])
     assert kill == []
 
 
@@ -171,3 +171,28 @@ def test_겹친_패치를_이름으로_불러도_안_죽는다(tmp_path):
     r = subprocess.run(["bash", "tools/apply_patch.sh", str(p)], capture_output=True, text=True, cwd=repo)
     assert r.returncode == 0, (r.stdout, r.stderr)
     assert "남은 것 : seshat-100: plain" in r.stdout
+
+
+def test_작업대_목록이_한_곳이다():
+    """doctor 는 labels/ 를 알고 sweep 은 몰랐다 — 한쪽이 「치웠다」 한 자리가 남았다(DECISIONS §136)."""
+    import tomllib
+    from seshat import paths
+    층 = tomllib.loads((ROOT / "data/catalog.toml").read_text(encoding="utf-8"))["layers"]["작업대"]
+    assert set(paths.BENCH) == set(층["dirs"])
+    for _, (자리, how) in paths.BENCH.items():
+        assert 자리.split("/")[0] in paths.TIERS and how          # 레이크의 층 아래여야 한다
+
+
+def test_labels_도_치운다(tmp_path):
+    """레이크에 같은 해시로 있으면 labels 도 지울 근거가 있다. 자리가 `raw/labels` 라 이름만으로는 못 찾는다."""
+    d = tmp_path / "lake"
+    lake.init(d)
+    bench = tmp_path / "labels"
+    bench.mkdir()
+    (bench / "d001-60.claude.jsonl").write_text("a\n")
+    lake.put(d, "raw", [bench / "d001-60.claude.jsonl"], into="labels")
+    kill, keep, _ = sweep.scan_bench(lake.manifest(d), [(bench, "raw/labels")])
+    assert [p.name for p, _ in kill] == ["d001-60.claude.jsonl"] and keep == []
+    # 자리를 틀리게 대면 「레이크 밖」 이다 — 이름만 맞히면 안 된다
+    _, keep2, _ = sweep.scan_bench(lake.manifest(d), [(bench, "runs")])
+    assert [p.name for p, _ in keep2] == ["d001-60.claude.jsonl"]

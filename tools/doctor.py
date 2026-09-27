@@ -32,13 +32,15 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+# ★ **도구 자리는 `ROOT` 를 안 탄다.** 시험이 `ROOT` 를 임시 자리로 바꾸므로, 여기서 `ROOT/tools` 를
+#   쓰면 없는 자리를 import 경로에 넣는다. 이 파일이 있는 자리가 곧 도구 자리다
+TOOLS = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 from seshat import backends, catalog, licenses, paths  # noqa: E402
 
 HITS: list[tuple[str, str]] = []
 NOTES: list[str] = []
-# 작업대 — 도구가 쓰고 사람이 `lake.py put` 으로 레이크에 넣는 자리(DECISIONS §103)
-BENCHES = {"runs": "runs", "labels": "raw --into labels"}
+# ★ 작업대 목록은 `paths.BENCH` 하나다(DECISIONS §136). 여기서 또 적으면 두 도구가 다르게 안다
 # 값이 없어도 되는 키. 쓰는 도구가 있을 때만 필요하다
 OPTIONAL = {"AWS_PROFILE": "AWS Translate 기준선(H-025)", "HF_TOKEN": "FLORES+ 받기(tools/fetch_flores.py)",
             "AWS_REGION": "AWS Translate 기준선(H-025)"}
@@ -105,22 +107,29 @@ def d2_weights() -> None:
 
 
 def d3_bench() -> None:
-    """작업대에 남은 것. 레이크로 안 갔으면 **다시 못 만드는 것이 저장소 밖에서 혼자 산다**."""
+    """작업대에 남은 것. 레이크로 안 갔으면 **다시 못 만드는 것이 저장소 밖에서 혼자 산다**.
+
+    ★ **이름만 보고 있었다**(DECISIONS §136). 같은 이름으로 내용이 바뀐 파일을 「이미 넣었다」 로
+      읽었고, 그러면 치우는 쪽이 레이크에 없는 것을 지운다. 이제 `lake.has` 하나가 판정한다 —
+      자리와 해시를 같이 본다. `sweep` 과 같은 규칙이다.
+    """
     d = paths.data()
-    known: set[str] = set()
-    if d is not None and (d / "MANIFEST.tsv").exists():
-        for line in (d / "MANIFEST.tsv").read_text(encoding="utf-8").splitlines()[1:]:
-            if line.strip():
-                known.add(Path(line.split("\t")[1]).name)
-    for bench, how in sorted(BENCHES.items()):
+    if d is None or not (d / "MANIFEST.tsv").exists():
+        hit("D3", "레이크를 못 물어 작업대를 못 잰다 — 0건이 아니다")
+        return
+    sys.path.insert(0, str(TOOLS))
+    import lake
+    have = lake.manifest(d)
+    for bench, (자리, how) in sorted(paths.BENCH.items()):
         p = ROOT / bench
         if not p.is_dir():
             continue
-        left = [f.name for f in sorted(p.glob("*.jsonl")) if f.name not in known]
+        files = sorted(p.glob("*.jsonl"))
+        left = [f.name for f in files if not lake.has(have, 자리, f)]
         if left:
             hit("D3", f"{bench}/ 에 레이크로 안 간 파일 {len(left)}개 — "
                       f"python3 tools/lake.py put {how} {bench}/*.jsonl")
-        note(f"D3  {bench}/ {len(list(p.glob('*.jsonl')))}개 · 안 간 것 {len(left)}")
+        note(f"D3  {bench}/ {len(files)}개 · 안 간 것 {len(left)}")
 
 
 def d4_env() -> None:

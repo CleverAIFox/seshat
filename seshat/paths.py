@@ -22,6 +22,14 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 TIERS = ("raw", "runs", "cache")
 
+# 작업대 — 도구가 쓰고 사람이 `lake.py put` 으로 레이크에 넣는 자리(DECISIONS §103 · §136).
+#   저장소 디렉터리 → (레이크에서의 자리, `lake.py put` 에 줄 인자)
+# ★ **목록이 한 곳이다.** 종전에는 `tools/doctor.py` 가 둘을 알고 `tools/sweep.py` 가 하나만 알았다 —
+#   그래서 doctor 는 「labels/ 에 안 간 것 0」 이라 하고 sweep 은 labels/ 를 아예 안 봤다. 작업대가
+#   무엇인지 두 도구가 다르게 알면, 한쪽이 「치웠다」 고 한 자리가 다른 쪽에는 남아 있다.
+# ★ 여기 적은 이름은 `data/catalog.toml` 의 `[layers."작업대"]` 와 같아야 한다 — 시험이 센다.
+BENCH: dict[str, tuple[str, str]] = {"runs": ("runs", "runs"), "labels": ("raw/labels", "raw --into labels")}
+
 
 def load_dotenv(path: Path | None = None) -> None:
     """저장소 루트 `.env` 를 환경에 얹는다. 셸에 이미 있는 키는 안 덮는다. 빈 값은 미설정이다.

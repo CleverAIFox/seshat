@@ -60,28 +60,55 @@ def test_배선에_있는데_라이선스_대장에_없으면_짚는다(monkeypa
     assert len(D.HITS) == 1 and "누가/새모델-9b" in D.HITS[0][1]
 
 
+def _레이크(tmp_path):
+    """빈 레이크를 세운다 — **레이크를 못 물면 작업대를 못 잰다**(DECISIONS §136)."""
+    lake = tmp_path / "lake"
+    lake.mkdir()
+    (lake / "MANIFEST.tsv").write_text("sha256\tpath\tbytes\tadded\torigin\n", encoding="utf-8")
+    return lake
+
+
 def test_작업대에_남은_것을_짚고_다음_명령을_든다(tmp_path, monkeypatch):
     """다시 못 만드는 것이 저장소 밖에서 혼자 살면 안 된다(DECISIONS §103)."""
     _reset()
     monkeypatch.setattr(D, "ROOT", tmp_path)
-    monkeypatch.setattr(D.paths, "data", lambda: None)
+    monkeypatch.setattr(D.paths, "data", lambda: _레이크(tmp_path))
     (tmp_path / "runs").mkdir()
     (tmp_path / "runs/a.jsonl").write_text("{}\n", encoding="utf-8")
     D.d3_bench()
     assert D.HITS and "lake.py put runs" in D.HITS[0][1]
 
 
-def test_레이크에_들어간_것은_안_짚는다(tmp_path, monkeypatch):
+def test_레이크를_못_물면_작업대를_못_잰다(tmp_path, monkeypatch):
+    """0건이 아니다 — 못 잰 것을 「안 간 것 0」 으로 적으면 치우는 쪽이 그것을 믿는다."""
     _reset()
-    lake = tmp_path / "lake"; lake.mkdir()
-    (lake / "MANIFEST.tsv").write_text("sha256\tpath\tbytes\tadded\torigin\n"
-                                       "abc\truns/a.jsonl\t2\t2026-09-27\t-\n", encoding="utf-8")
     monkeypatch.setattr(D, "ROOT", tmp_path)
-    monkeypatch.setattr(D.paths, "data", lambda: lake)
+    monkeypatch.setattr(D.paths, "data", lambda: None)
     (tmp_path / "runs").mkdir()
     (tmp_path / "runs/a.jsonl").write_text("{}\n", encoding="utf-8")
     D.d3_bench()
+    assert D.HITS and "0건이 아니다" in D.HITS[0][1]
+
+
+def test_레이크에_들어간_것은_안_짚는다(tmp_path, monkeypatch):
+    """**이름이 아니라 해시로 본다**(DECISIONS §136) — 이름만 맞히면 바뀐 파일을 치운다."""
+    import hashlib
+    _reset()
+    lake = tmp_path / "lake"; lake.mkdir()
+    (tmp_path / "runs").mkdir()
+    f = tmp_path / "runs/a.jsonl"
+    f.write_text("{}\n", encoding="utf-8")
+    h = hashlib.sha256(f.read_bytes()).hexdigest()
+    (lake / "MANIFEST.tsv").write_text("sha256\tpath\tbytes\tadded\torigin\n"
+                                       f"{h}\truns/a.jsonl\t3\t2026-09-27\t-\n", encoding="utf-8")
+    monkeypatch.setattr(D, "ROOT", tmp_path)
+    monkeypatch.setattr(D.paths, "data", lambda: lake)
+    D.d3_bench()
     assert D.HITS == []
+    _reset()
+    f.write_text("{\"바뀜\": 1}\n", encoding="utf-8")        # 이름은 같고 내용이 다르다
+    D.d3_bench()
+    assert D.HITS and "안 간 파일 1개" in D.HITS[0][1]
 
 
 def test_없어도_되는_키는_안_센다(monkeypatch, tmp_path):

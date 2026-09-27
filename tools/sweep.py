@@ -39,9 +39,9 @@ def lake_hashes() -> dict[str, str] | None:
     return lake.manifest(d)
 
 
-def in_lake(p: Path, have: dict[str, str]) -> bool:
+def in_lake(p: Path, have: dict[str, str], 자리: str = "runs") -> bool:
     import lake
-    return have.get(f"runs/{p.name}") == lake.sha256(p)
+    return lake.has(have, 자리, p)
 
 
 def scan_inbox(repo: Path = ROOT):
@@ -56,20 +56,22 @@ def scan_inbox(repo: Path = ROOT):
     return kill, keep, []
 
 
-def scan_bench(have: dict[str, str] | None, dirs: list[Path]):
+def scan_bench(have: dict[str, str] | None, dirs: list[tuple[Path, str]]):
+    """`dirs` 는 (자리, 레이크에서의 자리) 짝이다 — 층마다 레이크의 자리가 다르다(DECISIONS §136)."""
     if have is None:
         return [], [], ["작업대 결과 — 레이크가 안 붙었다(SESHAT_DATA · MANIFEST.tsv)"]
     kill, keep = [], []
-    for d in dirs:
-        files = sorted(d.rglob("*.jsonl")) if d.is_dir() else []
-        for p in files:
-            (kill if in_lake(p, have) else keep).append((p, "레이크에 있다" if in_lake(p, have) else "레이크 밖 — put 먼저"))
+    for d, 자리 in dirs:
+        for p in (sorted(d.rglob("*.jsonl")) if d.is_dir() else []):
+            (kill if in_lake(p, have, 자리) else keep).append(
+                (p, "레이크에 있다" if in_lake(p, have, 자리) else "레이크 밖 — put 먼저"))
     return kill, keep, []
 
 
-def tmp_bench_dirs() -> list[Path]:
-    """`/tmp/h001` 처럼 아티팩트를 풀어 둔 자리. 이름이 근거다 — seshat 의 안내가 이 이름을 썼다."""
-    return sorted(p for p in TMP.glob("h[0-9][0-9][0-9]") if p.is_dir())
+def tmp_bench_dirs() -> list[tuple[Path, str]]:
+    """`/tmp/h001` 처럼 아티팩트를 풀어 둔 자리. 이름이 근거다 — seshat 의 안내가 이 이름을 썼다.
+    아티팩트는 `runs/` 의 것이므로 레이크 자리도 `runs` 다."""
+    return [(p, "runs") for p in sorted(TMP.glob("h[0-9][0-9][0-9]")) if p.is_dir()]
 
 
 def prune_empty(d: Path) -> list[Path]:
@@ -122,7 +124,9 @@ def main(argv: list[str] | None = None) -> int:
     show("INBOX 의 붙은 패치", k, a.fix, True)
     show("INBOX 의 아직 안 붙은 패치", keep, a.fix, False)
     have = lake_hashes()
-    k, keep, u = scan_bench(have, [ROOT / "runs", *tmp_bench_dirs()])
+    # ★ 작업대 목록은 `paths.BENCH` 하나다 — 두 도구가 다르게 알면 한쪽이 「치웠다」 한 자리가 남는다
+    k, keep, u = scan_bench(have, [(ROOT / d, 자리) for d, (자리, _) in paths.BENCH.items()]
+                            + tmp_bench_dirs())
     unmeasured += u
     show("작업대 결과 — 레이크에 있다", k, a.fix, True)
     show("작업대 결과 — 레이크 밖", keep, a.fix, False)
