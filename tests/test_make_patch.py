@@ -19,9 +19,27 @@ def _grep(pattern: str, text: str) -> int:
     return int(r.stdout.strip() or 0)
 
 def test_스크립트가_세_가지를_경고한다():
-    assert "uv.lock 을 담았다" in SH
+    assert "판 번호 말고도" in SH
     assert "판정과 온톨로지를 같이 바꾼다" in SH
     assert "제안 상태로 더하는 가설" in SH
+
+def _lock_hunk(body: str) -> int:
+    """스크립트의 awk + grep 과 같은 셈 — uv.lock 안에서 판 번호 아닌 변경 줄을 센다."""
+    patch = "diff --git a/uv.lock b/uv.lock\n" + body + "diff --git a/x b/x\n+다른 파일\n"
+    awk = subprocess.run(
+        ["awk", r'/^diff --git a\/uv.lock/{on=1;next} on&&/^diff --git /{on=0} on&&/^[-+][^-+]/'],
+        input=patch, capture_output=True, text=True).stdout
+    r = subprocess.run(["grep", "-vcE", r'^[-+]version = "[0-9.]+"$'], input=awk, capture_output=True, text=True)
+    return int(r.stdout.strip() or 0)
+
+
+def test_판_번호만_바뀐_lock_은_안_잡는다():
+    assert _lock_hunk('-version = "0.0.81"\n+version = "0.0.82"\n') == 0
+
+
+def test_의존성이_바뀐_lock_은_잡는다():
+    assert _lock_hunk('-version = "0.0.81"\n+version = "0.0.82"\n+name = "새-의존성"\n') == 1
+
 
 def test_uv_lock_을_담은_패치를_잡는다():
     assert _grep("^diff --git a/uv.lock", "diff --git a/uv.lock b/uv.lock\n")

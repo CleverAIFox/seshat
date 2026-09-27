@@ -68,6 +68,8 @@ python3 tools/compare_runs.py <A> <B> --set <셋>   # 두 결과를 줄 단위�
 python3 tools/rescore.py <결과> --set <셋> --hypothesis H-NNN   # GPU 없이 다시 채점
 python3 tools/show_misses.py <결과> [--what keep|term|hangul|style]  # 숫자 뒤의 줄을 본다
 python3 tools/term_diff.py <A> <B>                # 두 결과를 개념 단위로 — 누가 어느 용어에서 이겼나
+python3 tools/labels.py make --set <셋> --a <A> --b <B>   # 눈가림 채점표 → /tmp · 사람이 뜻을 본다
+python3 tools/labels.py read --name <이름>         # 채운 표를 읽어 팔마다 비율을 낸다
 ```
 
 thoth 배포본(Nova Lite)을 기준선으로 잴 때는 워커를 그대로 부른다. 평가 문장은

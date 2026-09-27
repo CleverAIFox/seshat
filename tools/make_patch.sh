@@ -26,11 +26,16 @@ if [ -n "$PROPOSED" ]; then
   echo "    지금 돌릴 것이면 이 패치에서 '실험' 으로 올린다 — 안 그러면 문이 막는다" >&2
 fi
 
-# ★ **기계마다 다른 파일은 패치에 싣지 않는다**(DECISIONS §96). 사본에서 `uv run` 을 돌리면 uv.lock 이
-#   갱신되고 `git add -A` 가 담는다. 붙이는 쪽에서 반드시 충돌한다 — 두 번 겪었다
+# ★ **uv.lock 은 판 번호 한 줄만 바뀌어야 한다**(DECISIONS §96 · §99). 사본에서 `uv run` 을 돌리면
+#   갱신되고 `git add -A` 가 담는다. 두 사본이 같은 자리면 그 한 줄은 오히려 실어야 맞다 — 빼면 붙인 쪽이
+#   `uv sync` 로 또 더럽혀진다. 위험한 것은 **의존성까지 바뀐 lock** 이다. 그것만 경고한다
 if grep -q '^diff --git a/uv.lock' "$OUT"; then
-  echo "  ※ 이 패치가 uv.lock 을 담았다 — 붙이는 쪽에서 충돌한다" >&2
-  echo "    빼고 다시 만든다 : git checkout HEAD~1 -- uv.lock && git commit --amend --no-edit" >&2
+  LOCK="$(awk '/^diff --git a\/uv.lock/{on=1;next} on&&/^diff --git /{on=0} on&&/^[-+][^-+]/' "$OUT" \
+          | grep -vcE '^[-+]version = "[0-9.]+"$' || true)"
+  if [ "${LOCK:-0}" -gt 0 ]; then
+    echo "  ※ 이 패치의 uv.lock 이 판 번호 말고도 ${LOCK}줄 바뀌었다 — 붙이는 쪽에서 충돌한다" >&2
+    echo "    빼고 다시 만든다 : git checkout HEAD~1 -- uv.lock && git commit --amend --no-edit" >&2
+  fi
 fi
 
 # ★ **재는 자를 바꾸는 일과 그 자로 판정하는 일을 같이 두지 않는다**(DECISIONS §96 · §86).
