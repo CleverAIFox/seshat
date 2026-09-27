@@ -37,15 +37,22 @@ def read_run(path: str) -> tuple[dict, dict[str, str]]:
     return head, {x["id"]: x["out"] for x in lines if not x.get("meta") and "out" in x}
 
 
-def read_labels(path: str) -> dict[str, str]:
-    """`labels.py read` 가 레이크에 넣은 판정 — 줄 id 와 `맞다 · 어긋난다 · 아니다`(DECISIONS §103)."""
-    out = {}
+def read_labels(path: str) -> dict[str, dict[str, str]]:
+    """`labels.py read` 가 레이크에 넣은 판정 → **팔마다** {줄 id: 판정}(DECISIONS §103).
+
+    ★ **한 장에 팔이 여럿 든다.** 눈가림 채점표가 같은 줄의 세 팔을 섞어 내므로, 파일 하나에
+      `(id, arm)` 짝이 줄 수의 몇 배로 들어 있다. `id` 만으로 모으면 **마지막 팔이 앞의 것을
+      덮는다** — 팔을 견주려고 만든 자가 팔을 지워 버린다.
+    """
+    out: dict[str, dict[str, str]] = {}
     for x in pathlib.Path(path).read_text(encoding="utf-8").splitlines():
         if not x.strip():
             continue
         d = json.loads(x)
         if not d.get("meta") and d.get("id") and d.get("verdict"):
-            out[d["id"]] = d["verdict"]
+            out.setdefault(d.get("arm", "?"), {})[d["id"]] = d["verdict"]
+    if not out:
+        raise SystemExit(f"{pathlib.Path(path).name} 에 판정이 없다 — 0 건이 아니라 못 읽은 것이다")
     return out
 
 
@@ -61,10 +68,11 @@ def by_axis(rows: list[dict], outs: dict[str, str]) -> dict[str, dict]:
 
 
 def by_axis_labels(rows: list[dict], verdicts: dict[str, str]) -> dict[str, dict]:
+    """한 팔의 판정을 축으로 가른다. **「뜻이 맞다」 비율만 본다**(H-046)."""
     축 = 축_of(rows)
     got = {}
     for ax in ("전체", *grammar.AXES):
-        골 = [i for i, v in verdicts.items() if i in 축 and (ax == "전체" or ax in 축[i])]
+        골 = [i for i in verdicts if i in 축 and (ax == "전체" or ax in 축[i])]
         if 골:
             got[ax] = {"n": len(골), "맞다": sum(verdicts[i] == "맞다" for i in 골) / len(골)}
     return got
@@ -72,6 +80,14 @@ def by_axis_labels(rows: list[dict], verdicts: dict[str, str]) -> dict[str, dict
 
 def _칸(v) -> str:
     return "     —" if v is None else (f"{v:6.3f}" if isinstance(v, float) else f"{v:>6}")
+
+
+def _맞다칸(c: dict | None) -> str:
+    """축마다 「뜻이 맞다」 비율과 **분모**. 분모 없이 비율만 두면 한 줄짜리 칸을 믿게 된다(§70)."""
+    if not c:
+        return " " * 14
+    글 = "%.3f /%d" % (c["맞다"], c["n"])
+    return 글.rjust(14)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -85,19 +101,15 @@ def main(argv: list[str] | None = None) -> int:
         raise SystemExit("결과 파일이나 --labels 가 하나는 있어야 한다")
     rows = evaluate.load(a.set)
 
-    if a.labels:
-        print(f"\n  사람 판정 — 「뜻이 맞다」 비율 · 셋 {pathlib.Path(a.set).name}")
-        표 = {pathlib.Path(p).name: by_axis_labels(rows, read_labels(p)) for p in a.labels}
-        print(f"  {'축':<8}" + "".join(f"{n[:18]:>20}" for n in 표))
+    for p in a.labels:
+        팔 = read_labels(p)
+        표 = {arm: by_axis_labels(rows, v) for arm, v in sorted(팔.items())}
+        print(f"\n  {pathlib.Path(p).name} — 「뜻이 맞다」 비율 · 팔 {len(표)}")
+        print(f"  {'축':<8}" + "".join(f"{arm[:12]:>14}" for arm in 표))
         for ax in ("전체", *grammar.AXES):
             if not any(ax in v for v in 표.values()):
                 continue
-            줄 = f"  {ax:<8}"
-            for v in 표.values():
-                c = v.get(ax)
-                칸 = f"{_칸(c['맞다'])} /{c['n']}" if c else ""
-                줄 += f"{칸:>20}"
-            print(줄)
+            print(f"  {ax:<8}" + "".join(_맞다칸(v.get(ax)) for v in 표.values()))
 
     for p in a.runs:
         head, outs = read_run(p)

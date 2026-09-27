@@ -88,3 +88,35 @@ def test_슬라이스가_약한_축을_짚는다(tmp_path):
     got = S.by_axis(rows, outs)
     assert got["관형절"]["n"] == 2
     assert got["관형절"]["term_off"] < got["전체"]["term_off"]
+
+
+def _slice():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("slice", ROOT / "tools/slice.py")
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    return m
+
+
+def test_판정_한_장에_팔이_여럿_든다(tmp_path):
+    """눈가림 채점표는 같은 줄의 세 팔을 섞어 낸다. `id` 로만 모으면 **마지막 팔이 앞을 덮는다**
+    — 팔을 견주려고 만든 자가 팔을 지운다(DECISIONS §127)."""
+    import json
+    p = tmp_path / "lab.jsonl"
+    p.write_text("\n".join(json.dumps(x, ensure_ascii=False) for x in (
+        {"meta": True, "judge": "claude"},
+        {"id": "r0", "arm": "4b", "verdict": "어긋난다"},
+        {"id": "r0", "arm": "12b", "verdict": "맞다"},
+        {"id": "r1", "arm": "4b", "verdict": "어긋난다"},
+        {"id": "r1", "arm": "12b", "verdict": "맞다"})) + "\n", encoding="utf-8")
+    got = _slice().read_labels(str(p))
+    assert set(got) == {"4b", "12b"}
+    assert got["4b"] == {"r0": "어긋난다", "r1": "어긋난다"}
+    assert got["12b"] == {"r0": "맞다", "r1": "맞다"}
+
+
+def test_판정이_없으면_0_이_아니라_못_읽은_것이다(tmp_path):
+    p = tmp_path / "빈.jsonl"
+    p.write_text('{"meta": true}\n', encoding="utf-8")
+    with pytest.raises(SystemExit, match="못 읽은 것이다"):
+        _slice().read_labels(str(p))
