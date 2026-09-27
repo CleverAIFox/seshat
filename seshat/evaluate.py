@@ -19,13 +19,14 @@
 
   style   마지막 문장이 합쇼체로 끝나는 비율. 정답 없이 잰다
   keep    `keep` 에 적은 영어 이름이 번역에 그대로 남은 비율. 정답 없이 잰다
-  lit     원문이 **코드로 표시한** 글자가 그대로 남은 비율. 사전이 아니라 문서가 근거다(DECISIONS §122)
+  lit     원문이 `` ` `` 로 표시한 글자(식별자 · 값)가 그대로 남은 비율. 근거는 사전이 아니라 문서다
+  ui      원문이 `**굵게**` 로 표시한 글자(콘솔 라벨)가 그대로 남은 비율. 한국어 문서도 영어로 둔다(§123)
   chrf    chrF++ (sacrebleu). `ref` 가 있는 줄만. 없으면 건너뛴다
   ms      문장당 지연
 
   josa    `keep` 이름 바로 뒤 조사가 그 이름의 끝소리와 맞는 비율(온톨로지 `coda`, H-001)
   term    원문에 나온 온톨로지 개념의 한국어(`ko` · `alt_ko`)가 번역에 있는 비율. 관계절의 머리 명사가
-          사라지는지를 이것으로 본다(H-012). **코드로 표시된 자리는 개념이 아니다** — 분모에서 뺀다
+          사라지는지를 이것으로 본다(H-012). **문서가 표시한 자리는 개념이 아니다** — 분모에서 뺀다
 
   COMET 같은 신경망 지표는 torch 를 요구하므로 여기 넣지 않는다(PLAN #3).
 
@@ -143,41 +144,50 @@ def load(path: str) -> list[dict]:
     return rows
 
 
+MARKS = ("lit", "ui")
+
+
 def marked(row: dict) -> list[tuple[int, int]]:
-    """원문에서 **문서가 코드로 표시한** 자리(DECISIONS §122).
+    """원문에서 **문서가 표시한** 자리(DECISIONS §122 · §123). 개념 채점에서 뺀다.
 
     ★ `` `PARTITION` `` 안의 `partition` 은 개념이 아니라 SQL 낱말이다. `` `snapshot-repo` `` 안의
-      `snapshot` 도 마찬가지다 — 「스냅샷-리포」로 바꾸면 그 지시는 안 먹는다. **여기 든 자리는
-      개념 채점에서 뺀다.**
-    ★ 굵은 글씨(`ui`)는 안 뺀다. 한국어 콘솔이 라벨을 현지화하는지 아직 확인하지 않았고,
-      **확인 안 한 것으로 자를 바꾸지 않는다**(DECISIONS §65).
-    ★ **줄은 표시를 글자로 들고 자리는 모른다.** 같은 글자가 표시 밖에 또 있으면 그것도 빠진다 —
-      실문서 600줄에서 그렇게 잘못 빠지는 개념은 690 중 1 이었다. 자리를 적으면 정확해지지만
-      줄을 사람이 못 읽는다. **값을 재고 글자를 택했다.**
+      `snapshot` 도 마찬가지다 — 「스냅샷-리포」로 바꾸면 그 지시는 안 먹는다.
+    ★ **굵은 글씨도 뺀다.** 한국어 AWS 문서가 콘솔 라벨을 영어로 둔다는 것을 확인했다 —
+      「왼쪽 탐색 창에서 [**Security Groups**]를 선택합니다」(DECISIONS §123).
+    ★ **자리를 든다.** 줄은 `[[글자, 자리], …]` 로 싣고 여기서 맞는지 확인한다. 글자로만 들면
+      같은 글자가 표시 밖에 또 있을 때 그것까지 빠진다 — **그것은 세는 척하는 것이다.**
     """
     src, out = row.get("src", ""), []
-    for t in row.get("lit", []):
-        i = src.find(t)
-        while i >= 0:
-            out.append((i, i + len(t)))
-            i = src.find(t, i + 1)
+    for kind in MARKS:
+        for t, at in row.get(kind, []):
+            if src[at:at + len(t)] != t:
+                raise SystemExit(f"{row.get('id')} 의 {kind} 가 자리를 틀리게 든다 — {t!r} @ {at}\n"
+                                 f"    `python3 tools/fetch_awsdocs.py` 로 셋을 다시 만든다")
+            out.append((at, at + len(t)))
     return out
 
 
 def literal(rows: list[dict], outs: list[str]) -> dict[str, float | int | None]:
-    """문서가 코드로 표시한 글자가 번역에 **그대로** 남았나(DECISIONS §122).
+    """문서가 표시한 글자가 번역에 **그대로** 남았나(DECISIONS §122 · §123).
 
-    ★ **`keep` 과 근거가 다르다.** `keep` 은 사전이 아는 영어 이름이고 `lit` 은 문서가 표시한 글자다.
+      lit  `` `코드` `` — 식별자 · 값 · API 이름. 옮기면 그 지시는 안 먹는다
+      ui   `**굵게**` — 콘솔 라벨. 한국어 문서도 영어로 둔다(`[Type(유형)]` 처럼 주석만 붙인다)
+
+    ★ **`keep` 과 근거가 다르다.** `keep` 은 사전이 아는 영어 이름이고 이 둘은 문서가 표시한 글자다.
       식별자는 무한하다 — `bucket-owner-full-control` · `snapshot-repo` · `search_path` 를 사전에
       다 적을 수 없고 적어서도 안 된다. **수확기가 원문의 표시를 지우고 있었던 것이 문제였지,
       사전이 좁았던 것이 아니다.**
     """
-    ok = total = 0
-    for r, o in zip(rows, outs):
-        for t in r.get("lit", []):
-            total += 1
-            ok += t in o
-    return {"lit": ok / total if total else None, "lit_n": total}
+    res: dict[str, float | int | None] = {}
+    for kind in MARKS:
+        ok = total = 0
+        for r, o in zip(rows, outs):
+            for t, _ in r.get(kind, []):
+                total += 1
+                ok += t in o
+        res[kind] = ok / total if total else None
+        res[f"{kind}_n"] = total
+    return res
 
 
 _JOSA = re.compile(r"^(으로|이나|이라|을|를|이|가|은|는|과|와|나|라|로)(?![가-힣])")

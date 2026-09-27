@@ -268,29 +268,43 @@ def test_코드로_표시된_자리는_개념이_아니다():
     """
     src = "In the snapshot section of the policy, replace the repository name with your own one."
     민 = [{"id": "a", "src": src, "keep": []}]
-    표시 = [{"id": "a", "src": src, "keep": [], "lit": ["snapshot"]}]
+    표시 = [{"id": "a", "src": src, "keep": [], "lit": [["snapshot", src.index("snapshot")]]}]
     out = ["정책의 snapshot 섹션에서 리포지토리 이름을 바꿉니다."]
     assert ev.score(표시, out)["term_n"] == ev.score(민, out)["term_n"] - 1
 
 
-def test_같은_글자가_또_있으면_그것도_빠진다():
-    """**아는 한계다.** 줄이 표시를 글자로만 들어서 자리를 모른다(DECISIONS §122).
-
-    자리를 적으면 정확해지지만 줄을 사람이 못 읽게 된다. 실문서 600줄에서 이 때문에 잘못 빠지는
-    개념은 **690 중 1** 이었다(`awsdocs-0198` 의 `snapshot repository`). 그 값으로 글자를 택했다.
-    """
+def test_표시_밖의_같은_글자는_그대로_개념이다():
+    """자리를 들기 때문에 가른다. 글자로만 들던 판에서는 뒤엣것까지 빠졌다(DECISIONS §123)."""
     src = "In the snapshot section of the policy, set how long each snapshot is kept for you."
     민 = [{"id": "a", "src": src, "keep": []}]
-    표시 = [{"id": "a", "src": src, "keep": [], "lit": ["snapshot"]}]
+    표시 = [{"id": "a", "src": src, "keep": [], "lit": [["snapshot", src.index("snapshot")]]}]
     out = ["정책의 snapshot 섹션에서 각 스냅샷을 얼마나 보관할지 정합니다."]
-    assert ev.score(민, out)["term_n"] == 3 and ev.score(표시, out)["term_n"] == 1
+    assert ev.score(민, out)["term_n"] == 3 and ev.score(표시, out)["term_n"] == 2
+
+
+def test_자리를_틀리게_든_줄은_멈춘다():
+    """줄이 제 자리를 거짓으로 적으면 그 위의 모든 숫자가 거짓이다 — 세는 척하지 않는다."""
+    거짓 = [{"id": "나쁜줄", "src": "Amazon S3 stores the object.", "keep": [], "lit": [["object", 3]]}]
+    with pytest.raises(SystemExit, match="자리를 틀리게 든다"):
+        ev.score(거짓, ["객체를 저장합니다."])
+
+
+def test_굵은_글씨도_개념에서_빠지고_따로_센다():
+    """한국어 AWS 문서가 콘솔 라벨을 영어로 둔다 — `[**Security Groups**]`(DECISIONS §123)."""
+    src = "In the navigation pane, choose Dev endpoints, and then choose Add endpoint here."
+    민 = [{"id": "a", "src": src, "keep": []}]
+    표시 = [{"id": "a", "src": src, "keep": [],
+             "ui": [["Dev endpoints", src.index("Dev endpoints")], ["Add endpoint", src.index("Add endpoint")]]}]
+    out = ["탐색 창에서 Dev endpoints 를 선택한 다음 Add endpoint 를 선택합니다."]
+    assert ev.score(민, out)["term_n"] > ev.score(표시, out)["term_n"]
+    assert ev.score(표시, out)["ui"] == 1.0 and ev.score(표시, out)["ui_n"] == 2
 
 
 def test_lit_은_표시된_글자가_그대로_남았나를_센다():
-    rows = [{"id": "a", "src": "Specify the bucket-owner-full-control canned ACL for the request.",
-             "keep": [], "lit": ["bucket-owner-full-control"]},
-            {"id": "b", "src": "Replace snapshot-repo with your own name for the domain.",
-             "keep": [], "lit": ["snapshot-repo"]}]
+    a = "Specify the bucket-owner-full-control canned ACL for the request."
+    b = "Replace snapshot-repo with your own name for the domain."
+    rows = [{"id": "a", "src": a, "keep": [], "lit": [["bucket-owner-full-control", a.index("bucket")]]},
+            {"id": "b", "src": b, "keep": [], "lit": [["snapshot-repo", b.index("snapshot")]]}]
     got = ev.score(rows, ["요청에 bucket-owner-full-control 미리 제공된 ACL 을 지정합니다.",
                           "도메인 이름으로 캡샷-리포를 바꿉니다."])
     assert got["lit_n"] == 2 and got["lit"] == 0.5
@@ -299,7 +313,7 @@ def test_lit_은_표시된_글자가_그대로_남았나를_센다():
 def test_표시가_없으면_lit_은_0_이_아니라_None():
     """못 잰 것을 0 으로 세면 표시 없는 셋이 늘 빨갛다(tools/doctor.py 와 같은 규율)."""
     got = ev.score([{"id": "a", "src": "Amazon S3 stores the object.", "keep": []}], ["객체를 저장합니다."])
-    assert got["lit"] is None and got["lit_n"] == 0
+    assert got["lit"] is None and got["lit_n"] == 0 and got["ui"] is None
 
 
 def test_재채점은_쓴_셋을_적는다(tmp_path):

@@ -111,52 +111,98 @@ def _body(md: str) -> list[str]:
 class Line(typing.NamedTuple):
     """문장 하나와 **원문이 그 문장에 해 둔 표시**."""
     text: str
-    lit: tuple[str, ...] = ()       # `` `코드` `` — 식별자 · 값 · API 이름. 그대로 남아야 한다
-    ui: tuple[str, ...] = ()        # `**굵게**` — 콘솔 라벨. 지금은 기록만 한다
+    lit: tuple[tuple[str, int], ...] = ()   # `` `코드` `` — 식별자 · 값. **(글자, 자리)** 다
+    ui: tuple[tuple[str, int], ...] = ()    # `**굵게**` — 콘솔 라벨. 한국어 문서도 영어로 둔다
     guide: str = ""
     doc: str = ""
 
 
-def _grab(pat: re.Pattern, ln: str, into: list[str]) -> str:
-    """표시를 걷되 **걷어 낸 글자를 `into` 에 담는다.** 지우기와 기억하기를 한 번에 한다."""
-    def keep(m: re.Match) -> str:
-        into.append(m.group(1))
-        return m.group(1)
-    return pat.sub(keep, ln)
+LIT, UI = 1, 2      # 깃발
 
 
-def plain(ln: str) -> tuple[str, list[str], list[str]]:
+def _walk(pat: re.Pattern, text: str, flag: list[int], group: int = 0, mark: int = 0) -> tuple[str, list[int]]:
+    """정규식 하나를 적용하되 **글자와 깃발을 같이 옮긴다**(DECISIONS §123).
+
+    `group` 이 0 이면 맞은 자리를 지우고, 아니면 그 조 안만 남긴다. `mark` 가 있으면 남긴 자리에
+    깃발을 찍는다 — 이미 찍힌 자리는 안 덮는다(코드 안의 굵은 글씨는 코드다).
+
+    ★ **`re.sub` 로는 자리를 못 지킨다.** 바꾸고 나면 어디가 어디였는지 사라진다. 그래서 문자열을
+      손으로 다시 짓는다 — 표시를 글자로만 들고 「같은 글자가 또 있으면 그것도 뺀다」 고 적는 것은
+      거짓말이다.
+    """
+    out, f, end = [], [], 0
+    for m in pat.finditer(text):
+        out.append(text[end:m.start()])
+        f.extend(flag[end:m.start()])
+        if group:
+            s, e = m.span(group)
+            out.append(text[s:e])
+            f.extend([x or mark for x in flag[s:e]] if mark else flag[s:e])
+        end = m.end()
+    out.append(text[end:])
+    f.extend(flag[end:])
+    return "".join(out), f
+
+
+def _spans(text: str, flag: list[int], want: int) -> tuple[tuple[str, int], ...]:
+    """이어진 깃발을 (글자, 자리)로. **자리는 이 문자열 안에서의 자리다.**"""
+    out, i = [], 0
+    while i < len(text):
+        if flag[i] != want:
+            i += 1
+            continue
+        j = i
+        while j < len(text) and flag[j] == want:
+            j += 1
+        if (t := text[i:j].strip()):
+            out.append((t, i + text[i:j].index(t)))
+        i = j
+    return tuple(out)
+
+
+def plain(ln: str) -> tuple[str, list[int]]:
     """마크다운 표시를 걷는다. **링크는 글자만 남긴다** — 주소는 문장이 아니다.
+
+    돌려주는 깃발은 글자마다 `0`(산문) · `LIT`(코드) · `UI`(굵게) 다.
 
     ★ **지우기만 하던 함수였다.** `_CODE.sub(r"\\1", ln)` 한 줄이 `` `bucket-owner-full-control` `` 의
       백틱을 없앴고, 그 뒤로는 그것이 산문인지 타이핑할 값인지 아무도 몰랐다. 지표는 몰라서 개념으로
       셌다(DECISIONS §98 · §122). **문서가 이미 답을 적어놨는데 수확기가 그것을 지웠다.**
     """
-    ln = _IMG.sub("", ln)
-    ln = _LINK.sub(r"\1", ln)
-    lit: list[str] = []
-    ui: list[str] = []
-    ln = _grab(_CODE, ln, lit)
-    ln = _BULLET.sub("", ln)
-    ln = _grab(_BOLD, ln, ui)           # `_EMPH` 가 별표를 지우기 전이다
-    ln = _EMPH.sub("", ln)
-    씻기 = lambda xs: [t for t in (_ESCAPED.sub(r"\1", _EMPH.sub("", x)).strip() for x in xs) if t]  # noqa: E731
-    return _ESCAPED.sub(r"\1", ln).strip(), 씻기(lit), 씻기(ui)
+    flag = [0] * len(ln)
+    for pat, group, mark in ((_IMG, 0, 0), (_LINK, 1, 0), (_CODE, 1, LIT),
+                             (_BULLET, 0, 0), (_BOLD, 1, UI), (_EMPH, 0, 0), (_ESCAPED, 1, 0)):
+        ln, flag = _walk(pat, ln, flag, group, mark)
+    끝 = len(ln) - len(ln.rstrip())
+    앞 = len(ln) - len(ln.lstrip())
+    return ln.strip(), flag[앞:len(ln) - 끝]
+
+
+def _cuts(text: str) -> list[tuple[int, int]]:
+    """문장 경계를 **자리로** 돌려준다. `_SPLIT.split` 은 자리를 버린다."""
+    out, last = [], 0
+    for m in _SPLIT.finditer(text):
+        out.append((last, m.start()))
+        last = m.end()
+    out.append((last, len(text)))
+    return out
 
 
 def sentences(md: str) -> list[Line]:
     """한 문서에서 산문 문장만. 모양으로만 거르고 뜻은 보지 않는다.
 
-    ★ **한 줄이 여러 문장으로 쪼개진다.** 표시는 그것이 실제로 든 문장에만 붙인다 — 같은 줄의
-      옆 문장에 붙이면 있지도 않은 글자가 남았는지 묻게 된다.
+    ★ **한 줄이 여러 문장으로 쪼개진다.** 표시는 그것이 실제로 든 문장에만, 그 문장 안의 **자리와 함께**
+      붙인다 — 글자로만 들면 같은 글자가 표시 밖에 또 있을 때 그것까지 표시로 세게 된다.
     """
     out = []
     for ln in _body(md):
-        c, lit, ui = plain(ln)
+        c, flag = plain(ln)
         if not c:
             continue
-        for s in _SPLIT.split(c):
-            s = s.strip()
+        for a, b in _cuts(c):
+            s, f = c[a:b], flag[a:b]
+            앞 = len(s) - len(s.lstrip())
+            s, f = s.strip(), f[앞:앞 + len(s.strip())]
             if not (MIN_CHARS <= len(s) <= MAX_CHARS):
                 continue
             if not s[0].isupper() or s[-1] not in ".?!":
@@ -165,8 +211,7 @@ def sentences(md: str) -> list[Line]:
                 continue
             if sum(ch.isascii() for ch in s) / len(s) < 0.99:
                 continue
-            out.append(Line(s, tuple(sorted({t for t in lit if t in s})),
-                            tuple(sorted({t for t in ui if t in s}))))
+            out.append(Line(s, _spans(s, f, LIT), _spans(s, f, UI)))
     return out
 
 
@@ -218,14 +263,17 @@ def harvest(onto: list[dict], root: pathlib.Path) -> list[Line]:
 def rows(onto: list[dict], picked: list[Line]) -> list[dict]:
     """평가셋 줄. `keep` 은 **온톨로지가 영어로 남기라고 한 표기**다 — 탐침과 같은 근거다.
 
-    ★ `lit` 에서 `keep` 과 겹치는 것을 뺀다. 같은 글자를 두 지표가 세면 분모만 부푼다 —
-      `keep` 은 사전이 아는 이름이고 `lit` 은 문서가 표시한 나머지다(DECISIONS §122).
+    ★ `lit` · `ui` 에서 `keep` 과 겹치는 것을 뺀다. 같은 글자를 두 지표가 세면 분모만 부푼다 —
+      `keep` 은 사전이 아는 이름이고 나머지 둘은 문서가 표시한 것이다(DECISIONS §122).
+    ★ 표시는 **(글자, 자리)** 로 싣는다. `src[자리:자리+len(글자)] == 글자` 가 불변식이고
+      `evaluate.marked` 가 그것을 확인한다.
     """
     out = []
     for i, ln in enumerate(picked, 1):
         keep = sorted({ln.text[a:b] for a, b, _ in ontology.find(onto, ln.text, keep_only=True)})
+        빼기 = lambda xs: [[t, at] for t, at in xs if t not in keep]  # noqa: E731
         out.append({"id": f"awsdocs-{i:04d}", "src": ln.text, "keep": keep,
-                    "lit": [t for t in ln.lit if t not in keep], "ui": list(ln.ui),
+                    "lit": 빼기(ln.lit), "ui": 빼기(ln.ui),
                     "guide": ln.guide, "doc": ln.doc})
     return out
 

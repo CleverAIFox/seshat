@@ -136,16 +136,19 @@ You can replace `snapshot-repo` with your own bucket name. The next stream sente
 """
 
 
-def test_원문이_코드로_표시한_글자를_들고_나온다():
+def test_원문이_코드로_표시한_글자를_자리와_함께_들고_나온다():
     """**문서가 이미 적어놨다** — 수확기가 그것을 지우고 있었다(DECISIONS §122)."""
     ln = _line(MARKED, "canned ACL")
-    assert ln.lit == ("bucket-owner-full-control",)
-    assert "`" not in ln.text and "bucket-owner-full-control" in ln.text
+    (t, at), = ln.lit
+    assert t == "bucket-owner-full-control"
+    assert ln.text[at:at + len(t)] == t         # 자리가 맞다
+    assert "`" not in ln.text
 
 
 def test_굵은_글씨는_콘솔_라벨로_따로_든다():
     ln = _line(MARKED, "navigation pane")
-    assert ln.ui == ("Add endpoint", "Dev endpoints")
+    assert [t for t, _ in ln.ui] == ["Dev endpoints", "Add endpoint"]
+    assert all(ln.text[at:at + len(t)] == t for t, at in ln.ui)
     assert ln.lit == () and "*" not in ln.text
 
 
@@ -153,23 +156,33 @@ def test_같은_줄의_옆_문장에_표시를_안_붙인다():
     """한 줄이 두 문장으로 쪼개지면 표시는 그것이 실제로 든 문장에만 간다."""
     앞 = _line(MARKED, "replace snapshot-repo")
     뒤 = _line(MARKED, "no marking on it")
-    assert 앞.lit == ("snapshot-repo",) and 뒤.lit == ()
+    assert [t for t, _ in 앞.lit] == ["snapshot-repo"] and 뒤.lit == ()
 
 
 def test_표시는_뽑히는_문장을_안_바꾼다():
     """`choose` 의 열쇠는 글자뿐이다 — 표시를 붙이는 일이 셋을 흔들면 옛 결과와 못 잇는다."""
     민 = _found("g", [f"Amazon S3 stores object number {i:03d} in the bucket for a long time." for i in range(50)])
-    표시 = {"g": [ln._replace(lit=("x",), ui=("y",)) for ln in 민["g"]]}
+    표시 = {"g": [ln._replace(lit=(("object", 10),), ui=(("bucket", 40),)) for ln in 민["g"]]}
     assert [x.text for x in aws.choose(민, 10, 21, 400)] == [x.text for x in aws.choose(표시, 10, 21, 400)]
 
 
 def test_lit_은_keep_과_겹치지_않는다():
     """같은 글자를 두 지표가 세면 분모만 부푼다."""
     onto = ontology.load()
-    got = aws.rows(onto, [aws.Line("Amazon DynamoDB writes the record to the table with a search_path now.",
-                                   ("Amazon DynamoDB", "search_path"), (), "g", "d.md")])
+    src = "Amazon DynamoDB writes the record to the table with a search_path now."
+    got = aws.rows(onto, [aws.Line(src, (("Amazon DynamoDB", 0), ("search_path", src.index("search_path"))),
+                                   (), "g", "d.md")])
     assert "Amazon DynamoDB" in got[0]["keep"]
-    assert got[0]["lit"] == ["search_path"]
+    assert got[0]["lit"] == [["search_path", src.index("search_path")]]
+
+
+def test_표시가_문장_안_자리를_정확히_든다():
+    """같은 글자가 표시 밖에 또 있어도 표시된 쪽만 든다 — 글자로만 들면 못 가른다."""
+    md = "In the `snapshot` section of the policy, set how long each snapshot is kept here.\n"
+    ln = aws.sentences(md)[0]
+    (t, at), = ln.lit
+    assert t == "snapshot" and at == ln.text.index("snapshot")
+    assert ln.text.count("snapshot") == 2      # 뒤엣것은 안 들었다
 
 
 def test_카탈로그가_이_도구를_안다():
