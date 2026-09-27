@@ -21,7 +21,10 @@ def main(argv: list[str]) -> int:
             print(f"  층 {n:<6} {d['base']:<5} {' '.join(d['dirs']):<38} {깃}")
         print()
         for e in entries:
+            f = e["feeds"]
+            읽는다 = f if isinstance(f, str) else " · ".join(f)
             print(f"  {e['id']:<14} {e['where']:<30} {','.join(e['uses']):<16} {e['license']}")
+            print(f"  {'':<14} └ 읽는다 {읽는다[:96]}")
         return 0
     fails = (catalog.validate(entries)
              + [f"카탈로그 밖 {r}" for r in catalog.unlisted_repo_files(entries)]
@@ -29,7 +32,8 @@ def main(argv: list[str]) -> int:
              + catalog.check_layers())
     for f in fails:
         print(f"  {f}")
-    print(f"  카탈로그 {len(entries)}출처 · 실패 {len(fails)}")
+    아무도 = catalog.unfed(entries)
+    print(f"  카탈로그 {len(entries)}출처 · 아무도 안 읽는 것 {len(아무도)}({' · '.join(아무도)}) · 실패 {len(fails)}")
     return 1 if fails else 0
 
 

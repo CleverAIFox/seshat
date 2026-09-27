@@ -11,7 +11,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 PATH = ROOT / "data/catalog.toml"
 USES = {"eval", "evidence", "train", "ontology", "reference", "serve"}
-FIELDS = ("id", "where", "origin", "license", "uses", "how")
+FIELDS = ("id", "where", "origin", "license", "uses", "how", "feeds")
+# ★ 아무도 안 읽는 출처는 **언제 쓸지**를 적고 산다(DECISIONS §120 · 파이어레인 §18-1a R4)
+UNFED = "미투입 — "
 UNKNOWN = "미확인"
 LEDGER = "seshat/licenses.py"
 
@@ -97,7 +99,37 @@ def validate(entries: list[dict], root: Path = ROOT) -> list[str]:
         how = e.get("how", "")
         if how and how != "사람" and not (root / how).exists():
             fails.append(f"{name}: 얻는 도구 {how} 가 없다")
+        fails += feeds_fail(name, e.get("feeds"), root)
     return fails
+
+
+def feeds_fail(name: str, feeds, root: Path = ROOT) -> list[str]:
+    """`feeds` 는 **누가 읽는가**다(DECISIONS §120).
+
+    ★ 목록이면 읽는 것들의 이름이고, 그중 저장소 안의 파일을 가리키는 것은 **있어야 한다** —
+      도구를 지우고 대장만 남으면 「누가 읽는다」 가 거짓이 된다.
+    ★ 아무도 안 읽으면 `"미투입 — <언제 쓸지>"` 한 줄이다. **비워 두는 것과 다르다** — 비면 모르는
+      것이고, `미투입` 은 알고 두는 것이다.
+    """
+    if not feeds:
+        return [f"{name}: `feeds` 가 비었다 — 누가 읽는지 적거나 `{UNFED}<언제 쓸지>` 라고 적는다"]
+    if isinstance(feeds, str):
+        if not feeds.startswith(UNFED):
+            return [f"{name}: `feeds` 가 글자 하나면 `{UNFED}` 로 시작한다 — {feeds[:30]}"]
+        if len(feeds) <= len(UNFED) + 2:
+            return [f"{name}: `미투입` 뒤에 **언제 쓸지**를 적는다"]
+        return []
+    out = []
+    for f in feeds:
+        head = f.split(" ")[0]
+        if "/" in head and head.endswith(".py") and not (root / head).exists():
+            out.append(f"{name}: feeds 가 없는 {head} 를 든다")
+    return out
+
+
+def unfed(entries: list[dict]) -> list[str]:
+    """아무도 안 읽는 출처. **실패가 아니라 수다** — 세어서 보인다."""
+    return [e["id"] for e in entries if isinstance(e.get("feeds"), str)]
 
 
 def match(entries: list[dict], space: str, rel: str) -> dict | None:

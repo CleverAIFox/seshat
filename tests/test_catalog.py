@@ -5,7 +5,8 @@ from seshat import catalog
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 
-OK = {"id": "a", "where": "lake:raw/a/*", "origin": "o", "license": "CC BY 4.0", "uses": ["eval"], "how": "사람"}
+OK = {"id": "a", "where": "lake:raw/a/*", "origin": "o", "license": "CC BY 4.0", "uses": ["eval"],
+      "how": "사람", "feeds": ["seshat/evaluate.py"]}
 
 
 def test_실제_카탈로그가_통과한다():
@@ -132,3 +133,28 @@ def test_lake_의_MANAGED_는_선언에서_온다():
     src = (ROOT / "tools/lake.py").read_text(encoding="utf-8")
     assert "MANAGED = catalog.managed_tiers()" in src
     assert 'MANAGED = ("raw", "runs")' not in src
+
+
+def test_feeds_는_비워_두지_않는다():
+    """`uses` 는 허가고 `feeds` 는 사실이다 — 둘을 합치면 아무도 안 읽는 출처가 「쓸 수 있음」으로 남는다."""
+    assert any("`feeds` 가 비었다" in f for f in catalog.validate([{**OK, "feeds": []}]))
+    assert any("`feeds` 가 비었다" in f for f in catalog.validate([{k: v for k, v in OK.items() if k != "feeds"}]))
+
+
+def test_아무도_안_읽으면_언제_쓸지를_적는다():
+    assert catalog.feeds_fail("a", "미투입 — PLAN #6 이 뽑을 때") == []
+    assert any("로 시작한다" in f for f in catalog.feeds_fail("a", "나중에"))
+    assert any("언제 쓸지" in f for f in catalog.feeds_fail("a", "미투입 — "))
+
+
+def test_없는_도구를_읽는다고_적으면_짚는다(tmp_path):
+    """도구를 지우고 대장만 남으면 「누가 읽는다」 가 거짓이 된다."""
+    assert catalog.feeds_fail("a", ["tools/없다.py"], tmp_path) == ["a: feeds 가 없는 tools/없다.py 를 든다"]
+    assert catalog.feeds_fail("a", ["사람이 눈으로 본다"], tmp_path) == []
+
+
+def test_실제_카탈로그의_미투입을_센다():
+    """실패가 아니라 수다 — 아무도 안 읽는 출처가 몇인지 대장이 말한다."""
+    got = catalog.unfed(catalog.load())
+    assert "thoth-pairs" in got          # 넉 달째 아무도 안 읽는다
+    assert "ontology-aws" not in got

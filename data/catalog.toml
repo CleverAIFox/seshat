@@ -13,6 +13,10 @@
 #   license  라이선스 · 약관. 모르면 `미확인` 이라고 적는다. 비워 두지 않는다
 #   uses     eval · evidence · train · ontology · reference · serve 중에서
 #   how      얻는 방법 — 도구 경로 또는 `사람`
+#   feeds    **누가 읽는가**(DECISIONS §120 · 파이어레인 MASTER §18-1a R4). 읽는 도구 · 산출물의 목록이다.
+#            아무도 안 읽으면 `"미투입 — <언제 쓸지>"` 한 줄로 적는다. **비워 두지 않는다.**
+#            ★ `uses` 와 다르다 — `uses` 는 「쓸 수 있는가」(허가), `feeds` 는 「누가 읽는가」(사실).
+#              둘을 한 칸으로 합치면 **아무도 안 읽는 출처가 「쓸 수 있음」 으로 남는다.**
 
 # ── 계층 ── **층 정책의 정본은 이 블록이다**(DECISIONS §114 · 파이어레인 MASTER §18-1).
 #
@@ -84,6 +88,7 @@ origin = "AWS 서비스 · 기능 · API · 개념과 공식 한국어 표기를
 license = "자체 — 이름과 표기라는 사실의 목록"
 uses = ["ontology", "eval"]
 how = "사람"
+feeds = ["seshat/ontology.py — term · josa 지표", "seshat/terms.py — 용어 자리표시", "tools/make_probes.py", "tools/fetch_awsdocs.py — 수확 거르기"]
 
 [[source]]
 id = "eval-seed"
@@ -92,6 +97,7 @@ origin = "평가셋 초안(PLAN #1)"
 license = "자체"
 uses = ["eval"]
 how = "사람"
+feeds = ["seshat/evaluate.py — 배선 확인용 12줄"]
 
 [[source]]
 id = "flores-plus"
@@ -100,6 +106,7 @@ origin = "openlanguagedata/flores_plus · eng_Latn → kor_Hang · dev · devtes
 license = "CC BY-SA 4.0"
 uses = ["eval"]
 how = "tools/fetch_flores.py"
+feeds = ["seshat/evaluate.py — 범용 chrF(H-035 · H-038)"]
 note = "평가 전용. 학습에 넣으면 이길 대상의 숫자가 거짓말을 한다"
 
 [[source]]
@@ -109,6 +116,7 @@ origin = "사람이 줄마다 내린 판정 — 뜻이 맞다 · 어긋난다 ·
 license = "자체 — 판정만 든다"
 uses = ["eval"]
 how = "사람"
+feeds = ["tools/labels.py — agree 의 카파"]
 note = "**저장소가 아니라 레이크다**(DECISIONS §103). 근거는 레이크에 산다 — runs 와 같은 규칙. 원문도 출력도 적지 않는다"
 
 [[source]]
@@ -118,6 +126,7 @@ origin = "5형식 문형 템플릿 × 온톨로지 어휘(MASTER §7 R5)"
 license = "자체"
 uses = ["eval"]
 how = "tools/make_probes.py"
+feeds = ["seshat/evaluate.py — 도메인 탐침(h001~h004)"]
 
 [[source]]
 id = "runs"
@@ -126,6 +135,7 @@ origin = "실험 결과 — 머리줄이 재현 조건(커밋 · 셋 해시 · �
 license = "자체"
 uses = ["evidence"]
 how = "seshat/evaluate.py"
+feeds = ["tools/compare_runs.py", "tools/term_diff.py", "tools/rescore.py", "tools/show_misses.py", "tools/labels.py", "tools/lake.py — 가설 대장의 근거"]
 note = "다시 만들 수 없다. 가설 대장의 근거다"
 
 [[source]]
@@ -135,6 +145,7 @@ origin = "thoth 배포본의 쌍 로그 — 사용자 화면의 영어 원문"
 license = "사이트 저작물 · 비공개 학습만(DECISIONS §2)"
 uses = ["train"]
 how = "사람"
+feeds = "미투입 — PLAN #6 이 Athena 에서 뽑을 때. 2026-09-27 현재 S3 에 2객체 9,880바이트뿐이고 레이크 자리는 비어 있다"
 note = "공개하지 않는다. 정답(Bedrock 출력)은 학습에 쓰지 않는다(PLAN §4)"
 
 [[source]]
@@ -144,6 +155,7 @@ origin = "AWS 문서 영어 · 한국어 쌍 페이지의 스냅숏 — 온톨�
 license = "미확인"
 uses = ["ontology"]
 how = "사람"
+feeds = "미투입 — 사람이 온톨로지 `ko_ref` 를 대조할 때 눈으로 본다. 코드가 안 읽는다"
 note = "학습에 쓰려면 약관을 먼저 읽고 license 를 채운다"
 
 [[source]]
@@ -153,6 +165,7 @@ origin = "AWS 공식 안내서의 GitHub 저장소 14권(awsdocs/*, master 가�
 license = "CC BY-SA 4.0"
 uses = ["eval", "ontology"]
 how = "tools/fetch_awsdocs.py"
+feeds = ["tools/fetch_awsdocs.py"]
 note = "cache 층이라 해시 대장 밖이다 — 다시 받을 수 있다. train 을 안 단다(동일 조건이 학습 산출물에 미치는지 안 읽었다)"
 
 [[source]]
@@ -162,6 +175,7 @@ origin = "위 안내서에서 뽑은 도메인 문장 — 온톨로지가 든 �
 license = "CC BY-SA 4.0"
 uses = ["eval"]
 how = "tools/fetch_awsdocs.py"
+feeds = ["seshat/evaluate.py", "tools/labels.py"]
 note = "커밋하지 않는다 — 나눠 줄 때 저작자 표시와 동일 조건이 붙는다. 머리줄이 출처 sha 와 표시를 든다"
 
 [[source]]
@@ -171,6 +185,7 @@ origin = "논문 PDF — 읽은 결과는 docs/papers.md 가 든다"
 license = "논문마다 다르다"
 uses = ["reference"]
 how = "사람"
+feeds = "미투입 — 사람이 읽고 docs/papers.md 에 적는다"
 
 [[source]]
 id = "weights"
@@ -179,4 +194,5 @@ origin = "모델 가중치"
 license = "seshat/licenses.py"
 uses = ["eval", "serve"]
 how = "사람"
+feeds = ["seshat/backends.py — ollama 로 부른다"]
 note = "라이선스 정본은 대장이다. 대장에 없는 가중치는 서빙에 쓰지 않는다"
