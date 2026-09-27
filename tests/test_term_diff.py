@@ -47,3 +47,12 @@ def test_둘_다_맞거나_둘_다_틀리면_안_집는다(tmp_path):
     a = td.read(_run(tmp_path / "a.jsonl", "A", 같음))[1]
     b = td.read(_run(tmp_path / "b.jsonl", "B", 같음))[1]
     assert td.가른다(onto, a, b) == []
+
+
+def test_갈린_자리가_적으면_잡음과_구별되지_않는다():
+    """h003 의 4 대 11 은 눈에는 12B 승이지만 동전으로도 12% 확률이다(DECISIONS §88)."""
+    assert td.부호검정(4, 11) > 0.05
+    assert td.부호검정(21, 8) < 0.05          # h001 — 이만큼 갈리면 말할 수 있다
+    assert td.부호검정(9, 25) < 0.01
+    assert td.부호검정(0, 0) == 1.0           # 갈린 자리가 없으면 아무 말도 안 한다
+    assert td.부호검정(7, 7) == 1.0           # 반반이면 차이가 없다

@@ -16,6 +16,7 @@ import argparse
 import json
 import sys
 from collections import Counter
+from math import comb
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -56,6 +57,20 @@ def 가른다(onto: list[dict], a_rows: dict, b_rows: dict) -> list[dict]:
     return out
 
 
+def 부호검정(a: int, b: int) -> float:
+    """갈린 자리만으로 두 팔이 다른지 본다 — 양측 부호 검정(DECISIONS §88).
+
+    ★ 둘 다 맞거나 둘 다 틀린 자리는 **정보가 없다.** 같은 문항을 둘이 풀었으므로 갈린 자리만 센다.
+    ★ 2026-09-27 h003 에서 4 대 11 이 나왔다. 눈에는 12B 가 이긴 것으로 보이지만 **동전으로도 그만큼은
+      12% 확률로 나온다.** 갈린 자리가 적으면 평균 차이는 아무 말도 못 한다.
+    """
+    n = a + b
+    if n == 0:
+        return 1.0
+    k = max(a, b)
+    return min(1.0, 2 * sum(comb(n, i) for i in range(k, n + 1)) / 2 ** n)
+
+
 def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("a", type=Path)
@@ -73,7 +88,9 @@ def main(argv: list[str]) -> int:
     a만 = [d for d in 자리 if d["a"]]
     b만 = [d for d in 자리 if not d["a"]]
     print(f"  A {A}  ·  B {B}  ·  갈린 자리 {len(자리)}")
-    print(f"  A 만 공식 표기 {len(a만)} · B 만 공식 표기 {len(b만)}")
+    p = 부호검정(len(a만), len(b만))
+    판정 = "두 팔이 다르다" if p < 0.05 else "**잡음과 구별되지 않는다** — 갈린 자리가 적다"
+    print(f"  A 만 공식 표기 {len(a만)} · B 만 공식 표기 {len(b만)} · 부호 검정 p = {p:.3f} → {판정}")
     for 이름, 묶음 in (("A 만", a만), ("B 만", b만)):
         if 묶음:
             print(f"\n  [{이름}] 개념별 " + " · ".join(f"{k}×{v}" for k, v in Counter(d["en"] for d in 묶음).most_common()))
