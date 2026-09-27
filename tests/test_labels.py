@@ -185,3 +185,13 @@ def test_열쇠가_없으면_한_줄로_말한다(tmp_path, monkeypatch):
         assert "열쇠가 없다" in str(e)
     else:
         raise AssertionError("열쇠 없는데 통과했다")
+
+
+def test_make_가_판정_순서를_찍는다(tmp_path, monkeypatch, capsys):
+    """순서가 설계에만 있고 전달에 없으면 오염된다(DECISIONS §108)."""
+    monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
+    monkeypatch.setattr(L.evaluate, "load", lambda p: ROWS)
+    L.main(["make", "--set", "x", "--a", str(_run(tmp_path, "4b")), "--b", str(_run(tmp_path, "12b")),
+            "--name", "t", "--n", "5"])
+    out = capsys.readouterr().out
+    assert "한 번에 하나씩" in out and "§108" in out

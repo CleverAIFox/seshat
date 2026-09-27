@@ -11,6 +11,8 @@
   **일치하지 않는 줄이 기준이 무른 자리**다 — 거기서 기준을 좁힌다.
 ★ **판정자는 교사가 아니다.** 판정은 평가에만 쓰고 학습 데이터로 넘기지 않는다. 그래서 가중치 대장의
   교사 가부(`seshat/licenses.py`)가 판정자를 가리지 않는다 — 학습에 쓰려면 그때 대장을 본다.
+★ **판정자는 한 번에 하나씩 받는다**(DECISIONS §108). 앞선 판정을 본 뒤에 매기면 카파가 높아도
+  일치가 아니라 베끼기이고, **안 봤다고 증명할 수 없다.** 오염된 판정은 레이크에 넣지 않는다.
 ★ **눈가림이다.** 채점표는 어느 팔의 출력인지 적지 않는다. 알면 큰 모델에 후하게 준다 — 사람이
   정직하지 않아서가 아니라 **기대가 채점을 민다.** 팔 이름은 열쇠 파일에만 있고, `read` 가 붙인다.
 ★ **줄을 먼저 뽑고 출력을 나중에 본다.** seed 로 뽑으므로 무엇이 나올지 모르는 채로 표본이 정해진다.
@@ -263,6 +265,8 @@ def main(argv: list[str] | None = None) -> int:
     out.write_text(sheet, encoding="utf-8")
     print(f"  {out}  {len(key)}줄 (눈가림 · 어느 팔인지 안 적혀 있다)")
     print(f"  {_짧게(out_dir() / f'{name}.key.jsonl')}  열쇠 — 다 매기기 전에 열지 않는다")
+    print("  ★ 판정자는 한 번에 하나씩이다 — 앞선 판정을 보여 주지 않는다(DECISIONS §108).")
+    print("    표를 첫 판정자에게 주고 답을 받은 뒤에 둘째에게 준다. 답끼리는 `agree` 가 처음 만난다")
     print(f"  다 매기면 : python3 tools/labels.py read --name {name} --judge <판정자>")
     print("  그 뒤     : python3 tools/lake.py put raw --into labels labels/*.jsonl")
     return 0

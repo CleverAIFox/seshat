@@ -19,7 +19,9 @@ def main(argv: list[str]) -> int:
         for e in entries:
             print(f"  {e['id']:<14} {e['where']:<30} {','.join(e['uses']):<16} {e['license']}")
         return 0
-    fails = catalog.validate(entries) + [f"카탈로그 밖 {r}" for r in catalog.unlisted_repo_files(entries)]
+    fails = (catalog.validate(entries)
+             + [f"카탈로그 밖 {r}" for r in catalog.unlisted_repo_files(entries)]
+             + catalog.weights_outside(entries))
     for f in fails:
         print(f"  {f}")
     print(f"  카탈로그 {len(entries)}출처 · 실패 {len(fails)}")

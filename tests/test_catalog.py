@@ -42,3 +42,31 @@ def test_data_밖에_몰래_둔_파일을_짚는다(tmp_path):
     (tmp_path / "data/ontology/aws.jsonl").write_text("{}")
     (tmp_path / "data/scratch.csv").write_text("x")
     assert catalog.unlisted_repo_files(catalog.load(), root=tmp_path) == ["data/scratch.csv"]
+
+
+def test_가중치가_카탈로그_밖에_있으면_짚는다(tmp_path, monkeypatch):
+    """카탈로그는 약속이고 ollama 는 그 약속을 모른다(DECISIONS §106)."""
+    lake = tmp_path / "lake"; (lake / "cache/models").mkdir(parents=True)
+    outside = tmp_path / "home/.ollama/models"; outside.mkdir(parents=True)
+    (outside / "blob").write_text("가중치인 척", encoding="utf-8")
+    entries = catalog.load()
+    monkeypatch.setenv("SESHAT_DATA", str(lake))
+
+    monkeypatch.setenv("OLLAMA_MODELS", str(outside))
+    got = catalog.weights_outside(entries)
+    assert got and "카탈로그는 lake:cache/models/*" in got[0] and str(outside) in got[0]
+
+    inside = lake / "cache/models/ollama"; inside.mkdir(parents=True)
+    (inside / "blob").write_text("가중치인 척", encoding="utf-8")
+    monkeypatch.setenv("OLLAMA_MODELS", str(inside))
+    assert catalog.weights_outside(entries) == []
+
+    # 빈 자리는 짚지 않는다 — 아직 아무것도 안 받은 기계다
+    empty = tmp_path / "empty"; empty.mkdir()
+    monkeypatch.setenv("OLLAMA_MODELS", str(empty))
+    assert catalog.weights_outside(entries) == []
+
+    # 레이크가 없는 기계(CI)에서는 묻지 않는다
+    monkeypatch.setenv("OLLAMA_MODELS", str(outside))
+    monkeypatch.setenv("SESHAT_DATA", "")
+    assert catalog.weights_outside(entries) == []

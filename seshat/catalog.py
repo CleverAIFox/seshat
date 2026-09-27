@@ -61,6 +61,34 @@ def allowed(source_id: str, use: str, entries: list[dict] | None = None) -> bool
     return False
 
 
+def weights_outside(entries: list[dict], root: Path = ROOT) -> list[str]:
+    """가중치가 카탈로그가 적은 자리 밖에 있는가(DECISIONS §106).
+
+    ★ **카탈로그는 파일을 못 본다.** `where` 는 약속이고, ollama 는 그 약속을 모른 채 자기 자리에
+      받는다. 2026-09-27 에 카탈로그가 `lake:cache/models/*` 라고 적은 동안 21GB 가 `~/.ollama/models`
+      에 있었다. **제일 큰 데이터가 정본 밖에 있었다.**
+    ★ 자리를 정하는 것은 `OLLAMA_MODELS` 다. 비어 있으면 ollama 는 `~/.ollama/models` 를 쓴다.
+    ★ **레이크가 없는 기계(CI)에서는 묻지 않는다.** 거기엔 ollama 도 없다.
+    """
+    import os
+    lake = os.environ.get("SESHAT_DATA", "").strip()
+    if not lake:
+        return []
+    want = next((e for e in entries if e["id"] == "weights"), None)
+    if not want:
+        return []
+    here = Path(os.environ.get("OLLAMA_MODELS", "").strip() or "~/.ollama/models").expanduser()
+    if not here.exists():
+        return []
+    if str(here).startswith(str(Path(lake).expanduser())):
+        return []
+    n = sum(1 for _ in here.rglob("*") if _.is_file())
+    if not n:
+        return []
+    return [f"weights: 카탈로그는 {want['where']} 라는데 가중치 {n}개가 {here} 에 있다 — "
+            f".env 에 OLLAMA_MODELS 를 적거나 카탈로그를 고친다(DECISIONS §106)"]
+
+
 def unlisted_repo_files(entries: list[dict], root: Path = ROOT) -> list[str]:
     """`data/` 아래의 파일 중 카탈로그 밖. README 는 데이터가 아니다."""
     out = []
