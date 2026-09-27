@@ -41,15 +41,20 @@ NUMBER = re.compile(r"^(seshat-\d{3})\b")
 
 
 def state(patch: Path, repo: Path) -> str:
-    """붙음 · 안 붙음 · 판정 못함 — 셋으로 가른다(thoth DECISIONS §61).
+    """붙음 · 겹침 · 안 붙음 · 판정 못함 — 넷으로 가른다(thoth DECISIONS §61 · DECISIONS §124).
 
     커밋 패치(format-patch)는 제목으로 가른다. seshat-018 전의 패치는 `git diff` 라 제목이 없다 — 그때는
     ① 역적용이 붙으면 붙은 것이다 ② 파일 이름의 번호(`seshat-017`)로 시작하는 커밋이 이력에 있으면 붙은 것이다.
     역적용 실패는 안 붙음의 증거가 아니다(붙은 뒤 같은 파일이 또 바뀐다). 둘 다 아니면 판정 못함이다.
+
+    ★ **겹침 — 든 커밋 중 일부만 이력에 있다.** 합본을 보낸 뒤 그 일부가 먼저 붙으면 이 꼴이 된다.
+      `git am` 은 이런 패치를 못 붙이고, 기준 나무도 당연히 안 맞는다. **실패가 아니라 지나갈 자리다** —
+      안 그러면 죽은 패치 하나가 뒤에 밀린 것을 영영 막는다(2026-09-27 실제로 막았다).
     """
     subs = subjects(patch)
     if subs:
-        return "붙음" if set(subs) <= history(repo) else "안 붙음"
+        h, s = history(repo), set(subs)
+        return "붙음" if s <= h else ("겹침" if s & h else "안 붙음")
     body = patch.read_bytes().replace(b"\r\n", b"\n")
     r = subprocess.run(["git", "-C", str(repo), "apply", "--check", "-R", "-"], input=body, capture_output=True)
     if r.returncode == 0 and body.strip():

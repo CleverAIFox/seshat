@@ -27,7 +27,14 @@ if [ -z "$ARG" ]; then
   [ "${#ALL[@]}" -gt 0 ] || { echo "$SESHAT_INBOX 에 seshat-*.patch 가 없다" >&2; exit 1; }
   PENDING=()
   for f in "${ALL[@]}"; do
-    [ "$(python3 tools/patch_subjects.py --state "$f")" = "붙음" ] || PENDING+=("$f")
+    S="$(python3 tools/patch_subjects.py --state "$f")"
+    case "$S" in
+      붙음) ;;
+      # ★ **겹침은 지나간다**(DECISIONS §124). 합본의 일부가 먼저 붙으면 남는 꼴이고, `git am` 으로
+      #   붙지 않는다. 멈추면 죽은 패치 하나가 뒤에 밀린 것을 영영 막는다 — 2026-09-27 에 그랬다.
+      겹침) echo "  건너뛴다(겹침) : $(basename "$f") — 든 커밋 일부가 이미 붙어 있다" ;;
+      *) PENDING+=("$f") ;;
+    esac
   done
   [ "${#PENDING[@]}" -gt 0 ] || { echo "  안 붙은 패치가 없다"; exit 0; }
   if [ "${#PENDING[@]}" -gt 1 ]; then
@@ -56,6 +63,13 @@ LOG="$(git log --format=%s -n 500)"
 MISSING="$(printf '%s\n' "$SUBJECTS" | while IFS= read -r s; do grep -qxF -- "$s" <<<"$LOG" || printf '%s\n' "$s"; done)"
 if [ -z "$MISSING" ]; then
   echo "       이미 붙어 있다. 아무것도 안 한다"
+  exit 0
+fi
+# ★ 일부만 붙어 있으면 이 패치로는 나머지를 못 붙인다(DECISIONS §124). 남은 커밋은 다른 패치가 든다
+if [ "$(printf '%s\n' "$MISSING" | wc -l)" -lt "$(printf '%s\n' "$SUBJECTS" | wc -l)" ]; then
+  echo "       든 커밋 일부가 이미 붙어 있다 — 이 패치로는 나머지를 못 붙인다"
+  printf '%s\n' "$MISSING" | sed 's/^/         남은 것 : /'
+  echo "       남은 것이 다른 패치로 붙으면 이 패치는 '붙음' 이 되고 tools/sweep.py 가 지운다"
   exit 0
 fi
 
