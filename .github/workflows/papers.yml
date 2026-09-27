@@ -1,0 +1,44 @@
+name: papers
+# 주 1회 신규 논문 · 모델을 훑어 `docs/papers.md` 의 「읽을 것」 에 후보를 붙인다(DECISIONS §126).
+on:
+  schedule:
+    - cron: "17 0 * * 1"        # 월요일 09:17 KST. 정각을 피한다 — 그 분에 세상의 작업이 몰린다
+  workflow_dispatch:
+
+# ★ **권한을 적는다**(DECISIONS §20). 비공개 저장소의 GITHUB_TOKEN 은 적지 않은 권한이 없다.
+#   가지를 밀고 PR 을 열려면 쓰기와 PR 쓰기가 둘 다 든다.
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  watch:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with: { python-version: "3.12" }
+      # ★ **의존성이 없다.** 표준 라이브러리만 쓰는 도구라 `uv sync` 를 안 한다 — 예약 작업이
+      #   의존성 하나 때문에 조용히 멈추는 자리를 안 만든다
+      - run: python3 tools/watch_papers.py --write --days 8
+
+      # ★ **main 을 안 민다**(DECISIONS §30). 봇이 main 을 움직이면 보내 둔 패치의 기준 나무가
+      #   갈리고, 받는 쪽은 까닭 모를 「만든 쪽이 모르는 커밋이 있다」 를 본다. 가지와 PR 로만 낸다.
+      - name: 바뀌었으면 PR 을 연다
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git diff --quiet docs/papers.md && { echo "  붙일 후보가 없다"; exit 0; }
+          BR="papers/$(date -u +%Y-%m-%d)"
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$BR"
+          git add docs/papers.md
+          git commit -m "논문 대장: $(date -u +%Y-%m-%d) 에 훑은 후보"
+          git push -u origin "$BR"
+          gh pr create --base main --head "$BR" \
+            --title "논문 대장 — $(date -u +%Y-%m-%d) 후보" \
+            --body '`tools/watch_papers.py` 가 훑은 후보다. **요약이 아니라 후보다** — 표 본문의
+          「무엇을 했나 · 가져올 것」 은 읽은 사람이 쓴다(DECISIONS §126).
+
+          합치면 `main` 이 움직인다. **보내 둔 패치가 있으면 합친 뒤 다시 받는다**(DECISIONS §30).'

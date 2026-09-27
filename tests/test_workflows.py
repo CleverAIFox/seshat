@@ -67,3 +67,17 @@ def test_결과는_레이크보다_먼저_아티팩트로_간다():
     assert t.index("upload-artifact") < t.index("lake.py put")
     art = t[t.index("upload-artifact"):t.index("lake.py put")]
     assert "if: always()" in art
+
+
+def test_예약_작업은_main_을_안_민다():
+    """봇이 main 을 움직이면 보내 둔 패치의 기준 나무가 갈린다(DECISIONS §30 · §126)."""
+    text = (ROOT / ".github/workflows/papers.yml").read_text(encoding="utf-8")
+    assert "schedule:" in text and "gh pr create" in text
+    assert "push -u origin" in text and "push origin main" not in text
+    assert re.search(r"git switch -c", text)
+
+
+def test_예약_작업은_정각을_피한다():
+    """정각에 세상의 작업이 몰려 밀린다. 분을 흩는다."""
+    m = re.search(r'cron: "(\d+) ', (ROOT / ".github/workflows/papers.yml").read_text(encoding="utf-8"))
+    assert m and m.group(1) not in ("0", "30")
