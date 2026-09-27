@@ -132,6 +132,49 @@ def unfed(entries: list[dict]) -> list[str]:
     return [e["id"] for e in entries if isinstance(e.get("feeds"), str)]
 
 
+def 자리(path: Path, root: Path = ROOT) -> tuple[str, str] | None:
+    """경로를 (공간, 상대경로)로. 공간은 `repo` · `lake` 다. **밖이면 `None`** — 이 문의 일이 아니다.
+
+    ★ 밖을 막지 않는다. `labels.py` 는 채점표를 `/tmp` 에 쓰고 그것이 맞다(DECISIONS §103). 문이 지키는
+      것은 **선언된 공간 안에서 선언된 자리에만 쓰는가**이지 「어디에도 안 쓰는가」 가 아니다.
+    """
+    from . import paths
+    path = Path(path).expanduser().resolve()
+    for space, base in (("repo", root.resolve()), ("lake", (paths.data() or Path("/없다")).resolve())):
+        if path == base or base in path.parents:
+            return space, path.relative_to(base).as_posix()
+    return None
+
+
+def gate(path: Path, root: Path = ROOT, cat: Path = PATH) -> dict | None:
+    """**데이터를 쓰기 전에 묻는 문**(DECISIONS §121 · 파이어레인 MASTER §18-11 의 세 판정).
+
+      catalog.gate(OUT / f"{name}.jsonl")      # 자리가 선언돼 있나. 아니면 멈춘다
+
+    ★ **선언 밖에는 안 쓴다.** 층(`[layers]`)이 그 자리를 알아야 하고, 데이터 자리면 출처(`[[source]]`)도
+      있어야 한다. 둘 중 하나가 없으면 **반입 정지**다 — 파이어레인의 「대장에 없음 + 파일 있음 → 멈춘다」.
+    ★ **작업대는 출처가 없어도 된다.** `runs/` · `labels/` 는 도구가 쓰고 사람이 `put` 으로 레이크에
+      넣는 자리다 — 레이크에 들어갈 때 출처가 묻는다(DECISIONS §103).
+    ★ 돌려주는 것은 맞은 출처이거나 `None`(작업대 · 두 공간 밖)이다. 멈추는 것으로 답을 대신하지 않는다.
+    """
+    자 = 자리(path, root)
+    if 자 is None:                      # 저장소도 레이크도 아니면 이 문의 일이 아니다
+        return None
+    space, rel = 자
+    L = layers(cat)
+    안 = [(n, d) for n, d in L.items() if d["base"] == space
+          and any(rel == sub or rel.startswith(sub + "/") for sub in d["dirs"])]
+    if not 안:
+        raise SystemExit(f"선언 밖에 쓰려고 한다 — {space}:{rel}\n"
+                         f"    `data/catalog.toml` 의 [layers] 에 자리를 적는다(DECISIONS §114)")
+    name, layer = 안[0]
+    got = match(load(cat), space, rel)
+    if got is None and (layer["managed"] or space == "lake" or rel.startswith("data/")):
+        raise SystemExit(f"카탈로그 밖에 쓰려고 한다 — {space}:{rel} (층 {name})\n"
+                         f"    `data/catalog.toml` 에 [[source]] 를 적는다. **파일을 옮기기 전에 대장부터** 쓴다")
+    return got
+
+
 def match(entries: list[dict], space: str, rel: str) -> dict | None:
     """`space` 는 repo · lake. 첫 번째로 맞는 출처."""
     for e in entries:

@@ -37,7 +37,7 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
-from seshat import ontology, paths  # noqa: E402
+from seshat import catalog, ontology, paths  # noqa: E402
 
 OUT = ROOT / "data/domain"
 LICENSE = "CC BY-SA 4.0"
@@ -221,6 +221,7 @@ def main(argv: list[str] | None = None) -> int:
         raise SystemExit(f"모르는 안내서 {unknown} — `--list` 가 아는 것을 든다")
 
     cache = paths.require_lake() / "cache/awsdocs"
+    catalog.gate(cache)             # 레이크 자리도 묻는다(DECISIONS §121)
     onto = ontology.load()
     found, shas = {}, {}
     for g in guides:
@@ -239,6 +240,7 @@ def main(argv: list[str] | None = None) -> int:
             "note": "참조(ref)가 없다 — 도메인 지표는 참조 없이 센다. chrF 는 FLORES+ 가 든다"}
     OUT.mkdir(parents=True, exist_ok=True)
     out = OUT / f"{a.name}.jsonl"
+    catalog.gate(out)               # 쓰기 전에 묻는다(DECISIONS §121)
     out.write_text("\n".join(json.dumps(x, ensure_ascii=False) for x in [meta, *made]) + "\n", encoding="utf-8")
     print(f"  {out.relative_to(ROOT)}  {len(made)}줄")
     return 0

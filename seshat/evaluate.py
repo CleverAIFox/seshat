@@ -448,6 +448,8 @@ def main(argv=None) -> int:
 
     runs = pathlib.Path("runs")
     runs.mkdir(exist_ok=True)
+    from . import catalog
+    catalog.gate(runs)                  # 선언 안에 쓴다(DECISIONS §121)
     stamp = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
     out = runs / f"{a.name or 'eval'}-{stamp}.jsonl"
     with out.open("w", encoding="utf-8") as f:

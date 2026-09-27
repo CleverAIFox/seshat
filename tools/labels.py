@@ -36,7 +36,7 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
-from seshat import evaluate  # noqa: E402
+from seshat import catalog, evaluate  # noqa: E402
 
 # ★ **판정은 근거다. 근거는 레이크에 산다**(MASTER §11 · DECISIONS §103). 저장소에는 사람이 고치는
 #   작은 정본과 문서만 둔다 — `runs/` 를 저장소에 안 넣는 것과 같은 규칙이다.
@@ -46,6 +46,7 @@ from seshat import evaluate  # noqa: E402
 def out_dir() -> pathlib.Path:
     d = ROOT / "labels"
     d.mkdir(parents=True, exist_ok=True)
+    catalog.gate(d)                 # 작업대도 선언 안에 있어야 한다(DECISIONS §121)
     return d
 
 

@@ -18,7 +18,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
-from seshat import ontology  # noqa: E402
+from seshat import catalog, ontology  # noqa: E402
 
 # (구문, 템플릿). {S} 서비스 · 기능 · {S2} 두 번째 · {A} API(그 부모가 {P}) · {C} 개념
 TEMPLATES = [
@@ -75,6 +75,7 @@ def main(argv=None) -> int:
             "made_by": "tools/make_probes.py"}
     out = ROOT / "data/probes" / f"{a.name}.jsonl"
     out.parent.mkdir(parents=True, exist_ok=True)
+    catalog.gate(out)               # 쓰기 전에 묻는다(DECISIONS §121)
     out.write_text("\n".join(json.dumps(x, ensure_ascii=False) for x in [meta, *rows]) + "\n", encoding="utf-8")
     print(f"  {out.relative_to(ROOT)}  {len(rows)}줄")
     return 0

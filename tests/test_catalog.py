@@ -158,3 +158,28 @@ def test_실제_카탈로그의_미투입을_센다():
     got = catalog.unfed(catalog.load())
     assert "thoth-pairs" in got          # 넉 달째 아무도 안 읽는다
     assert "ontology-aws" not in got
+
+
+def test_문은_선언_밖을_막는다():
+    """데이터를 쓰기 전에 묻는다 — 파이어레인의 「대장에 없음 + 파일 있음 → 반입 정지」(DECISIONS §121)."""
+    import pytest
+    with pytest.raises(SystemExit, match="선언 밖에 쓰려고 한다"):
+        catalog.gate(ROOT / "data/몰래/x.jsonl")
+    # 밖은 이 문의 일이 아니다 — labels.py 는 채점표를 /tmp 에 쓰고 그것이 맞다
+    assert catalog.gate(pathlib.Path("/etc/passwd")) is None
+
+
+def test_문은_선언_안을_통과시킨다():
+    assert catalog.gate(ROOT / "data/domain/d001.jsonl")["id"] == "awsdocs-domain"
+    assert catalog.gate(ROOT / "data/probes/h001.jsonl")["id"] == "probes"
+    assert catalog.gate(ROOT / "runs") is None          # 작업대는 출처가 없어도 된다
+    assert catalog.gate(ROOT / "labels") is None
+
+
+def test_쓰는_도구는_전부_문을_부른다():
+    """문이 하나여도 부르지 않으면 없는 것과 같다 — 입구마다 부르는지 시험이 센다."""
+    문 = ("tools/fetch_flores.py", "tools/fetch_awsdocs.py", "tools/make_probes.py",
+          "tools/labels.py", "seshat/evaluate.py")
+    for f in 문:
+        src = (ROOT / f).read_text(encoding="utf-8")
+        assert "catalog.gate(" in src, f"{f} 가 문을 안 부른다"

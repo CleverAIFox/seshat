@@ -67,7 +67,7 @@ thoth 의 도메인(AWS 자격증 문항 · 합쇼체)은 그 위에 얹는 특�
 | ② 연말 전 | Kaggle · Colab T4 · EC2 스팟(크레딧) | Apache 교사 증류 데이터 · LoRA SFT · 작은 규모 강화학습 | #18 #7 |
 | ③ 새 장비 | 학습용 데스크탑(예산 500만 원) | GRPO 강화학습 — 보상은 thoth 검사기 + QE, 양쪽성 강제자 · 학생 구조 대결 | #19 #20 |
 
-## 1. 남은 일 — 25행
+## 1. 남은 일 — 24행
 
 | # | 상태 | 항목 | 전건 · 막고 있는 것 |
 |---|---|---|---|
@@ -94,7 +94,6 @@ thoth 의 도메인(AWS 자격증 문항 · 합쇼체)은 그 위에 얹는 특�
 | 26 | ⏳ | 컨테이너 — CUDA 기반 Dockerfile 하나(버전 고정) · 데브 컨테이너가 그것을 쓴다 · 서빙 이미지와 같은 뿌리 | torch · llama.cpp 가 의존성으로 들어올 때. 지금은 ollama 가 GPU 를 맡는다 |
 | 27 | ⏳ | 서빙 배포 파이프라인 — 이미지 → ECR → Lambda 컨테이너(CPU · CTranslate2 int8) · 태그 → 승인 → OIDC(thoth 와 같은 모양) · 서빙 Terraform 은 이 저장소가 든다. **유휴 비용 0 이 조건이다**(MASTER §13 · DECISIONS §36) | #8 — 띄울 모델이 생길 때 |
 | 28 | 📄 | GPU 러너와 평가 게이트 — 지금 GTX 1660 Ti(WSL2)를 `gpu` 라벨 셀프 호스티드 러너로 등록한다(MASTER §10). 새 장비는 같은 라벨로 갈아 끼운다. 다음은 모델 · 데이터가 바뀐 커밋마다 AWS Translate 와 직전 모델을 넘어야 통과하는 게이트 | |
-| 31 | 📄 | **입구가 다섯인데 문이 하나다** — `fetch_awsdocs` 는 레이크에 바로 클론하고 `fetch_flores` 는 `data/bench/` 에 바로 쓰고 ollama 는 아무 데나 쓴다. `lake.py put` 만 문이다. 파이어레인은 intake(관측 → 대장 매칭 → landing) → acquire(세 판정 · 대장 밖은 **반입 정지**) 로 가른다. seshat 에 맞는 최소판을 정한다 | |
 | 32 | 📄 | **온톨로지가 UI 라벨과 식별자를 모른다** — `Dev endpoints`(Glue 콘솔 메뉴) · CloudWatch 차원 이름 `Topic` 을 개념으로 봐서 「엔드포인트」 「주제」 로 옮긴 쪽에 점수를 준다(DECISIONS §98). `bucket-owner-full-control` 같은 **식별자를 번역한 줄**도 기준이 없다(§105 의 남은 세 갈림 중 하나). 제품 이름은 §94 에서 고쳤고 이쪽이 나머지다 | |
 
 ★ **AWS Translate 는 2017년의 범용 NMT 다.** WMT25 영→한 예비 순위에서 7B 공개 모델(Shy-hunyuan-MT)이

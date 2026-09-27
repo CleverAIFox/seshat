@@ -22,6 +22,7 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 import seshat  # noqa: E402,F401  — 불러 오는 것이 곧 `.env` 를 얹는 일이다(DECISIONS §39)
+from seshat import catalog  # noqa: E402
 
 OUT = ROOT / "data/bench"
 # ★ 데이터셋이다. 가중치가 아니므로 라이선스 대장(seshat/licenses.py) 밖이다.
@@ -86,6 +87,7 @@ def main() -> int:
         meta = {"meta": True, "about": f"FLORES+ {sp} 영→한", "license": "CC-BY-SA-4.0", "source": FLORES,
                 "register": "정답은 평어체(-다)다 — 합쇼체 출력과는 style 을 따로 본다"}
         path = OUT / f"flores_plus.{sp}.jsonl"
+        catalog.gate(path)          # 쓰기 전에 묻는다(DECISIONS §121)
         path.write_text("\n".join(json.dumps(x, ensure_ascii=False) for x in [meta, *rows]) + "\n", encoding="utf-8")
         print(f"  {path.relative_to(ROOT)}  {len(rows)}줄")
     return 0
