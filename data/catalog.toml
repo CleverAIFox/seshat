@@ -41,12 +41,12 @@ note = "평가 전용. 학습에 넣으면 이길 대상의 숫자가 거짓말�
 
 [[source]]
 id = "labels"
-where = "repo:data/labels/*.jsonl"
+where = "lake:raw/labels/*"
 origin = "사람이 줄마다 내린 판정 — 뜻이 맞다 · 어긋난다 · 번역이 아니다(H-046)"
 license = "자체 — 판정만 든다"
 uses = ["eval"]
 how = "사람"
-note = "**원문도 출력도 적지 않는다.** 줄 id 와 판정뿐이다 — 그래야 CC BY-SA 본문이 저장소에 안 들어온다"
+note = "**저장소가 아니라 레이크다**(DECISIONS §103). 근거는 레이크에 산다 — runs 와 같은 규칙. 원문도 출력도 적지 않는다"
 
 [[source]]
 id = "probes"

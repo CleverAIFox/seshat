@@ -1,7 +1,7 @@
 """사람이 줄마다 내리는 판정 — 눈가림으로 받고 다시 붙인다(DECISIONS §98 · H-046).
 
   python3 tools/labels.py make --set data/domain/d001.jsonl --a <A결과> --b <B결과> --n 60
-  # → /tmp/labels-<이름>.tsv (채점표) · data/labels/<이름>.key.jsonl (열쇠)
+  # → /tmp/labels-<이름>.tsv (채점표) · labels/<이름>.key.jsonl (열쇠 · git 밖)
   python3 tools/labels.py read --name d001-60 --judge claude    # 채운 표를 읽어 판정과 비율을 낸다
   python3 tools/labels.py agree --name d001-60 --judges claude,gemini   # 판정자 둘이 얼마나 맞나
   python3 tools/labels.py prompt > /tmp/judge.txt    # 다른 판정자에게 줄 지시문
@@ -17,8 +17,10 @@
   보고 고르면 그 표본이 결론이다(DECISIONS §86 이 같은 잘못을 적는다).
 ★ **판정은 셋이다.** `맞다`(뜻이 통한다) · `어긋난다`(뜻이 틀렸거나 지어냈다) · `아니다`(번역이 아니다).
   표기가 공식이 아닌 것은 **맞다** 다 — `term_off` 가 이미 그것을 센다. 여기서 재는 것은 **뜻**이다.
-★ **원문도 출력도 저장소에 안 들어온다.** 채점표는 `/tmp` 에 있고, `data/labels/` 에는 줄 id 와 판정만
-  남는다 — 문서 본문이 CC BY-SA 라서다(카탈로그 `labels`).
+★ **아무것도 커밋되지 않는다.** 채점표는 `/tmp` 에, 판정은 작업대 `labels/`(git 밖)에 나고
+  **레이크에는 `lake.py put raw --into labels labels/*.jsonl` 로 넣는다** — `runs/` 와 같은 모양이다.
+  저장소가 드는 것은 **인사이트**뿐이다 — 숫자와 배운 것은 DECISIONS 가, 판정 규칙은 이 파일이 든다
+  (DECISIONS §103). 판정 파일에도 원문과 출력은 없다. 줄 id · 팔 · 판정뿐이다.
 """
 from __future__ import annotations
 
@@ -33,7 +35,15 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 from seshat import evaluate  # noqa: E402
 
-OUT = ROOT / "data/labels"
+# ★ **판정은 근거다. 근거는 레이크에 산다**(MASTER §11 · DECISIONS §103). 저장소에는 사람이 고치는
+#   작은 정본과 문서만 둔다 — `runs/` 를 저장소에 안 넣는 것과 같은 규칙이다.
+# ★ **작업대에 쓰고 레이크에는 `put` 으로 넣는다.** `raw` 는 해시 대장이 지키는 층이라 도구가 직접
+#   쓰면 대장 밖 파일이 된다(`lake.py check` 가 짚는다). `evaluate.py` 가 `runs/` 에 쓰고 사람이
+#   `lake.py put runs` 로 넣는 것과 같은 모양이다. 이 자리는 git 이 무시한다.
+def out_dir() -> pathlib.Path:
+    d = ROOT / "labels"
+    d.mkdir(parents=True, exist_ok=True)
+    return d
 
 
 def _짧게(p: pathlib.Path) -> str:
@@ -133,7 +143,7 @@ def verdict_of(cols: list[str]) -> str:
 
 
 def read(name: str, sheet: pathlib.Path, judge: str = "claude") -> int:
-    key = {r["tag"]: r for r in (json.loads(x) for x in (OUT / f"{name}.key.jsonl").read_text(encoding="utf-8").splitlines() if x.strip())}
+    key = {r["tag"]: r for r in (json.loads(x) for x in (out_dir() / f"{name}.key.jsonl").read_text(encoding="utf-8").splitlines() if x.strip())}
     got, blank = [], 0
     for ln in sheet.read_text(encoding="utf-8").splitlines()[1:]:
         if not ln.strip():
@@ -154,7 +164,7 @@ def read(name: str, sheet: pathlib.Path, judge: str = "claude") -> int:
         print(f"  ※ 아직 안 매긴 줄 {blank}", file=sys.stderr)
     if not got:
         raise SystemExit("매긴 줄이 없다")
-    path = OUT / f"{name}.{judge}.jsonl"
+    path = out_dir() / f"{name}.{judge}.jsonl"
     meta = {"meta": True, "about": f"{name} · 판정자 {judge} — 뜻만 본다. 표기는 term_off 가 센다(H-046)",
             "judge": judge, "license": "자체 — 판정만 든다", "made_by": "tools/labels.py"}
     path.write_text("\n".join(json.dumps(x, ensure_ascii=False) for x in [meta, *sorted(got, key=lambda r: (r["id"], r["arm"]))]) + "\n",
@@ -175,7 +185,7 @@ def agree(name: str, judges: list[str]) -> int:
     """판정자 둘의 일치. **어긋난 줄을 이름으로 든다** — 거기가 기준이 무른 자리다."""
     got = {}
     for j in judges:
-        p = OUT / f"{name}.{j}.jsonl"
+        p = out_dir() / f"{name}.{j}.jsonl"
         if not p.exists():
             raise SystemExit(f"{_짧게(p)} 가 없다 — 먼저 read --judge {j} 로 읽는다")
         got[j] = {(r["id"], r["arm"]): r["verdict"]
@@ -233,13 +243,13 @@ def main(argv: list[str] | None = None) -> int:
 
     name = a.name or f"{pathlib.Path(a.setpath).stem}-{a.n}"
     sheet, key = make(pathlib.Path(a.a), pathlib.Path(a.b), evaluate.load(a.setpath), name, a.n, a.seed)
-    OUT.mkdir(parents=True, exist_ok=True)
-    (OUT / f"{name}.key.jsonl").write_text("\n".join(json.dumps(x, ensure_ascii=False) for x in key) + "\n", encoding="utf-8")
+    (out_dir() / f"{name}.key.jsonl").write_text("\n".join(json.dumps(x, ensure_ascii=False) for x in key) + "\n", encoding="utf-8")
     out = pathlib.Path(f"/tmp/labels-{name}.tsv")
     out.write_text(sheet, encoding="utf-8")
     print(f"  {out}  {len(key)}줄 (눈가림 · 어느 팔인지 안 적혀 있다)")
-    print(f"  {_짧게(OUT / f'{name}.key.jsonl')}  열쇠 — 다 매기기 전에 열지 않는다")
+    print(f"  {_짧게(out_dir() / f'{name}.key.jsonl')}  열쇠 — 다 매기기 전에 열지 않는다")
     print(f"  다 매기면 : python3 tools/labels.py read --name {name} --judge <판정자>")
+    print("  그 뒤     : python3 tools/lake.py put raw --into labels labels/*.jsonl")
     return 0
 
 

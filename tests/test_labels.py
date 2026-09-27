@@ -1,4 +1,4 @@
-"""사람 판정 — 눈가림 · 줄을 먼저 뽑는다 · 원문은 저장소에 안 남는다(DECISIONS §98 · H-046)."""
+"""판정 — 눈가림 · 줄을 먼저 뽑는다 · 원문은 아무 데도 안 남는다(DECISIONS §98 · §103 · H-046)."""
 import importlib.util
 import json
 import pathlib
@@ -65,10 +65,9 @@ def test_줄_id_가_없으면_거절한다(tmp_path):
 
 
 def test_채점표를_읽어_팔마다_비율을_낸다(tmp_path, monkeypatch, capsys):
-    monkeypatch.setattr(L, "OUT", tmp_path / "labels")
-    L.OUT.mkdir()
+    monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
     sheet, key = L.make(_run(tmp_path, "4b"), _run(tmp_path, "12b"), ROWS, "t", 5, 31)
-    (L.OUT / "t.key.jsonl").write_text("\n".join(json.dumps(x, ensure_ascii=False) for x in key) + "\n", encoding="utf-8")
+    (tmp_path / "t.key.jsonl").write_text("\n".join(json.dumps(x, ensure_ascii=False) for x in key) + "\n", encoding="utf-8")
     arm_of = {r["tag"]: r["arm"] for r in key}
     filled = [sheet.splitlines()[0]]
     for ln in sheet.splitlines()[1:]:
@@ -79,15 +78,14 @@ def test_채점표를_읽어_팔마다_비율을_낸다(tmp_path, monkeypatch, c
     L.read("t", s, "claude")
     out = capsys.readouterr().out
     assert "a  뜻이 맞다 0.000" in out and "b  뜻이 맞다 1.000" in out
-    saved = [json.loads(x) for x in (L.OUT / "t.claude.jsonl").read_text(encoding="utf-8").splitlines()]
-    assert all("src" not in r and "out" not in r for r in saved), "원문이나 출력이 저장소에 남았다"
+    saved = [json.loads(x) for x in (tmp_path / "t.claude.jsonl").read_text(encoding="utf-8").splitlines()]
+    assert all("src" not in r and "out" not in r for r in saved), "원문이나 출력이 판정 파일에 남았다"
 
 
 def test_모르는_판정은_거절한다(tmp_path, monkeypatch):
-    monkeypatch.setattr(L, "OUT", tmp_path / "labels")
-    L.OUT.mkdir()
+    monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
     sheet, key = L.make(_run(tmp_path, "4b"), _run(tmp_path, "12b"), ROWS, "t", 2, 31)
-    (L.OUT / "t.key.jsonl").write_text("\n".join(json.dumps(x, ensure_ascii=False) for x in key) + "\n", encoding="utf-8")
+    (tmp_path / "t.key.jsonl").write_text("\n".join(json.dumps(x, ensure_ascii=False) for x in key) + "\n", encoding="utf-8")
     s = tmp_path / "sheet.tsv"
     s.write_text(sheet.splitlines()[0] + "\n" + sheet.splitlines()[1] + "좋음\n", encoding="utf-8")
     try:
@@ -117,7 +115,7 @@ def test_카파는_쏠린_판정을_벌준다():
 
 
 def test_두_판정자의_일치를_낸다(tmp_path, monkeypatch, capsys):
-    monkeypatch.setattr(L, "OUT", tmp_path)
+    monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
     for judge, v2 in (("claude", "맞다"), ("gemini", "어긋난다")):
         rows = [{"meta": True}]
         rows += [{"tag": f"t{i}", "id": f"x{i:03d}", "arm": "a",
@@ -131,7 +129,7 @@ def test_두_판정자의_일치를_낸다(tmp_path, monkeypatch, capsys):
 
 
 def test_없는_판정자는_말한다(tmp_path, monkeypatch):
-    monkeypatch.setattr(L, "OUT", tmp_path)
+    monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
     (tmp_path / "t.claude.jsonl").write_text(json.dumps({"meta": True}) + "\n", encoding="utf-8")
     try:
         L.agree("t", ["claude", "gemini"])
@@ -147,3 +145,17 @@ def test_지시문이_규칙_넷을_든다():
                  "태그<탭>판정", "120줄"):
         assert must in L.PROMPT, must
     assert "4B" not in L.PROMPT and "12B" not in L.PROMPT and "gemma" not in L.PROMPT.lower()
+
+
+def test_판정은_작업대에_나고_커밋되지_않는다():
+    """`runs/` 와 같은 모양 — 도구는 작업대에 쓰고 사람이 `put` 으로 레이크에 넣는다(DECISIONS §103).
+    레이크의 `raw` 에 직접 쓰면 해시 대장 밖 파일이 된다."""
+    assert L.out_dir() == ROOT / "labels"
+    assert not (ROOT / "data/labels").exists(), "저장소에 data/labels 가 다시 생겼다"
+    assert "\nlabels/\n" in (ROOT / ".gitignore").read_text(encoding="utf-8"), "작업대가 git 에 잡힌다"
+
+
+def test_카탈로그가_라벨을_레이크에_둔다():
+    from seshat import catalog
+    e = next(x for x in catalog.load() if x["id"] == "labels")
+    assert e["where"].startswith("lake:"), e["where"]

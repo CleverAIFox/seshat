@@ -8,6 +8,8 @@ __pycache__/
 #   쌍 로그는 thoth 배포본의 사용자 화면에서 나온 원문이다 — 사이트의 저작물이다.
 data/private/
 runs/
+# 판정 — 작업대다. 레이크에 put 으로 넣는다(DECISIONS §103)
+labels/
 models/
 checkpoints/
 *.parquet
