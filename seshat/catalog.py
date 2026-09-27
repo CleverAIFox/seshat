@@ -77,16 +77,27 @@ def weights_outside(entries: list[dict], root: Path = ROOT) -> list[str]:
     want = next((e for e in entries if e["id"] == "weights"), None)
     if not want:
         return []
-    here = Path(os.environ.get("OLLAMA_MODELS", "").strip() or "~/.ollama/models").expanduser()
-    if not here.exists():
-        return []
-    if str(here).startswith(str(Path(lake).expanduser())):
-        return []
-    n = sum(1 for _ in here.rglob("*") if _.is_file())
-    if not n:
-        return []
-    return [f"weights: 카탈로그는 {want['where']} 라는데 가중치 {n}개가 {here} 에 있다 — "
-            f".env 에 OLLAMA_MODELS 를 적거나 카탈로그를 고친다(DECISIONS §106)"]
+    root = Path(lake).expanduser()
+    said = os.environ.get("OLLAMA_MODELS", "").strip()
+    # ★ **선언한 자리에 있는지만 묻지 않는다**(DECISIONS §111). 2026-09-27 에 `.env` 에
+    #   `OLLAMA_MODELS` 를 적고 파일을 옮겼는데 **ollama 는 `.env` 를 안 읽는다.** 기본 자리에서
+    #   3.3GB 를 다시 받아 둘로 쪼개졌고, 이 검사는 선언한 자리만 보고 통과시켰다.
+    #   **두 자리를 다 센다** — 기본 자리는 `OLLAMA_MODELS` 를 적었어도 비어 있어야 한다.
+    seen = {Path("~/.ollama/models").expanduser()}
+    if said:
+        seen.add(Path(said).expanduser())
+    out = []
+    for here in sorted(seen):
+        n = sum(1 for f in here.rglob("*") if f.is_file()) if here.exists() else 0
+        if not n:
+            continue
+        if str(here).startswith(str(root)):
+            continue
+        why = ("셸이 OLLAMA_MODELS 를 모른다 — `.env` 는 파이썬만 읽는다. ~/.bashrc 에 export 한다"
+               if said else ".env 에 OLLAMA_MODELS 를 적거나 카탈로그를 고친다")
+        out.append(f"weights: 카탈로그는 {want['where']} 라는데 가중치 {n}개가 {here} 에 있다 — {why}"
+                   f"(DECISIONS §106 · §111)")
+    return out
 
 
 def unlisted_repo_files(entries: list[dict], root: Path = ROOT) -> list[str]:

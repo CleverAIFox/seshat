@@ -70,3 +70,25 @@ def test_가중치가_카탈로그_밖에_있으면_짚는다(tmp_path, monkeypa
     monkeypatch.setenv("OLLAMA_MODELS", str(outside))
     monkeypatch.setenv("SESHAT_DATA", "")
     assert catalog.weights_outside(entries) == []
+
+
+def test_옮겼는데_기본_자리에_다시_받은_것을_짚는다(tmp_path, monkeypatch):
+    """`.env` 는 파이썬만 읽는다. 셸이 모르면 ollama 가 기본 자리에 다시 받는다(DECISIONS §111).
+
+    ★ 선언한 자리에만 파일이 있는지 묻던 검사는 이 상태를 **통과시켰다.**
+    """
+    lake = tmp_path / "lake"
+    inside = lake / "cache/models/ollama"; inside.mkdir(parents=True)
+    (inside / "blob").write_text("옮긴 것", encoding="utf-8")
+    home = tmp_path / "home"; default = home / ".ollama/models"; default.mkdir(parents=True)
+    (default / "blob").write_text("다시 받은 것", encoding="utf-8")
+    monkeypatch.setenv("HOME", str(home))
+    monkeypatch.setenv("SESHAT_DATA", str(lake))
+    monkeypatch.setenv("OLLAMA_MODELS", str(inside))
+    got = catalog.weights_outside(catalog.load())
+    assert len(got) == 1 and str(default) in got[0]
+    assert "셸이 OLLAMA_MODELS 를 모른다" in got[0]
+
+    # 기본 자리를 치우면 조용해진다
+    (default / "blob").unlink()
+    assert catalog.weights_outside(catalog.load()) == []
