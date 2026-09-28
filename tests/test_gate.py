@@ -146,7 +146,7 @@ def test_처음부터_끝까지_한_번_돈다(tmp_path, monkeypatch, capsys):
     run = tmp_path / "H-999-x.jsonl"
     run.write_text("\n".join(json.dumps(x, ensure_ascii=False) for x in (
         {"meta": True, "backend": arm, "set_sha256": "셋1", "onto_sha256": "사전1",
-         "term_off": 0.8858, "lit": 0.803, "keep": 0.9853},
+         "term_off": 0.8858, "lit": 0.803, "keep": 0.9853, "josa": 0.99},
         {"id": "a", "src": "x", "out": "y"})) + "\n", encoding="utf-8")
 
     assert G.main([str(run), "--update"]) == 0           # ① 처음 박는다
@@ -156,14 +156,14 @@ def test_처음부터_끝까지_한_번_돈다(tmp_path, monkeypatch, capsys):
     assert G.main([str(run)]) == 0                       # ② 같은 값이면 통과
     좋 = tmp_path / "H-999-y.jsonl"
     좋.write_text(json.dumps({"meta": True, "backend": arm, "set_sha256": "셋1", "onto_sha256": "사전1",
-                              "term_off": 0.95, "lit": 0.90, "keep": 0.99}, ensure_ascii=False) + "\n",
+                              "term_off": 0.95, "lit": 0.90, "keep": 0.99, "josa": 1.0}, ensure_ascii=False) + "\n",
                   encoding="utf-8")
     assert G.main([str(좋), "--update"]) == 0            # ③ 오르면 기록이 바뀐다
     assert G.load(sb)["record"][0]["term_off"] == 0.95
 
     나 = tmp_path / "H-999-z.jsonl"
     나.write_text(json.dumps({"meta": True, "backend": arm, "set_sha256": "셋1", "onto_sha256": "사전1",
-                              "term_off": 0.80, "lit": 0.90, "keep": 0.99}, ensure_ascii=False) + "\n",
+                              "term_off": 0.80, "lit": 0.90, "keep": 0.99, "josa": 1.0}, ensure_ascii=False) + "\n",
                   encoding="utf-8")
     assert G.main([str(나)]) == 1                        # ④ 떨어지면 막는다
     assert G.load(sb)["record"][0]["term_off"] == 0.95   # 막힌 값은 기록에 안 남는다
@@ -188,3 +188,51 @@ def test_MBR_만큼_떨어지면_막는다():
     실제 = G.load()["record"][0]["tol"]
     막, _ = G.check({**REC, "tol": 실제}, 머리(term_off=0.90 - 0.0076, lit=0.80))
     assert 막 and "term_off" in 막[0] and "떨어졌다" in 막[0]
+
+
+def test_승격하면_이름과_날짜도_바뀐다(tmp_path, monkeypatch):
+    """숫자만 고치면 기록판이 **자기가 안 든 팔의 숫자**를 든다(DECISIONS §143).
+
+    그러면 다음 판에서 `--arm` 없이 부를 때 「기록판에 없는 팔」 로 통과한다 —
+    **승격하는 순간 문이 서빙 후보를 안 지킨다.**
+    """
+    board = tmp_path / "board.toml"
+    board.write_text(
+        '[[record]]\nset = "s.jsonl"\nset_sha256 = "셋"\narm = "옛팔"\nrun = "옛실행"\n'
+        'commit = "0000000"\ndate = "2020-01-01"\nonto_sha256 = "사전"\n'
+        'term_off = 0.80\nlit = 0.70\nkeep = 0.90\nstyle = 0.90\n'
+        'guard = ["term_off", "lit", "keep"]\ntol = 0.0\n', encoding="utf-8")
+    run = tmp_path / "새실행-20260928-120000.jsonl"
+    run.write_text(json.dumps(머리(backend="새팔", term_off=0.9, lit=0.8, keep=0.95, style=0.91,
+                                   set_sha256="셋", onto_sha256="사전"), ensure_ascii=False) + "\n",
+                   encoding="utf-8")
+    monkeypatch.setattr(G.catalog, "gate", lambda p: None)
+    rec = G.load(board)["record"][0]
+    head = G.head_of(str(run))
+    G._쓴다(str(run), rec, head, G.올릴_것(rec, head), path=board)
+    새 = G.load(board)["record"][0]
+    assert 새["arm"] == "새팔", "기록의 팔이 안 바뀌면 문이 다음 판부터 아무것도 안 지킨다"
+    assert 새["run"] == "새실행-20260928-120000" and 새["date"] != "2020-01-01"
+    assert 새["term_off"] == 0.9 and 새["keep"] == 0.95
+
+
+def test_고친_기록으로_다시_부르면_문이_지킨다(tmp_path, monkeypatch):
+    """승격 뒤 `--arm` 없이 불러도 그 팔을 찾아야 한다 — 그게 이 고침의 목적이다."""
+    board = tmp_path / "board.toml"
+    board.write_text(
+        '[[record]]\nset = "s.jsonl"\nset_sha256 = "셋"\narm = "옛팔"\nrun = "r"\n'
+        'commit = "0"\ndate = "2020-01-01"\nonto_sha256 = "사전"\n'
+        'term_off = 0.80\nlit = 0.70\nkeep = 0.90\nstyle = 0.90\n'
+        'guard = ["term_off", "lit", "keep"]\ntol = 0.0\n', encoding="utf-8")
+    run = tmp_path / "새실행-20260928-120000.jsonl"
+    run.write_text(json.dumps(머리(backend="새팔", term_off=0.9, lit=0.8, keep=0.95, style=0.91,
+                                   set_sha256="셋", onto_sha256="사전"), ensure_ascii=False) + "\n",
+                   encoding="utf-8")
+    monkeypatch.setattr(G.catalog, "gate", lambda p: None)
+    rec, head = G.load(board)["record"][0], G.head_of(str(run))
+    G._쓴다(str(run), rec, head, G.올릴_것(rec, head), path=board)
+    # 이제 팔 이름을 안 주고 골라도 찾아야 하고, 떨어진 실행을 막아야 한다
+    새rec = G.고른다(G.load(board), 머리(backend="새팔"), None, 꼭=True)
+    막, _ = G.check(새rec, 머리(backend="새팔", set_sha256="셋", onto_sha256="사전",
+                                term_off=0.85, lit=0.8, keep=0.95))
+    assert 막 and "term_off" in 막[0]

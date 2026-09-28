@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 import argparse
+import datetime as dt
 import json
 import pathlib
 import sys
@@ -110,7 +111,14 @@ def 올릴_것(rec: dict, head: dict, pin: bool = False) -> dict[str, float]:
 
 
 def _쓴다(run: str, rec: dict, head: dict, 오른: dict, path: pathlib.Path | None = None) -> None:
-    """**한 줄씩 고쳐 쓴다.** TOML 을 다시 찍으면 주석이 사라지는데, 이 파일은 주석이 절반이다."""
+    """**한 줄씩 고쳐 쓴다.** TOML 을 다시 찍으면 주석이 사라지는데, 이 파일은 주석이 절반이다.
+
+    ★ **이름과 날짜도 같이 고친다.** 2026-09-28, 숫자만 고치고 `arm` 을 안 고쳤더니 기록판이
+      **자기가 안 든 팔의 숫자**를 들었다. 그러면 다음 판에서 `--arm` 없이 부를 때 머리줄의 새 팔로
+      찾다가 「기록판에 없는 팔」 로 **통과**한다 — **승격하는 순간 문이 서빙 후보를 안 지킨다**
+      (DECISIONS §143). `--update` 는 「이 실행을 기록으로 삼는다」 는 뜻이고, 그러면 그 실행의
+      팔이 기록의 팔이다.
+    """
     path = path or PATH          # import 때 안 묶는다 — 위의 `load` 와 같은 까닭
     catalog.gate(path)
     줄 = path.read_text(encoding="utf-8").splitlines()
@@ -118,7 +126,9 @@ def _쓴다(run: str, rec: dict, head: dict, 오른: dict, path: pathlib.Path | 
                 and any(f'arm = "{rec["arm"]}"' == y.strip() for y in 줄[i:i + 12]))
     끝 = next((i for i in range(시작 + 1, len(줄)) if 줄[i].startswith("[[")), len(줄))
     새값 = {**오른, "set_sha256": head.get("set_sha256", ""), "commit": head.get("commit", ""),
-            "onto_sha256": head.get("onto_sha256", ""), "run": pathlib.Path(run).stem}
+            "onto_sha256": head.get("onto_sha256", ""), "run": pathlib.Path(run).stem,
+            "arm": head.get("backend") or head.get("model") or rec["arm"],
+            "date": dt.date.today().isoformat()}
     for i in range(시작, 끝):
         k = 줄[i].split("=", 1)[0].strip()
         if k in 새값:
