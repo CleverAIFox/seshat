@@ -162,8 +162,12 @@ def _쓴다(run: str, rec: dict, head: dict, 오른: dict, path: pathlib.Path | 
         k = 줄[i].split("=", 1)[0].strip()
         if k in 새값:
             v = 새값.pop(k)
-            꼬리 = ("  " + 줄[i].split("#", 1)[1].join(("#", ""))) if "#" in 줄[i] else ""
-            줄[i] = f"{k} = {json.dumps(v, ensure_ascii=False)}" + 꼬리
+            # ★ **주석의 자리를 지킨다.** 이 파일은 주석이 절반이고 세로로 맞춰 읽는다 —
+            #   2026-09-28 한 줄을 고쳐 쓰면서 `#` 앞 공백을 두 칸으로 뭉개 이어지는 주석 줄과
+            #   어긋나게 만들었다. 고쳐 쓰는 도구가 **읽는 모양을 망가뜨리면 안 된다**
+            앞, _, 뒤 = 줄[i].partition("#")
+            새줄 = f"{k} = {json.dumps(v, ensure_ascii=False)}"
+            줄[i] = (새줄 + " " * max(1, len(앞) - len(새줄)) + "#" + 뒤) if 뒤 else 새줄
     # ★ **없는 키는 만든다.** 종전에는 있는 줄만 고쳐 썼다 — 그래서 새로 생긴 `metrics` 가 영영
     #   안 박히고 문이 매번 「기록에 자 판이 없다」 로 막았다(DECISIONS §145 · §143 과 같은 얼굴).
     if 새값:
@@ -186,8 +190,9 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  최고  {r['arm']:<40} {r.get('note', '')}")
             print(f"        {' · '.join(f'{m} {r[m]}' for m in r.get('guard', []) if m in r)}  ({r.get('run', '?')})")
         for t in board.get("target", []):
+            자 = "" if t.get("metrics") else "   ※ 자 판이 없다 — 다시 재기 전에는 차를 못 찍는다"
             print(f"  선    {t['arm']:<40} {t.get('note', '')}")
-            print(f"        term_off {t.get('term_off')} · lit {t.get('lit')}  ({t.get('run', '?')})")
+            print(f"        term_off {t.get('term_off')} · lit {t.get('lit')}  ({t.get('run', '?')}){자}")
         return 0
 
     head = head_of(a.run)
@@ -209,9 +214,16 @@ def main(argv: list[str] | None = None) -> int:
         return f"{v:.4f}" if isinstance(v, float) else str(v)
     print("  통과 — " + " · ".join(f"{m} {_값(m)}" for m in rec.get("guard", [])))
     for t in board.get("target", []):
-        if t.get("set") == rec.get("set"):
-            남 = {m: round(t[m] - head[m], 4) for m in ("term_off", "lit") if m in t and head.get(m) is not None}
-            print(f"  선까지 {t['arm']:<40} " + " · ".join(f"{m} {v:+.4f}" for m, v in 남.items()))
+        if t.get("set") != rec.get("set"):
+            continue
+        # ★ **선도 같은 자로 잰 것이어야 한다**(DECISIONS §147). 2026-09-28, 자를 바꾼 뒤에도 이 줄이
+        #   새 수와 옛 수의 차를 찍고 있었다 — **비교를 거절하는 도구가 스스로 섞어 재고 있었다.**
+        if t.get("metrics") != head.get("metrics"):
+            print(f"  선    {t['arm']:<40} **다른 자로 잰 선이다** — 기록 판 {t.get('metrics') or '없다'} · "
+                  f"이번 판 {head.get('metrics')}. 차를 안 찍는다. `tools/rescore.py` 로 그 판을 다시 잰다")
+            continue
+        남 = {m: round(t[m] - head[m], 4) for m in ("term_off", "lit") if m in t and head.get(m) is not None}
+        print(f"  선까지 {t['arm']:<40} " + " · ".join(f"{m} {v:+.4f}" for m, v in 남.items()))
     if 오른 and a.update:
         _쓴다(a.run, rec, head, 오른)
         print(f"  기록판을 고쳤다 — {' · '.join(f'{m} → {v}' for m, v in 오른.items())}")

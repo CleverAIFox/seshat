@@ -314,3 +314,39 @@ def test_자가_같으면_내려간_값은_안_박는다():
     """봐주는 것이 아니다 — 같은 자에서 내려간 것은 회귀다."""
     rec = {**REC, "metrics": "2", "term_off": 0.9772, "guard": ["term_off"]}
     assert "term_off" not in G.올릴_것(rec, 머리(metrics="2", term_off=0.9619), pin=True)
+
+
+def test_다른_자로_잰_선은_차를_안_찍는다(tmp_path, monkeypatch, capsys):
+    """비교를 거절하는 도구가 스스로 섞어 재고 있었다(DECISIONS §147)."""
+    board = tmp_path / "b.toml"
+    board.write_text(
+        '[[record]]\nset = "s"\nset_sha256 = "셋"\nonto_sha256 = "사전"\nmetrics = "2"\narm = "팔"\n'
+        'term_off = 0.96\nlit = 0.81\nguard = ["term_off"]\ntol = 0.0\n\n'
+        '[[target]]\nset = "s"\narm = "옛선"\nterm_off = 0.9163\nlit = 0.923\n\n'
+        '[[target]]\nset = "s"\narm = "새선"\nmetrics = "2"\nterm_off = 0.90\nlit = 0.93\n',
+        encoding="utf-8")
+    run = tmp_path / "r-20260928-1.jsonl"
+    run.write_text(json.dumps(머리(backend="팔", set_sha256="셋", onto_sha256="사전",
+                                   metrics="2", term_off=0.97, lit=0.82), ensure_ascii=False) + "\n",
+                   encoding="utf-8")
+    monkeypatch.setattr(G, "PATH", board)
+    assert G.main([str(run)]) == 0
+    out = capsys.readouterr().out
+    assert "옛선" in out and "다른 자로 잰 선이다" in out
+    assert "선까지 새선" in out, "같은 자로 잰 선은 그대로 찍어야 한다"
+
+
+def test_주석의_자리를_지킨다(tmp_path, monkeypatch):
+    """기록판은 주석이 절반이고 세로로 맞춰 읽는다 — 고쳐 쓰는 도구가 모양을 망가뜨리면 안 된다."""
+    board = tmp_path / "b.toml"
+    board.write_text('[[record]]\narm = "팔"\nset_sha256 = "셋"\n'
+                     'term_off = 0.5                       # 앞 칸\n'
+                     '                                     # 이어지는 줄\n'
+                     'guard = ["term_off"]\ntol = 0.0\n', encoding="utf-8")
+    monkeypatch.setattr(G.catalog, "gate", lambda p: None)
+    rec = G.load(board)["record"][0]
+    head = 머리(backend="팔", set_sha256="셋", term_off=0.6)
+    G._쓴다("r-20260928-1.jsonl", rec, head, G.올릴_것(rec, head), path=board)
+    줄 = [x for x in board.read_text(encoding="utf-8").splitlines() if "앞 칸" in x][0]
+    이어 = [x for x in board.read_text(encoding="utf-8").splitlines() if "이어지는" in x][0]
+    assert 줄.index("#") == 이어.index("#"), f"주석 자리가 어긋났다\n{줄}\n{이어}"
