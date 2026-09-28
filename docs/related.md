@@ -23,6 +23,7 @@
 | `⟦Tn⟧` 로 이름을 빼고 되돌린다(H-001 · H-016 · §15 · §17) | **placeholding · named-entity masking** | *An Exploration of Placeholding in Neural Machine Translation* ([aclanthology W19-6618](https://aclanthology.org/W19-6618.pdf)) | **새것이 아니다.** `keep` 0.785 → 0.993 은 알려진 처치의 재현이다. 이 저장소의 몫은 **되돌릴 때 끝소리로 조사를 고르는 것**(H-013)이고 그것은 한국어 고유의 문제다 |
 | 그 줄의 용어만 프롬프트에 싣는다(H-056 · H-057 · §134 · §142) | **terminology-constrained MT · LLM prompting** | *Terminology-Aware Translation with Constrained Decoding and Large Language Model Prompting* ([arXiv 2310.05824](https://arxiv.org/abs/2310.05824)) · WMT 용어 태스크 | **새것이 아니다.** 이 저장소의 몫은 **울타리**다 — 목록만 주면 사전에 **없는** 식별자까지 번역된다는 관측(§140)과, 범위를 한 줄 그으면 그것이 사라진다는 것(§142) |
 | N-best + MBR(H-055 · §133) | **Minimum Bayes Risk decoding** | *High Quality Rather than High Model Probability: MBR with Neural Metrics* — Freitag, Grangier, Tan, Liang, TACL 2022 ([arXiv 2111.09388](https://arxiv.org/html/2111.09388)) | **같은 결론에 뒤늦게 닿았다.** 그 논문은 사람 평가(MQM)로 **chrF 효용이 빔서치보다 나쁘다**고 적는다(2.139 대 2.030). BLEURT 효용은 1.661 로 확실히 낫다. H-055 는 `term_off` −0.0076 · 4.3배 느림으로 기각했고 「뼈대가 아니라 효용이 틀렸다」 고 적었다 — **읽었으면 이 판을 안 돌렸어도 됐다**(0원이라 손해는 시간뿐이다) |
+| 차이가 잡음인가(§180) | **paired bootstrap resampling** | Koehn, *Statistical Significance Tests for MT Evaluation*, EMNLP 2004([W04-3250](https://aclanthology.org/W04-3250)) · 부트스트랩 자체는 Efron 1979 | **새것이 아니다 — 22년 묵은 표준이다.** 이 저장소는 2026-09-28 까지 허용치 · 배수 · 중앙값을 **손으로 그었고 하루에 세 번 틀렸다**(§139 · §178 · §179). 늦은 것은 기술이 아니라 **이것을 아는가 한 칸**이고, 한 칸은 반나절이었다 |
 | #3 뜻을 보는 자 | **reference-free QE** | COMET · CometKiwi 계열([Unbabel/COMET](https://github.com/Unbabel/COMET)) | **아직 안 했다.** MBR 의 효용으로도, 보상(#19)으로도 같은 부품이다 |
 | 후처리 종결 정규화(H-023 · §33) | 규칙 기반 post-editing | — | 한국어 합쇼체는 분야의 표준 과제가 아니다. thoth 의 도메인 요구다 |
 
@@ -47,6 +48,7 @@
   **갈린 것이지 넘은 것이 아니다**(§118 · §143)
 - 같은 팔을 네 판 돌린 지표 퍼짐이 **0** 이다(§141). 본문은 600 중 7줄이 흔들리지만 지표는 못 본다
 - `lit` · `ui` 는 **못 견준다** — 이쪽은 자리표시가 지키고 저쪽은 모델이 지킨다(§156)
+- **아직 p 값이 안 붙어 있다.** 위의 차이들은 **점 추정**이고, `tools/bootstrap.py` 로 구간을 붙이는 것이 다음 수다(§180). 그전까지 「넘었다」 는 **크기 말이지 확실함 말이 아니다**
 
 ★ **2026-09-28 오전까지 이 칸의 수는 전부 좁은 사전 · 옛 자의 것이었다**(§166 · §167). 그때
   적혀 있던 「0.9619 대 0.9026」 은 **분모가 674 일 때의 수**이고, 분모를 982 로 넓히자 네 팔이

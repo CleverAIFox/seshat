@@ -19,6 +19,7 @@ python3 tools/check_model_licenses.py    # 코드 ↔ 라이선스 대장
 python3 tools/check_hypotheses.py        # 가설 대장 — 실험의 문
 python3 tools/check_ontology.py          # 온톨로지 — 표기 유일 · 부모 · 끝소리
 python3 tools/check_catalog.py           # 데이터 카탈로그 — 칸 · 쓰임 · data/ 의 카탈로그 밖 파일(§11)
+python3 tools/bootstrap.py A B --set S   # ★ **차이가 잡음인가** — 짝지은 재표집(§180 · Koehn 2004)
 python3 tools/ci_status.py               # ★ **마지막 CI 가 초록인가** — 이 기계의 초록은 CI 의 초록이 아니다(§170)
 python3 tools/sweep.py [--fix]           # WSL 위생 — seshat 이 남긴 흔적만(§12)
 bash tools/deps.sh --merge               # 의존성 봇(Actions 만) — 초록만 합치고 가지를 지운다
@@ -44,6 +45,7 @@ bash tools/apply_patch.sh                # INBOX 의 안 붙은 seshat-*.patch �
 | **셋은 어느 사전으로 만들어졌는지를 든다**(`onto_score`). 셋의 `keep` · `lit` · `ui` 자리는 만들 때의 사전이 찍은 것이라 사전이 넓어져도 안 늘어난다 — 판마다 `set_stale` 이 그것을 말한다(DECISIONS §171 · PLAN #36) | `tools/fetch_awsdocs.py` · `seshat/evaluate.py::셋이_낡았나` · `tests/test_noise.py` |
 | **기록판은 손으로 안 고친다 — 선 줄도 그렇다.** 기록은 `--update`, 선은 `--pin-target` 이 판에서 박는다(DECISIONS §171) | `tools/gate.py::_블록을_고친다` · `tools/gate.py::_선을_박는다` · `tests/test_gate.py` |
 | **점수를 내는 셋에서 캔 노드는 누수 장부에 적는다.** 출처를 사전 안에 적지 않는다 — 적으면 `onto_sha256` 이 바뀌어 **뜻이 안 바뀐 편집이 옛 판을 전부 막는다**(DECISIONS §168) | `data/ontology/mined.jsonl` · `tools/check_ontology.py` · `tools/mine_terms.py` 의 거절 · `tests/test_mined.py` |
+| **차이가 잡음인지는 손으로 안 정한다.** 허용치 · 배수 · 중앙값을 사람이 그으면 자가 변수에 안 맞는다 — 2026-09-28 하루에 세 번 틀렸다(§139 · §178 · §179). 짝지은 부트스트랩이 **크기와 확실함을 따로** 준다(DECISIONS §180) | `tools/bootstrap.py` · `tests/test_bootstrap.py` · `verify.sh` 의 `bootstrap` 단계 |
 | **가설을 닫는 판마다 빚 한 줄을 같이 움직인다.** 재면 **재는 도구의 결함이 보이므로** 가설 닫기는 빚을 만든다 — 2026-09-28 가설 17 을 닫고 빚이 18 에서 20 이 됐다(DECISIONS §168) | 패치 제목 아래 **갚은 줄**을 적는다 · `docs/PLAN.md` 의 「일부 갚음」 |
 | 위생 도구는 근거가 있을 때만 지운다 | `tools/sweep.py` · `tests/test_sweep.py` |
 
