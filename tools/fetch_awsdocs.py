@@ -79,7 +79,13 @@ _BULLET = re.compile(r"^\s*[-+*]\s+")
 _BOLD = re.compile(r"\*\*([^*]+)\*\*")      # 콘솔 라벨. `_EMPH` 가 별표를 지우기 **전에** 집는다
 _EMPH = re.compile(r"\*\*|__|\*")
 _ESCAPED = re.compile(r"\\([-.\[\]()*_+#!<>|])")
-_SPLIT = re.compile(r"(?<=[.!?])\s+(?=[A-Z\"'(])")
+# ★ **홀로 선 한 글자의 마침표는 문장 끝이 아니다**(DECISIONS §195). `US East (N. Virginia)` 가
+#   `N.` 에서 잘려 `… for the US East (N.` 과 `Virginia) Region …` 두 줄이 됐다 — d001 에 하나,
+#   d002 에 셋. **잘린 줄은 번역이 될 수가 없으므로 모든 지표의 분모를 더럽힌다.**
+# ★ **넓게 막으면 더 나쁘다.** 「대문자+마침표 뒤엔 안 자른다」 로 하면 `… with IAM. Then …` 같은
+#   정상 문장이 다 붙는다 — AWS 문서는 약어로 끝나는 문장이 흔하다. 그래서 **앞이 글자가 아닌**
+#   한 글자일 때만 막는다: `(N.` 은 막고 `IAM.` · `S3.` 은 안 막는다.
+_SPLIT = re.compile(r"(?<![^A-Za-z][A-Z]\.)(?<=[.!?])\s+(?=[A-Z\"'(])")
 # 산문이 아닌 것 — 자리표시 · URL · 명령줄 · 끊긴 문장
 _NOT_PROSE = re.compile(r"[{}<>|]|\$\{|https?://|\.\.\.|^\s*aws\s", re.I)
 # ★ 머리에 붙은 콜론은 정의 목록이다 — `Table: The tables that this policy applies to.` 는 표의 칸이

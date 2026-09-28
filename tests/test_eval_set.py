@@ -2,6 +2,8 @@
 import json
 import pathlib
 
+import pytest
+
 from seshat import evaluate as ev
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -144,3 +146,23 @@ def test_옆_파일이_없으면_아무것도_안_뺀다(tmp_path):
                   encoding="utf-8")
     assert ev.문체_밖(셋) == set()
     assert ev.load(str(셋))[0].get("style_na") is None
+
+
+@pytest.mark.parametrize("글, 조각", [
+    # 홀로 선 한 글자 — 자르면 안 된다(DECISIONS §195). d001 · d002 에서 실제로 잘린 꼴이다
+    ("Use the US East (N. Virginia) Region for this bucket.", 1),
+    ("Auto-termination is available in US East (N. Virginia) and US West (Oregon).", 1),
+    # 약어로 끝나는 정상 문장 — **자르는 것이 맞다.** 넓게 막으면 이쪽이 다 붙는다
+    ("Configure access with IAM. Then attach the policy.", 2),
+    ("Upload the file to S3. The object appears in the console.", 2),
+    ("See the guide. Also read the FAQ.", 2),
+])
+def test_약어_마침표에서_문장을_안_자른다(글, 조각):
+    """★ **잘린 줄은 번역이 될 수가 없다**(DECISIONS §195). `… for the US East (N.` 은 `style` 만이
+    아니라 `term` · `keep` 의 분모까지 더럽힌다 — d001 에 하나, d002 에 셋 있었다.
+
+    ★ **넓게 막으면 더 나쁘다.** AWS 문서는 약어로 끝나는 문장이 흔해서, 대문자 마침표를 통째로
+      막으면 정상 문장이 줄줄이 붙는다. **앞이 글자가 아닌 한 글자**일 때만 막는다.
+    """
+    fa = _fetch()
+    assert len(fa._SPLIT.split(글)) == 조각
