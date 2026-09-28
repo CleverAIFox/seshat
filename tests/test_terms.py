@@ -79,7 +79,7 @@ def test_줄이_아는_자리를_뺀다():
 def test_자리가_틀리면_멈춘다():
     """글자가 그 자리에 없으면 셋이 코드와 어긋난 것이다 — 조용히 넘기면 세는 척하는 것이다."""
     import pytest
-    with pytest.raises(SystemExit, match="자리가 틀리다"):
+    with pytest.raises(SystemExit, match="자리를 틀리게 든다"):
         terms.hide("Choose Security Groups.", [["Security Groups", 0]])
 
 

@@ -193,9 +193,8 @@ def marked(row: dict) -> list[tuple[int, int]]:
     src, out = row.get("src", ""), []
     for kind in MARKS:
         for t, at in row.get(kind, []):
-            if src[at:at + len(t)] != t:
-                raise SystemExit(f"{row.get('id')} 의 {kind} 가 자리를 틀리게 든다 — {t!r} @ {at}\n"
-                                 f"    `python3 tools/fetch_awsdocs.py` 로 셋을 다시 만든다")
+            from . import terms
+            terms.제자리인가(src, t, at, f"{row.get('id')} 의 {kind}")
             out.append((at, at + len(t)))
     return out
 
@@ -223,20 +222,26 @@ def literal(rows: list[dict], outs: list[str]) -> dict[str, float | int | None]:
     return res
 
 
-_JOSA = re.compile(r"^(으로|이나|이라|을|를|이|가|은|는|과|와|나|라|로)(?![가-힣])")
+# ★ **조사 목록은 `seshat/terms.py` 의 `JOSA` 하나뿐이다**(DECISIONS §158). 여기 손으로 적었을 때
+#   네 곳이 됐고, 한 곳만 고치면 조용히 갈린다. **부를 때 불러온다** — 이 파일은 패키지 없이도
+#   돌아야 한다(`tools/compare_runs.py` 가 그렇게 쓴다)
+def _josa_re():
+    from . import terms
+    return terms.josa_머리()
 
 
 def josa(rows: list[dict], outs: list[str]) -> float | None:
     """`keep` 이름 뒤에 붙은 조사가 끝소리와 맞는 비율. 조사가 붙지 않은 자리는 세지 않는다."""
     from . import ontology, terms
     codas = {x.text: x.coda for x in ontology.surfaces(ontology.load()) if x.coda}
+    _josa = terms.josa_머리()
     ok = total = 0
     for r, o in zip(rows, outs):
         for k in r.get("keep", []):
             if k not in codas:
                 continue
             for m in re.finditer(re.escape(k), o):
-                j = _JOSA.match(o[m.end():])
+                j = _josa.match(o[m.end():])
                 if j:
                     total += 1
                     ok += terms.particle(codas[k], j.group(1)) == j.group(1)

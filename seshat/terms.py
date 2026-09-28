@@ -70,7 +70,21 @@ def _forms(letter: str = "T") -> str:
             rf"|(?<![A-Za-z0-9]){L}(\d+)(?![0-9]))")
 
 
-_JOSA_TAIL = r"(?:(으로|이나|이라|을|를|이|가|은|는|과|와|나|라|로)(?![가-힣]))?"
+# ★ **조사 목록은 여기 한 줄뿐이다**(DECISIONS §158). 2026-09-28 이 목록이 네 곳에 손으로 적혀
+#   있었고 그중 하나는 그날 새로 적은 것이었다 — 같은 병이 여덟 번 난 까닭과 같다(§157).
+#   **긴 것이 앞이다**(`으로` 가 `로` 보다 먼저) — 짧은 것이 앞이면 앞부분만 집는다.
+#   **`_PAIRS` 에서 유도한다** — 낱말을 두 번 적으면 한쪽만 고쳐진다. 긴 것이 앞이어야
+#   `으로` 를 `로` 로 집지 않는다.
+JOSA = tuple(sorted({x for 짝 in _PAIRS for x in 짝}, key=lambda w: (-len(w), w)))
+# 조사 뒤에 한글이 이어지면 조사가 아니다 — `⟦T1⟧이다` 의 `이` 는 서술격이다
+_JOSA_RE = "(" + "|".join(JOSA) + r")(?![가-힣])"
+_JOSA_TAIL = f"(?:{_JOSA_RE})?"
+
+
+@functools.lru_cache(maxsize=1)
+def josa_머리() -> re.Pattern:
+    """글 맨 앞의 조사. `evaluate.josa` 가 이것을 쓴다 — 목록을 두 번 적지 않는다(§158)."""
+    return re.compile("^" + _JOSA_RE)
 SLOT_FORMS = _forms("T")
 _AFTER = re.compile(SLOT_FORMS + _JOSA_TAIL)
 RESIDUE = re.compile(SLOT_FORMS)
@@ -87,7 +101,7 @@ def _residue_of(letter: str) -> re.Pattern:
 
 
 BASE, JONG, _RIEUL = 0xAC00, 28, 8
-_PARTICLE = r"(?:(으로|이나|이라|을|를|이|가|은|는|과|와|나|라|로)(?![가-힣]))?"
+_PARTICLE = _JOSA_TAIL        # 같은 것이다 — 이름만 남긴다(DECISIONS §158)
 
 
 def ko_coda(text: str) -> str | None:
@@ -131,7 +145,7 @@ def fix_terms(onto: list[dict], ko: str, src: str | None = None) -> tuple[str, l
 
 
 # 이름 바로 뒤의 조사. `_AFTER` 와 같은 목록이고 같은 규칙이다 — 뒤에 한글이 이어지면 조사가 아니다
-_JOSA_AFTER = "(으로|이나|이라|을|를|이|가|은|는|과|와|나|라|로)(?![가-힣])"
+_JOSA_AFTER = _JOSA_RE        # 같은 것이다 — 이름만 남긴다(DECISIONS §158)
 
 
 def fix_particles(text: str, slots: dict[str, dict]) -> str:
@@ -153,6 +167,18 @@ def fix_particles(text: str, slots: dict[str, dict]) -> str:
     return text
 
 
+def 제자리인가(text: str, 글: str, at: int, 무엇: str = "표시") -> None:
+    """**글자가 그 자리에 있나.** 없으면 셋이 코드와 어긋난 것이고 조용히 넘기면 **세는 척**이다.
+
+    ★ 2026-09-28 이 검사가 세 곳에 손으로 적혀 있었다(`evaluate.marked` · `hide` · `hide_all`) —
+      §157 과 같은 병이다. **자리를 보는 규칙은 여기 하나뿐이다**(DECISIONS §158).
+    ★ 이 검사가 실제로 일했다: `lit` 을 먼저 빼고 `ui` 를 부르자 자리가 밀려 멈췄다(§152).
+    """
+    if text[at:at + len(글)] != 글:
+        raise SystemExit(f"{무엇} 가 자리를 틀리게 든다 — {글!r} @ {at}\n"
+                         f"    `python3 tools/fetch_awsdocs.py` 로 셋을 다시 만든다")
+
+
 def hide(text: str, spans: list, letter: str = "U") -> tuple[str, dict[str, dict]]:
     """줄이 아는 자리(`ui` 같은)를 `⟦U1⟧` 로 뺀다 — 온톨로지가 아니라 **자리로** 뺀다(§151).
 
@@ -167,9 +193,7 @@ def hide(text: str, spans: list, letter: str = "U") -> tuple[str, dict[str, dict
     자리 = sorted(((int(at), str(t)) for t, at in (spans or [])), reverse=True)
     slots, 새, n = {}, text, len(자리)
     for at, t in 자리:
-        if text[at:at + len(t)] != t:
-            raise SystemExit(f"{letter} 자리가 틀리다 — {t!r} @ {at}\n"
-                             f"    `python3 tools/fetch_awsdocs.py` 로 셋을 다시 만든다")
+        제자리인가(text, t, at, f"{letter} 자리")
         key = f"{letter}{n}"
         slots[key] = {"text": t, "coda": None}
         새 = 새[:at] + f"{OPEN}{key}{CLOSE}" + 새[at + len(t):]
@@ -194,9 +218,7 @@ def hide_all(text: str, groups: list[tuple[list, str]]) -> tuple[str, dict[str, 
     센다 = {letter: len([1 for spans, L in groups if L == letter for _ in (spans or [])]) for _, letter in groups}
     새 = text
     for at, x, letter in sorted(모, reverse=True):
-        if text[at:at + len(x)] != x:
-            raise SystemExit(f"{letter} 자리가 틀리다 — {x!r} @ {at}\n"
-                             f"    `python3 tools/fetch_awsdocs.py` 로 셋을 다시 만든다")
+        제자리인가(text, x, at, f"{letter} 자리")
         key = f"{letter}{센다[letter]}"
         slots[letter][key] = {"text": x, "coda": None}
         새 = 새[:at] + f"{OPEN}{key}{CLOSE}" + 새[at + len(x):]
