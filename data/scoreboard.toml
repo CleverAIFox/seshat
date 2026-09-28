@@ -42,14 +42,17 @@ metrics = "2"
 note = "배포본 — thoth 가 지금 쓰는 것. 이것을 넘어야 engine=http 슬롯이 열린다(thoth PLAN #59)"
 set = "data/domain/d001.jsonl"
 arm = "nova-lite (thoth 워커)"
-run = "H-050-nova-d001-20260927-181909"
-term_off = 0.9163
-lit = 0.923
+run = "H-062-rescore-H-050-nova-d001-20260927-181909-20260928-121859"
+metrics = "2"                        # 선도 같은 자로 잰 것이어야 한다(DECISIONS §147)
+term_off = 0.9026
+lit = 0.9225
+term_bad = 0.0091                    # 옛 자는 0 이라고 했다 — 새 자가 오역 6건을 처음 봤다(§148)
 
 [[target]]
 note = "체급 — 6GB 에 안 올라간다. 살 값어치를 재는 선이다"
 set = "data/domain/d001.jsonl"
 arm = "gemma3-12b+ph+retry+endings+terms"
-run = "H-052-rescore-H-045-12b-d001-20260927-135211"
-term_off = 0.9254
-lit = 0.894
+run = "H-062-rescore-H-045-12b-d001-20260927-135211-20260928-122355"
+metrics = "2"                        # 선도 같은 자로 잰 것이어야 한다(DECISIONS §147)
+term_off = 0.9117
+lit = 0.8944
