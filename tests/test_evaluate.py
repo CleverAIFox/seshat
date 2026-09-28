@@ -367,11 +367,11 @@ def test_판이_끊겨도_중간_결과가_남는다(tmp_path, monkeypatch):
         fn, model = 진짜(name)
         센다 = [0]
 
-        def call(texts):
+        def call(texts, marks=None):
             센다[0] += len(texts)
             if 센다[0] > 18:
                 raise KeyboardInterrupt
-            return fn(texts)
+            return fn(texts, marks)
         return call, model
     monkeypatch.setattr(ev, "via_backend", 도중에_죽는다)
     with pytest.raises(KeyboardInterrupt):
@@ -405,7 +405,7 @@ def test_이어받으면_이미_있는_줄을_안_부른다(tmp_path, monkeypatc
 
     def 센다(name):
         fn, model = 진짜(name)
-        return (lambda texts: (부른것.extend(texts), fn(texts))[1]), model
+        return (lambda texts, marks=None: (부른것.extend(texts), fn(texts, marks))[1]), model
     monkeypatch.setattr(ev, "via_backend", 센다)
     assert ev.main(["--backend", "echo", "--set", 셋, "--name", "t", "--resume"]) == 0
     assert len(부른것) == 29                                   # 30 중 하나는 안 불렀다

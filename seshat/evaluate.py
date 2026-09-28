@@ -350,10 +350,14 @@ def translate(url: str, texts: list[str], token: str = "", thoth: bool = False,
 
 
 def via_backend(name: str):
-    """이름으로 백엔드를 불러 `translate` 와 같은 모양의 함수를 돌려준다."""
+    """이름으로 백엔드를 불러 `translate` 와 같은 모양의 함수를 돌려준다.
+
+    ★ **줄을 셋째 자리로 넘긴다**(DECISIONS §151). 온톨로지가 아는 이름은 원문에서 찾을 수 있지만
+      `ui` · `lit` 의 자리는 **줄만 안다** — 수확기가 마크업을 벗겼기 때문이다(§122).
+    """
     from . import backends
     fn, model = backends.get(name)
-    return (lambda texts: fn(texts, {})), model
+    return (lambda texts, marks=None: fn(texts, {}, marks)), model
 
 
 def door(h: str) -> None:
@@ -534,7 +538,7 @@ def main(argv=None) -> int:
         call, model = via_backend(a.backend)
     else:
         model = ""
-        def call(texts):
+        def call(texts, marks=None):     # 서버는 줄을 안 본다 — 자리는 이 저장소의 셋에만 있다
             return translate(a.url, texts, a.token, a.thoth or bool(a.thoth_token), a.thoth_token)
     코드 = 코드_상태()                                # 판이 끝난 뒤가 아니라 **지금** 찍는다(§81)
     from . import backends as _b
@@ -568,7 +572,7 @@ def main(argv=None) -> int:
         for i in range(0, len(남은줄), BATCH):
             묶음 = 남은줄[i:i + BATCH]
             before = len(새것)
-            for r, o in zip(묶음, call([r["src"] for r in 묶음])):
+            for r, o in zip(묶음, call([r["src"] for r in 묶음], 묶음)):
                 새것[r.get("id")] = o
                 pf.write(json.dumps({"id": r.get("id"), "out": o}, ensure_ascii=False) + "\n")
             pf.flush()

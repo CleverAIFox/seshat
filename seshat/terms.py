@@ -15,6 +15,7 @@
 """
 from __future__ import annotations
 
+import functools
 import re
 
 from . import ontology
@@ -38,7 +39,14 @@ def mask(onto: list[dict], text: str) -> tuple[str, dict[str, dict]]:
 
 
 def particle(coda: str | None, got: str) -> str:
-    """끝소리에 맞는 조사로 바꾼다. 짝이 없는 말은 그대로 둔다."""
+    """끝소리에 맞는 조사로 바꾼다. 짝이 없는 말은 그대로 둔다.
+
+    ★ **끝소리를 모르면 그대로 둔다.** 종전에는 `None` 을 받침 없는 쪽으로 **짐작**했다 — 콘솔
+      라벨처럼 읽기를 모르는 자리가 생기자 그 짐작이 맞던 조사를 틀리게 만들 수 있게 됐다.
+      `fix_particles` 와 같은 규율이다(DECISIONS §151).
+    """
+    if not coda:
+        return got
     for closed, open_ in _PAIRS:
         if got in (closed, open_):
             if closed == "으로":
@@ -51,10 +59,31 @@ def particle(coda: str | None, got: str) -> str:
 # ★ 모델이 바꾼 모양도 받는다 — `[T1]` · `\[T1]` · `\[T1\]` · `【T1】`(DECISIONS §16) · 백틱 `T1`(DECISIONS §24) ·
 #   **괄호가 통째로 벗겨진 맨 `T1`**(DECISIONS §42 — AWS Translate 가 그렇게 돌려준다. 조사까지 붙여서 온다).
 #   맨 모양은 앞뒤에 영숫자가 없을 때만 본다 — `MT1` · `T10` 을 잘못 집지 않는다.
-SLOT_FORMS = (r"(?:⟦T(\d+)⟧|\\?\[T(\d+)\\?\]|【T(\d+)】|`T(\d+)`"
-              r"|(?<![A-Za-z0-9])T(\d+)(?![0-9]))")
-_AFTER = re.compile(SLOT_FORMS + r"(?:(으로|이나|이라|을|를|이|가|은|는|과|와|나|라|로)(?![가-힣]))?")
+def _forms(letter: str = "T") -> str:
+    """자리표시의 모든 모양. **글자를 인자로 받는다** — 같은 규칙을 두 번 쓰지 않는다(DECISIONS §151).
+
+    `T` 는 이름(온톨로지가 아는 것), `U` 는 콘솔 라벨(줄이 아는 것)이다. 모델이 모양을 바꾸는 방식은
+    둘이 같으므로 **정규식도 하나여야 한다** — 따로 쓰면 한쪽만 고쳐지고, 오늘 그 병을 셋 봤다.
+    """
+    L = re.escape(letter)
+    return (rf"(?:⟦{L}(\d+)⟧|\\?\[{L}(\d+)\\?\]|【{L}(\d+)】|`{L}(\d+)`"
+            rf"|(?<![A-Za-z0-9]){L}(\d+)(?![0-9]))")
+
+
+_JOSA_TAIL = r"(?:(으로|이나|이라|을|를|이|가|은|는|과|와|나|라|로)(?![가-힣]))?"
+SLOT_FORMS = _forms("T")
+_AFTER = re.compile(SLOT_FORMS + _JOSA_TAIL)
 RESIDUE = re.compile(SLOT_FORMS)
+
+
+@functools.lru_cache(maxsize=8)
+def _after_of(letter: str) -> re.Pattern:
+    return re.compile(_forms(letter) + _JOSA_TAIL)
+
+
+@functools.lru_cache(maxsize=8)
+def _residue_of(letter: str) -> re.Pattern:
+    return re.compile(_forms(letter))
 
 
 BASE, JONG, _RIEUL = 0xAC00, 28, 8
@@ -124,16 +153,40 @@ def fix_particles(text: str, slots: dict[str, dict]) -> str:
     return text
 
 
-def unmask(ko: str, slots: dict[str, dict]) -> tuple[str, list[str]]:
+def hide(text: str, spans: list, letter: str = "U") -> tuple[str, dict[str, dict]]:
+    """줄이 아는 자리(`ui` 같은)를 `⟦U1⟧` 로 뺀다 — 온톨로지가 아니라 **자리로** 뺀다(§151).
+
+      hide("Choose Security Groups.", [["Security Groups", 7]])
+      # ("Choose ⟦U1⟧.", {"U1": {"text": "Security Groups", "coda": None}})
+
+    ★ **뒤에서부터 자른다** — 앞을 먼저 바꾸면 뒤 자리가 밀린다.
+    ★ **자리가 안 맞으면 멈춘다.** 글자가 그 자리에 없으면 셋이 코드와 어긋난 것이고, 조용히 넘기면
+      **세는 척하는 것**이 된다(`evaluate.marked` 와 같은 규율 · DECISIONS §122).
+    ★ 끝소리는 `None` 이다 — 임의의 영어 라벨은 읽기를 모른다. 조사는 손대지 않는다.
+    """
+    자리 = sorted(((int(at), str(t)) for t, at in (spans or [])), reverse=True)
+    slots, 새, n = {}, text, len(자리)
+    for at, t in 자리:
+        if text[at:at + len(t)] != t:
+            raise SystemExit(f"{letter} 자리가 틀리다 — {t!r} @ {at}\n"
+                             f"    `python3 tools/fetch_awsdocs.py` 로 셋을 다시 만든다")
+        key = f"{letter}{n}"
+        slots[key] = {"text": t, "coda": None}
+        새 = 새[:at] + f"{OPEN}{key}{CLOSE}" + 새[at + len(t):]
+        n -= 1
+    return 새, slots
+
+
+def unmask(ko: str, slots: dict[str, dict], letter: str = "T") -> tuple[str, list[str]]:
     seen = set()
 
     def put(m: re.Match) -> str:
-        key = f"T{m.group(1) or m.group(2) or m.group(3) or m.group(4) or m.group(5)}"
+        key = f"{letter}{m.group(1) or m.group(2) or m.group(3) or m.group(4) or m.group(5)}"
         slot = slots.get(key)
         if slot is None:
             return m.group(0)
         seen.add(key)
         return slot["text"] + (particle(slot["coda"], m.group(6)) if m.group(6) else "")
 
-    out = _AFTER.sub(put, ko)
+    out = _after_of(letter).sub(put, ko)
     return out, sorted(set(slots) - seen)

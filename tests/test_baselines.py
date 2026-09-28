@@ -111,7 +111,7 @@ def test_끼울_후보는_자리표시와_종결_정규화를_함께_쓴다():
     assert name in b.REGISTRY and name in b.WEIGHTS and name in b.DECODING_OF
     fn, model = b.REGISTRY[name]
     assert model.endswith("+ph+endings")
-    out = b.with_endings(lambda texts, terms: ["무엇인가요?"])(["x"], {})
+    out = b.with_endings(lambda texts, terms, marks=None: ["무엇인가요?"])(["x"], {})
     assert out == ["무엇입니까?"]
 
 
@@ -250,7 +250,7 @@ def _calls(answers):
     """부른 횟수를 세는 가짜 백엔드. 답을 차례로 돌려준다."""
     box = {"n": 0}
 
-    def fn(texts, terms_):
+    def fn(texts, terms_, marks=None):
         box["n"] += 1
         return [answers[min(box["n"] - 1, len(answers) - 1)] for _ in texts]
     return fn, box

@@ -13,10 +13,13 @@ import re
 import sys as _sys
 from typing import Callable
 
-Backend = Callable[[list[str], dict[str, str]], list[str]]
+# ★ 셋째 자리 `marks` 는 **그 줄 자체**다(DECISIONS §151). 온톨로지가 아는 것(`이름`)은 원문에서
+#   찾을 수 있지만 **줄이 아는 것**(`ui` · `lit` 의 자리)은 찾을 수 없다 — 수확기가 마크업을 벗겼다.
+#   `serve.py` 는 둘째 자리(`terms`)를 HTTP 로 받으므로 그 자리는 그대로 두고 **더한다.**
+Backend = Callable[..., list[str]]
 
 
-def echo(texts: list[str], terms: dict[str, str]) -> list[str]:
+def echo(texts: list[str], terms: dict[str, str], marks: list[dict] | None = None) -> list[str]:
     """과금 0 · 의존성 0. 계약과 배선만 본다."""
     return [f"[KO] {t}" for t in texts]
 
@@ -172,7 +175,7 @@ def _ask(req, model: str, 무엇: str = ""):
 
 
 def ollama(model: str, prompt: str, extra: dict | None = None):
-    def call(texts: list[str], terms: dict[str, str]) -> list[str]:
+    def call(texts: list[str], terms: dict[str, str], marks: list[dict] | None = None) -> list[str]:
         import json as _json
         import os
         import urllib.request
@@ -204,7 +207,7 @@ NO_THINK = "\n/no_think"
 
 def ollama_chat(model: str, system: str, extra: dict | None = None, suffix: str = ""):
     """`/api/chat` — 체계 지시를 따로 싣는다. 사고 모드는 `think: false` 와 말끝 스위치로 끈다."""
-    def call(texts: list[str], terms: dict[str, str]) -> list[str]:
+    def call(texts: list[str], terms: dict[str, str], marks: list[dict] | None = None) -> list[str]:
         import json as _json
         import os
         import urllib.request
@@ -231,7 +234,7 @@ def ollama_chat_ref(model: str, system: str, cap: int = 12, extra: dict | None =
     ★ `fence` — 사전 뒤에 **어디까지가 사전의 일인지**를 붙인다(DECISIONS §140). 목록만 주면
       모델이 사전에 없는 식별자까지 옮긴다.
     """
-    def call(texts: list[str], terms: dict[str, str]) -> list[str]:
+    def call(texts: list[str], terms: dict[str, str], marks: list[dict] | None = None) -> list[str]:
         import json as _json
         import os
         import urllib.request
@@ -266,7 +269,7 @@ def nbest(model: str, system: str, n: int = 8, temp: float = 0.8, seed0: int = 1
     arms = [ollama_chat(model, system, {"options": {**DECODING, "temperature": temp, "seed": seed0 + i}})
             for i in range(n)]
 
-    def call(texts: list[str], terms: dict[str, str]) -> list[str]:
+    def call(texts: list[str], terms: dict[str, str], marks: list[dict] | None = None) -> list[str]:
         판 = [f(texts, terms) for f in arms]            # n × 줄
         return [mbr.pick([p[i] for p in 판]) for i in range(len(texts))]
     return call
@@ -290,19 +293,20 @@ def with_placeholders(inner: Backend, repair: tuple[Backend, ...] = ()) -> Backe
     ★ 다 실패하면 **첫 답을 그대로 둔다** — 없는 이름을 지어 넣지 않는다. 사라진 것은 사라진 것으로 재야
       `keep` 이 진실을 말한다.
     """
-    def call(texts: list[str], terms_: dict[str, str]) -> list[str]:
+    def call(texts: list[str], terms_: dict[str, str], marks: list[dict] | None = None) -> list[str]:
         from . import ontology, terms
         onto = ontology.load()
         masked = [terms.mask(onto, t) for t in texts]
-        outs = inner([m for m, _ in masked], terms_)
+        outs = inner([m for m, _ in masked], terms_, marks)
         fixed = []
-        for t, o, (_, slots) in zip(texts, outs, masked):
+        마크 = marks or [{}] * len(texts)
+        for i, (t, o, (_, slots)) in enumerate(zip(texts, outs, masked)):
             ko, missing = terms.unmask(o, slots)
             if missing and repair:
                 REPAIR_STATS["tried"] += 1
                 names = [sl["text"] for sl in slots.values()]
                 for ask in repair:
-                    cand = ask([t], terms_)[0]
+                    cand = ask([t], terms_, [마크[i]])[0]
                     if all(n in cand for n in names):
                         # ★ **고치는 판에도 조사 규칙을 세운다**(DECISIONS §149). 이 답에는 `⟦Tn⟧` 이
                         #   없어 `unmask` 가 안 불린다 — 그대로 두면 이름은 살고 조사는 버려진다
@@ -314,16 +318,36 @@ def with_placeholders(inner: Backend, repair: tuple[Backend, ...] = ()) -> Backe
     return call
 
 
+def with_marks_hidden(inner: Backend, kind: str = "ui", letter: str = "U") -> Backend:
+    """**줄이 아는 자리**를 `⟦U1⟧` 로 빼고 번역한 뒤 되돌린다(DECISIONS §151 · H-064).
+
+    ★ **이것은 프롬프트가 아니라 입력을 고친다.** 콘솔 라벨은 「Security Groups」 처럼 평범한 영어
+      낱말이 평범한 자리에 있어 **원문에 단서가 없다** — 무엇을 시키든 모델은 알 수 없는 것을 맞혀야
+      한다(§150). 자리를 빼 주면 맞힐 것이 없어진다.
+    ★ **자리표시 밖에 선다.** 이름 빼기(`with_placeholders`)보다 먼저 빼야 두 자리가 안 겹친다 —
+      수확기가 이미 `keep` 과 겹치는 `ui` 를 뺐지만(`fetch_awsdocs.rows`) 순서까지 믿지 않는다.
+    ★ **끝소리를 모른다.** 임의의 영어 라벨의 읽기는 사전에 없으므로 조사는 손대지 않는다
+      (`terms.particle` 이 `None` 을 그대로 돌려준다).
+    """
+    def call(texts: list[str], terms_: dict, marks: list[dict] | None = None) -> list[str]:
+        from . import terms
+        마크 = marks or [{}] * len(texts)
+        숨긴 = [terms.hide(t, m.get(kind) or [], letter) for t, m in zip(texts, 마크)]
+        outs = inner([h for h, _ in 숨긴], terms_, 마크)
+        return [terms.unmask(o, sl, letter=letter)[0] for o, (_, sl) in zip(outs, 숨긴)]
+    return call
+
+
 def with_terms(inner: Backend) -> Backend:
     """H-033 의 처치 — 출력의 관측된 오역을 공식 표기로 바꾼다(`seshat/terms.py` · DECISIONS §56).
 
     ★ **맨 뒤에 선다.** 이름을 되돌리고 종결을 고친 뒤의 한국어를 본다 — 자리표시 안의 글자를 건드리지 않는다.
     """
-    def run(texts: list[str], terms_: dict) -> list[str]:
+    def run(texts: list[str], terms_: dict, marks: list[dict] | None = None) -> list[str]:
         from . import ontology, terms
         onto = ontology.load()
         # ★ 줄마다 그 줄의 원문을 함께 준다 — 흔한 말이 휩쓸리지 않게(DECISIONS §67)
-        return [terms.fix_terms(onto, o, src=t)[0] for t, o in zip(texts, inner(texts, terms_))]
+        return [terms.fix_terms(onto, o, src=t)[0] for t, o in zip(texts, inner(texts, terms_, marks))]
     return run
 
 
@@ -333,9 +357,9 @@ def with_endings(inner: Backend) -> Backend:
     ★ **프롬프트가 못 하는 것을 검사기가 한다.** 문체 지시는 종결을 못 바꿨고(H-019 기각) 결정적 후처리는
       style 을 0.93 → 1.00 으로 올렸다. 다른 지표는 그대로다 — 공짜로 얻는 자리다.
     """
-    def call(texts: list[str], terms_: dict[str, str]) -> list[str]:
+    def call(texts: list[str], terms_: dict[str, str], marks: list[dict] | None = None) -> list[str]:
         from . import endings
-        return [endings.normalize(o) for o in inner(texts, terms_)]
+        return [endings.normalize(o) for o in inner(texts, terms_, marks)]
     return call
 
 
@@ -425,6 +449,12 @@ REGISTRY: dict[str, tuple[Backend, str]] = {
         with_endings(with_placeholders(
             ollama_chat_ref("gemma3:4b", GENERIC_SYSTEM, fence=True, ui=True))),
         "gemma3:4b+ph+gloss3+endings"),
+    # ★ **콘솔 라벨을 자리표시로 뺀 팔**(H-064). 서빙 후보와 `ui` 하나만 다르다 —
+    #   `with_marks_hidden` 이 가장 바깥에 서서 이름 빼기보다 **먼저** 뺀다
+    "gemma3-4b+ph+ui+gloss2+retry+endings+terms": (
+        with_marks_hidden(with_terms(with_endings(with_placeholders(
+            ollama_chat_ref("gemma3:4b", GENERIC_SYSTEM, fence=True), repair=_gemma3_repair)))),
+        "gemma3:4b+ph+ui+gloss2+retry+endings+terms"),
     "gemma3-4b+ph+gloss2+retry+endings+terms": (
         with_terms(with_endings(with_placeholders(
             ollama_chat_ref("gemma3:4b", GENERIC_SYSTEM, fence=True), repair=_gemma3_repair))),
@@ -450,7 +480,8 @@ OLLAMA_OF.update({"translategemma-4b": "translategemma:4b", "translategemma-4b+p
                   "gemma3-4b+ph+gloss+endings+terms": "gemma3:4b",
                   "gemma3-4b+ph+gloss2+endings": "gemma3:4b",
                   "gemma3-4b+ph+gloss2+retry+endings+terms": "gemma3:4b",
-                  "gemma3-4b+ph+gloss3+endings": "gemma3:4b"})
+                  "gemma3-4b+ph+gloss3+endings": "gemma3:4b",
+                  "gemma3-4b+ph+ui+gloss2+retry+endings+terms": "gemma3:4b"})
 
 # ★ **어느 ollama 모델이 어느 가중치인가.** `from_pretrained` 를 거치지 않는 호출은 라이선스 검사의
 #   정규식이 보지 못한다. 선언을 검사가 대장과 대조한다(DECISIONS §14).
@@ -479,6 +510,7 @@ DECODING_OF.update({arm: {"temperature": 0.8, "seed0": 101, "num_predict": 512, 
 # ★ 고치는 판을 쓰는 팔은 그 조건도 머리줄에 싣는다 — 안 적으면 되풀이할 수 없다(DECISIONS §57)
 REPAIR_ARMS.update({"gemma3-4b+ph+retry+endings+terms", "gemma3-4b+ph+retry",
                     "gemma3-4b+ph+gloss2+retry+endings+terms",
+                    "gemma3-4b+ph+ui+gloss2+retry+endings+terms",
                     "gemma3-12b+ph+retry", "gemma3-12b+ph+retry+endings+terms"})
 for _arm in REPAIR_ARMS:
     DECODING_OF[_arm] = {**DECODING, "repair": REPAIR}
