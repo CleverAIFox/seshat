@@ -111,3 +111,18 @@ def test_d001_사례를_프롬프트에_안_적는다():
     """실제 셋에서 본 식별자를 예시로 적으면 고침이 아니라 **시험 셋에 맞춘 프롬프트**다(§130)."""
     for 본것 in ("CreateTable", "SCHEDULED", "DocumentBatchWrite", "processing-failed", "DynamicFrames"):
         assert 본것 not in glossary.FENCE
+
+
+def test_서빙_배선_팔이_기록판_팔과_하나만_다르다():
+    """승격을 노리는 팔은 **기록판 팔과 `gloss2` 하나만** 달라야 한다(DECISIONS §134 · §142).
+
+    `+retry` 가 빠져 있어서 `keep` 이 0.0042 모자랐다 — 그것은 사전의 죄가 아니라 배선의 죄다.
+    """
+    새, 옛 = "gemma3-4b+ph+gloss2+retry+endings+terms", "gemma3-4b+ph+retry+endings+terms"
+    assert 새 in backends.REGISTRY
+    assert backends.OLLAMA_OF[새] == backends.OLLAMA_OF[옛]
+    assert backends.WEIGHTS[새] == backends.WEIGHTS[옛]
+    assert backends.DECODING_OF[새] == backends.DECODING_OF[옛], "복호화까지 같아야 사전만 남는다"
+    assert 새 in backends.REPAIR_ARMS, "고치는 판을 쓰면 그 조건도 머리줄에 실려야 한다(§57)"
+    # 이름이 곧 배선이다 — 기록판 팔 이름에 `gloss2` 를 끼운 것이어야 한다
+    assert 새 == 옛.replace("+ph+", "+ph+gloss2+")

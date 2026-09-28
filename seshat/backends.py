@@ -414,6 +414,13 @@ REGISTRY: dict[str, tuple[Backend, str]] = {
     "gemma3-4b+ph+gloss2+endings": (
         with_endings(with_placeholders(ollama_chat_ref("gemma3:4b", GENERIC_SYSTEM, fence=True))),
         "gemma3:4b+ph+gloss2+endings"),
+    # ★ **서빙 후보 배선에 울타리 사전을 얹은 팔**(H-059). 기록판 팔과 **`gloss2` 하나만 다르다** —
+    #   `+retry` 도 `+endings` 도 `+terms` 도 그대로 둔다. 고치는 판(`_gemma3_repair`)은 사전 없이
+    #   부른다 — 기록판 팔과 같게 두어야 달라진 것이 하나가 된다(DECISIONS §134)
+    "gemma3-4b+ph+gloss2+retry+endings+terms": (
+        with_terms(with_endings(with_placeholders(
+            ollama_chat_ref("gemma3:4b", GENERIC_SYSTEM, fence=True), repair=_gemma3_repair))),
+        "gemma3:4b+ph+gloss2+retry+endings+terms"),
 }
 
 # ★ 이름으로 짐작하지 않는다 — 어느 백엔드가 ollama 위에 서는지 여기 적는다. 종전에는 `translategemma` 로
@@ -433,7 +440,8 @@ OLLAMA_OF.update({"translategemma-4b": "translategemma:4b", "translategemma-4b+p
                   "gemma3-4b+ph+mbr4+endings+terms": "gemma3:4b",
                   "gemma3-4b+ph+gloss+endings": "gemma3:4b",
                   "gemma3-4b+ph+gloss+endings+terms": "gemma3:4b",
-                  "gemma3-4b+ph+gloss2+endings": "gemma3:4b"})
+                  "gemma3-4b+ph+gloss2+endings": "gemma3:4b",
+                  "gemma3-4b+ph+gloss2+retry+endings+terms": "gemma3:4b"})
 
 # ★ **어느 ollama 모델이 어느 가중치인가.** `from_pretrained` 를 거치지 않는 호출은 라이선스 검사의
 #   정규식이 보지 못한다. 선언을 검사가 대장과 대조한다(DECISIONS §14).
@@ -461,6 +469,7 @@ DECODING_OF.update({arm: {"temperature": 0.8, "seed0": 101, "num_predict": 512, 
 
 # ★ 고치는 판을 쓰는 팔은 그 조건도 머리줄에 싣는다 — 안 적으면 되풀이할 수 없다(DECISIONS §57)
 REPAIR_ARMS.update({"gemma3-4b+ph+retry+endings+terms", "gemma3-4b+ph+retry",
+                    "gemma3-4b+ph+gloss2+retry+endings+terms",
                     "gemma3-12b+ph+retry", "gemma3-12b+ph+retry+endings+terms"})
 for _arm in REPAIR_ARMS:
     DECODING_OF[_arm] = {**DECODING, "repair": REPAIR}
