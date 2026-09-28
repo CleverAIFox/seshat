@@ -39,6 +39,8 @@ bash tools/apply_patch.sh                # INBOX 의 안 붙은 seshat-*.patch �
 | 워크플로는 권한을 적는다. gitleaks 가 있는 곳은 PR 을 읽는다 | `tests/test_workflows.py::test_워크플로마다_권한을_적는다` · `tests/test_workflows.py::test_gitleaks_는_PR_을_읽을_수_있다` |
 | 레이크는 넣기만 한다 · 대장 밖을 짚는다 · 가설의 근거가 레이크에 있다 | `tools/lake.py::check` · `tests/test_lake.py` |
 | 데이터는 전부 카탈로그에 있다 · 미확인 라이선스는 학습에 못 쓴다 | `tools/check_catalog.py` · `seshat/catalog.py::validate` · `tests/test_catalog.py` |
+| **점수를 내는 셋에서 캔 노드는 누수 장부에 적는다.** 출처를 사전 안에 적지 않는다 — 적으면 `onto_sha256` 이 바뀌어 **뜻이 안 바뀐 편집이 옛 판을 전부 막는다**(DECISIONS §168) | `data/ontology/mined.jsonl` · `tools/check_ontology.py` · `tools/mine_terms.py` 의 거절 · `tests/test_mined.py` |
+| **가설을 닫는 판마다 빚 한 줄을 같이 움직인다.** 재면 **재는 도구의 결함이 보이므로** 가설 닫기는 빚을 만든다 — 2026-09-28 가설 17 을 닫고 빚이 18 에서 20 이 됐다(DECISIONS §168) | 패치 제목 아래 **갚은 줄**을 적는다 · `docs/PLAN.md` 의 「일부 갚음」 |
 | 위생 도구는 근거가 있을 때만 지운다 | `tools/sweep.py` · `tests/test_sweep.py` |
 
 ---

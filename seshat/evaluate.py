@@ -442,7 +442,7 @@ def conditions(a, rows: list[dict], 코드: dict | None = None) -> dict:
 
     ★ `코드` 는 판을 **시작할 때** 찍어 둔 상태다. 안 주면 지금 찍는다 — 짧은 판과 도구용 길이다.
     """
-    from . import backends
+    from . import backends, ontology
     코드 = 코드 or 코드_상태()
     chars = sum(len(r["src"]) for r in rows)
     out = {"hypothesis": a.hypothesis or None,
@@ -451,6 +451,9 @@ def conditions(a, rows: list[dict], 코드: dict | None = None) -> dict:
            "set_sha256": set_sha256(a.set),
            "onto_sha256": onto_sha256(),
            "metrics": METRICS_VER,      # 자가 바뀌면 옛 수와 못 견준다(DECISIONS §145)
+           # ★ **이 셋에서 캐서 사전에 넣은 노드의 수**(DECISIONS §168 · PLAN #37). 0 이 아니면
+           #   그만큼 **시험지가 분모를 골랐다.** 줄이는 길은 사전을 빼는 것이 아니라 **딴 셋에서 재는 것**
+           "onto_leak": len(ontology.캔_노드(a.set)),
            "chars": chars,
            "backend": a.backend or None,
            "weights": backends.WEIGHTS.get(a.backend or ""),

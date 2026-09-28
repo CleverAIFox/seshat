@@ -31,6 +31,14 @@ DEFAULT = ROOT / "data/ontology/aws.jsonl"
 KINDS = {"service", "feature", "api", "concept", "brand"}
 CODAS = {"none", "closed", "rieul"}
 SOURCES = {"author", "thoth-glossary", "aws-glossary"}   # AWS 공식 한국어 용어집(§165)
+# ★ **어디서 베꼈는가와 누가 고르라 했는가는 다르다**(DECISIONS §168). `src` 는 **표기의 근거**이고
+#   누수 장부(`data/ontology/mined.jsonl`)는 **이 노드를 넣기로 한 까닭이 어느 셋이었나** 를 든다.
+#   2026-09-28 의 개념 14 는 표기를 AWS 공식 용어집에서 베꼈지만(`src=aws-glossary`) **무엇을 넣을지는
+#   `d001` 이 골랐다** — 그 `d001` 이 점수를 내는 셋이다. **분모를 시험지가 정했다**(PLAN #37).
+# ★ **장부가 딴 파일인 데는 까닭이 있다.** 여기 적으면 `onto_sha256` 이 바뀌고, **뜻이 하나도 안 바뀐
+#   편집이 옛 판을 전부 「사전이 바뀌었다」 로 막는다**(compare.AXIS). 출처는 채점기 밖에 산다.
+MINED = ROOT / "data/ontology/mined.jsonl"
+MINED_FROM = re.compile(r"data/[a-z0-9_/-]+\.jsonl")
 _HANGUL = re.compile(r"[가-힣]")
 _ACRONYM = re.compile(r"^[A-Z0-9-]+$")
 # 공식 표기의 근거 — AWS 한국어 문서의 <서비스>/<페이지>. URL 은 적지 않는다(DECISIONS §34)
@@ -128,6 +136,9 @@ def validate(onto: list[dict]) -> list[str]:
                 fails.append(f"{i} 의 ko_ref 는 <서비스>/<페이지> 다 — {ref!r}")
         if n.get("keep") and (n.get("alt_ko") or n.get("bad_ko") or n.get("ko_ref")):
             fails.append(f"{i} 는 영어로 남는데 한국어 표기 · 근거를 든다")
+        if "mined_from" in n:
+            fails.append(f"{i} 가 mined_from 을 든다 — 출처는 {MINED.name} 에 적는다. "
+                         f"여기 적으면 onto_sha256 이 바뀌어 옛 판이 전부 못 견주게 된다")
     for n in onto:
         p = n.get("parent")
         if p and p not in ids:
@@ -149,6 +160,30 @@ def validate(onto: list[dict]) -> list[str]:
             fails.append(f"표기 '{s.text}' 가 {owner[k]} 와 {s.node['id']} 둘을 가리킨다")
         owner.setdefault(k, s.node["id"])
     return fails
+
+
+def 누수_장부(path: Path | None = None) -> list[dict]:
+    """{id, mined_from, date, …}. 없으면 빈 목록 — 장부가 없는 것은 누수가 없는 것과 같이 다룬다."""
+    p = path or MINED
+    if not p.exists():
+        return []
+    return [d for d in (json.loads(x) for x in p.read_text(encoding="utf-8").splitlines() if x.strip())
+            if not d.get("meta")]
+
+
+def 캔_노드(셋: str | Path | None, 장부: list[dict] | None = None) -> list[str]:
+    """**이 셋에서 캐서 넣은 노드**의 id. 그 셋으로 낸 점수는 그만큼 제 사전으로 잰 것이다.
+
+    ★ **누수는 세는 것이지 지우는 것이 아니다**(DECISIONS §168). 이미 들어온 16 을 도로 뺄 수는 없다 —
+      뺀다고 `d001` 의 점수가 깨끗해지지 않고, 모르는 채로 재는 것보다 **아는 채로 재는 것**이 낫다.
+      그래서 판마다 이 수를 싣는다(`onto_leak`). 딴 셋에서 재면 저절로 0 이 되고, **0 이 되는 날이
+      「사전 탓이 아니다」 를 말할 수 있는 날**이다(PLAN #37).
+    """
+    if not 셋:
+        return []
+    s = str(셋).replace("\\", "/")
+    return sorted(d["id"] for d in (장부 if 장부 is not None else 누수_장부())
+                  if d.get("mined_from") and s.endswith(d["mined_from"]))
 
 
 def find(onto: list[dict], text: str, keep_only: bool = False) -> list[tuple[int, int, Surface]]:

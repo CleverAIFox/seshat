@@ -27,6 +27,10 @@ def main(argv=None) -> int:
     args = sys.argv[1:] if argv is None else argv
     _canary()
     onto = ontology.load()
+    # ★ **장부가 사전보다 먼저 썩는다.** 노드를 지우거나 이름을 바꾸면 장부의 id 가 허공을 가리키고,
+    #   그러면 판의 `onto_leak` 이 **실제보다 작게** 나온다 — 누수가 저절로 줄어든 것처럼 보인다(§168)
+    있는id = {n["id"] for n in onto}
+    장부 = ontology.누수_장부()
     if "--list" in args:
         for k, v in sorted(Counter(n["kind"] for n in onto).items()):
             print(f"  {k:<8} {v}")
@@ -34,8 +38,15 @@ def main(argv=None) -> int:
         print(f"  허용 표기 {sum(len(n.get('alt_ko', [])) for n in onto)} · 관측된 오역 {sum(len(n.get('bad_ko', [])) for n in onto)}")
         con = [n for n in onto if n["kind"] == "concept"]
         print(f"  공식 표기 대조 {sum(1 for n in con if n.get('ko_ref'))}/{len(con)} 개념 (PLAN #22)")
+        for 셋, v in sorted(Counter(d["mined_from"] for d in 장부).items()):
+            print(f"  누수 {v} — {셋} 에서 캐서 넣었다 (PLAN #37)")
         return 0
     fails = ontology.validate(onto)
+    fails += [f"누수 장부의 {d.get('id')!r} 가 사전에 없다 — 지웠으면 장부에서도 지운다"
+              for d in 장부 if d.get("id") not in 있는id]
+    fails += [f"누수 장부의 {d.get('id')!r} 가 든 mined_from 이 셋의 자리가 아니다 — {d.get('mined_from')!r}"
+              for d in 장부
+              if not (isinstance(d.get("mined_from"), str) and ontology.MINED_FROM.fullmatch(d["mined_from"]))]
     for f in fails:
         print(f"    {f}")
     return 1 if fails else 0

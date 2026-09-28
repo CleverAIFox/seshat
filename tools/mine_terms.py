@@ -10,10 +10,16 @@
 ★ **이름(`keep`)도 뺀다.** 그것은 이미 사전이 아는 것이고, 영어로 남는다.
 ★ **캔 것을 그대로 넣지 않는다.** 이 도구는 **후보**를 준다. 공식 한국어 표기는 사람이 AWS 한국어
   문서와 대조해서 적고(`ko_ref`), 그때까지는 사전에 안 들어간다(§34 · §65 와 같은 규율).
+★ **이 도구가 2026-09-28 의 누수를 만들었다**(DECISIONS §168 · PLAN #37). 점수를 내는 `d001` 을 캐서
+  개념 14 를 넣었고, **시험지가 분모를 골랐다.** 캘 때는 안 보였다 — 표기를 공식 용어집에서 베꼈으니
+  근거는 깨끗했고, **무엇을 넣을지를 누가 골랐나**는 아무 데도 안 적혔기 때문이다.
+  그래서 이 도구는 이제 **기록판에 오른 셋을 거절한다.** 굳이 캐려면 `--leak-ok` 를 들고, 그때 이
+  도구가 **누수 장부에 적을 줄을 찍어 준다.** 막는 것이 아니라 **적게 만드는 것**이 목적이다.
 """
 from __future__ import annotations
 
 import argparse
+import datetime
 import json
 import pathlib
 import re
@@ -65,12 +71,32 @@ def 캔다(rows: list[dict], onto: list[dict]) -> Counter:
     return 셈
 
 
+def 점수를_내는_셋() -> set[str]:
+    """`data/scoreboard.toml` 이 든 셋들. **이 셋을 캐면 분모를 시험지가 고른다**(§168)."""
+    p = ROOT / "data/scoreboard.toml"
+    if not p.exists():
+        return set()
+    return set(re.findall(r'^\s*set\s*=\s*"([^"]+)"', p.read_text(encoding="utf-8"), re.M))
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("set", help="평가셋 jsonl")
     ap.add_argument("--top", type=int, default=40)
     ap.add_argument("--least", type=int, default=3, help="이보다 적게 나온 말은 안 보인다")
+    ap.add_argument("--leak-ok", action="store_true",
+                    help="기록판에 오른 셋이어도 캔다 — 넣거든 누수 장부에 적는다")
     a = ap.parse_args(argv)
+
+    잰셋 = 점수를_내는_셋()
+    몫 = str(a.set).replace("\\", "/")
+    걸린 = sorted(s for s in 잰셋 if 몫.endswith(s))
+    if 걸린 and not a.leak_ok:
+        print(f"  ✗ {걸린[0]} 은 **점수를 내는 셋**이다 — 여기서 캐서 사전에 넣으면 "
+              f"시험지가 분모를 고른다(PLAN #37 · DECISIONS §168)", file=sys.stderr)
+        print("    딴 셋에서 캐거나, 알면서 캐려면 --leak-ok 를 든다 — 그때 장부 줄을 찍어 준다",
+              file=sys.stderr)
+        return 1
 
     rows = [d for d in (json.loads(x) for x in
             pathlib.Path(a.set).read_text(encoding="utf-8").splitlines() if x.strip())
@@ -84,6 +110,12 @@ def main(argv: list[str] | None = None) -> int:
         if n < a.least:
             break
         print(f"    {n:>4}줄  {말}")
+    if 걸린:
+        오늘 = datetime.date.today().isoformat()
+        print(f"\n  ⚠ **{걸린[0]} 은 점수를 내는 셋이다.** 여기서 캔 것을 사전에 넣거든 "
+              f"`data/ontology/mined.jsonl` 에 이 꼴로 적는다 —")
+        print(f'    {{"id": "con.<이름>", "mined_from": "{걸린[0]}", "date": "{오늘}", "note": "…"}}')
+        print("    안 적으면 누수가 없어지는 것이 아니라 **안 보이게 된다**(판의 `onto_leak` 이 거짓이 된다)")
     return 0
 
 
