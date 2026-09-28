@@ -45,6 +45,12 @@ def rescore(run_path: str, set_path: str, post: str = "none") -> tuple[dict, lis
     # ★ **쓴 셋을 적는다.** 2026-09-27 까지 이 줄은 옛 머리줄의 `set_sha256` 을 그대로 옮겼다 —
     #   `--set` 으로 다른 셋을 대도 결과는 옛 셋을 쟀다고 말했다. §106 과 같은 병이다(DECISIONS §122).
     keep["set_sha256"] = evaluate.set_sha256(set_path)
+    # ★ **자리도 적는다**(DECISIONS §173). 해시만 적었더니 기록판의 선 줄(자리만 든다)과
+    #   견줄 이름이 없어서 `--pin-target` 이 「셋이 다르다 — 이번 None」 으로 막혔다
+    keep["set"] = set_path
+    keep["onto_score"] = evaluate.onto_score_sha256()
+    keep["set_onto"] = evaluate.셋의_사전(set_path)
+    keep["set_stale"] = evaluate.셋이_낡았나(set_path)
     if head.get("set_sha256") and head["set_sha256"] != keep["set_sha256"]:
         keep["set_was"] = head["set_sha256"]          # 원래 어느 셋이었는지도 남긴다
     return {"meta": True, **res, **keep, "post": post, "rescored_from": Path(run_path).name}, out_lines

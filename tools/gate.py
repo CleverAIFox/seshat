@@ -248,12 +248,21 @@ def _선을_박는다(run: str | None, arm: str, board: dict) -> int:
         있는 = " · ".join(x.get("arm", "?") for x in board.get("target", []))
         print(f"  ✗ 선 줄에 그런 팔이 없다 — {arm}\n    있는 것 : {있는}", file=sys.stderr)
         return 1
-    if t.get("set") != head.get("set"):
-        print(f"  ✗ 셋이 다르다 — 선 {t.get('set')} · 이번 {head.get('set')}", file=sys.stderr)
+    같나 = compare.같은_셋인가(t, head)
+    if 같나 is None:
+        print(f"  ✗ 같은 셋인지 모른다 — 선은 {t.get('set_sha256') or t.get('set') or '아무것도'} 를 들고 "
+              f"이번 판은 {head.get('set_sha256') or head.get('set') or '아무것도'} 를 든다\n"
+              f"    **모르는 것은 같은 것이 아니다**(DECISIONS §173)", file=sys.stderr)
+        return 1
+    if not 같나:
+        print(f"  ✗ 셋이 다르다 — 선 {t.get('set_sha256') or t.get('set')} · "
+              f"이번 {head.get('set_sha256') or head.get('set')}", file=sys.stderr)
         return 1
     값 = {m: 재(head[m]) for m in ("term_off", "lit", "ui", "term_bad", "keep", "style")
           if isinstance(head.get(m), (int, float))}
     새값 = {**값, "run": pathlib.Path(run).stem, "metrics": head.get("metrics", ""),
+            # ★ **다음 판은 해시로 묻게 한다.** 선 줄이 자리만 들고 있어서 이 물음이 갈렸다(§173)
+            **({"set_sha256": head["set_sha256"]} if head.get("set_sha256") else {}),
             "onto_sha256": head.get("onto_sha256", ""), "onto_score": head.get("onto_score", ""),
             "date": dt.date.today().isoformat(),
             **({"protects": list(head["protects"])} if head.get("protects") else {})}

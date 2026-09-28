@@ -562,3 +562,41 @@ def test_선을_딴_셋의_판으로는_못_박는다(tmp_path, monkeypatch, cap
     assert G.main([str(run), "--pin-target", "배포본"]) == 1
     assert "셋이 다르다" in capsys.readouterr().err
     assert "0.99" not in board.read_text(encoding="utf-8")
+
+
+def test_선과_판이_견줄_이름이_없으면_안_박는다(tmp_path, monkeypatch, capsys):
+    """★ **모르는 것은 같은 것이 아니다**(DECISIONS §173 · §110). 재채점 판은 `set_sha256` 만 들고
+    기록판의 선 줄은 `set` 만 들어서, 둘이 같은 글을 쟀는지 **물을 이름이 없었다.**"""
+    board = tmp_path / "b.toml"
+    board.write_text('[[record]]\nset = "s"\nset_sha256 = "셋"\nmetrics = "' + 자 + '"\narm = "우리"\n'
+                     'term_off = 0.95\nguard = ["term_off"]\ntol = 0.0\n\n'
+                     '[[target]]\nset = "s"\narm = "배포본"\nterm_off = 0.9\n', encoding="utf-8")
+    run = tmp_path / "재-20260928-1.jsonl"
+    run.write_text(json.dumps(머리(backend="배포본", set_sha256="셋", metrics=자, term_off=0.88),
+                              ensure_ascii=False) + "\n", encoding="utf-8")
+    monkeypatch.setattr(G, "PATH", board)
+    assert G.main([str(run), "--pin-target", "배포본"]) == 1
+    assert "모른다" in capsys.readouterr().err
+    assert "0.88" not in board.read_text(encoding="utf-8")
+
+
+def test_해시가_양쪽에_있으면_해시로_묻는다(tmp_path, monkeypatch):
+    """★ **자리는 옮기면 바뀌고 해시는 안 바뀐다**(DECISIONS §173). 둘 다 들면 해시가 먼저다."""
+    board = tmp_path / "b.toml"
+    board.write_text('[[record]]\nset = "s"\nset_sha256 = "셋"\nmetrics = "' + 자 + '"\narm = "우리"\n'
+                     'term_off = 0.95\nguard = ["term_off"]\ntol = 0.0\n\n'
+                     '[[target]]\nset = "옛자리"\nset_sha256 = "셋"\narm = "배포본"\nterm_off = 0.9\n',
+                     encoding="utf-8")
+    run = tmp_path / "재-20260928-1.jsonl"
+    run.write_text(json.dumps(머리(backend="배포본", set="새자리", set_sha256="셋", metrics=자,
+                                   term_off=0.88), ensure_ascii=False) + "\n", encoding="utf-8")
+    monkeypatch.setattr(G, "PATH", board)
+    assert G.main([str(run), "--pin-target", "배포본"]) == 0, "자리가 달라도 같은 글이다"
+    assert "0.88" in board.read_text(encoding="utf-8")
+
+
+def test_재채점이_셋의_자리도_적는다():
+    """적는 자리가 없으면 다음 재채점 판도 똑같이 선을 못 박는다(DECISIONS §173)."""
+    t = (ROOT / "tools/rescore.py").read_text(encoding="utf-8")
+    for k in ('keep["set"]', 'keep["onto_score"]', 'keep["set_stale"]'):
+        assert k in t, f"재채점 머리줄에 {k} 가 없다"

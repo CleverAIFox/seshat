@@ -95,6 +95,20 @@ def 사전축(a: dict, b: dict) -> str:
     return "onto_score" if (a.get("onto_score") and b.get("onto_score")) else "onto_sha256"
 
 
+def 같은_셋인가(가: dict, 나: dict) -> bool | None:
+    """**둘이 같은 글을 쟀나.** None 은 「모른다」 — 견줄 이름이 한 쪽에도 없다(DECISIONS §173).
+
+    ★ **해시가 먼저다.** 자리(`set`)는 옮기면 바뀌고 해시는 안 바뀐다. 둘 다 해시를 들면 해시로,
+      아니면 자리로 묻는다 — 재채점 판은 `set_sha256` 만 들고 기록판의 선 줄은 `set` 만 든다.
+    ★ **이 물음이 두 곳에 있었다.** 문의 `GATE_막` 이 해시로 묻고 선 박는 길이 자리로 물어서,
+      재채점 판으로 선을 박으려다 「셋이 다르다 — 이번 None」 으로 막혔다(§169 와 같은 얼굴).
+    """
+    for k in ("set_sha256", "set"):
+        if 가.get(k) and 나.get(k):
+            return 가[k] == 나[k]
+    return None
+
+
 def 가린_지표(가: dict, 나: dict) -> set[str]:
     """보호가 달라서 **못 견주는 지표**. 통째로 막지 않는다(DECISIONS §156).
 
