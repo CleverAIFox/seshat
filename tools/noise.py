@@ -23,11 +23,14 @@ import pathlib
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
+from seshat import compare  # noqa: E402
 
 # 흔들림을 볼 지표. `ms` 는 기계 속도지 번역이 아니다 — 여기 넣으면 늘 빨갛다
 METRICS = ("term_off", "lit", "keep", "style", "term", "hangul", "josa", "ui", "chrf")
-# 두 판이 같은 것을 잰 것인지 정하는 값들. 하나라도 다르면 그 차이는 잡음이 아니다
-SAME = ("backend", "set_sha256", "onto_sha256")
+# ★ **축은 `seshat/compare.py` 하나에만 적는다**(DECISIONS §157). 여기 손으로 적었을 때
+#   `metrics` 가 빠져 있었다 — 자를 바꾸기 전후의 두 판을 섞어 「잡음」 이라 부를 뻔했다
+SAME = compare.AA
 
 
 def read(path: str | pathlib.Path) -> tuple[dict, dict[str, str]]:
@@ -49,11 +52,12 @@ def read(path: str | pathlib.Path) -> tuple[dict, dict[str, str]]:
 
 def 같은_것인가(머리들: list[dict], 이름: list[str]) -> None:
     """★ **거절이 기본이다.** 섞어 재고 「잡음이 크다」 고 적는 것이 가장 나쁜 결과다."""
-    for k in SAME:
-        본 = {(m.get(k) or "") for m in 머리들}
-        if len(본) > 1:
-            줄 = "\n".join(f"    {n} : {m.get(k) or '없다'}" for n, m in zip(이름, 머리들))
-            raise SystemExit(f"{k} 가 판마다 다르다 — 다른 자로 잰 차이는 잡음이 아니다\n{줄}")
+    for m, n in zip(머리들[1:], 이름[1:]):
+        갈린 = compare.갈림(머리들[0], m, SAME)
+        if 갈린:
+            줄 = "\n".join(f"    {g.이름} — {이름[0]} {g.가 or '없다'} · {n} {g.나 or '없다'}"
+                          for g in 갈린)
+            raise SystemExit(f"{갈린[0].키} 가 판마다 다르다 — 다른 것을 잰 차이는 잡음이 아니다\n{줄}")
 
 
 def 퍼짐(머리들: list[dict]) -> dict[str, tuple[float, float, float]]:

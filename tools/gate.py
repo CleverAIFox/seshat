@@ -32,7 +32,7 @@ import tomllib
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
-from seshat import catalog  # noqa: E402
+from seshat import catalog, compare  # noqa: E402
 
 PATH = ROOT / "data/scoreboard.toml"
 
@@ -96,18 +96,14 @@ def check(rec: dict, head: dict, pin: bool = False) -> tuple[list[str], list[str
             + (" — 이번 실행으로 박는다" if pin else
                " — 채점 코드가 바뀌었을 수 있다. `tools/rescore.py` 로 기준을 다시 재고 `--update` 로 박는다"))
         return 막, 말
-    if head.get("metrics") != rec["metrics"]:
-        막.append(f"**자가 바뀌었다** — 기록 판 {rec['metrics']} · 이번 판 {head.get('metrics')}\n"
-                  f"    사전이 바뀐 것과 다르다(§32 · §96). 사전은 **같은 것을 더 잘 재는** 일이고\n"
-                  f"    자가 바뀌는 것은 **다른 것을 재는** 일이다. `tools/rescore.py` 로 기준을 다시 잰다")
+    # ★ **축은 `seshat/compare.py` 하나에만 적는다**(DECISIONS §157)
+    갈린 = compare.갈림(rec, head, compare.GATE_막)
+    if 갈린:
+        막.append(갈린[0].글())
         return 막, 말
-    if head.get("set_sha256") != rec["set_sha256"]:
-        막.append(f"셋이 다르다 — 기록 {rec['set_sha256']} · 이번 {head.get('set_sha256')}\n"
-                  f"    다른 자로 잰 두 수를 견주지 않는다. 같은 셋으로 다시 재거나 기록을 다시 박는다")
-        return 막, 말
-    if rec.get("onto_sha256") and head.get("onto_sha256") != rec["onto_sha256"]:
-        말.append(f"사전이 바뀌었다 — 기록 {rec['onto_sha256']} · 이번 {head.get('onto_sha256')}. "
-                  f"**막지 않는다**(DECISIONS §32 · §96). 기준을 `rescore` 로 다시 박는다")
+    if rec.get("onto_sha256"):
+        for x in compare.갈림(rec, head, ("onto_sha256",)):
+            말.append(x.글() + " — `rescore` 로 기준을 다시 박는다")
     tol = float(rec.get("tol", 0.0))
     for m in rec.get("guard", []):
         # **기록판에 적히는 자리에서 견준다.** 안 그러면 반올림이 올라간 값이 자기 기록에 막힌다
@@ -136,7 +132,8 @@ def 올릴_것(rec: dict, head: dict, pin: bool = False, 받음: bool = False) -
     """
     # ★ **받아들인 판은 떨어진 값도 박는다**(DECISIONS §155). 안 박으면 기록판이 옛 선을 든 채로
     #   남고 **다음 판이 같은 자리에서 또 막힌다** — 사람이 한 번 정한 것을 매번 다시 정하게 된다
-    처음 = 받음 or (pin and (not rec.get("set_sha256") or rec.get("metrics") != head.get("metrics")))
+    처음 = 받음 or (pin and (not rec.get("set_sha256")
+                            or bool(compare.갈림(rec, head, ("metrics",)))))
     out = {}
     for m in (*rec.get("guard", []), "term_off", "lit", "keep", "style"):
         새 = 재(head.get(m))
@@ -244,13 +241,14 @@ def main(argv: list[str] | None = None) -> int:
             continue
         # ★ **선도 같은 자로 잰 것이어야 한다**(DECISIONS §147). 2026-09-28, 자를 바꾼 뒤에도 이 줄이
         #   새 수와 옛 수의 차를 찍고 있었다 — **비교를 거절하는 도구가 스스로 섞어 재고 있었다.**
-        if t.get("metrics") != head.get("metrics"):
-            print(f"  선    {t['arm']:<40} **다른 자로 잰 선이다** — 기록 판 {t.get('metrics') or '없다'} · "
-                  f"이번 판 {head.get('metrics')}. 차를 안 찍는다. `tools/rescore.py` 로 그 판을 다시 잰다")
+        다른자 = compare.갈림(t, head, ("metrics",))
+        if 다른자:
+            print(f"  선    {t['arm']:<40} **다른 자로 잰 선이다** — 선 {다른자[0].가 or '없다'} · "
+                  f"이번 {다른자[0].나}. 차를 안 찍는다. `tools/rescore.py` 로 그 판을 다시 잰다")
             continue
         # ★ **보호가 다르면 그 지표는 안 찍는다**(DECISIONS §156). 기계가 지킨 0.993 과 모델이 지킨
         #   0.9225 를 견주면 「넘었다」 가 거짓이 된다 — 자도 셋도 같아서 위의 검사가 다 통과한다
-        못볼것 = set(rec.get("protects") or []) ^ set(t.get("protects") or [])
+        못볼것 = compare.가린_지표(rec, t)
         남 = {m: round(t[m] - head[m], 4) for m in ("term_off", "lit")
               if m in t and head.get(m) is not None and m not in 못볼것}
         print(f"  선까지 {t['arm']:<40} " + " · ".join(f"{m} {v:+.4f}" for m, v in 남.items()))

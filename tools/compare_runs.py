@@ -16,6 +16,9 @@ import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from seshat import compare as _축  # noqa: E402  (이 파일에 `compare` 함수가 따로 있다)
+
 # seshat/terms.py 의 SLOT_FORMS 와 같다. 도구가 패키지 없이도 돌게 여기에 둔다 — 테스트가 둘을 대조한다
 RESIDUE = re.compile(r"(?:⟦T(\d+)⟧|\\?\[T(\d+)\\?\]|【T(\d+)】|`T(\d+)`"
                      r"|(?<![A-Za-z0-9])T(\d+)(?![0-9]))")
@@ -156,8 +159,12 @@ def main(argv=None) -> int:
     if a.set:
         spec = {x["id"]: x for x in (json.loads(y) for y in Path(a.set).read_text(encoding="utf-8").splitlines() if y.strip())
                 if not x.get("meta")}
-    if ha.get("set_sha256") != hb.get("set_sha256"):
-        print("    ★ 두 파일의 평가셋 해시가 다르다 — 같은 셋이 아니면 줄 대조는 뜻이 없다")
+    # ★ **축은 `seshat/compare.py` 하나에만 적는다**(DECISIONS §157). 2026-09-28 까지 이 도구는
+    #   셋과 사전만 보고 **자는 안 봤다** — 같은 병의 여덟 번째였다
+    for g in _축.갈림(ha, hb, ("set_sha256", "metrics")):
+        print(f"    ★ 두 파일의 {g.글()}")
+        print("      같은 셋이 아니면 줄 대조는 뜻이 없다" if g.키 == "set_sha256"
+              else "      `tools/rescore.py` 로 한쪽을 지금 자로 다시 잰다")
         return 1
     # ★ **줄 수가 다르면 머리줄의 숫자는 짝이 아니다**(DECISIONS §45). `--limit` 으로 싸게 본 판과 전수를
     #   나란히 놓으면 다른 문장을 비교하게 된다. 줄 대조는 겹치는 id 만 보지만 머리줄은 각자 전체를 든다
@@ -165,9 +172,10 @@ def main(argv=None) -> int:
         print(f"    ★ 두 파일의 줄 수가 다르다 — A {ha.get('n')} · B {hb.get('n')}")
         print("      같은 줄 수로 다시 재거나, 적은 쪽에 맞춰 `--limit` 으로 다시 잰다")
         return 1
-    # ★ 온톨로지도 채점기의 일부다(DECISIONS §32). 사전이 다르면 term 은 모델이 아니라 사전을 재고 있다
-    if ha.get("onto_sha256") != hb.get("onto_sha256"):
-        print(f"    ★ 두 파일의 온톨로지 해시가 다르다 — A {ha.get('onto_sha256')} · B {hb.get('onto_sha256')}")
+    # ★ 온톨로지도 채점기의 일부다(DECISIONS §32). 사전이 다르면 term 은 모델이 아니라 사전을 재고 있다.
+    #   **여기서는 막는다** — 문과 달리 이 도구는 두 팔을 나란히 놓는 것이 전부다
+    for g in _축.갈림(ha, hb, ("onto_sha256",)):
+        print(f"    ★ 두 파일의 온톨로지 해시가 다르다 — A {g.가} · B {g.나}")
         print("      term 은 사전이 바뀐 몫까지 센다. 같은 사전으로 한쪽을 다시 채점한다(tools/rescore.py)")
         return 1
     r = compare(ra, rb, spec)
