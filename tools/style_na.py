@@ -1,9 +1,9 @@
-"""**합쇼체가 설 수 없는 줄**의 후보를 뽑는다(PLAN #40 · DECISIONS §189).
+"""**합쇼체가 설 수 없는 줄**의 후보를 뽑는다(DECISIONS §189 · §194).
 
   python3 tools/style_na.py runs/A.jsonl runs/B.jsonl runs/C.jsonl
   python3 tools/style_na.py runs/*.jsonl --least 3
 
-★ **`style` 의 분모에 합쇼체가 설 수 없는 줄이 섞여 있다**(PLAN #40). `A list of triggers for the
+★ **`style` 의 분모에 합쇼체가 설 수 없는 줄이 섞여 있다**(DECISIONS §194). `A list of triggers for the
   specified job.` → `지정된 작업에 대한 트리거 목록.` 은 **명사구**라 종결어미가 설 자리가 없는데
   지표는 깨진 것으로 센다. 목록으로 끝나는 줄도 같다.
 ★ **고치기 전에 크기부터 잰다**(DECISIONS §183). 지금은 「더럽다」 만 알고 **얼마나**를 모른다.
@@ -78,7 +78,7 @@ def main(argv: list[str] | None = None) -> int:
         이름 = pathlib.Path(셋).stem
         print(f"\n  눈으로 보고 **합쇼체가 설 수 없는 것**만 골라 여기 적는다 —"
               f" `data/domain/{이름}.style-na.txt`(한 줄에 id 하나)")
-        print("  적고 나면 그 수가 PLAN #40 의 크기다 — 그때 분모에서 뺄지 정한다(자가 바뀐다)")
+        print("  적고 나면 그 수가 DECISIONS §194 의 크기다 — 그때 분모에서 뺄지 정한다(자가 바뀐다)")
     return 0
 
 

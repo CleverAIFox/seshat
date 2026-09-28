@@ -91,6 +91,15 @@ how = "사람"
 feeds = ["seshat/ontology.py — term · josa 지표", "seshat/terms.py — 용어 자리표시", "tools/make_probes.py", "tools/fetch_awsdocs.py — 수확 거르기"]
 
 [[source]]
+id = "style-na"
+where = "repo:data/domain/*.style-na.txt"
+origin = "합쇼체를 물을 수 없는 줄을 **사람이 눈으로 보고 적은 판정**(DECISIONS §194 · §189)"
+license = "자체 — 이 저장소가 내린 판정"
+uses = ["eval"]
+how = "사람"
+feeds = ["seshat/evaluate.py::문체_밖 — style 의 분모에서 뺀다", "tools/style_na.py — 후보를 준다"]
+
+[[source]]
 id = "eval-seed"
 where = "repo:data/eval/*.jsonl"
 origin = "평가셋 초안(PLAN #1)"

@@ -111,3 +111,36 @@ def test_없는_셋을_빼라고_하면_멈춘다(tmp_path):
     fa = _fetch()
     with pytest.raises(SystemExit):
         fa.이미_쓴_문장([str(tmp_path / "없다.jsonl")])
+
+
+def test_합쇼체를_물을_수_없는_줄은_분모에서_뺀다(tmp_path):
+    """★ **원문이 명사구면 종결어미가 설 자리가 없다**(DECISIONS §194). 그런 줄을
+    분모에 넣으면 `style` 이 거짓으로 낮아진다 — d001 에서 걸린 13줄 중 셋이 그것이었다(§190).
+
+    ★ **판정은 사람이 하고 기계는 읽기만 한다**(§189). 파서를 놓으면 그 파서가 또 자가 된다.
+    """
+    셋 = tmp_path / "x.jsonl"
+    셋.write_text("\n".join(json.dumps(r, ensure_ascii=False) for r in [
+        {"meta": True, "about": "시험용"},
+        {"id": "a", "src": "Create a bucket."},
+        {"id": "b", "src": "A list of triggers."},
+        {"id": "c", "src": "Delete the table."}]) + "\n", encoding="utf-8")
+    (tmp_path / "x.style-na.txt").write_text("# 주석은 무시한다\nb   # 명사구\n", encoding="utf-8")
+
+    assert ev.문체_밖(셋) == {"b"}
+    rows = ev.load(str(셋))
+    assert [r.get("style_na") for r in rows] == [None, True, None]
+
+    outs = ["버킷을 만듭니다.", "트리거 목록.", "표를 지운다."]
+    got = ev.score(rows, outs)
+    assert got["style_n"] == 2, "명사구 줄은 분모에 없다"
+    assert got["style"] == 0.5, "남은 둘 중 하나만 합쇼체다 — 명사구를 넣었으면 1/3 이 된다"
+
+
+def test_옆_파일이_없으면_아무것도_안_뺀다(tmp_path):
+    """★ **없는 것을 있는 것처럼 굴지 않는다.** 대부분의 셋은 이 파일이 없다."""
+    셋 = tmp_path / "y.jsonl"
+    셋.write_text(json.dumps({"meta": True}) + "\n" + json.dumps({"id": "a", "src": "x"}) + "\n",
+                  encoding="utf-8")
+    assert ev.문체_밖(셋) == set()
+    assert ev.load(str(셋))[0].get("style_na") is None

@@ -1,4 +1,4 @@
-"""합쇼체가 설 수 없는 줄의 후보 뽑기(PLAN #40 · DECISIONS §189)."""
+"""합쇼체가 설 수 없는 줄의 후보 뽑기(DECISIONS §189 · §194)."""
 from __future__ import annotations
 
 import importlib.util

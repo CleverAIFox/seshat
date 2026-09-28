@@ -103,7 +103,7 @@ def is_hapsyo(ko: str) -> bool:
     None 이 아니라 True 로 센다. 어미가 없는 것을 틀렸다고 세면 짧은 보기가 많은 평가셋에서
     style 이 거짓으로 낮아진다.
 
-    ★ **종결어미 뒤에 오는 꼬리를 벗긴다**(DECISIONS §190 · PLAN #40). `_HAPSYO` 는 줄 **끝**에
+    ★ **종결어미 뒤에 오는 꼬리를 벗긴다**(DECISIONS §190). `_HAPSYO` 는 줄 **끝**에
       앵커돼 있어서, 옳게 맺고도 뒤에 목록이나 영어 이름이 붙으면 깨진 것으로 셌다. d001 에서
       style 이 걸린 13줄 중 **다섯이 그것**이었다 —
 
@@ -198,7 +198,27 @@ def load(path: str) -> list[dict]:
             r = json.loads(line)
             if not r.get("meta"):
                 rows.append(r)
+    뺄것 = 문체_밖(p)
+    for r in rows:
+        if r.get("id") in 뺄것:
+            r["style_na"] = True
     return rows
+
+
+def 문체_밖(셋: pathlib.Path) -> set[str]:
+    """**합쇼체를 물을 수 없는 줄**의 id — `<셋>.style-na.txt`(DECISIONS §194).
+
+    ★ 원문이 **명사구 · 표 항목**이면 종결어미가 설 자리가 없다. 그런 줄을 분모에 넣으면
+      `style` 이 **거짓으로 낮아진다** — d001 에서 걸린 13줄 중 셋이 그것이었다(§190).
+    ★ **판정은 사람이 한다**(§189). 「완전한 문장인가」 를 가르는 파서를 놓으면 그 파서가 또 자가
+      된다. 이 파일은 **사람이 눈으로 보고 적은 것**이고, 기계는 읽기만 한다.
+    ★ **셋 옆에 산다.** 셋마다 다르고, 셋이 바뀌면 같이 바뀐다 — `d002` 는 제 것을 따로 든다.
+    """
+    옆 = 셋.parent / f"{셋.stem}.style-na.txt"
+    if not 옆.exists():
+        return set()
+    return {x.split("#")[0].strip() for x in 옆.read_text(encoding="utf-8").splitlines()
+            if x.strip() and not x.lstrip().startswith("#")}
 
 
 def 셋의_사전(path: str | pathlib.Path) -> str | None:
@@ -236,7 +256,9 @@ MARKS = ("lit", "ui")
 #   4 — `style` 이 **종결어미 뒤 꼬리를 벗긴다**(2026-09-28 · DECISIONS §190 · §191). 줄 끝 그대로
 #       보고, 떨어진 것만 콜론 뒤 나열과 한글 없는 조각을 벗겨 **구제**한다 — 오직 완화이므로
 #       `style` 은 올라가기만 한다. d001 에서 걸린 13줄 중 **다섯이 바른 번역**이었다
-METRICS_VER = "4"
+#   5 — `style` 의 분모에서 **합쇼체를 물을 수 없는 줄**을 뺀다(2026-09-28 · DECISIONS §194).
+#       `<셋>.style-na.txt` 가 그 줄을 든다 — 사람이 적고 기계는 읽기만 한다
+METRICS_VER = "5"
 
 
 def marked(row: dict) -> list[tuple[int, int]]:
@@ -363,13 +385,15 @@ def term(rows: list[dict], outs: list[str]) -> dict[str, float | None]:
 
 def score(rows: list[dict], outs: list[str]) -> dict:
     n = len(rows)
-    style = sum(is_hapsyo(o) for o in outs) / n if n else None
+    # ★ **합쇼체를 물을 수 없는 줄은 분모에서 뺀다**(DECISIONS §194). 명사구 · 표 항목이다
+    잴것 = [(r, o) for r, o in zip(rows, outs) if not r.get("style_na")]
+    style = (sum(is_hapsyo(o) for _, o in 잴것) / len(잴것)) if 잴것 else None
     kept = total = 0
     for r, o in zip(rows, outs):
         for k in r.get("keep", []):
             total += 1
             kept += k in o
-    res = {"n": n, "style": style, "hangul": hangul(rows, outs), "keep": kept / total if total else None, "chrf": None,
+    res = {"n": n, "style": style, "style_n": len(잴것), "hangul": hangul(rows, outs), "keep": kept / total if total else None, "chrf": None,
            "josa": josa(rows, outs) if total else None, **term(rows, outs), **literal(rows, outs)}
     pairs = [(o, r["ref"]) for r, o in zip(rows, outs) if r.get("ref")]
     if pairs:
