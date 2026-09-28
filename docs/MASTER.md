@@ -131,7 +131,7 @@ AWS_PROFILE=<프로파일> uv run --group eval --group aws python -m seshat.eval
 | `translategemma-4b` | `google/translategemma-4b-it` · ollama Q4_K_M 3.3GB | 후보 1호. ollama 가 GPU 를 맡는다 · `temperature 0` · `seed 42` |
 | `translategemma-4b+ph` | 같다 | H-001 처치군 — 용어 자리표시를 두른다 |
 
-두 결과가 **어느 개념에서** 갈렸는지는 `tools/term_diff.py` 가 보인다 — 줄 대조(`compare_runs`)로는 한 줄에 든 여러 용어를 못 가른다. 숫자가 왜 그 값인지는 `tools/show_misses.py` 가 줄로 보인다 — 사라진 이름 · 버린 개념 · 오역 · 번역이 아닌 줄. 결과 파일은 `tools/rescore.py` 로 모델을 다시 부르지 않고 다시 채점한다 — 되돌리기를 바꿨을 때. 두 결과 파일은 `tools/compare_runs.py` 로 줄 단위로 대조한다 — 이긴 줄 · 진 줄 · 남은 자리표시 · 구문별 keep · 구문별 개념 유지 · 합쇼체가 한쪽에서만 깨진 줄 ·
+두 결과가 **어느 개념에서** 갈렸는지는 `tools/term_diff.py` 가 보인다 — 줄 대조(`compare_runs`)로는 한 줄에 든 여러 용어를 못 가른다. 숫자가 왜 그 값인지는 `tools/show_misses.py` 가 줄로 보인다 — 사라진 이름 · 버린 개념 · 오역 · 번역이 아닌 줄. 결과 파일은 `tools/rescore.py` 로 모델을 다시 부르지 않고 다시 채점한다 — 되돌리기를 바꿨을 때. **같은 팔을 여러 판 돌린 결과는 `tools/noise.py` 가 흔들림으로 바꾼다** — 지표 퍼짐과 줄 흔들림은 **다른 수**이고 둘을 한 문장으로 내지 않는다(DECISIONS §139). 두 결과 파일은 `tools/compare_runs.py` 로 줄 단위로 대조한다 — 이긴 줄 · 진 줄 · 남은 자리표시 · 구문별 keep · 구문별 개념 유지 · 합쇼체가 한쪽에서만 깨진 줄 ·
 가장 많이 잃은 이름. 평가셋 해시가 다르면 멈춘다. ollama 백엔드의 결과 파일은 머리줄에 `ollama`(GPU 적재 비율)를 싣는다.
 
 탐침은 `tools/make_probes.py` 가 만든다 — 문형 템플릿 14 × 온톨로지 어휘, 결정적(`--seed`). 의미가 어색한 문장도
@@ -230,7 +230,7 @@ bash tools/verify.sh --only=pytest  # 부분 실행 — 마지막에 일부러 �
 | thoth 와의 경계 | HTTP JSON — `POST /translate` · `GET /health`(§2). thoth 워커(Lambda)가 서버 대 서버로 부른다 | 스트리밍이 필요하면 같은 경로에 SSE(thoth PLAN #38) |
 | 서빙 | `serve.py` · 표준 라이브러리 · echo | 이미지 → ECR → Lambda 컨테이너(PLAN #27) · **유휴 비용 0** 이 조건이다(§13). 집의 장비로 서빙하지 않는다 — 꺼지면 thoth 번역이 죽는다 |
 | 환경 | uv · ollama | 컨테이너(PLAN #26) — torch 가 들어올 때 |
-| 실험 | `evaluate.py` → `runs/`(커밋 밖) · 머리줄에 재현 조건 · 견적과 상한(`--max-usd` · DECISIONS §35) · GPU 러너(§10) | 평가 게이트(`tools/gate.py` · `data/scoreboard.toml` · DECISIONS §131) · 비용 장부 |
+| 실험 | `evaluate.py` → `runs/`(커밋 밖) · 머리줄에 재현 조건 · 견적과 상한(`--max-usd` · DECISIONS §35) · GPU 러너(§10) · **A/B 전에 A/A**(`tools/noise.py` — 같은 팔을 여러 판 돌려 흔들림을 재고 그 최댓값이 `tol` 이다 · DECISIONS §139) | 평가 게이트(`tools/gate.py` · `data/scoreboard.toml` · DECISIONS §131) · 비용 장부 |
 | 학습 | 없다 | ② 원격 T4 · 스팟 → ③ 학습용 데스크탑 |
 | 데이터 | 저장소의 `data/`(작은 정본 · 받는 도구) · SSD 레이크 `SESHAT_DATA`(raw · runs · cache — §11) | thoth 쌍(원문만) · 교사 공장 산출 · 온톨로지 2판 원천 |
 
