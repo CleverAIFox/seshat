@@ -12,6 +12,9 @@
 ★ **사전이 바뀌면 막지 않고 말한다.** 사전을 고치면 같은 번역의 점수가 바뀐다(§32 · §96). 그것을
   회귀로 읽으면 사전을 영영 못 고친다 — 재채점으로 기준을 다시 박으라고 이른다.
 ★ **못 재면 0 이 아니다.** 결과에 그 지표가 없으면 「통과」 가 아니라 빨간불이다(§110 과 같은 규율).
+★ **문은 맞바꿈을 못 정한다.** 한 지표가 크게 오르고 다른 지표가 조금 떨어지는 판은 **사람이 정한다** —
+  `--accept "<까닭>"` 이 그것이다. 까닭 없이는 안 받는다. 받은 것은 기록판에 **떨어진 지표와 함께**
+  남고, 다음 판부터 그 새 값이 선이 된다(DECISIONS §155).
 ★ **자가 바뀌면 막는다.** 채점 코드가 바뀌면 `metrics` 판이 올라가고, 판이 다른 두 수는 **다른 것을
   잰 수**다(DECISIONS §145). 사전이 바뀌는 것과 다르다 — 사전은 같은 것을 더 잘 재는 일이다.
 """
@@ -119,7 +122,7 @@ def check(rec: dict, head: dict, pin: bool = False) -> tuple[list[str], list[str
     return 막, 말
 
 
-def 올릴_것(rec: dict, head: dict, pin: bool = False) -> dict[str, float]:
+def 올릴_것(rec: dict, head: dict, pin: bool = False, 받음: bool = False) -> dict[str, float]:
     """올라간 지표만. **떨어진 것을 기록판에 쓰지 않는다** — 기록판은 최고를 든다.
 
     ★ `pin` — 셋 해시를 처음 박는 판에서는 **있는 값을 그대로 적는다.** 그 기록은 아직 어느 셋의
@@ -128,7 +131,9 @@ def 올릴_것(rec: dict, head: dict, pin: bool = False) -> dict[str, float]:
       일이 잦은데, 오른 것만 쓰면 기록판이 **「새 자」 라고 적힌 채 옛 자로 잰 수**를 든다 —
       거짓말이 박힌다. 판이 다르면 견주지 않고 **그대로 옮긴다.**
     """
-    처음 = pin and (not rec.get("set_sha256") or rec.get("metrics") != head.get("metrics"))
+    # ★ **받아들인 판은 떨어진 값도 박는다**(DECISIONS §155). 안 박으면 기록판이 옛 선을 든 채로
+    #   남고 **다음 판이 같은 자리에서 또 막힌다** — 사람이 한 번 정한 것을 매번 다시 정하게 된다
+    처음 = 받음 or (pin and (not rec.get("set_sha256") or rec.get("metrics") != head.get("metrics")))
     out = {}
     for m in (*rec.get("guard", []), "term_off", "lit", "keep", "style"):
         새 = 재(head.get(m))
@@ -138,7 +143,8 @@ def 올릴_것(rec: dict, head: dict, pin: bool = False) -> dict[str, float]:
     return out
 
 
-def _쓴다(run: str, rec: dict, head: dict, 오른: dict, path: pathlib.Path | None = None) -> None:
+def _쓴다(run: str, rec: dict, head: dict, 오른: dict, path: pathlib.Path | None = None,
+          받은: str = "") -> None:
     """**한 줄씩 고쳐 쓴다.** TOML 을 다시 찍으면 주석이 사라지는데, 이 파일은 주석이 절반이다.
 
     ★ **이름과 날짜도 같이 고친다.** 2026-09-28, 숫자만 고치고 `arm` 을 안 고쳤더니 기록판이
@@ -157,7 +163,8 @@ def _쓴다(run: str, rec: dict, head: dict, 오른: dict, path: pathlib.Path | 
             "onto_sha256": head.get("onto_sha256", ""), "run": pathlib.Path(run).stem,
             "metrics": head.get("metrics", ""),
             "arm": head.get("backend") or head.get("model") or rec["arm"],
-            "date": dt.date.today().isoformat()}
+            "date": dt.date.today().isoformat(),
+            **({"accepted": 받은} if 받은 else {})}
     for i in range(시작, 끝):
         k = 줄[i].split("=", 1)[0].strip()
         if k in 새값:
@@ -183,6 +190,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--update", action="store_true", help="올라간 지표만 기록판에 쓴다")
     ap.add_argument("--show", action="store_true")
     ap.add_argument("--require", action="store_true", help="기록판에 없는 팔이면 멈춘다")
+    ap.add_argument("--accept", metavar="까닭",
+                    help="떨어진 지표를 **사람이 받아들인다**. 까닭을 적어야 한다 — 문은 맞바꿈을 못 정한다")
     a = ap.parse_args(argv)
     board = load()
     if a.show or not a.run:
@@ -203,12 +212,26 @@ def main(argv: list[str] | None = None) -> int:
     막, 말 = check(rec, head, pin=a.update)
     for x in 말:
         print(f"  ※ {x}")
+    # ★ 받아들이는 것은 **떨어진 지표**뿐이다. 셋 · 사전 · 자가 다른 것은 못 받는다 — 그것은
+    #   맞바꿈이 아니라 **다른 것을 잰 것**이다(§145 · §147)
+    받을수있나 = all("떨어졌다" in x for x in 막)
+    받은 = ""
+    if 막 and a.accept and 받을수있나:
+        if not a.accept.strip():
+            raise SystemExit("`--accept` 에 까닭이 비었다 — 까닭 없는 받아들임은 문을 끈 것이다")
+        받은 = a.accept.strip()
+        print(f"\n  ⚠ **사람이 받아들였다** — {받은}", file=sys.stderr)
+        for x in 막:
+            print(f"      받은 것 : {x.splitlines()[0]}", file=sys.stderr)
+        막 = []
+    elif 막 and a.accept:
+        print("  ✗ 이것은 맞바꿈이 아니다 — 셋 · 사전 · 자가 다르면 못 받는다", file=sys.stderr)
     for x in 막:
         print(f"  ✗ {x}", file=sys.stderr)
     if 막:
         print(f"\n  문이 막았다 — {pathlib.Path(a.run).name}", file=sys.stderr)
         return 1
-    오른 = 올릴_것(rec, head, pin=a.update)
+    오른 = 올릴_것(rec, head, pin=a.update, 받음=bool(받은))
     def _값(m):
         v = head.get(m)
         return f"{v:.4f}" if isinstance(v, float) else str(v)
@@ -224,8 +247,8 @@ def main(argv: list[str] | None = None) -> int:
             continue
         남 = {m: round(t[m] - head[m], 4) for m in ("term_off", "lit") if m in t and head.get(m) is not None}
         print(f"  선까지 {t['arm']:<40} " + " · ".join(f"{m} {v:+.4f}" for m, v in 남.items()))
-    if 오른 and a.update:
-        _쓴다(a.run, rec, head, 오른)
+    if 오른 and (a.update or 받은):
+        _쓴다(a.run, rec, head, 오른, 받은=받은)
         print(f"  기록판을 고쳤다 — {' · '.join(f'{m} → {v}' for m, v in 오른.items())}")
     elif 오른:
         print(f"  올라간 것 {' · '.join(f'{m} {v}' for m, v in 오른.items())} — `--update` 가 기록한다")

@@ -350,3 +350,46 @@ def test_주석의_자리를_지킨다(tmp_path, monkeypatch):
     줄 = [x for x in board.read_text(encoding="utf-8").splitlines() if "앞 칸" in x][0]
     이어 = [x for x in board.read_text(encoding="utf-8").splitlines() if "이어지는" in x][0]
     assert 줄.index("#") == 이어.index("#"), f"주석 자리가 어긋났다\n{줄}\n{이어}"
+
+
+def test_맞바꿈은_사람이_받는다(tmp_path, monkeypatch, capsys):
+    """문은 맞바꿈을 못 정한다 — 한쪽이 크게 오르고 한쪽이 조금 떨어지는 판(DECISIONS §155)."""
+    board = tmp_path / "b.toml"
+    board.write_text('[[record]]\nset = "s"\nset_sha256 = "셋"\nonto_sha256 = "사전"\nmetrics = "2"\n'
+                     'arm = "옛팔"\nrun = "r"\ncommit = "0"\ndate = "2020-01-01"\n'
+                     'term_off = 0.9619\nlit = 0.8099\nguard = ["term_off", "lit"]\ntol = 0.0\n',
+                     encoding="utf-8")
+    run = tmp_path / "새-20260928-1.jsonl"
+    run.write_text(json.dumps(머리(backend="새팔", set_sha256="셋", onto_sha256="사전", metrics="2",
+                                   term_off=0.9559, lit=0.9930), ensure_ascii=False) + "\n",
+                   encoding="utf-8")
+    monkeypatch.setattr(G, "PATH", board)
+    monkeypatch.setattr(G.catalog, "gate", lambda p: None)
+    assert G.main([str(run), "--arm", "옛팔"]) == 1                    # ① 그냥은 막는다
+    assert G.main([str(run), "--arm", "옛팔",
+                   "--accept", "식별자 26 · 라벨 67 을 개념 4 와 바꾼다"]) == 0
+    새 = G.load(board)["record"][0]
+    assert 새["term_off"] == 0.9559, "받은 판은 **떨어진 값도** 박아야 다음 판이 안 막힌다"
+    assert 새["lit"] == 0.993 and 새["arm"] == "새팔"
+    assert "식별자 26" in 새["accepted"]
+    assert "사람이 받아들였다" in capsys.readouterr().err
+
+
+def test_까닭_없는_받아들임은_문을_끈_것이다(tmp_path, monkeypatch):
+    board = tmp_path / "b.toml"
+    board.write_text('[[record]]\nset = "s"\nset_sha256 = "셋"\nonto_sha256 = "사전"\nmetrics = "2"\n'
+                     'arm = "팔"\nterm_off = 0.9\nguard = ["term_off"]\ntol = 0.0\n', encoding="utf-8")
+    run = tmp_path / "새-20260928-1.jsonl"
+    run.write_text(json.dumps(머리(backend="팔", set_sha256="셋", onto_sha256="사전", metrics="2",
+                                   term_off=0.8), ensure_ascii=False) + "\n", encoding="utf-8")
+    monkeypatch.setattr(G, "PATH", board)
+    monkeypatch.setattr(G.catalog, "gate", lambda p: None)
+    with pytest.raises(SystemExit, match="까닭이 비었다"):
+        G.main([str(run), "--accept", "   "])
+
+
+def test_다른_자는_못_받는다(tmp_path, monkeypatch, capsys):
+    """맞바꿈이 아니라 **다른 것을 잰 것**이다(§145 · §147) — 까닭을 적어도 안 받는다."""
+    rec = {**REC, "metrics": "1"}
+    막, _ = G.check(rec, 머리(metrics="2", term_off=0.99, lit=0.99))
+    assert 막 and "떨어졌다" not in 막[0]
