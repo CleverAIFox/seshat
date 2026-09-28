@@ -11,6 +11,9 @@
 # ★ **건너뛴 것은 통과가 아니다.** `--only` 로 돈 실행은 마지막 `부분 실행` 단계가 실패시킨다.
 # ★ 레이크 검사는 **이 기계에서만** 돈다. CI 에는 SSD 가 없다 — 없는 것이 설계라서 CI 에서는 「CI 밖」 으로
 #   찍고 세지 않는다. 이 기계에서 SESHAT_DATA 가 비었으면 실패다(조용한 통과를 막는다).
+# ★ **훅 검사와 CI 검사는 서로 반대쪽에서만 돈다**(DECISIONS §170). 훅은 커밋할 때 도는 것이라
+#   CI 에는 깔 까닭이 없고 — CI 는 커밋을 안 한다 — CI 판정은 CI 안에서 보는 것이 뜻이 없다.
+#   2026-09-28 이 둘을 안 갈라서 **CI 가 네 판째 빨간데 이 기계에서는 초록이었다.**
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 1
 . tools/lib/env.sh; load_env .env
@@ -33,7 +36,8 @@ step() {  # step 이름 명령...
 }
 
 
-step 훅                 bash tools/hookcheck.sh --check
+if [ "${CI:-}" = "true" ]; then NAMES+=("훅"); MARKS+=("CI 밖 — CI 는 커밋을 안 한다")
+else step 훅            bash tools/hookcheck.sh --check; fi
 step ruff               uv run ruff check .
 step pytest             uv run pytest -q
 step check_docs         uv run python tools/check_docs.py
@@ -44,6 +48,10 @@ step ontology           uv run python tools/check_ontology.py
 step catalog            uv run python tools/check_catalog.py
 if [ "${CI:-}" = "true" ]; then NAMES+=("lake"); MARKS+=("CI 밖 — SSD 는 이 기계에만 있다")
 else step lake          uv run python tools/lake.py check; fi
+# ★ **이 기계가 초록인 것과 CI 가 초록인 것은 다른 말이다**(DECISIONS §170). 훅을 만들고 나서
+#   진짜 강제자를 안 보게 됐다 — 네 판을 빨간 채로 밀었다
+if [ "${CI:-}" = "true" ]; then NAMES+=("ci"); MARKS+=("CI 안 — 이 판이 그 판이다")
+else step ci            uv run python tools/ci_status.py; fi
 
 echo
 for i in "${!NAMES[@]}"; do printf '  %-16s %s\n' "${NAMES[$i]}" "${MARKS[$i]}"; done

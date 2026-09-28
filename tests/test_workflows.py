@@ -114,3 +114,23 @@ def test_훅이_규칙을_두_번_적지_않는다():
     몸 = "\n".join(x.split("#", 1)[0] for x in
                    (ROOT / ".githooks/pre-commit").read_text(encoding="utf-8").splitlines())
     assert "pytest" not in 몸, "커밋마다 7초를 물리면 사람이 훅을 끈다 — pytest 는 verify 의 몫이다"
+
+
+def test_CI_에서_안_도는_단계는_까닭을_적는다():
+    """★ **2026-09-28 CI 가 네 판째 빨간 것을 아무도 몰랐다**(DECISIONS §170).
+
+    `verify.sh` 가 CI 에서 훅을 검사하고 있었다 — **CI 는 커밋을 안 하므로 깔 까닭이 없다.**
+    이 기계에서는 훅이 깔려 있어 초록이었고, 빨간 것은 GitHub 에만 있었고, 아무도 안 봤다.
+    """
+    v = (ROOT / "tools/verify.sh").read_text(encoding="utf-8")
+    for 이름, 까닭 in (("훅", "CI 는 커밋을 안 한다"), ("lake", "SSD 는 이 기계에만")):
+        블록 = v[v.index(f'NAMES+=("{이름}")'):]
+        assert 까닭 in 블록.splitlines()[0], f"{이름} 이 CI 에서 왜 안 도는지 안 적혀 있다"
+
+
+def test_verify_가_CI_판정을_본다():
+    """★ **이 기계가 초록인 것과 CI 가 초록인 것은 다른 말이다**(DECISIONS §170).
+    훅은 이 기계에만 있다 — 남의 PR 도 새로 받은 저장소도 안 막는다. **강제자는 CI 다.**"""
+    v = (ROOT / "tools/verify.sh").read_text(encoding="utf-8")
+    assert "tools/ci_status.py" in v
+    assert v.index("ci_status.py") > v.index("tools/lake.py"), "CI 판정은 마지막에 본다"
