@@ -34,6 +34,13 @@ KEEP = "keep in English"
 FENCE = ("Translate ordinary prose only. Identifiers, API and class names, enum and constant "
          "values, flags, paths and code tokens must be copied from the source exactly as "
          "written, even when the parts they are made of look like English words.")
+# ★ **콘솔 라벨은 위 울타리 밖이다**(H-060 · DECISIONS §142). 식별자도 API 이름도 아니고 **사람이
+#   누르는 것의 이름**이라, 울타리를 세우고도 `ui` 가 0.207 → 0.183 으로 떨어졌다. 한국어 AWS 문서는
+#   콘솔 라벨을 영어로 두고 괄호로 뜻만 붙인다(DECISIONS §123) — 그 관행을 한 줄로 적는다.
+#   **d001 에서 본 라벨을 예로 적지 않는다**(§130) — 시험 셋에 맞춘 프롬프트가 된다.
+FENCE_UI = ("Names of console buttons, menus, fields, tabs and panes stay in English as they appear "
+            "in the console; Korean AWS documentation keeps them in English and adds the Korean "
+            "meaning in brackets after them.")
 
 
 def for_line(onto: list[dict], src: str, cap: int = CAP) -> list[tuple[str, str]]:
@@ -56,9 +63,11 @@ def for_line(onto: list[dict], src: str, cap: int = CAP) -> list[tuple[str, str]
     return out
 
 
-def block(pairs: list[tuple[str, str]], fence: bool = False) -> str:
+def block(pairs: list[tuple[str, str]], fence: bool = False, ui: bool = False) -> str:
     """프롬프트에 실을 토막. **비면 빈 글자다** — 빈 사전을 실으면 모델이 없는 것을 찾는다.
 
+    ★ `ui` — 울타리에 **콘솔 라벨** 한 갈래를 더한다(H-060). `fence` 없이는 안 선다 — 울타리가
+      없는데 갈래만 더하면 그것은 딴 처치다.
     ★ `fence` — 목록 뒤에 **어디까지가 사전의 일인지**를 붙인다. 기본이 꺼짐인 것은 이미 이 함수로
       잰 판(H-056 · `runs/H-056-gloss-*`)이 있기 때문이다. **측정된 처치의 뜻을 뒤에서 바꾸지 않는다** —
       울타리는 새 팔로 잰다(§134).
@@ -66,4 +75,6 @@ def block(pairs: list[tuple[str, str]], fence: bool = False) -> str:
     if not pairs:
         return ""          # 울타리만 남기지 않는다 — 사전 없는 줄에 경고만 주면 그것은 딴 처치다
     몸 = HEAD + "\n" + "\n".join(f"- {en} → {ko}" for en, ko in pairs)
-    return 몸 + "\n" + FENCE if fence else 몸
+    if not fence:
+        return 몸          # 잰 팔의 뜻을 뒤에서 바꾸지 않는다 — `ui` 는 울타리 위에만 선다
+    return 몸 + "\n" + FENCE + (" " + FENCE_UI if ui else "")

@@ -126,3 +126,28 @@ def test_서빙_배선_팔이_기록판_팔과_하나만_다르다():
     assert 새 in backends.REPAIR_ARMS, "고치는 판을 쓰면 그 조건도 머리줄에 실려야 한다(§57)"
     # 이름이 곧 배선이다 — 기록판 팔 이름에 `gloss2` 를 끼운 것이어야 한다
     assert 새 == 옛.replace("+ph+", "+ph+gloss2+")
+
+
+def test_콘솔_라벨_갈래는_울타리_위에만_선다():
+    """울타리 없이 갈래만 더하면 그것은 딴 처치다 — 하나만 달라야 무엇이 효과인지 가른다(§134)."""
+    assert glossary.FENCE_UI not in glossary.block([("quota", "할당량")], ui=True)
+    토막 = glossary.block([("quota", "할당량")], fence=True, ui=True)
+    assert glossary.FENCE in 토막 and glossary.FENCE_UI in 토막
+
+
+def test_울타리_팔의_뜻을_뒤에서_안_바꾼다():
+    """`runs/H-057-gloss2-*` 가 `ui` 없는 울타리로 잰 판이다."""
+    assert glossary.FENCE_UI not in glossary.block([("quota", "할당량")], fence=True)
+
+
+def test_콘솔_갈래도_d001_사례를_안_적는다():
+    for 본것 in ("Security Groups", "Type", "유형", "Create bucket"):
+        assert 본것 not in glossary.FENCE_UI
+
+
+def test_콘솔_팔이_울타리_팔과_하나만_다르다():
+    새, 옛 = "gemma3-4b+ph+gloss3+endings", "gemma3-4b+ph+gloss2+endings"
+    assert 새 in backends.REGISTRY
+    assert backends.OLLAMA_OF[새] == backends.OLLAMA_OF[옛]
+    assert backends.WEIGHTS[새] == backends.WEIGHTS[옛]
+    assert backends.DECODING_OF[새] == backends.DECODING_OF[옛]

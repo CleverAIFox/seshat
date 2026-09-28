@@ -222,7 +222,7 @@ def ollama_chat(model: str, system: str, extra: dict | None = None, suffix: str 
 
 
 def ollama_chat_ref(model: str, system: str, cap: int = 12, extra: dict | None = None,
-                    fence: bool = False):
+                    fence: bool = False, ui: bool = False):
     """줄마다 **그 줄의 용어집**을 체계 지시에 붙여 부른다(DECISIONS §134 · `seshat/glossary.py`).
 
     ★ `ollama_chat` 과 배선이 같고 **체계 지시만 줄마다 다르다.** 달라진 것이 하나여야 무엇이
@@ -241,7 +241,7 @@ def ollama_chat_ref(model: str, system: str, cap: int = 12, extra: dict | None =
         url = os.environ.get("OLLAMA_URL", OLLAMA_URL).rstrip("/") + "/api/chat"
         out = []
         for t in texts:
-            토막 = glossary.block(glossary.for_line(onto, t, cap), fence=fence)
+            토막 = glossary.block(glossary.for_line(onto, t, cap), fence=fence, ui=ui)
             body = _json.dumps({"model": model, "stream": False, "options": DECODING,
                                 "messages": [{"role": "system",
                                               "content": system + ("\n\n" + 토막 if 토막 else "")},
@@ -417,6 +417,11 @@ REGISTRY: dict[str, tuple[Backend, str]] = {
     # ★ **서빙 후보 배선에 울타리 사전을 얹은 팔**(H-059). 기록판 팔과 **`gloss2` 하나만 다르다** —
     #   `+retry` 도 `+endings` 도 `+terms` 도 그대로 둔다. 고치는 판(`_gemma3_repair`)은 사전 없이
     #   부른다 — 기록판 팔과 같게 두어야 달라진 것이 하나가 된다(DECISIONS §134)
+    # ★ **울타리에 콘솔 라벨 한 갈래를 더한 팔**(H-060). `gloss2` 와 **문장 하나만** 다르다
+    "gemma3-4b+ph+gloss3+endings": (
+        with_endings(with_placeholders(
+            ollama_chat_ref("gemma3:4b", GENERIC_SYSTEM, fence=True, ui=True))),
+        "gemma3:4b+ph+gloss3+endings"),
     "gemma3-4b+ph+gloss2+retry+endings+terms": (
         with_terms(with_endings(with_placeholders(
             ollama_chat_ref("gemma3:4b", GENERIC_SYSTEM, fence=True), repair=_gemma3_repair))),
@@ -441,7 +446,8 @@ OLLAMA_OF.update({"translategemma-4b": "translategemma:4b", "translategemma-4b+p
                   "gemma3-4b+ph+gloss+endings": "gemma3:4b",
                   "gemma3-4b+ph+gloss+endings+terms": "gemma3:4b",
                   "gemma3-4b+ph+gloss2+endings": "gemma3:4b",
-                  "gemma3-4b+ph+gloss2+retry+endings+terms": "gemma3:4b"})
+                  "gemma3-4b+ph+gloss2+retry+endings+terms": "gemma3:4b",
+                  "gemma3-4b+ph+gloss3+endings": "gemma3:4b"})
 
 # ★ **어느 ollama 모델이 어느 가중치인가.** `from_pretrained` 를 거치지 않는 호출은 라이선스 검사의
 #   정규식이 보지 못한다. 선언을 검사가 대장과 대조한다(DECISIONS §14).
