@@ -278,15 +278,39 @@ def rows(onto: list[dict], picked: list[Line]) -> list[dict]:
     return out
 
 
-def choose(found: dict[str, list[Line]], n: int, seed: int, cap: int) -> list[Line]:
+def 이미_쓴_문장(셋들: list[str]) -> set[str]:
+    """이미 만든 셋들이 든 원문. **떼어둔 셋은 겹치면 떼어둔 것이 아니다**(DECISIONS §188).
+
+    ★ 씨만 바꾸면 겹친다 — 같은 못에서 다시 뜨는 것이므로 몇십 줄은 반드시 같이 나온다.
+      그 줄은 **사전을 캘 때 본 줄**이고, 그 줄로 다시 재면 누수가 그대로 남는다(PLAN #37).
+    """
+    본 = set()
+    for x in 셋들:
+        길 = pathlib.Path(x)
+        if not 길.exists():
+            raise SystemExit(f"뺄 셋이 없다 — {x}")
+        for line in 길.read_text(encoding="utf-8").splitlines():
+            if line.strip():
+                d = json.loads(line)
+                if not d.get("meta") and d.get("src"):
+                    본.add(d["src"])
+    return 본
+
+
+def choose(found: dict[str, list[Line]], n: int, seed: int, cap: int,
+           뺄것: set[str] | None = None) -> list[Line]:
     """안내서마다 `cap` 까지 자르고 합쳐서 `n` 을 뽑는다. **해시로 정렬한다** — 순서가 기계를 안 탄다.
 
     ★ **뽑는 열쇠는 문장 글자뿐이다**(`t[0]` = `Line.text`). 줄이 표시를 더 들고 다녀도 같은 인자면
       같은 문장이 나온다 — 표시를 붙이는 일이 셋을 바꾸지 않는다.
     """
+    뺄것 = 뺄것 or set()
     pool: list[Line] = []
     for guide in sorted(found):
-        got = sorted(found[guide], key=lambda t: hashlib.sha256(t[0].encode()).hexdigest())
+        # ★ **자르기 전에 뺀다**(DECISIONS §188). `cap` 으로 자른 뒤에 빼면 안내서마다 남는 수가
+        #   달라져 **셋의 구성이 조용히 기운다** — 문장이 많은 안내서가 더 많이 남는다
+        got = [ln for ln in found[guide] if ln[0] not in 뺄것]
+        got = sorted(got, key=lambda t: hashlib.sha256(t[0].encode()).hexdigest())
         pool += [ln._replace(guide=guide) for ln in got[:cap]]
     pool.sort(key=lambda t: hashlib.sha256(t[0].encode()).hexdigest())
     if len(pool) < n:
@@ -301,6 +325,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--seed", type=int, default=21)
     ap.add_argument("--cap", type=int, default=400, help="안내서 하나에서 가져올 최대 문장")
     ap.add_argument("--guides", default="", help="쉼표로 고른다. 비면 전부")
+    ap.add_argument("--exclude", action="append", default=[], metavar="셋",
+                    help="이 셋들이 든 문장은 뺀다 — **떼어둔 셋**을 만든다(PLAN #37)")
     ap.add_argument("--list", action="store_true")
     a = ap.parse_args(argv)
     if a.list:
@@ -324,7 +350,10 @@ def main(argv: list[str] | None = None) -> int:
         found[g] = harvest(onto, cache / g)
         print(f"  {g:48} {len(found[g]):>6}문장  {shas[g][:10]}", file=sys.stderr)
 
-    picked = choose(found, a.n, a.seed, a.cap)
+    뺄것 = 이미_쓴_문장(a.exclude)
+    if 뺄것:
+        print(f"  뺄 문장 {len(뺄것)} — {' · '.join(a.exclude)}", file=sys.stderr)
+    picked = choose(found, a.n, a.seed, a.cap, 뺄것)
     made = rows(onto, picked)
     meta = {"meta": True,
             "about": f"AWS 공식 문서 {len(guides)}권에서 뽑은 도메인 문장 {a.n}줄 · seed {a.seed} · 안내서당 최대 {a.cap}",
@@ -332,6 +361,8 @@ def main(argv: list[str] | None = None) -> int:
             "attribution": f"© Amazon Web Services, Inc. · {ORG} · {LICENSE}",
             "sources": {g: shas[g] for g in sorted(shas)},
             "made_by": "tools/fetch_awsdocs.py",
+            # ★ **떼어둔 셋인가** — 어느 셋과 안 겹치는지 적는다(PLAN #37 · DECISIONS §188)
+            **({"held_out_from": list(a.exclude)} if a.exclude else {}),
             # ★ **어느 사전으로 만든 셋인가**(DECISIONS §171 · PLAN #36). `keep` 자리는 이 셋을 만들 때의
             #   온톨로지가 찍은 것이라 **사전이 넓어져도 안 늘어난다** — 2026-09-28 사전에 `AWS` 를 넣었는데
             #   `keep` 이 한 자리도 안 움직인 것이 그 자국이다(§166). 종전에는 **이 사실이 아무 데도

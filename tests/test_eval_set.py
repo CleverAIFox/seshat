@@ -4,6 +4,8 @@ import pathlib
 
 from seshat import evaluate as ev
 
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+
 SEED = pathlib.Path(__file__).resolve().parents[1] / "data/eval/seed.jsonl"
 
 
@@ -66,6 +68,7 @@ def test_없는_평가셋은_받는_법을_말한다():
     import pytest
 
     from seshat import evaluate as ev
+
     with pytest.raises(SystemExit) as e:
         ev.load("data/bench/받은적없는셋.jsonl")
     말 = str(e.value)
@@ -74,3 +77,37 @@ def test_없는_평가셋은_받는_법을_말한다():
     with pytest.raises(SystemExit) as e2:
         ev.load("data/probes/없는탐침.jsonl")
     assert "tools/make_probes.py" in str(e2.value)
+
+
+def _fetch():
+    import importlib.util
+    s = importlib.util.spec_from_file_location("fa", ROOT / "tools/fetch_awsdocs.py")
+    m = importlib.util.module_from_spec(s)
+    s.loader.exec_module(m)
+    return m
+
+
+def test_떼어둔_셋은_겹친_문장을_뺀다(tmp_path):
+    """★ **씨만 바꾸면 겹친다**(DECISIONS §188). 같은 못에서 다시 뜨는 것이므로 몇십 줄은
+    반드시 같이 나오고, 그 줄은 **사전을 캘 때 본 줄**이다 — 그러면 떼어둔 것이 아니다(PLAN #37)."""
+    fa = _fetch()
+    옛 = tmp_path / "d001.jsonl"
+    옛.write_text("\n".join(json.dumps(x, ensure_ascii=False) for x in [
+        {"meta": True, "about": "옛 셋"},
+        {"id": "a", "src": "Use Amazon S3 to store objects."},
+        {"id": "b", "src": "Create a DynamoDB table."}]) + "\n", encoding="utf-8")
+    뺄것 = fa.이미_쓴_문장([str(옛)])
+    assert 뺄것 == {"Use Amazon S3 to store objects.", "Create a DynamoDB table."}
+
+    줄 = [fa.Line("Use Amazon S3 to store objects.", ()), fa.Line("A brand new sentence here.", ()),
+          fa.Line("Create a DynamoDB table.", ()), fa.Line("Another fresh one for the pool.", ())]
+    got = fa.choose({"g": 줄}, 2, 21, 400, 뺄것)
+    assert {x[0] for x in got} == {"A brand new sentence here.", "Another fresh one for the pool."}
+
+
+def test_없는_셋을_빼라고_하면_멈춘다(tmp_path):
+    import pytest
+
+    fa = _fetch()
+    with pytest.raises(SystemExit):
+        fa.이미_쓴_문장([str(tmp_path / "없다.jsonl")])
