@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# .githooks/pre-commit — **커밋 시점 방어.** 세샤트에는 이것이 없었고 `verify.sh` 를 사람이
+# 기억해서 돌렸다(DECISIONS §164). 기억은 강제자가 아니다.
+#
+# 켜기:   bash tools/hookcheck.sh --install     (기계 설정을 건드리므로 무엇을 하는지 먼저 찍는다)
+# 넘기기: git commit --no-verify                (까닭을 커밋 메시지에 남길 것)
+#
+# ★ **빠른 것만 돈다.** `pytest` 는 `verify.sh` 의 몫이다 — 커밋마다 7초를 물리면 사람이 훅을 끈다.
+#   여기 도는 넷은 다 합쳐 1초 아래이고, **문서와 대장의 거짓말을 커밋 전에 막는다.**
+# ★ **규칙을 여기 적지 않는다.** 검사의 정본은 `tools/` 의 도구들이다 — 목록을 두 곳에 적으면
+#   한쪽만 고쳐진다(DECISIONS §157 · §158).
+set -uo pipefail
+cd "$(git rev-parse --show-toplevel)" || exit 1
+
+# ★ **도달 탐침.** 「훅 파일이 있는가」 와 「훅이 도는가」 는 다른 물음이다 — 파이어레인은 전역 훅의
+#   `exit 0` 뒤에 붙은 죽은 스니펫이 문자열 검사를 통과한 적이 있다.
+# ★ **탐침은 막는다.** `exit 0` 으로 두면 이 변수 한 줄이 **모든 커밋의 훅을 조용히 통과**시키고
+#   `--no-verify` 와 달리 흔적도 안 남는다. **조용한 통과 대신 시끄러운 차단**이다.
+if [ -n "${SESHAT_HOOK_PROBE:-}" ]; then
+  echo "[seshat] pre-commit 도달"
+  printf '  ★ 탐침 모드다 — 검사를 안 돌았으므로 커밋을 막는다.\n' >&2
+  printf '    평소에 이 줄이 보이면 SESHAT_HOOK_PROBE 를 지운다.\n' >&2
+  exit 1
+fi
+
+P="uv run python"; command -v uv >/dev/null 2>&1 || P="python3"
+# ★ **변수 이름은 ASCII 다.** 배시는 한글 이름을 못 받는다(DECISIONS §164)
+RED=$'\033[31m'; Z=$'\033[0m'; [ -t 2 ] || { RED=""; Z=""; }
+bad=0
+for chk in check_docs.py doc_fsck.py check_hypotheses.py; do
+  $P "tools/$chk" || bad=1
+done
+command -v uv >/dev/null 2>&1 && { uv run ruff check . || bad=1; }
+
+if [ "$bad" != 0 ]; then
+  printf '%s✗ 커밋 전 검사가 막았다%s — 고치거나 `git commit --no-verify`(까닭을 메시지에)\n' "$RED" "$Z" >&2
+  exit 1
+fi

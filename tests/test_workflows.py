@@ -81,3 +81,36 @@ def test_예약_작업은_정각을_피한다():
     """정각에 세상의 작업이 몰려 밀린다. 분을 흩는다."""
     m = re.search(r'cron: "(\d+) ', (ROOT / ".github/workflows/papers.yml").read_text(encoding="utf-8"))
     assert m and m.group(1) not in ("0", "30")
+
+
+def test_셸의_변수_이름은_ASCII_다():
+    """배시는 한글 변수 이름을 못 받는다 — 2026-09-28 에 **두 번째**로 겪었다(DECISIONS §164).
+
+    한 번은 우연이고 두 번은 자리다. 셸 파일 전부를 훑어 막는다.
+    """
+    import re
+    나쁜 = []
+    for f in (*ROOT.glob("tools/*.sh"), *ROOT.glob(".githooks/*"), *ROOT.glob(".github/workflows/*.yml")):
+        if not f.is_file():
+            continue
+        for i, 줄 in enumerate(f.read_text(encoding="utf-8").splitlines(), 1):
+            몸 = 줄.split("#", 1)[0]
+            for m in re.finditer(r"(^|[;&|]|\s)([A-Za-z_]*[^\x00-\x7F][^\s=]*)=", 몸):
+                나쁜.append(f"{f.name}:{i} {m.group(2)}=")
+    assert not 나쁜, "셸 변수 이름은 ASCII 여야 한다\n" + "\n".join(나쁜)
+
+
+def test_커밋_훅이_탐침을_들고_있다():
+    """**탐침은 막는다.** `exit 0` 으로 두면 환경변수 한 줄이 모든 커밋의 훅을 조용히 통과시키고
+    `--no-verify` 와 달리 흔적도 안 남는다(DECISIONS §164)."""
+    훅 = (ROOT / ".githooks/pre-commit").read_text(encoding="utf-8")
+    assert "SESHAT_HOOK_PROBE" in 훅
+    탐침 = 훅.split("SESHAT_HOOK_PROBE", 1)[1].split("fi", 1)[0]
+    assert "exit 1" in 탐침 and "exit 0" not in 탐침, "탐침이 통과시키면 그것은 영구 우회 스위치다"
+
+
+def test_훅이_규칙을_두_번_적지_않는다():
+    """검사의 정본은 `tools/` 의 도구들이다 — 목록을 두 곳에 적으면 한쪽만 고쳐진다(§157)."""
+    몸 = "\n".join(x.split("#", 1)[0] for x in
+                   (ROOT / ".githooks/pre-commit").read_text(encoding="utf-8").splitlines())
+    assert "pytest" not in 몸, "커밋마다 7초를 물리면 사람이 훅을 끈다 — pytest 는 verify 의 몫이다"

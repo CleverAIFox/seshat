@@ -33,6 +33,7 @@ step() {  # step 이름 명령...
 }
 
 
+step 훅                 bash tools/hookcheck.sh --check
 step ruff               uv run ruff check .
 step pytest             uv run pytest -q
 step check_docs         uv run python tools/check_docs.py
