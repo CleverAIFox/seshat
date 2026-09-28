@@ -122,3 +122,22 @@ def test_줄_수가_다르면_대조를_멈춘다(capsys, tmp_path):
             "\n".join(json.dumps(x, ensure_ascii=False) for x in (head, row)) + "\n", encoding="utf-8")
     assert cr.main([str(tmp_path / "a.jsonl"), str(tmp_path / "b.jsonl")]) == 1
     assert "줄 수가 다르다" in capsys.readouterr().out
+
+
+def test_토막_길이는_가린_뒤에_센다():
+    """★ **`+ph` 가 이름을 먼저 뺀다**(DECISIONS §177). 원문으로 세면 이름까지 세어
+    실제 토막보다 길게 나오고, 그러면 H-075 의 배수가 통째로 틀린다."""
+    rows = {"x": {"src": "Use Amazon S3 with the console to create a table."}}
+    got = cr.토막_길이(["x"], rows)["x"]
+    from seshat import glossary, ontology
+    onto = ontology.load()
+    날것 = len(glossary.for_line(onto, rows["x"]["src"]))
+    assert got <= 날것, "가린 뒤가 원문보다 길 수 없다"
+    assert got >= 1, "개념이 하나는 잡혀야 이 시험이 뜻이 있다"
+
+
+def test_중앙값():
+    assert cr.중앙([]) == 0.0
+    assert cr.중앙([3]) == 3.0
+    assert cr.중앙([1, 3]) == 2.0
+    assert cr.중앙([5, 1, 3]) == 3.0

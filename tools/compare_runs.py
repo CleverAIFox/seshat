@@ -146,12 +146,39 @@ def compare(a_rows: dict, b_rows: dict, spec: dict[str, dict]) -> dict:
             "lost_a": lost_a, "lost_b": lost_b, "by_construction": dict(by_cons)}
 
 
+
+def 토막_길이(ids, rows: dict) -> dict[str, int]:
+    """줄마다 **용어집 토막에 실리는 항목 수**(DECISIONS §177 · H-075).
+
+    ★ **가린 뒤에 센다.** `+ph` 가 이름을 먼저 빼므로 사전은 **가려진 글**에서 찾는다 —
+      원문으로 세면 이름까지 세어 실제보다 길게 나온다(`glossary.for_line` 의 문서주석과 같은 말).
+    """
+    from seshat import glossary, ontology, terms
+    onto = ontology.load()
+    out = {}
+    for i in ids:
+        src = rows.get(i, {}).get("src") or ""
+        가린, _ = terms.mask(onto, src)
+        out[i] = len(glossary.for_line(onto, 가린))
+    return out
+
+
+def 중앙(xs: list[int]) -> float:
+    if not xs:
+        return 0.0
+    s = sorted(xs)
+    n = len(s)
+    return float(s[n // 2]) if n % 2 else (s[n // 2 - 1] + s[n // 2]) / 2
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("a")
     ap.add_argument("b")
     ap.add_argument("--set", default="")
     ap.add_argument("--show", type=int, default=6)
+    ap.add_argument("--open", dest="open_", default="",
+                    choices=["", "style"], help="style — B 만 합쇼체가 깨진 줄을 전부 연다(H-075)")
     a = ap.parse_args(argv)
     ha, ra = read(a.a)
     hb, rb = read(a.b)
@@ -199,6 +226,22 @@ def main(argv=None) -> int:
         print(f"    [둘 다 · {spec.get(i, {}).get('construction', '?')}] {ra[i]['src']}\n      A: {ra[i]['out']}\n      B: {rb[i]['out']}")
     for i in sf["flips"][: a.show]:
         print(f"    [{spec.get(i, {}).get('construction', '?')}] {ra[i]['src']}\n      A: {ra[i]['out']}\n      B: {rb[i]['out']}")
+    if a.open_ == "style":
+        # ★ **7줄은 세는 것이 아니라 여는 것이다**(H-075). 평균으로는 「왜」 가 안 나온다
+        깨진 = sf["b_only"]
+        길이 = 토막_길이(rb.keys(), rb)
+        깨진중앙, 전체중앙 = 중앙([길이[i] for i in 깨진]), 중앙(list(길이.values()))
+        print(f"\n  ── B 만 합쇼체가 깨진 줄 {len(깨진)} 를 전부 연다  [H-075]")
+        for i in 깨진:
+            print(f"    [{i} · 용어집 {길이.get(i, 0)}항목 · {spec.get(i, {}).get('construction', '?')}]")
+            print(f"      원문: {ra[i]['src'][:100]}")
+            print(f"      A   : …{ra[i]['out'][-40:]}")
+            print(f"      B   : …{rb[i]['out'][-40:]}")
+        배 = (깨진중앙 / 전체중앙) if 전체중앙 else 0.0
+        판 = ("**길어서 샌다 — 참**" if 배 >= 1.5 else
+              "**거짓 — 토막 길이 탓이 아니다**" if 배 <= 1.2 else "**사이다 — 표본이 모자란다**")
+        print(f"\n    용어집 항목 수 중앙값 — 깨진 줄 {깨진중앙} · 전체 {전체중앙} · {배:.2f}배 → {판}")
+        print("    (미리 그은 선: 1.5배 이상이면 참 · 1.2배 아래면 거짓)")
     mc, ml = term_misses(ra, spec)
     print(f"\n  A 에서 개념이 없다고 센 자리 {len(ml)} — 모델이 버렸나 · 온톨로지가 모르는 표기인가  [H-020]")
     for k, c in mc.most_common(8):
