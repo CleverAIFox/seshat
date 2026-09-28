@@ -154,7 +154,13 @@ def _ask(req, model: str, 무엇: str = ""):
             raise _늦다(model, 초, 무엇) from None
         except urllib.error.HTTPError as e:
             if e.code not in _잠깐 or 마지막:
-                raise SystemExit(f"{model} 이 {e.code} 로 거절했다 — {req.full_url}\n"
+                # ★ **막으면서 넘는 길을 같이 준다**(DECISIONS §196). ollama 의 404 는 거의 항상
+                #   **「그 모델이 이 기계에 없다」** 이고 넘는 길은 `ollama pull` 하나다. 2026-09-29
+                #   12B 를 부르다 이것에 걸렸고, 글에는 「404 로 거절했다」 뿐이라 **찾으러 갔다.**
+                #   오늘 네 번째로 같은 모양이다(§174 · §175 · §188).
+                길 = (f"\n    이 기계에 그 모델이 없다 — `ollama pull {model}`"
+                      f"\n    있는 것 : `ollama list`") if e.code == 404 else ""
+                raise SystemExit(f"{model} 이 {e.code} 로 거절했다 — {req.full_url}{길}\n"
                                  f"    막힌 줄 : {무엇[:80]}") from None
             까닭 = f"{e.code}"
         except (ConnectionResetError, http.client.RemoteDisconnected) as e:
