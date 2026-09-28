@@ -28,6 +28,16 @@ from seshat import catalog  # noqa: E402
 
 PATH = ROOT / "data/scoreboard.toml"
 
+# ★ **기록판은 반올림해서 든다** — 읽으라고 만든 파일이라 16자리를 적지 않는다. 그러면 **견줄 때도
+#   같은 자리에서 견뎌야 한다.** 2026-09-28, 쓸 때만 반올림하고 견줄 때는 안 해서 `0.9771689…` 가
+#   자기가 세운 기록 `0.9772` 보다 작았다 — **승격한 팔이 다시 돌리면 무조건 막혔다**(DECISIONS §144).
+자리 = 4
+
+
+def 재(v):
+    """기록판에 적히는 그대로의 수. 없으면 없는 대로 둔다 — 못 잰 것은 0 이 아니다."""
+    return round(float(v), 자리) if isinstance(v, (int, float)) and not isinstance(v, bool) else v
+
 
 def load(path: pathlib.Path | None = None) -> dict:
     """★ **기본값을 `PATH` 로 묶지 않는다.** 기본 인자는 import 할 때 한 번 값이 박히므로,
@@ -81,7 +91,8 @@ def check(rec: dict, head: dict, pin: bool = False) -> tuple[list[str], list[str
                   f"**막지 않는다**(DECISIONS §32 · §96). 기준을 `rescore` 로 다시 박는다")
     tol = float(rec.get("tol", 0.0))
     for m in rec.get("guard", []):
-        옛, 새 = rec.get(m), head.get(m)
+        # **기록판에 적히는 자리에서 견준다.** 안 그러면 반올림이 올라간 값이 자기 기록에 막힌다
+        옛, 새 = 재(rec.get(m)), 재(head.get(m))
         if 옛 is None:
             말.append(f"{m}: 기록에 없다 — 이번 값 {새}")
             continue
@@ -104,9 +115,10 @@ def 올릴_것(rec: dict, head: dict, pin: bool = False) -> dict[str, float]:
     처음 = pin and not rec.get("set_sha256")
     out = {}
     for m in (*rec.get("guard", []), "term_off", "lit", "keep", "style"):
-        새 = head.get(m)
-        if isinstance(새, (int, float)) and (처음 or rec.get(m) is None or 새 > rec[m]):
-            out[m] = round(float(새), 4)
+        새 = 재(head.get(m))
+        # **오른 것도 같은 자리에서 본다** — 0.00001 짜리 「상승」 을 기록하면 다음 판이 그것에 막힌다
+        if isinstance(새, (int, float)) and (처음 or rec.get(m) is None or 새 > 재(rec[m])):
+            out[m] = 새
     return out
 
 

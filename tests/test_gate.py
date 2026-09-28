@@ -236,3 +236,28 @@ def test_고친_기록으로_다시_부르면_문이_지킨다(tmp_path, monkeyp
     막, _ = G.check(새rec, 머리(backend="새팔", set_sha256="셋", onto_sha256="사전",
                                 term_off=0.85, lit=0.8, keep=0.95))
     assert 막 and "term_off" in 막[0]
+
+
+def test_자기가_세운_기록에_안_막힌다():
+    """기록판은 4자리로 반올림해 든다 — **견줄 때도 같은 자리여야 한다**(DECISIONS §144).
+
+    2026-09-28 승격 직후 같은 파일을 다시 넣었더니 `0.9771689497716894 < 0.9772` 로 막혔다.
+    반올림이 올라가는 값은 **자기가 세운 기록에 영영 막힌다.**
+    """
+    rec = {**REC, "term_off": 0.9772, "lit": 0.8099, "guard": ["term_off", "lit"], "tol": 0.0}
+    막, 말 = G.check(rec, 머리(term_off=0.9771689497716894, lit=0.8098591549295775))
+    assert 막 == [], f"자기 기록에 막혔다 — {막}"
+
+
+def test_반올림_아래로_떨어지면_그래도_막는다():
+    """같은 자리에서 견주는 것이지 봐주는 것이 아니다."""
+    rec = {**REC, "term_off": 0.9772, "guard": ["term_off"], "tol": 0.0}
+    막, _ = G.check(rec, 머리(term_off=0.97714))          # 0.9771 로 내려앉는다
+    assert 막 and "term_off" in 막[0]
+
+
+def test_반올림_안쪽_상승은_기록하지_않는다():
+    """0.00001 짜리 상승을 적으면 다음 판이 그 자릿수에 막힌다 — 같은 사고의 다른 얼굴이다."""
+    rec = {**REC, "term_off": 0.9772, "guard": ["term_off"], "tol": 0.0}
+    assert "term_off" not in G.올릴_것(rec, 머리(term_off=0.97721))
+    assert G.올릴_것(rec, 머리(term_off=0.97731))["term_off"] == 0.9773
