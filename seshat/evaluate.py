@@ -53,6 +53,8 @@ BATCH = 9
 # 합쇼체 종결. 마지막 문장부호 앞을 본다.
 _HAPSYO = re.compile(r"(습니다|ㅂ니다|[가-힣]니다|습니까|[가-힣]니까|십시오|시오)\s*[.?!]?\s*$")
 _SENT_END = re.compile(r"[.?!]\s*$")
+# 종결 부호로 조각낸다. **뒤에서부터 한글이 있는 첫 조각**이 판정 대상이다(DECISIONS §190)
+_SENT_SPLIT = re.compile(r"[.?!]")
 
 
 _LATIN = re.compile(r"[A-Za-z]")
@@ -97,13 +99,33 @@ def hangul(rows: list[dict], outs: list[str]) -> float | None:
 
 
 def is_hapsyo(ko: str) -> bool:
-    """마지막 줄의 끝이 합쇼체인가. 문장부호가 없는 명사구(보기 `S3 버킷`)는 **판정
-    밖**이다 — None 이 아니라 True 로 센다. 어미가 없는 것을 틀렸다고 세면 짧은 보기가
-    많은 평가셋에서 style 이 거짓으로 낮아진다."""
+    """마지막 줄이 합쇼체로 맺는가. 문장부호가 없는 명사구(보기 `S3 버킷`)는 **판정 밖**이다 —
+    None 이 아니라 True 로 센다. 어미가 없는 것을 틀렸다고 세면 짧은 보기가 많은 평가셋에서
+    style 이 거짓으로 낮아진다.
+
+    ★ **종결어미 뒤에 오는 꼬리를 벗긴다**(DECISIONS §190 · PLAN #40). `_HAPSYO` 는 줄 **끝**에
+      앵커돼 있어서, 옳게 맺고도 뒤에 목록이나 영어 이름이 붙으면 깨진 것으로 셌다. d001 에서
+      style 이 걸린 13줄 중 **다섯이 그것**이었다 —
+
+        역할은 … 포함합니다: 클러스터 전체, 인덱스 특정, 문서 수준 및 필드 수준.
+        … 다음 매개변수 중 하나 이상을 설정합니다. log.retention.hours, log.retention.minutes, …
+        더 자세한 내용은 신뢰 정책을 참조하십시오. Trust policy.
+
+      **셋 다 바른 번역이다.** 벗기는 것은 둘이다 — **콜론 뒤**(나열이다)와 **한글이 없는 뒤쪽
+      조각**(식별자 · 영어 제목이다).
+    ★ **헐겁게 만들지 않는다.** 한글이 있는 마지막 조각을 찾아 **그것이** 합쇼체인지 본다.
+      어순이 무너져 부사구로 끝나는 줄(`… 제어할 수 있으며, 누가 … 관계없이.`)은 **그대로 실패**다.
+    ★ **한글이 아예 없으면 실패다.** 그것은 번역이 아닌 줄이고, 여기서 봐주면 `hangul` 하나에만
+      걸린다 — **번역이 아닌 줄은 전부 놓침이다**(DECISIONS §52).
+    """
     last = ko.strip().splitlines()[-1] if ko.strip() else ""
     if not _SENT_END.search(last):
         return True
-    return bool(_HAPSYO.search(last))
+    몸 = last.rsplit(":", 1)[0] if ":" in last else last      # 콜론 뒤는 나열이다
+    for 조각 in reversed(_SENT_SPLIT.split(몸)):
+        if _HANGUL_CH.search(조각):
+            return bool(_HAPSYO.search(조각.strip()) or _HAPSYO.search(조각.strip() + "."))
+    return False                                              # 한글이 없다 — 번역이 아니다(§52)
 
 
 _찍은 = [0.0]          # 마지막으로 진척을 찍은 때(경과 초). 시간으로도 찍으려고 든다
@@ -203,7 +225,9 @@ MARKS = ("lit", "ui")
 #   지표의 뜻을 바꿀 때 손으로 올린다. 문(`tools/gate.py`)이 이 값이 다르면 비교를 거절한다.
 #   2 — `term` 이 줄 단위 `in` 에서 **출현 횟수**로 바뀌었다(2026-09-28)
 #   3 — 복수 `y→ies` 를 받는다(2026-09-28 · DECISIONS §160). `policies` 가 세어지기 시작한다
-METRICS_VER = "3"
+#   4 — `style` 이 **종결어미 뒤 꼬리를 벗긴다**(2026-09-28 · DECISIONS §190). 콜론 뒤 나열과
+#       한글 없는 뒤쪽 조각을 빼고 본다 — d001 에서 걸린 13줄 중 **다섯이 바른 번역**이었다
+METRICS_VER = "4"
 
 
 def marked(row: dict) -> list[tuple[int, int]]:

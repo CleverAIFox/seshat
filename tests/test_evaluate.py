@@ -457,3 +457,41 @@ def test_문이_막을_때_열린_가설을_같이_찍는다():
     assert "지금 실험 상태인 가설" in 말
     for h in 열린[:3]:
         assert h in 말, f"열린 {h} 가 막는 글에 없다"
+
+
+# ★ **d001 에서 실제로 걸린 열세 줄**(DECISIONS §190). 손으로 지어낸 예제가 아니라 **관측된 줄**이다 —
+#   지어낸 것으로 고치면 지어낸 것만 고쳐진다. 갈래는 사람이 눈으로 갈랐다(PLAN #40).
+_STYLE_13 = [
+    # (원문 id, 번역, 합쇼체인가) — 「바른 번역인데 판정기가 틀린 것」 다섯
+    ("0001", "역할은 권한의 모든 조합을 포함합니다: 클러스터 전체, 인덱스 특정, 문서 수준 및 필드 수준.", True),
+    ("0064", "The X-Amz-Target 헤더는 DynamoDB 연산의 이름을 포함합니다: GetItem.", True),
+    ("0223", "다음 매개변수 중 하나 이상을 설정합니다. log.retention.hours, log.retention.ms.", True),
+    ("0228", "더 자세한 내용은 신뢰 정책을 참조하십시오. Trust policy.", True),
+    ("0482", "이 섹션에서는 표현식에서 항목 속성을 참조하는 방법을 설명합니다. Amazon DynamoDB.", True),
+    # 「원문이 명사구라 합쇼체가 설 수 없는 것」 셋 — **여기서는 여전히 실패다.** 분모에서 빼는 것은
+    # 사람 판정이 할 일이고(`<셋>.style-na.txt`), 판정기를 헐겁게 해서 넘기면 안 된다
+    ("0130", "지정된 작업에 대한 트리거 목록.", False),
+    ("0571", "GSI range key update Value(FOR USER) — 수정 모드에서 새롭게 제공된 속성 값.", False),
+    # 「진짜 실패」 다섯 — 고친 뒤에도 실패로 남아야 한다
+    ("0066", "However, you can edit the description of the 역할 using IAM.", False),
+    ("0210", "ACLs가 비활성화되면 제어할 수 있으며, 누가 버킷에 객체를 업로드했는지와 관계없이.", False),
+    ("0270", "AWS Glue Type the name in either dot or bracket JSON syntax.", False),
+    ("0272", "AWS Glue는 작업이 실행될 때 상태 정보를 어떻게 처리하는가?", False),
+    ("0284", "더 자세한 내용은 모니터링 Kinesis Data Firehose를 사용하여 CloudWatch Logs 참조.", False),
+]
+
+
+@pytest.mark.parametrize("어느, 번역, 맞나", _STYLE_13)
+def test_종결어미_뒤_꼬리를_벗긴다(어느, 번역, 맞나):
+    """★ **13 중 여덟이 지표 탓이었다**(DECISIONS §190 · PLAN #40). 다섯은 판정기가 줄 끝에
+    앵커돼 있어서였고, 셋은 원문이 명사구라 합쇼체가 설 자리가 없어서였다 — **앞의 다섯만 고친다.**"""
+    assert ev.is_hapsyo(번역) is 맞나, f"awsdocs-{어느}"
+
+
+def test_고치면서_헐거워지지_않았다():
+    """★ **벗기는 것과 봐주는 것은 다르다.** 어순이 무너져 부사구로 끝나는 줄은 그대로 실패고,
+    한글이 아예 없는 줄도 실패다 — 번역이 아닌 줄은 전부 놓침이다(DECISIONS §52)."""
+    assert ev.is_hapsyo("버킷을 만듭니다.")
+    assert not ev.is_hapsyo("This is not translated at all.")
+    assert not ev.is_hapsyo("버킷을 만든다.")            # 평어체는 여전히 실패
+    assert ev.is_hapsyo("S3 버킷")                        # 문장부호 없는 명사구는 판정 밖
