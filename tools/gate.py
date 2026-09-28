@@ -124,6 +124,18 @@ def check(rec: dict, head: dict, pin: bool = False, 지금: str | None = None) -
     if rec.get("onto_sha256"):
         for x in compare.갈림(rec, head, ("onto_sha256",)):
             말.append(x.글() + " — `rescore` 로 기준을 다시 박는다")
+    # ★ **분모가 갈린 두 수는 높낮이를 말할 수 없다**(DECISIONS §169). 2026-09-28 문이 스스로
+    #   「자가 바뀌었다 · 사전이 바뀌었다」 를 찍고 **바로 다음 줄에서 그 수로 막았다** —
+    #   0.9532(982자리 · 자 3)를 0.9559(674자리 · 자 2)와 견줘서. `올릴_것` 은 이것을 이미
+    #   알고 있었고(§146) `check` 만 몰랐다 — **같은 판단이 두 곳에 있으면 한 곳만 고쳐진다**(§163).
+    #   박으러 온 판에서만 넘긴다. 그냥 돌린 판은 위의 「기록판이 낡았다」 가 이미 막았다
+    갈린분모 = compare.갈림(rec, head, compare.분모) if pin else []
+    if 갈린분모:
+        말.append("**분모가 갈렸다 — 지킴을 안 본다**("
+                  + " · ".join(compare.AXIS[g.키].이름 for g in 갈린분모) + ")\n"
+                  "    높낮이를 말할 수 없는 두 수다. 이번 실행의 값을 **그대로 옮긴다** —\n"
+                  "    다음 판부터 이 수가 선이 된다(DECISIONS §169)")
+        return 막, 말
     tol = float(rec.get("tol", 0.0))
     for m in rec.get("guard", []):
         # **기록판에 적히는 자리에서 견준다.** 안 그러면 반올림이 올라간 값이 자기 기록에 막힌다
@@ -152,8 +164,11 @@ def 올릴_것(rec: dict, head: dict, pin: bool = False, 받음: bool = False) -
     """
     # ★ **받아들인 판은 떨어진 값도 박는다**(DECISIONS §155). 안 박으면 기록판이 옛 선을 든 채로
     #   남고 **다음 판이 같은 자리에서 또 막힌다** — 사람이 한 번 정한 것을 매번 다시 정하게 된다
+    # ★ **`check` 와 같은 물음을 같은 곳에 던진다**(DECISIONS §169). 2026-09-28 까지 여기만
+    #   `metrics` 를 보고 `check` 는 아무것도 안 봐서, 문이 막는 판과 문이 쓰는 판이 **서로 다른
+    #   기준**으로 돌았다. `compare.분모` 가 그 물음의 유일한 자리다 — 사전도 분모를 바꾼다(§166)
     처음 = 받음 or (pin and (not rec.get("set_sha256")
-                            or bool(compare.갈림(rec, head, ("metrics",)))))
+                            or bool(compare.갈림(rec, head, compare.분모))))
     out = {}
     for m in (*rec.get("guard", []), "term_off", "lit", "keep", "style"):
         새 = 재(head.get(m))
@@ -261,10 +276,13 @@ def main(argv: list[str] | None = None) -> int:
             continue
         # ★ **선도 같은 자로 잰 것이어야 한다**(DECISIONS §147). 2026-09-28, 자를 바꾼 뒤에도 이 줄이
         #   새 수와 옛 수의 차를 찍고 있었다 — **비교를 거절하는 도구가 스스로 섞어 재고 있었다.**
-        다른자 = compare.갈림(t, head, ("metrics",))
+        # ★ **사전도 분모를 바꾼다**(DECISIONS §169). 이 줄이 `metrics` 만 보던 동안 `term_n` 674 로
+        #   잰 선과 982 로 잰 이번 값의 차를 찍고 있었다 — §147 을 고칠 때 축을 하나만 적은 탓이다
+        다른자 = compare.갈림(t, head, compare.분모)
         if 다른자:
-            print(f"  선    {t['arm']:<40} **다른 자로 잰 선이다** — 선 {다른자[0].가 or '없다'} · "
-                  f"이번 {다른자[0].나}. 차를 안 찍는다. `tools/rescore.py` 로 그 판을 다시 잰다")
+            print(f"  선    {t['arm']:<40} **분모가 다른 선이다**({다른자[0].이름}) — 선 "
+                  f"{다른자[0].가 or '없다'} · 이번 {다른자[0].나}. 차를 안 찍는다. "
+                  f"`tools/rescore.py` 로 그 판을 다시 잰다")
             continue
         # ★ **보호가 다르면 그 지표는 안 찍는다**(DECISIONS §156). 기계가 지킨 0.993 과 모델이 지킨
         #   0.9225 를 견주면 「넘었다」 가 거짓이 된다 — 자도 셋도 같아서 위의 검사가 다 통과한다

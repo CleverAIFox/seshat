@@ -330,8 +330,9 @@ def test_다른_자로_잰_선은_차를_안_찍는다(tmp_path, monkeypatch, ca
     board.write_text(
         '[[record]]\nset = "s"\nset_sha256 = "셋"\nonto_sha256 = "사전"\nmetrics = "' + 자 + '"\narm = "팔"\n'
         'term_off = 0.96\nlit = 0.81\nguard = ["term_off"]\ntol = 0.0\n\n'
-        '[[target]]\nset = "s"\narm = "옛선"\nterm_off = 0.9163\nlit = 0.923\n\n'
-        '[[target]]\nset = "s"\narm = "새선"\nmetrics = "' + 자 + '"\nterm_off = 0.90\nlit = 0.93\n',
+        '[[target]]\nset = "s"\narm = "옛선"\nonto_sha256 = "사전"\nterm_off = 0.9163\nlit = 0.923\n\n'
+        '[[target]]\nset = "s"\narm = "새선"\nonto_sha256 = "사전"\nmetrics = "' + 자 + '"\n'
+        'term_off = 0.90\nlit = 0.93\n',
         encoding="utf-8")
     run = tmp_path / "r-20260928-1.jsonl"
     run.write_text(json.dumps(머리(backend="팔", set_sha256="셋", onto_sha256="사전",
@@ -340,7 +341,7 @@ def test_다른_자로_잰_선은_차를_안_찍는다(tmp_path, monkeypatch, ca
     monkeypatch.setattr(G, "PATH", board)
     assert G.main([str(run)]) == 0
     out = capsys.readouterr().out
-    assert "옛선" in out and "다른 자로 잰 선이다" in out
+    assert "옛선" in out and "분모가 다른 선이다" in out
     assert "선까지 새선" in out, "같은 자로 잰 선은 그대로 찍어야 한다"
 
 
@@ -409,7 +410,7 @@ def test_기계가_지킨_수와_모델이_지킨_수를_안_견준다(tmp_path,
     board.write_text('[[record]]\nset = "s"\nset_sha256 = "셋"\nonto_sha256 = "사전"\nmetrics = "' + 자 + '"\n'
                      'arm = "우리"\nprotects = ["lit", "ui"]\nterm_off = 0.95\nlit = 0.99\n'
                      'guard = ["term_off"]\ntol = 0.0\n\n'
-                     '[[target]]\nset = "s"\narm = "배포본"\nmetrics = "' + 자 + '"\nterm_off = 0.90\nlit = 0.92\n',
+                     '[[target]]\nset = "s"\narm = "배포본"\nonto_sha256 = "사전"\nmetrics = "' + 자 + '"\nterm_off = 0.90\nlit = 0.92\n',
                      encoding="utf-8")
     run = tmp_path / "새-20260928-1.jsonl"
     run.write_text(json.dumps(머리(backend="우리", set_sha256="셋", onto_sha256="사전", metrics=자,
@@ -426,7 +427,7 @@ def test_보호가_같으면_그대로_견준다(tmp_path, monkeypatch, capsys):
     board.write_text('[[record]]\nset = "s"\nset_sha256 = "셋"\nonto_sha256 = "사전"\nmetrics = "' + 자 + '"\n'
                      'arm = "우리"\nprotects = ["lit"]\nterm_off = 0.95\nlit = 0.99\n'
                      'guard = ["term_off"]\ntol = 0.0\n\n'
-                     '[[target]]\nset = "s"\narm = "같은보호"\nmetrics = "' + 자 + '"\nprotects = ["lit"]\n'
+                     '[[target]]\nset = "s"\narm = "같은보호"\nonto_sha256 = "사전"\nmetrics = "' + 자 + '"\nprotects = ["lit"]\n'
                      'term_off = 0.90\nlit = 0.92\n', encoding="utf-8")
     run = tmp_path / "새-20260928-1.jsonl"
     run.write_text(json.dumps(머리(backend="우리", set_sha256="셋", onto_sha256="사전", metrics=자,
@@ -469,3 +470,57 @@ def test_박는_판에서도_셋이_다르면_막는다():
     rec = {**REC, "metrics": "3"}
     막, _ = G.check(rec, 머리(metrics="3", set_sha256="딴셋", term_off=0.99), pin=True, 지금="3")
     assert 막 and "셋이 다르다" in 막[0]
+
+
+def _판(tmp_path, 기록자, 기록사전, 판자, 판사전, **값):
+    """기록판 한 줄 · 실행 한 판. **분모 축만 바꿔 가며 본다**(DECISIONS §169)."""
+    board = tmp_path / "b.toml"
+    board.write_text(f'[[record]]\nset = "s"\nset_sha256 = "셋"\nonto_sha256 = "{기록사전}"\n'
+                     f'metrics = "{기록자}"\narm = "팔"\nrun = "옛판"\ndate = "2026-09-01"\n'
+                     'term_off = 0.9559\nkeep = 1.0\nguard = ["term_off", "keep"]\ntol = 0.0\n',
+                     encoding="utf-8")
+    run = tmp_path / "새-20260928-1.jsonl"
+    run.write_text(json.dumps(머리(backend="팔", set_sha256="셋", onto_sha256=판사전,
+                                   metrics=판자, **값), ensure_ascii=False) + "\n", encoding="utf-8")
+    return board, run
+
+
+@pytest.mark.parametrize("기록자, 기록사전, 판자, 판사전, 이름", [
+    ("2", "옛사전", "3", "새사전", "둘 다"),
+    ("3", "옛사전", "3", "새사전", "사전만"),
+    ("2", "새사전", "3", "새사전", "자만"),
+])
+def test_분모가_갈리면_박으러_온_판을_지킴으로_막지_않는다(
+        tmp_path, monkeypatch, capsys, 기록자, 기록사전, 판자, 판사전, 이름):
+    """★ **2026-09-28 문이 스스로 「자가 바뀌었다 · 사전이 바뀌었다」 를 찍고 바로 다음 줄에서
+    그 수로 막았다**(DECISIONS §169). 0.9532(982자리)와 0.9559(674자리)는 높낮이가 없다.
+
+    ★ **떨어진 값도 그대로 박힌다.** 「오른 것만」 쓰면 기록판이 새 사전이라 적힌 채 옛 분모의
+      수를 들게 되고, 그것이 §166 의 순환을 다시 만든다.
+    """
+    board, run = _판(tmp_path, 기록자, 기록사전, 판자, 판사전, term_off=0.9532, keep=0.9979)
+    monkeypatch.setattr(G, "PATH", board)
+    assert G.main([str(run), "--update"]) == 0, 이름
+    out = capsys.readouterr().out
+    assert "분모가 갈렸다" in out
+    쓴 = board.read_text(encoding="utf-8")
+    assert "0.9532" in 쓴 and "0.9979" in 쓴, "떨어진 값도 다시 박는다"
+
+
+def test_분모가_같으면_박으러_와도_떨어진_것을_막는다(tmp_path, monkeypatch, capsys):
+    """★ **문을 끄는 길을 만든 것이 아니다.** 같은 자 · 같은 사전이면 `--update` 여도 막는다 —
+    안 그러면 자를 한 번 올릴 때마다 아무 팔이나 기록이 된다."""
+    board, run = _판(tmp_path, "3", "새사전", "3", "새사전", term_off=0.9532, keep=0.9979)
+    monkeypatch.setattr(G, "PATH", board)
+    assert G.main([str(run), "--update"]) == 1
+    assert "떨어졌다" in capsys.readouterr().err
+
+
+def test_check_와_올릴것이_같은_물음을_쓴다():
+    """★ **같은 판단이 두 곳에 있으면 한 곳만 고쳐진다**(DECISIONS §163 · §169). `올릴_것` 은
+    자 바뀜을 알았고 `check` 는 몰랐다 — 둘 다 `compare.분모` 를 본다."""
+    import inspect
+    from seshat import compare
+    for fn in (G.check, G.올릴_것):
+        assert "compare.분모" in inspect.getsource(fn), f"{fn.__name__} 이 제 손으로 축을 적는다"
+    assert "set_sha256" not in compare.분모, "다른 시험지는 GATE_막 이 막는다 — 선 줄이 침묵한다"
