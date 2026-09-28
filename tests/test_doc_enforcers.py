@@ -240,9 +240,10 @@ def test_더럽힌다고_적었으면_무엇을_더럽히는지_적어야_한다
     assert not [f for f in fails if "더럽히는지" in f]
 
 
-def test_더럽히는_빚이_실제로_표시돼_있다():
-    """§159 가 넷을 셌다 — 목록이 평평하면 더럽히는 빚이 열다섯 번째까지 밀린다."""
+def test_더럽히는_빚은_무엇을_더럽히는지_들고_있다():
+    """**수를 박지 않는다.** 갚으면 줄어드는 것이 정상이고, 수를 박으면 갚을 때 시험이 빨개진다
+    (2026-09-28 #34 를 갚자 「넷 이상」 이 깨졌다 · DECISIONS §161)."""
     plan = (ROOT / "docs/PLAN.md").read_text(encoding="utf-8")
     붉은 = [x for x in plan.splitlines() if re.match(r"^\| \d+ \|", x) and "🔴" in x]
-    assert len(붉은) >= 4, "측정을 더럽히는 빚이 표시돼 있어야 한다"
-    assert all("더럽힌다" in x for x in 붉은)
+    assert all("더럽힌다" in x for x in 붉은), \
+        "🔴 인 행은 무엇을 더럽히는지 들어야 한다 — 안 들면 「중요함」 의 다른 말이 된다"
