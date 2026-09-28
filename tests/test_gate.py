@@ -297,3 +297,20 @@ def test_없는_키는_만든다(tmp_path, monkeypatch):
     새 = G.load(board)
     assert 새["record"][0]["metrics"] == "7" and 새["record"][0]["run"] == "새-20260928-1"
     assert 새["target"][0]["arm"] == "선", "뒤 블록을 안 건드려야 한다"
+
+
+def test_자가_바뀌면_내려가도_그대로_박는다():
+    """재채점은 값을 **내리는** 일이 잦다 — 오른 것만 쓰면 「새 자」 라고 적힌 채 옛 수가 남는다.
+
+    2026-09-28 `term` 을 출현 횟수로 바꾸자 기준이 0.9772 → 0.9619 로 내려갔다(DECISIONS §146).
+    """
+    rec = {**REC, "metrics": "1", "term_off": 0.9772, "lit": 0.8099, "keep": 0.9979,
+           "guard": ["term_off", "lit", "keep"]}
+    got = G.올릴_것(rec, 머리(metrics="2", term_off=0.9619, lit=0.8099, keep=0.9979), pin=True)
+    assert got["term_off"] == 0.9619, "내려간 값이 안 박히면 기록판이 거짓말한다"
+
+
+def test_자가_같으면_내려간_값은_안_박는다():
+    """봐주는 것이 아니다 — 같은 자에서 내려간 것은 회귀다."""
+    rec = {**REC, "metrics": "2", "term_off": 0.9772, "guard": ["term_off"]}
+    assert "term_off" not in G.올릴_것(rec, 머리(metrics="2", term_off=0.9619), pin=True)

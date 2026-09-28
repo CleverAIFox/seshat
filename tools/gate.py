@@ -124,8 +124,11 @@ def 올릴_것(rec: dict, head: dict, pin: bool = False) -> dict[str, float]:
 
     ★ `pin` — 셋 해시를 처음 박는 판에서는 **있는 값을 그대로 적는다.** 그 기록은 아직 어느 셋의
       것인지 몰랐으므로 「올랐다 · 내렸다」 를 말할 수 없다. 견주기는 다음 판부터다.
+    ★ **자가 바뀌면 올리는 것이 아니라 다시 박는 것이다**(DECISIONS §146). 재채점은 값을 **내리는**
+      일이 잦은데, 오른 것만 쓰면 기록판이 **「새 자」 라고 적힌 채 옛 자로 잰 수**를 든다 —
+      거짓말이 박힌다. 판이 다르면 견주지 않고 **그대로 옮긴다.**
     """
-    처음 = pin and not rec.get("set_sha256")
+    처음 = pin and (not rec.get("set_sha256") or rec.get("metrics") != head.get("metrics"))
     out = {}
     for m in (*rec.get("guard", []), "term_off", "lit", "keep", "style"):
         새 = 재(head.get(m))
