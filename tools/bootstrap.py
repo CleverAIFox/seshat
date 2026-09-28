@@ -27,10 +27,14 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
-from seshat import compare, evaluate  # noqa: E402
+from seshat import backends, compare, evaluate  # noqa: E402
 
 # 줄마다 (분자, 분모)를 낼 수 있는 지표. `_n` 이 결과에 실리거나 분모를 줄에서 셀 수 있어야 한다
 지표 = ("term_off", "term", "term_bad", "lit", "ui", "keep", "style", "hangul")
+# ★ **낮을수록 좋은 지표가 있다**(DECISIONS §182). 2026-09-28 이 도구가 `term_bad` 를
+#   0.0061 대 0.0010 으로 재고 **「A 가 낫다」** 고 찍었다 — 오역이 적은 쪽이 진 것으로 나왔다.
+#   부호를 도구가 모르면 **논문에 반대로 적힌다.**
+낮을수록_좋다 = frozenset({"term_bad"})
 
 
 def 줄별(rows: list[dict], outs: list[str]) -> dict[str, list[tuple[float, float]]]:
@@ -155,6 +159,13 @@ def main(argv: list[str] | None = None) -> int:
         print("  부트스트랩은 **견줄 수 있는 둘**에만 쓴다(DECISIONS §180)", file=sys.stderr)
         return 1
 
+    가팔, 나팔 = 가머리.get("backend") or 가머리.get("model"), 나머리.get("backend") or 나머리.get("model")
+    못견줌 = backends.지키는_지표(가팔) ^ backends.지키는_지표(나팔)
+    if 못견줌:
+        print(f"  ※ **못 견주는 지표 {' · '.join(sorted(못견줌))}** — 한쪽만 자리표시가 지킨다(§156)\n"
+              f"    A {가팔} 가 지키는 것 {sorted(backends.지키는_지표(가팔)) or '없다'}\n"
+              f"    B {나팔} 가 지키는 것 {sorted(backends.지키는_지표(나팔)) or '없다'}", file=sys.stderr)
+
     spec = {r["id"]: r for r in evaluate.load(a.set_)}
     같은줄 = [i for i in 가줄 if i in 나줄 and i in spec]
     rows = [spec[i] for i in 같은줄]
@@ -170,7 +181,12 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  {m:<10}{'—':>9}{'—':>9}{'분모가 없다':>10}")
             continue
         품 = got["아래"] <= 0 <= got["위"]
-        판 = "**차이를 말할 수 없다**" if 품 else ("B 가 낫다" if got["차"] > 0 else "A 가 낫다")
+        나은쪽 = (got["차"] < 0) if m in 낮을수록_좋다 else (got["차"] > 0)
+        판 = "**차이를 말할 수 없다**" if 품 else ("B 가 낫다" if 나은쪽 else "A 가 낫다")
+        # ★ **기계가 지킨 수와 모델이 지킨 수는 못 견준다**(§156 · §182). 자 · 셋 · 사전이 다 같아서
+        #   위의 검사는 전부 통과하고, p 값까지 붙어서 **가장 그럴듯한 거짓말**이 된다
+        if m in 못견줌:
+            판 = "**못 견준다** — 한쪽은 기계가 지킨다(§156)"
         구간 = f"[{got['아래']:+.4f}, {got['위']:+.4f}]"
         print(f"  {m:<10}{got['가']:>9.4f}{got['나']:>9.4f}{got['차']:>+10.4f}"
               f"{구간:>22}{got['p']:>8.3f}   {판}")

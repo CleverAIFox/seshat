@@ -554,10 +554,27 @@ DECODING_OF.update({arm: {"temperature": 0.8, "seed0": 101, "num_predict": 512, 
 
 # ★ 고치는 판을 쓰는 팔은 그 조건도 머리줄에 싣는다 — 안 적으면 되풀이할 수 없다(DECISIONS §57)
 # ★ 표시를 빼는 팔 — 머리줄에 `marks` 를 싣는다(DECISIONS §154)
-MARK_ARMS: set[str] = {"gemma3-4b+ph+ui+gloss2+retry+endings+terms",
-                       "gemma3-4b+ph+marks+gloss2+retry+endings+terms",
-                    "gemma3-4b+ph+marks2+gloss2+retry+endings+terms",
-                       "gemma3-4b+ph+marks2+gloss2+retry+endings+terms"}
+# ★ **어느 팔이 어느 지표를 기계로 지키는가**(DECISIONS §182). 자리표시로 빼고 되돌린 자리는
+#   **모델이 맞힌 것이 아니라 기계가 지킨 것**이고, 그런 지표는 딴 팔과 못 견준다(§156).
+#   `+ph` 는 이름을 빼므로 `keep` 을, `+ui` 는 콘솔 라벨을, `+marks`·`+marks2` 는 둘 다 지킨다.
+# ★ **이 표가 그 물음의 유일한 자리다.** 2026-09-28 까지 기록판의 `protects` 에 **손으로** 적혀
+#   있었고 거기 `keep` 이 빠져 있었다 — 그래서 nova 의 `keep` 0.9789(모델이 지킴)와 이쪽의
+#   0.9979(기계가 지킴)를 견주고 「이겼다」 고 적을 뻔했다(PLAN #41).
+보호: dict[str, frozenset[str]] = {
+    "gemma3-4b+ph+ui+gloss2+retry+endings+terms": frozenset({"keep", "ui"}),
+    "gemma3-4b+ph+marks+gloss2+retry+endings+terms": frozenset({"keep", "lit", "ui"}),
+    "gemma3-4b+ph+marks2+gloss2+retry+endings+terms": frozenset({"keep", "lit", "ui"}),
+}
+MARK_ARMS: set[str] = set(보호)      # 표시를 빼는 팔 — 위 표에서 나온다(두 곳에 안 적는다)
+
+
+def 지키는_지표(arm: str | None) -> frozenset[str]:
+    """이 팔이 **기계로** 지키는 지표. 표에 없어도 `+ph` 면 `keep` 은 지킨다(H-001 · §15)."""
+    if not arm:
+        return frozenset()
+    if arm in 보호:
+        return 보호[arm]
+    return frozenset({"keep"}) if "+ph" in arm else frozenset()
 REPAIR_ARMS.update({"gemma3-4b+ph+retry+endings+terms", "gemma3-4b+ph+retry",
                     "gemma3-4b+ph+gloss2+retry+endings+terms",
                     "gemma3-4b+ph+ui+gloss2+retry+endings+terms",

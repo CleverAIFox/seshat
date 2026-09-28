@@ -95,3 +95,39 @@ def test_못_견주는_둘은_거절한다(tmp_path, capsys):
                               "onto_sha256": "사전"}) + "\n", encoding="utf-8")
     assert bs.main([str(가), str(나), "--set", "x"]) == 1
     assert "자가 바뀌었다" in capsys.readouterr().err
+
+
+def test_낮을수록_좋은_지표의_부호를_안다():
+    """★ **2026-09-28 이 도구가 `term_bad` 를 반대로 찍었다**(DECISIONS §182).
+    오역 0.0061 대 0.0010 을 보고 **「A 가 낫다」** 고 했다 — 부호를 모르면 논문에 반대로 적힌다."""
+    assert "term_bad" in bs.낮을수록_좋다
+    assert not (bs.낮을수록_좋다 & {"term_off", "term", "lit", "ui", "keep", "style", "hangul"})
+
+
+def test_기계가_지키는_지표를_못_견준다고_찍는다(tmp_path, capsys):
+    """★ **자 · 셋 · 사전이 다 같아서 위의 검사는 전부 통과한다**(§156 · §182). 거기에 p 값까지
+    붙으면 **가장 그럴듯한 거짓말**이 된다 — 한쪽은 기계가 지킨 수인데."""
+    import json
+    from seshat import backends
+    우리 = "gemma3-4b+ph+marks2+gloss2+retry+endings+terms"
+    저쪽 = "nova-lite (thoth 워커)"
+    assert backends.지키는_지표(우리) >= {"keep", "lit", "ui"}
+    assert backends.지키는_지표(저쪽) == frozenset()
+    머리 = {"meta": True, "set_sha256": "셋", "metrics": "3", "onto_sha256": "사전"}
+    가 = tmp_path / "a.jsonl"
+    나 = tmp_path / "b.jsonl"
+    가.write_text(json.dumps({**머리, "backend": 저쪽}) + "\n", encoding="utf-8")
+    나.write_text(json.dumps({**머리, "backend": 우리}) + "\n", encoding="utf-8")
+    with pytest.raises(SystemExit):        # 셋이 없어 멈추지만, 경고는 그 전에 나온다
+        bs.main([str(가), str(나), "--set", str(tmp_path / "없는셋.jsonl")])
+    말 = capsys.readouterr().err
+    assert "못 견주는 지표" in 말 and "keep" in 말 and "lit" in 말
+
+
+def test_보호_표가_MARK_ARMS_를_만든다():
+    """★ **두 곳에 안 적는다**(§163). 표시를 빼는 팔 목록은 보호 표에서 나온다."""
+    from seshat import backends
+    assert backends.MARK_ARMS == set(backends.보호)
+    assert backends.지키는_지표("gemma3-12b+ph+retry+endings+terms") == {"keep"}, "+ph 는 이름을 지킨다"
+    assert backends.지키는_지표("aws-translate") == frozenset()
+    assert backends.지키는_지표(None) == frozenset()
