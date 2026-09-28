@@ -167,3 +167,24 @@ def test_처음부터_끝까지_한_번_돈다(tmp_path, monkeypatch, capsys):
                   encoding="utf-8")
     assert G.main([str(나)]) == 1                        # ④ 떨어지면 막는다
     assert G.load(sb)["record"][0]["term_off"] == 0.95   # 막힌 값은 기록에 안 남는다
+
+
+def test_허용치는_잰_값이다():
+    """짐작한 허용치는 **관대한 쪽으로** 틀린다 — 빡빡하면 내 실험이 막히기 때문이다(DECISIONS §139).
+
+    2026-09-28 같은 팔(`+ph+endings+terms`)을 두 판 돌려 지표가 **소수점 끝자리까지 같았다.**
+    잰 잡음이 0 인데 0.01 을 허용하면 그것은 잡음 여유가 아니라 **회귀 통행증**이다 —
+    H-055 의 `term_off` −0.0076 이 그것으로 통과했다.
+    """
+    for r in G.load().get("record", []):
+        assert r.get("tol", 0.0) <= 0.002, \
+            f"{r['arm']} 의 tol {r['tol']} 이 잰 잡음(0)보다 훨씬 크다 — 재고 나서 올린다"
+        assert len(r.get("tol_run", [])) >= 2, \
+            f"{r['arm']} 의 tol 에 **그것을 잰 두 판**이 안 적혀 있다 — 짐작한 허용치는 문이 아니다"
+
+
+def test_MBR_만큼_떨어지면_막는다():
+    """옛 `tol` 0.01 이 통과시킨 그 크기를 지금은 막는가(DECISIONS §139 · H-055)."""
+    실제 = G.load()["record"][0]["tol"]
+    막, _ = G.check({**REC, "tol": 실제}, 머리(term_off=0.90 - 0.0076, lit=0.80))
+    assert 막 and "term_off" in 막[0] and "떨어졌다" in 막[0]
