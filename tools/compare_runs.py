@@ -242,6 +242,29 @@ def main(argv=None) -> int:
               "**거짓 — 토막 길이 탓이 아니다**" if 배 <= 1.2 else "**사이다 — 표본이 모자란다**")
         print(f"\n    용어집 항목 수 중앙값 — 깨진 줄 {깨진중앙} · 전체 {전체중앙} · {배:.2f}배 → {판}")
         print("    (미리 그은 선: 1.5배 이상이면 참 · 1.2배 아래면 거짓)")
+        # ★ **중앙값 견주기는 약한 자다**(DECISIONS §178). 항목 수는 0·1·2·3 뿐이라 중앙값 1 대 2 는
+        #   **한 칸**이고, 분모에 **토막이 0 항목인 줄**이 섞인다 — 그 줄은 길이 탓으로 깨질 수가 없다.
+        #   묻고 싶은 것은 「길수록 더 깨지나」 이고, 그것은 **항목 수별 깨짐 비율**이 답한다.
+        #   **선을 옮기지 않는다** — 위의 판정은 그대로 두고 이 표는 다음 가설의 근거로만 쓴다
+        import importlib.util as _iu
+        _sp = _iu.spec_from_file_location("ev2", Path(__file__).resolve().parent.parent / "seshat/evaluate.py")
+        _ev = _iu.module_from_spec(_sp)
+        _sp.loader.exec_module(_ev)
+        통 = {}
+        for i in ra:
+            if i not in rb:
+                continue
+            k = min(길이.get(i, 0), 3)
+            n, ka, kb = 통.get(k, (0, 0, 0))
+            통[k] = (n + 1,
+                     ka + (0 if _ev.is_hapsyo(ra[i]["out"]) else 1),
+                     kb + (0 if _ev.is_hapsyo(rb[i]["out"]) else 1))
+        print("\n    항목 수별 합쇼체 깨짐 — 「길수록 더 깨지나」 에 곧바로 답한다")
+        print(f"      {'항목':>6} {'줄':>5} {'A 깨짐':>9} {'B 깨짐':>9}")
+        for k in sorted(통):
+            n, ka, kb = 통[k]
+            이름 = f"{k}+" if k == 3 else str(k)
+            print(f"      {이름:>6} {n:>5} {ka / n:>8.3f} {kb / n:>8.3f}")
     mc, ml = term_misses(ra, spec)
     print(f"\n  A 에서 개념이 없다고 센 자리 {len(ml)} — 모델이 버렸나 · 온톨로지가 모르는 표기인가  [H-020]")
     for k, c in mc.most_common(8):
