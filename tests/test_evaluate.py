@@ -387,7 +387,7 @@ def test_중간_결과가_있으면_말하고_멈춘다(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     셋 = _셋(tmp_path)
     (tmp_path / "runs").mkdir()
-    ev.part_path("t").write_text('{"meta": true}\n', encoding="utf-8")
+    _중간을_둔다(셋)            # ★ 조건이 맞는 것이라야 `--resume` 이 길이다(§197)
     with pytest.raises(SystemExit, match="--resume"):
         ev.main(["--backend", "echo", "--set", 셋, "--name", "t"])
 
@@ -426,6 +426,69 @@ def test_조건이_다르면_안_잇는다(tmp_path, monkeypatch):
                                             ensure_ascii=False) + "\n", encoding="utf-8")
     with pytest.raises(SystemExit, match="다른 조건에서 만들어졌다"):
         ev.main(["--backend", "echo", "--set", 셋, "--name", "t", "--resume"])
+
+
+def _중간을_둔다(셋, 줄수=1, **덮기) -> None:
+    조건 = {"backend": "echo", "url": "", "set_sha256": ev.set_sha256(셋),
+            "onto_sha256": ev.onto_sha256(), "commit": "옛커밋", "dirty": False, **덮기}
+    ev.part_path("t").write_text("\n".join(
+        [json.dumps({"meta": True, **조건}, ensure_ascii=False)]
+        + [json.dumps({"id": f"r{i}", "out": "이미 있던 줄"}, ensure_ascii=False) for i in range(줄수)]
+    ) + "\n", encoding="utf-8")
+
+
+def test_멈출_때_얼마나_들어_있는지_말한다(tmp_path, monkeypatch):
+    """★ **수를 모르면 이을지 버릴지 고를 수 없다**(DECISIONS §197).
+
+    열 줄이면 지우는 것이 싸고 사백 줄이면 이어야 한다 — 그 수가 없으면 사람이 딴 명령을 또 친다.
+    """
+    monkeypatch.chdir(tmp_path)
+    셋 = _셋(tmp_path)
+    (tmp_path / "runs").mkdir()
+    _중간을_둔다(셋, 줄수=7)
+    with pytest.raises(SystemExit) as e:
+        ev.main(["--backend", "echo", "--set", 셋, "--name", "t"])
+    말 = str(e.value)
+    assert "7/30 줄" in 말, 말
+    assert "--resume" in 말 and "이을 수 없다" not in 말      # 조건이 같으니 이을 수 있다
+
+
+def test_멈출_때_이을_수_없는_것이면_그렇게_말한다(tmp_path, monkeypatch):
+    """★ 조건이 다르면 `--resume` 은 헛걸음이다 — **그 사실을 여기서** 말한다(§197)."""
+    monkeypatch.chdir(tmp_path)
+    셋 = _셋(tmp_path)
+    (tmp_path / "runs").mkdir()
+    _중간을_둔다(셋, backend="딴백엔드")
+    with pytest.raises(SystemExit) as e:
+        ev.main(["--backend", "echo", "--set", 셋, "--name", "t"])
+    assert "이을 수 없다" in str(e.value) and "backend" in str(e.value)
+
+
+def test_이어받은_줄이_어느_커밋에서_왔는지_적는다(tmp_path, monkeypatch):
+    """★ **조건은 커밋을 안 본다**(그래야 패치 한 장이 이어 돌리기를 안 죽인다). 대신 **적는다**(§197).
+
+    §81 이 「판을 시작할 때 찍는다」 로 막은 거짓말이 이어 돌리기에는 그대로 남아 있었다 —
+    `commit` 은 이번 판의 것인데 줄의 일부는 옛 커밋이 냈다.
+    """
+    monkeypatch.chdir(tmp_path)
+    셋 = _셋(tmp_path)
+    (tmp_path / "runs").mkdir()
+    _중간을_둔다(셋, 줄수=1)
+    assert ev.main(["--backend", "echo", "--set", 셋, "--name", "t", "--resume"]) == 0
+    머리 = json.loads(next((tmp_path / "runs").glob("t-*.jsonl")).read_text(encoding="utf-8").splitlines()[0])
+    assert 머리["resumed"] == 1
+    assert 머리["resumed_from"] == "옛커밋"
+    assert 머리["commit"] != "옛커밋"
+
+
+def test_이어받을_것이_없으면_안_적는다(tmp_path, monkeypatch):
+    """빈 칸은 「모른다」 로 읽힌다 — 이어받지 않은 판에는 그 칸이 아예 없어야 한다(§110)."""
+    monkeypatch.chdir(tmp_path)
+    셋 = _셋(tmp_path)
+    (tmp_path / "runs").mkdir()
+    assert ev.main(["--backend", "echo", "--set", 셋, "--name", "t"]) == 0
+    머리 = json.loads(next((tmp_path / "runs").glob("t-*.jsonl")).read_text(encoding="utf-8").splitlines()[0])
+    assert "resumed_from" not in 머리 and "resumed" not in 머리
 
 
 def test_진척은_시간으로도_찍는다(capsys):

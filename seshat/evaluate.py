@@ -165,6 +165,18 @@ def part_path(name: str) -> pathlib.Path:
     return pathlib.Path("runs") / f"{name or 'eval'}.part.jsonl"
 
 
+def part_본다(path: pathlib.Path) -> tuple[dict, int]:
+    """중간 결과의 **머리줄과 줄 수**. 읽지 않고는 이을지 버릴지 고를 수 없다(DECISIONS §197).
+
+    ★ 막는 자리가 「무엇이 잘못인가」 만 말하고 「무엇을 하면 되는가」 를 안 말하면 사람이 딴 길로 간다
+      (§174 · §175 · §188 · §196 과 같은 꼴). 여기서는 **얼마나 들어 있나**가 그 한 마디다 —
+      열 줄이면 지우고 새로 돌리고, 사백 줄이면 이어 돌린다. 그 수를 모르면 고를 수가 없다.
+    """
+    줄 = [json.loads(x) for x in path.read_text(encoding="utf-8").splitlines() if x.strip()]
+    머리 = next((x for x in 줄 if x.get("meta")), {})
+    return 머리, sum(1 for x in 줄 if not x.get("meta") and x.get("id"))
+
+
 def part_read(path: pathlib.Path, 조건: dict) -> dict[str, str]:
     """중간 결과를 읽는다. **조건이 다르면 안 잇는다** — 다른 자로 잰 줄을 한 파일에 섞지 않는다(§45)."""
     줄 = [json.loads(x) for x in path.read_text(encoding="utf-8").splitlines() if x.strip()]
@@ -675,15 +687,29 @@ def main(argv=None) -> int:
     조건 = {"backend": a.backend or None, "url": a.url or "", "set_sha256": set_sha256(a.set),
             "onto_sha256": onto_sha256()}
     이미: dict[str, str] = {}
+    왔던: str | None = None
     if part.exists():
+        머리, 센 = part_본다(part)
+        왔던 = 머리.get("commit")
         if not a.resume:
+            다름 = [k for k, v in 조건.items() if 머리.get(k) != v]
+            길 = ("    이어서 돌린다 : 같은 명령에 --resume 을 붙인다\n" if not 다름 else
+                  f"    **이을 수 없다** — 조건이 다르다({' · '.join(다름)}) · 지우는 수밖에 없다\n")
             raise SystemExit(f"중간 결과가 남아 있다 — {part}\n"
-                             f"    이어서 돌린다 : 같은 명령에 --resume 을 붙인다\n"
-                             f"    처음부터     : 그 파일을 지운다")
+                             f"    이미 {센}/{len(rows)} 줄 · 마지막 줄 "
+                             f"{dt.datetime.fromtimestamp(part.stat().st_mtime):%m-%d %H:%M}\n"
+                             + 길 +
+                             f"    처음부터     : rm {part}")
         이미 = part_read(part, 조건)
         print(f"  이어서 돈다 — {len(이미)}/{len(rows)} 줄은 이미 있다", file=sys.stderr, flush=True)
+        # ★ **그 줄들은 이 커밋이 낸 것이 아닐 수 있다**(DECISIONS §197). 조건은 넷만 본다 —
+        #   커밋은 안 본다(보면 패치 한 장에 이어 돌리기가 죽는다). 대신 **어디서 왔는지 머리줄에 적는다**
+        if 왔던 != 코드["commit"]:
+            print(f"  ※ 그 {len(이미)} 줄은 {왔던 or '모르는'} 커밋이 냈다 — 지금은 {코드['commit']}"
+                  f" · 머리줄의 `resumed_from` 에 적는다", file=sys.stderr, flush=True)
     else:
-        part.write_text(json.dumps({"meta": True, **조건}, ensure_ascii=False) + "\n", encoding="utf-8")
+        part.write_text(json.dumps({"meta": True, **조건, "commit": 코드["commit"],
+                                    "dirty": 코드["dirty"]}, ensure_ascii=False) + "\n", encoding="utf-8")
 
     남은줄 = [r for r in rows if r.get("id") not in 이미]
     새것: dict[str, str] = {}
@@ -706,6 +732,9 @@ def main(argv=None) -> int:
     res["ms"] = round(ms)
     if 이미:
         res["resumed"] = len(이미)          # 몇 줄을 이어받았나 — `ms` 는 나머지만 잰 값이다
+        # ★ **그 줄을 낸 커밋**(DECISIONS §197). `commit` 은 판을 **시작할 때** 찍은 지금의 커밋이라
+        #   (§81), 이어 돌린 판에서는 앞쪽 줄을 낸 커밋을 안 든다. None 은 **모른다**(§110)
+        res["resumed_from"] = 왔던
     res["set"] = a.set
     res["url"] = a.url or f"backend:{a.backend}"
     if model:
