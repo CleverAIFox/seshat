@@ -408,12 +408,13 @@ def test_기계가_지킨_수와_모델이_지킨_수를_안_견준다(tmp_path,
     """자도 셋도 같아서 다른 검사가 다 통과한다 — `protects` 만이 이것을 본다(DECISIONS §156)."""
     board = tmp_path / "b.toml"
     board.write_text('[[record]]\nset = "s"\nset_sha256 = "셋"\nonto_sha256 = "사전"\nmetrics = "' + 자 + '"\n'
-                     'arm = "우리"\nprotects = ["lit", "ui"]\nterm_off = 0.95\nlit = 0.99\n'
+                     'arm = "gemma3-4b+ph+marks2+gloss2+retry+endings+terms"\nterm_off = 0.95\nlit = 0.99\n'
                      'guard = ["term_off"]\ntol = 0.0\n\n'
-                     '[[target]]\nset = "s"\narm = "배포본"\nonto_sha256 = "사전"\nmetrics = "' + 자 + '"\nterm_off = 0.90\nlit = 0.92\n',
+                     '[[target]]\nset = "s"\narm = "nova-lite (thoth 워커)"\nonto_sha256 = "사전"\nmetrics = "' + 자 + '"\nterm_off = 0.90\nlit = 0.92\n',
                      encoding="utf-8")
     run = tmp_path / "새-20260928-1.jsonl"
-    run.write_text(json.dumps(머리(backend="우리", set_sha256="셋", onto_sha256="사전", metrics=자,
+    run.write_text(json.dumps(머리(backend="gemma3-4b+ph+marks2+gloss2+retry+endings+terms",
+                                   set_sha256="셋", onto_sha256="사전", metrics=자,
                                    term_off=0.96, lit=0.99), ensure_ascii=False) + "\n", encoding="utf-8")
     monkeypatch.setattr(G, "PATH", board)
     assert G.main([str(run)]) == 0

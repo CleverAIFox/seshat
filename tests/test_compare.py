@@ -35,9 +35,27 @@ def test_문은_사전을_안_막는다():
 
 
 def test_보호는_그_지표만_가린다():
-    """통째로 막지 않는다 — `term_off` 는 양쪽 다 모델이 만든 값이다(DECISIONS §156)."""
-    assert compare.가린_지표({"protects": ["lit", "ui"]}, {}) == {"lit", "ui"}
-    assert compare.가린_지표({"protects": ["lit"]}, {"protects": ["lit"]}) == set()
+    """통째로 막지 않는다 — `term_off` 는 양쪽 다 모델이 만든 값이다(DECISIONS §156).
+
+    ★ **무엇을 지키는지는 팔이 안다**(DECISIONS §186). 기록판에 손으로 적던 `protects` 칸은
+      지웠다 — 거기 `keep` 이 빠져 있었고, 빠진 것을 아무도 못 봤다(§182).
+    """
+    우리 = {"arm": "gemma3-4b+ph+marks2+gloss2+retry+endings+terms"}
+    nova = {"arm": "nova-lite (thoth 워커)"}
+    십이 = {"arm": "gemma3-12b+ph+retry+endings+terms"}
+    assert compare.가린_지표(우리, nova) == {"keep", "lit", "ui"}
+    assert compare.가린_지표(우리, 십이) == {"lit", "ui"}, "둘 다 +ph 라 keep 은 견준다"
+    assert compare.가린_지표(우리, dict(우리)) == set()
+    assert compare.가린_지표({"backend": 우리["arm"]}, {"model": 우리["arm"]}) == set(), "칸 이름이 달라도 본다"
+
+
+def test_기록판에_보호를_손으로_안_적는다():
+    """★ **§163 의 병이 여기 있었다** — 같은 판단이 기록판과 코드 두 곳에 있었고, 기록판 쪽이
+    낡아 있었다(DECISIONS §186). 칸을 되살리면 다시 갈린다."""
+    import pathlib as _p
+    판 = (_p.Path(__file__).resolve().parents[1] / "data/scoreboard.toml").read_text(encoding="utf-8")
+    적힌줄 = [x for x in 판.splitlines() if x.startswith("protects")]
+    assert not 적힌줄, f"기록판이 보호를 손으로 든다 — {적힌줄}"
 
 
 def test_축을_손으로_다시_적은_곳이_없다():

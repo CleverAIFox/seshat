@@ -11,8 +11,10 @@
   적혀 있었다**(문의 `check` 에 셋 · 문의 선 줄 · `noise.SAME` · `compare_runs`). 손으로 적으면
   반드시 한 곳이 빠진다.
 ★ **이 파일이 그 목록의 유일한 자리다.** 새 축이 생기면 여기에만 더한다.
-★ **`protects` 는 통째로 막지 않는다.** 보호가 다르면 **그 지표만** 못 견주고 나머지는 견준다 —
+★ **보호는 통째로 막지 않는다.** 보호가 다르면 **그 지표만** 못 견주고 나머지는 견준다 —
   `term_off` 는 끝까지 나온 문장을 재므로 양쪽 다 모델이 만든 값이다(§156).
+★ **무엇을 지키는지는 팔이 안다** — `seshat/backends.py` 의 `보호` 표가 답한다(DECISIONS §186).
+  2026-09-28 까지 기록판의 `protects` 칸에 **손으로** 적혀 있었고 거기 `keep` 이 빠져 있었다(§182).
 """
 from __future__ import annotations
 
@@ -115,4 +117,10 @@ def 가린_지표(가: dict, 나: dict) -> set[str]:
     ★ 자리표시가 지키는 `lit` 1.0 과 모델이 지킨 `lit` 0.92 는 **다른 수**다. 셋도 사전도 자도
       같으므로 위의 축들은 전부 통과한다 — 이것만이 그 차이를 본다.
     """
-    return set(가.get("protects") or []) ^ set(나.get("protects") or [])
+    from . import backends
+    return set(backends.지키는_지표(_팔(가))) ^ set(backends.지키는_지표(_팔(나)))
+
+
+def _팔(d: dict) -> str | None:
+    """기록판 줄은 `arm`, 판 머리줄은 `backend` · `model` 로 팔을 든다."""
+    return d.get("arm") or d.get("backend") or d.get("model")

@@ -559,7 +559,7 @@ DECODING_OF.update({arm: {"temperature": 0.8, "seed0": 101, "num_predict": 512, 
 #   `+ph` 는 이름을 빼므로 `keep` 을, `+ui` 는 콘솔 라벨을, `+marks`·`+marks2` 는 둘 다 지킨다.
 # ★ **이 표가 그 물음의 유일한 자리다.** 2026-09-28 까지 기록판의 `protects` 에 **손으로** 적혀
 #   있었고 거기 `keep` 이 빠져 있었다 — 그래서 nova 의 `keep` 0.9789(모델이 지킴)와 이쪽의
-#   0.9979(기계가 지킴)를 견주고 「이겼다」 고 적을 뻔했다(PLAN #41).
+#   0.9979(기계가 지킴)를 견주고 「이겼다」 고 적을 뻔했다(DECISIONS §182 · §186).
 보호: dict[str, frozenset[str]] = {
     "gemma3-4b+ph+ui+gloss2+retry+endings+terms": frozenset({"keep", "ui"}),
     "gemma3-4b+ph+marks+gloss2+retry+endings+terms": frozenset({"keep", "lit", "ui"}),

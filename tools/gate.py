@@ -265,7 +265,7 @@ def _선을_박는다(run: str | None, arm: str, board: dict) -> int:
             **({"set_sha256": head["set_sha256"]} if head.get("set_sha256") else {}),
             "onto_sha256": head.get("onto_sha256", ""), "onto_score": head.get("onto_score", ""),
             "date": dt.date.today().isoformat(),
-            **({"protects": list(head["protects"])} if head.get("protects") else {})}
+            }          # `protects` 는 안 적는다 — 팔이 답한다(DECISIONS §186)
     _블록을_고친다("target", arm, 새값)
     print(f"  선을 다시 박았다 — {arm}\n    " +
           " · ".join(f"{m} {v}" for m, v in 값.items()))
