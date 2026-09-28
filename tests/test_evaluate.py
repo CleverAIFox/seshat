@@ -435,3 +435,25 @@ def test_진척은_시간으로도_찍는다(capsys):
     assert capsys.readouterr().err == ""
     ev._진척(100, 101, 600, ev.말없이 + 1)         # 조용한 지 오래됐다
     assert "101/600" in capsys.readouterr().err
+
+
+def test_문이_막을_때_열린_가설을_같이_찍는다():
+    """★ **막는 도구는 넘는 길을 같이 준다**(DECISIONS §174). 이 문이 하루에 **네 번** 막았고
+    네 번 다 닫힌 번호를 집은 것이었다 — 그때마다 열린 것을 찾으러 갔다. 화면에 있으면 안 찾는다.
+
+    ★ 닫힌 번호를 하나 골라 실제로 막아 본다 — **막는 글에 열린 목록이 들어 있어야** 한다.
+    """
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("ch", ROOT / "tools/check_hypotheses.py")
+    ch = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(ch)
+    rows = {hid: cells for _, hid, cells in ch.rows(ch.LEDGER.read_text(encoding="utf-8"))}
+    닫힌 = next(h for h, c in rows.items() if c[0] != "실험")
+    열린 = [h for h, c in rows.items() if c[0] == "실험"]
+    with pytest.raises(SystemExit) as e:
+        ev.door(닫힌)
+    말 = str(e.value)
+    assert "실험 상태여야" in 말
+    assert "지금 실험 상태인 가설" in 말
+    for h in 열린[:3]:
+        assert h in 말, f"열린 {h} 가 막는 글에 없다"
