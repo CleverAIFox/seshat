@@ -11,12 +11,14 @@ _spec = importlib.util.spec_from_file_location("gate", ROOT / "tools/gate.py")
 G = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(G)
 
-REC = {"arm": "가짜", "set_sha256": "셋해시", "onto_sha256": "사전해시",
+# `metrics` — 자 판. 없으면 문이 「재채점하고 박아라」 로 막는다(DECISIONS §145)
+REC = {"arm": "가짜", "set_sha256": "셋해시", "onto_sha256": "사전해시", "metrics": "2",
        "term_off": 0.90, "lit": 0.80, "guard": ["term_off", "lit"], "tol": 0.01}
 
 
 def 머리(**kw):
-    return {"meta": True, "backend": "가짜", "set_sha256": "셋해시", "onto_sha256": "사전해시", **kw}
+    return {"meta": True, "backend": "가짜", "set_sha256": "셋해시", "onto_sha256": "사전해시",
+            "metrics": "2", **kw}
 
 
 def test_올랐으면_통과한다():
@@ -146,7 +148,7 @@ def test_처음부터_끝까지_한_번_돈다(tmp_path, monkeypatch, capsys):
     run = tmp_path / "H-999-x.jsonl"
     run.write_text("\n".join(json.dumps(x, ensure_ascii=False) for x in (
         {"meta": True, "backend": arm, "set_sha256": "셋1", "onto_sha256": "사전1",
-         "term_off": 0.8858, "lit": 0.803, "keep": 0.9853, "josa": 0.99},
+         "metrics": "2", "term_off": 0.8858, "lit": 0.803, "keep": 0.9853, "josa": 0.99},
         {"id": "a", "src": "x", "out": "y"})) + "\n", encoding="utf-8")
 
     assert G.main([str(run), "--update"]) == 0           # ① 처음 박는다
@@ -156,14 +158,14 @@ def test_처음부터_끝까지_한_번_돈다(tmp_path, monkeypatch, capsys):
     assert G.main([str(run)]) == 0                       # ② 같은 값이면 통과
     좋 = tmp_path / "H-999-y.jsonl"
     좋.write_text(json.dumps({"meta": True, "backend": arm, "set_sha256": "셋1", "onto_sha256": "사전1",
-                              "term_off": 0.95, "lit": 0.90, "keep": 0.99, "josa": 1.0}, ensure_ascii=False) + "\n",
+                              "metrics": "2", "term_off": 0.95, "lit": 0.90, "keep": 0.99, "josa": 1.0}, ensure_ascii=False) + "\n",
                   encoding="utf-8")
     assert G.main([str(좋), "--update"]) == 0            # ③ 오르면 기록이 바뀐다
     assert G.load(sb)["record"][0]["term_off"] == 0.95
 
     나 = tmp_path / "H-999-z.jsonl"
     나.write_text(json.dumps({"meta": True, "backend": arm, "set_sha256": "셋1", "onto_sha256": "사전1",
-                              "term_off": 0.80, "lit": 0.90, "keep": 0.99, "josa": 1.0}, ensure_ascii=False) + "\n",
+                              "metrics": "2", "term_off": 0.80, "lit": 0.90, "keep": 0.99, "josa": 1.0}, ensure_ascii=False) + "\n",
                   encoding="utf-8")
     assert G.main([str(나)]) == 1                        # ④ 떨어지면 막는다
     assert G.load(sb)["record"][0]["term_off"] == 0.95   # 막힌 값은 기록에 안 남는다
@@ -199,7 +201,7 @@ def test_승격하면_이름과_날짜도_바뀐다(tmp_path, monkeypatch):
     board = tmp_path / "board.toml"
     board.write_text(
         '[[record]]\nset = "s.jsonl"\nset_sha256 = "셋"\narm = "옛팔"\nrun = "옛실행"\n'
-        'commit = "0000000"\ndate = "2020-01-01"\nonto_sha256 = "사전"\n'
+        'commit = "0000000"\ndate = "2020-01-01"\nonto_sha256 = "사전"\nmetrics = "2"\n'
         'term_off = 0.80\nlit = 0.70\nkeep = 0.90\nstyle = 0.90\n'
         'guard = ["term_off", "lit", "keep"]\ntol = 0.0\n', encoding="utf-8")
     run = tmp_path / "새실행-20260928-120000.jsonl"
@@ -221,7 +223,7 @@ def test_고친_기록으로_다시_부르면_문이_지킨다(tmp_path, monkeyp
     board = tmp_path / "board.toml"
     board.write_text(
         '[[record]]\nset = "s.jsonl"\nset_sha256 = "셋"\narm = "옛팔"\nrun = "r"\n'
-        'commit = "0"\ndate = "2020-01-01"\nonto_sha256 = "사전"\n'
+        'commit = "0"\ndate = "2020-01-01"\nonto_sha256 = "사전"\nmetrics = "2"\n'
         'term_off = 0.80\nlit = 0.70\nkeep = 0.90\nstyle = 0.90\n'
         'guard = ["term_off", "lit", "keep"]\ntol = 0.0\n', encoding="utf-8")
     run = tmp_path / "새실행-20260928-120000.jsonl"
@@ -261,3 +263,37 @@ def test_반올림_안쪽_상승은_기록하지_않는다():
     rec = {**REC, "term_off": 0.9772, "guard": ["term_off"], "tol": 0.0}
     assert "term_off" not in G.올릴_것(rec, 머리(term_off=0.97721))
     assert G.올릴_것(rec, 머리(term_off=0.97731))["term_off"] == 0.9773
+
+
+def test_자가_바뀌면_막는다():
+    """채점 코드가 바뀌면 옛 수와 못 견준다 — 사전이 바뀌는 것과 다르다(DECISIONS §145)."""
+    rec = {**REC, "metrics": "1"}  # 기록은 옛 자
+    막, _ = G.check(rec, 머리(metrics="2", term_off=0.99, lit=0.99))
+    assert len(막) == 1 and "자가 바뀌었다" in 막[0]
+
+
+def test_기록에_자_판이_없으면_박으라고_한다():
+    옛 = {k: v for k, v in REC.items() if k != "metrics"}
+    막, _ = G.check(옛, 머리(term_off=0.99, lit=0.99))
+    assert 막 and "자 판" in 막[0] and "rescore" in 막[0]
+    말2, = G.check(옛, 머리(term_off=0.99), pin=True)[1]
+    assert "이번 실행으로 박는다" in 말2
+
+
+def test_같은_자면_통과한다():
+    rec = {**REC, "metrics": "2"}
+    assert G.check(rec, 머리(metrics="2", term_off=0.92, lit=0.85)) == ([], [])
+
+
+def test_없는_키는_만든다(tmp_path, monkeypatch):
+    """있는 줄만 고쳐 쓰면 새로 생긴 칸(`metrics`)이 영영 안 박힌다(DECISIONS §145)."""
+    board = tmp_path / "b.toml"
+    board.write_text('[[record]]\narm = "팔"\nset_sha256 = "셋"\nterm_off = 0.5\n'
+                     'guard = ["term_off"]\ntol = 0.0\n\n[[target]]\narm = "선"\n', encoding="utf-8")
+    monkeypatch.setattr(G.catalog, "gate", lambda p: None)
+    rec = G.load(board)["record"][0]
+    head = 머리(backend="팔", set_sha256="셋", metrics="7", term_off=0.6)
+    G._쓴다("새-20260928-1.jsonl", rec, head, G.올릴_것(rec, head), path=board)
+    새 = G.load(board)
+    assert 새["record"][0]["metrics"] == "7" and 새["record"][0]["run"] == "새-20260928-1"
+    assert 새["target"][0]["arm"] == "선", "뒤 블록을 안 건드려야 한다"

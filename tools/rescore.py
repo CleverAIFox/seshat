@@ -6,6 +6,7 @@
   `evaluate.score` 로 다시 잰다. 원문을 다시 `mask` 해 자리를 얻는다 — `mask` 는 결정적이다.
 ★ 가설의 문은 같다 — `--hypothesis` 가 대장에서 `실험` 상태여야 한다.
 ★ 새 결과 파일은 머리줄에 `rescored_from` 을 들고, 원래 조건(커밋 · 해시 · 디코딩)을 그대로 옮긴다.
+★ **셋 · 사전 · 자는 물려받지 않고 지금 것을 적는다.** 다시 잰 것은 지금 것으로 잰 것이다.
 """
 from __future__ import annotations
 
@@ -38,6 +39,9 @@ def rescore(run_path: str, set_path: str, post: str = "none") -> tuple[dict, lis
     res = evaluate.score(rows, outs)
     keep = {k: head[k] for k in ("commit", "chars", "backend", "weights", "decoding", "model", "ms") if k in head}
     keep["onto_sha256"] = evaluate.onto_sha256()      # 지금 사전으로 다시 쟀다(DECISIONS §32)
+    # ★ **지금 자로 다시 쟀다.** 옛 머리줄의 자 판을 물려받으면 「옛 자로 잰 수」 라고 거짓말한다 —
+    #   바로 위의 셋 · 사전과 같은 병이다(DECISIONS §145). 재채점의 값어치가 여기 있다
+    keep["metrics"] = evaluate.METRICS_VER
     # ★ **쓴 셋을 적는다.** 2026-09-27 까지 이 줄은 옛 머리줄의 `set_sha256` 을 그대로 옮겼다 —
     #   `--set` 으로 다른 셋을 대도 결과는 옛 셋을 쟀다고 말했다. §106 과 같은 병이다(DECISIONS §122).
     keep["set_sha256"] = evaluate.set_sha256(set_path)

@@ -173,6 +173,12 @@ def load(path: str) -> list[dict]:
 
 MARKS = ("lit", "ui")
 
+# ★ **자가 바뀌면 옛 수와 못 견준다.** 사전이 바뀌면 `onto_sha256` 이 말하고 셋이 바뀌면
+#   `set_sha256` 이 말하는데, **채점 코드가 바뀌는 것을 말하는 것이 없었다**(DECISIONS §145).
+#   지표의 뜻을 바꿀 때 손으로 올린다. 문(`tools/gate.py`)이 이 값이 다르면 비교를 거절한다.
+#   2 — `term` 이 줄 단위 `in` 에서 **출현 횟수**로 바뀌었다(2026-09-28)
+METRICS_VER = "2"
+
 
 def marked(row: dict) -> list[tuple[int, int]]:
     """원문에서 **문서가 표시한** 자리(DECISIONS §122 · §123). 개념 채점에서 뺀다.
@@ -258,19 +264,31 @@ def term(rows: list[dict], outs: list[str]) -> dict[str, float | None]:
     for r, o in zip(rows, outs):
         translated = ko_line(r["src"], o)
         마크 = marked(r)
+        # ★ **출현마다 센다**(DECISIONS §145). 종전에는 분모만 출현마다 늘리고 맞았는지는
+        #   `ko in o` 로 **줄 전체에 한 번** 봤다 — 같은 줄 딴 자리에 맞는 표기가 있으면 틀린 자리도
+        #   맞은 것이 됐다. 2026-09-28 `+gloss` 두 판이 본문 5줄이 다른데 지표가 같았던 까닭이다.
+        #   **자리로는 못 맞춘다**(한 · 영 어순이 다르다). 횟수로 맞춘다 — 원문에 둘이면 번역에도 둘이다.
+        필요: dict[int, int] = {}
+        마디: dict[int, object] = {}
         for a, b, s in ontology.find(onto, r["src"]):
             if s.node["keep"]:
                 continue
             if any(a >= x and b <= y for x, y in 마크):   # 코드로 표시된 자리는 개념이 아니다(§122)
                 continue
-            total += 1
+            키 = id(s.node)
+            필요[키] = 필요.get(키, 0) + 1
+            마디[키] = s.node
+        for 키, n in 필요.items():
+            node = 마디[키]
+            total += n
             if not translated:      # 번역이 아닌 줄에서는 어떤 표기도 맞은 것이 아니다(DECISIONS §52)
                 continue
-            hit_off = s.node["ko"] in o
-            hit = hit_off or any(k in o for k in s.node.get("alt_ko", []))
-            off += hit_off
-            ok += hit
-            bad += (not hit) and any(k in o for k in s.node.get("bad_ko", []))
+            난off = o.count(node["ko"])
+            난 = 난off + sum(o.count(k) for k in node.get("alt_ko", []))
+            off += min(n, 난off)
+            ok += min(n, 난)
+            # 맞은 것으로 못 채운 자리에서만 오역을 센다 — 맞은 자리까지 오역으로 세면 이중 계산이다
+            bad += min(n - min(n, 난), sum(o.count(k) for k in node.get("bad_ko", [])))
     # ★ **분모를 함께 싣는다**(DECISIONS §70). 비율만 있으면 사람이 약분해서 분모를 짐작한다 —
     #   2026-09-25 `0.846` 을 보고 분모를 78 이라 읽었는데 실제는 132/156 이었다. 사전이 넓어지면
     #   분모가 움직이므로, 분모를 모르면 두 숫자가 같은 것을 재는지조차 알 수 없다.
@@ -422,6 +440,7 @@ def conditions(a, rows: list[dict], 코드: dict | None = None) -> dict:
            "dirty": 코드["dirty"],
            "set_sha256": set_sha256(a.set),
            "onto_sha256": onto_sha256(),
+           "metrics": METRICS_VER,      # 자가 바뀌면 옛 수와 못 견준다(DECISIONS §145)
            "chars": chars,
            "backend": a.backend or None,
            "weights": backends.WEIGHTS.get(a.backend or ""),

@@ -27,3 +27,20 @@ def test_후처리_이름이_결과_파일에_남는다():
     a = rs.out_path("H-023", "runs/H-019-x-20260923-110505.jsonl", NOW)
     b = rs.out_path("H-023", "runs/H-019-x-20260923-110505-endings", NOW)
     assert a != b and b.name.endswith("-endings-20260923-092129.jsonl")
+
+
+def test_자_판은_물려받지_않고_지금_것을_적는다(tmp_path):
+    """다시 잰 것은 **지금 자로** 잰 것이다 — 옛 판을 물려받으면 머리줄이 거짓말한다(§145)."""
+    import json as _json
+
+    from seshat import evaluate
+    run = tmp_path / "옛.jsonl"
+    run.write_text("\n".join(_json.dumps(x, ensure_ascii=False) for x in (
+        {"meta": True, "backend": "가짜", "metrics": "1", "commit": "abc", "set_sha256": "옛셋"},
+        {"id": "a", "src": "Increase the quota.", "out": "할당량을 늘리십시오."})) + "\n",
+        encoding="utf-8")
+    셋 = tmp_path / "s.jsonl"
+    셋.write_text(_json.dumps({"id": "a", "src": "Increase the quota."}, ensure_ascii=False) + "\n",
+                  encoding="utf-8")
+    head, _ = rs.rescore(str(run), str(셋), post="none")
+    assert head["metrics"] == evaluate.METRICS_VER != "1"

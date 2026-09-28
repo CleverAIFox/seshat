@@ -12,6 +12,8 @@
 ★ **사전이 바뀌면 막지 않고 말한다.** 사전을 고치면 같은 번역의 점수가 바뀐다(§32 · §96). 그것을
   회귀로 읽으면 사전을 영영 못 고친다 — 재채점으로 기준을 다시 박으라고 이른다.
 ★ **못 재면 0 이 아니다.** 결과에 그 지표가 없으면 「통과」 가 아니라 빨간불이다(§110 과 같은 규율).
+★ **자가 바뀌면 막는다.** 채점 코드가 바뀌면 `metrics` 판이 올라가고, 판이 다른 두 수는 **다른 것을
+  잰 수**다(DECISIONS §145). 사전이 바뀌는 것과 다르다 — 사전은 같은 것을 더 잘 재는 일이다.
 """
 from __future__ import annotations
 
@@ -82,6 +84,17 @@ def check(rec: dict, head: dict, pin: bool = False) -> tuple[list[str], list[str
         (말 if pin else 막).append(
             "기록에 셋 해시가 없다" + (" — 이번 실행으로 박는다" if pin else " — `--update` 로 박는다. 짐작으로 견주지 않는다"))
         return 막, 말
+    if not rec.get("metrics"):
+        (말 if pin else 막).append(
+            "기록에 **자 판**이 없다"
+            + (" — 이번 실행으로 박는다" if pin else
+               " — 채점 코드가 바뀌었을 수 있다. `tools/rescore.py` 로 기준을 다시 재고 `--update` 로 박는다"))
+        return 막, 말
+    if head.get("metrics") != rec["metrics"]:
+        막.append(f"**자가 바뀌었다** — 기록 판 {rec['metrics']} · 이번 판 {head.get('metrics')}\n"
+                  f"    사전이 바뀐 것과 다르다(§32 · §96). 사전은 **같은 것을 더 잘 재는** 일이고\n"
+                  f"    자가 바뀌는 것은 **다른 것을 재는** 일이다. `tools/rescore.py` 로 기준을 다시 잰다")
+        return 막, 말
     if head.get("set_sha256") != rec["set_sha256"]:
         막.append(f"셋이 다르다 — 기록 {rec['set_sha256']} · 이번 {head.get('set_sha256')}\n"
                   f"    다른 자로 잰 두 수를 견주지 않는다. 같은 셋으로 다시 재거나 기록을 다시 박는다")
@@ -139,6 +152,7 @@ def _쓴다(run: str, rec: dict, head: dict, 오른: dict, path: pathlib.Path | 
     끝 = next((i for i in range(시작 + 1, len(줄)) if 줄[i].startswith("[[")), len(줄))
     새값 = {**오른, "set_sha256": head.get("set_sha256", ""), "commit": head.get("commit", ""),
             "onto_sha256": head.get("onto_sha256", ""), "run": pathlib.Path(run).stem,
+            "metrics": head.get("metrics", ""),
             "arm": head.get("backend") or head.get("model") or rec["arm"],
             "date": dt.date.today().isoformat()}
     for i in range(시작, 끝):
@@ -147,6 +161,11 @@ def _쓴다(run: str, rec: dict, head: dict, 오른: dict, path: pathlib.Path | 
             v = 새값.pop(k)
             꼬리 = ("  " + 줄[i].split("#", 1)[1].join(("#", ""))) if "#" in 줄[i] else ""
             줄[i] = f"{k} = {json.dumps(v, ensure_ascii=False)}" + 꼬리
+    # ★ **없는 키는 만든다.** 종전에는 있는 줄만 고쳐 썼다 — 그래서 새로 생긴 `metrics` 가 영영
+    #   안 박히고 문이 매번 「기록에 자 판이 없다」 로 막았다(DECISIONS §145 · §143 과 같은 얼굴).
+    if 새값:
+        뒤 = max(i for i in range(시작, 끝) if 줄[i].strip())      # 블록의 마지막 알맹이 줄
+        줄[뒤 + 1:뒤 + 1] = [f"{k} = {json.dumps(v, ensure_ascii=False)}" for k, v in 새값.items()]
     path.write_text("\n".join(줄) + "\n", encoding="utf-8")
 
 
