@@ -382,6 +382,51 @@ def test_판이_끊겨도_중간_결과가_남는다(tmp_path, monkeypatch):
     assert len(줄) == 1 + 18                       # 머리줄 + 살아남은 줄
 
 
+def test_끊길_때_남은_줄과_이을_길을_말한다(tmp_path, monkeypatch, capsys):
+    """★ **죽는 자리마다 제 길을 말하지만 `--resume` 을 아는 곳은 여기뿐이다**(DECISIONS §198).
+
+    2026-09-29, ollama 시간 초과가 `OLLAMA_TIMEOUT=2400 …` 를 일러 줬는데 그 명령에 `--resume` 이
+    없었다. 그대로 치면 「중간 결과가 남아 있다」 벽을 또 만난다 — **넘는 길이 다음 벽으로 이었다.**
+    """
+    monkeypatch.chdir(tmp_path)
+    셋 = _셋(tmp_path)
+    진짜 = ev.via_backend
+
+    def 시간이_넘는다(name):
+        fn, model = 진짜(name)
+        센다 = [0]
+
+        def call(texts, marks=None):
+            센다[0] += len(texts)
+            if 센다[0] > 18:               # 묶음 둘은 나오고 셋째에서 죽는다
+                raise SystemExit("gemma3:12b 이 600초 안에 답하지 않았다")
+            return fn(texts, marks)
+        return call, model
+    monkeypatch.setattr(ev, "via_backend", 시간이_넘는다)
+    with pytest.raises(SystemExit):
+        ev.main(["--backend", "echo", "--set", 셋, "--name", "끊김"])
+    말 = capsys.readouterr().err
+    assert "18/30 줄" in 말, 말
+    assert "--resume" in 말
+
+
+def test_한_줄도_못_냈으면_이으란_말을_안_한다(tmp_path, monkeypatch, capsys):
+    """이을 것이 없는데 이으라고 하면 다음 판이 빈 파일에서 멈춘다 — 거짓 길이다."""
+    monkeypatch.chdir(tmp_path)
+    셋 = _셋(tmp_path)
+    진짜 = ev.via_backend
+
+    def 바로_죽는다(name):
+        _, model = 진짜(name)
+        def call(texts, marks=None):
+            raise SystemExit("첫 줄에서 막혔다")
+        return call, model
+    monkeypatch.setattr(ev, "via_backend", 바로_죽는다)
+    with pytest.raises(SystemExit):
+        ev.main(["--backend", "echo", "--set", 셋, "--name", "끊김"])
+    assert "--resume" not in capsys.readouterr().err
+
+
 def test_중간_결과가_있으면_말하고_멈춘다(tmp_path, monkeypatch):
     """조용히 덮어쓰면 남아 있던 줄이 사라진다 — 무엇을 할지 말하고 멈춘다."""
     monkeypatch.chdir(tmp_path)

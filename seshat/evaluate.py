@@ -715,15 +715,27 @@ def main(argv=None) -> int:
     새것: dict[str, str] = {}
     _찍은[0] = 0.0                # 판마다 진척 시계를 되돌린다 — 앞 판의 시계를 물려받으면 안 찍는다
     t = time.monotonic()
-    with part.open("a", encoding="utf-8") as pf:
-        for i in range(0, len(남은줄), BATCH):
-            묶음 = 남은줄[i:i + BATCH]
-            before = len(새것)
-            for r, o in zip(묶음, call([r["src"] for r in 묶음], 묶음)):
-                새것[r.get("id")] = o
-                pf.write(json.dumps({"id": r.get("id"), "out": o}, ensure_ascii=False) + "\n")
-            pf.flush()
-            _진척(before, len(새것), len(남은줄), time.monotonic() - t)
+    try:
+        with part.open("a", encoding="utf-8") as pf:
+            for i in range(0, len(남은줄), BATCH):
+                묶음 = 남은줄[i:i + BATCH]
+                before = len(새것)
+                for r, o in zip(묶음, call([r["src"] for r in 묶음], 묶음)):
+                    새것[r.get("id")] = o
+                    pf.write(json.dumps({"id": r.get("id"), "out": o}, ensure_ascii=False) + "\n")
+                pf.flush()
+                _진척(before, len(새것), len(남은줄), time.monotonic() - t)
+    except BaseException:
+        # ★ **끊긴 자리에서 「살아남았다」 고 말한다**(DECISIONS §198). 판이 죽는 까닭은 여럿이고
+        #   (시간 초과 · Ctrl-C · 모델이 사라짐) 저마다 제 길을 말하지만, **그 길에 `--resume` 이
+        #   없으면** 사람은 처음부터 돌리거나 다음 걸음에서 「중간 결과가 남아 있다」 벽을 또 만난다.
+        #   까닭을 아는 곳은 여럿이고 **줄이 남았다는 것을 아는 곳은 여기뿐**이다(§135 · §197).
+        센 = len(이미) + len(새것)
+        if 센:
+            print(f"\n  여기까지 {센}/{len(rows)} 줄은 {part} 에 남아 있다\n"
+                  f"    이어서 돌린다 : 같은 명령에 **--resume** 을 붙인다(위에 시킨 것이 있으면 같이)",
+                  file=sys.stderr, flush=True)
+        raise
     # ★ **`ms` 는 이번 판에 실제로 부른 줄만 센다.** 이어 돌린 판에서 전체로 나누면 빨라 보인다
     ms = (time.monotonic() - t) * 1000 / max(len(남은줄), 1)
     outs = [{**이미, **새것}[r.get("id")] for r in rows]
