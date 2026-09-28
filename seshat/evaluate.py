@@ -121,11 +121,19 @@ def is_hapsyo(ko: str) -> bool:
     last = ko.strip().splitlines()[-1] if ko.strip() else ""
     if not _SENT_END.search(last):
         return True
-    몸 = last.rsplit(":", 1)[0] if ":" in last else last      # 콜론 뒤는 나열이다
-    for 조각 in reversed(_SENT_SPLIT.split(몸)):
-        if _HANGUL_CH.search(조각):
-            return bool(_HAPSYO.search(조각.strip()) or _HAPSYO.search(조각.strip() + "."))
-    return False                                              # 한글이 없다 — 번역이 아니다(§52)
+    if _HAPSYO.search(last):
+        return True                                           # 줄 끝에서 그대로 맺었다
+    # ★ **벗기기는 구제 수단이지 대체가 아니다**(DECISIONS §191). 처음 판에서 콜론 앞만 보게 했더니
+    #   `참고: 이 값은 바꿀 수 없습니다.` 처럼 **콜론 뒤에 종결이 오는 줄**이 통째로 떨어졌다 —
+    #   d002 의 `style` 이 0.98 에서 0.96 으로 **내려갔다.** 원래 통과하던 줄은 계속 통과해야 한다.
+    for 몸 in ([last.rsplit(":", 1)[0]] if ":" in last else []) + [last]:
+        for 조각 in reversed(_SENT_SPLIT.split(몸)):
+            조각 = 조각.strip()
+            if _HANGUL_CH.search(조각):
+                if _HAPSYO.search(조각):
+                    return True
+                break                                         # 한글이 있는 마지막 조각이 아니다
+    return False
 
 
 _찍은 = [0.0]          # 마지막으로 진척을 찍은 때(경과 초). 시간으로도 찍으려고 든다
@@ -225,8 +233,9 @@ MARKS = ("lit", "ui")
 #   지표의 뜻을 바꿀 때 손으로 올린다. 문(`tools/gate.py`)이 이 값이 다르면 비교를 거절한다.
 #   2 — `term` 이 줄 단위 `in` 에서 **출현 횟수**로 바뀌었다(2026-09-28)
 #   3 — 복수 `y→ies` 를 받는다(2026-09-28 · DECISIONS §160). `policies` 가 세어지기 시작한다
-#   4 — `style` 이 **종결어미 뒤 꼬리를 벗긴다**(2026-09-28 · DECISIONS §190). 콜론 뒤 나열과
-#       한글 없는 뒤쪽 조각을 빼고 본다 — d001 에서 걸린 13줄 중 **다섯이 바른 번역**이었다
+#   4 — `style` 이 **종결어미 뒤 꼬리를 벗긴다**(2026-09-28 · DECISIONS §190 · §191). 줄 끝 그대로
+#       보고, 떨어진 것만 콜론 뒤 나열과 한글 없는 조각을 벗겨 **구제**한다 — 오직 완화이므로
+#       `style` 은 올라가기만 한다. d001 에서 걸린 13줄 중 **다섯이 바른 번역**이었다
 METRICS_VER = "4"
 
 
