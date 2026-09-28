@@ -221,12 +221,15 @@ def ollama_chat(model: str, system: str, extra: dict | None = None, suffix: str 
     return call
 
 
-def ollama_chat_ref(model: str, system: str, cap: int = 12, extra: dict | None = None):
+def ollama_chat_ref(model: str, system: str, cap: int = 12, extra: dict | None = None,
+                    fence: bool = False):
     """줄마다 **그 줄의 용어집**을 체계 지시에 붙여 부른다(DECISIONS §134 · `seshat/glossary.py`).
 
     ★ `ollama_chat` 과 배선이 같고 **체계 지시만 줄마다 다르다.** 달라진 것이 하나여야 무엇이
       효과인지 가른다 — 모델도 복호화도 그대로다.
     ★ 사전이 빈 줄은 **원래 지시 그대로** 간다. 빈 사전을 실으면 모델이 없는 것을 찾는다.
+    ★ `fence` — 사전 뒤에 **어디까지가 사전의 일인지**를 붙인다(DECISIONS §140). 목록만 주면
+      모델이 사전에 없는 식별자까지 옮긴다.
     """
     def call(texts: list[str], terms: dict[str, str]) -> list[str]:
         import json as _json
@@ -238,7 +241,7 @@ def ollama_chat_ref(model: str, system: str, cap: int = 12, extra: dict | None =
         url = os.environ.get("OLLAMA_URL", OLLAMA_URL).rstrip("/") + "/api/chat"
         out = []
         for t in texts:
-            토막 = glossary.block(glossary.for_line(onto, t, cap))
+            토막 = glossary.block(glossary.for_line(onto, t, cap), fence=fence)
             body = _json.dumps({"model": model, "stream": False, "options": DECODING,
                                 "messages": [{"role": "system",
                                               "content": system + ("\n\n" + 토막 if 토막 else "")},
@@ -405,6 +408,12 @@ REGISTRY: dict[str, tuple[Backend, str]] = {
     "gemma3-4b+ph+gloss+endings+terms": (
         with_terms(with_endings(with_placeholders(ollama_chat_ref("gemma3:4b", GENERIC_SYSTEM)))),
         "gemma3:4b+ph+gloss+endings+terms"),
+    # ★ **사전에 울타리를 세운 팔**(DECISIONS §140). `+gloss` 가 `term_off` 를 0.886 → 0.973 으로
+    #   올리면서 `lit` 을 0.803 → 0.732 로 떨어뜨렸고, 잃은 것의 9/11 은 **사전에 없는 식별자**였다.
+    #   달라진 것은 사전 토막 끝의 한 줄뿐이다 — 그것이 원인이면 `lit` 이 돌아오고 `term_off` 는 남는다
+    "gemma3-4b+ph+gloss2+endings": (
+        with_endings(with_placeholders(ollama_chat_ref("gemma3:4b", GENERIC_SYSTEM, fence=True))),
+        "gemma3:4b+ph+gloss2+endings"),
 }
 
 # ★ 이름으로 짐작하지 않는다 — 어느 백엔드가 ollama 위에 서는지 여기 적는다. 종전에는 `translategemma` 로
@@ -423,7 +432,8 @@ OLLAMA_OF.update({"translategemma-4b": "translategemma:4b", "translategemma-4b+p
                   "gemma3-4b+ph+mbr8+endings+terms": "gemma3:4b",
                   "gemma3-4b+ph+mbr4+endings+terms": "gemma3:4b",
                   "gemma3-4b+ph+gloss+endings": "gemma3:4b",
-                  "gemma3-4b+ph+gloss+endings+terms": "gemma3:4b"})
+                  "gemma3-4b+ph+gloss+endings+terms": "gemma3:4b",
+                  "gemma3-4b+ph+gloss2+endings": "gemma3:4b"})
 
 # ★ **어느 ollama 모델이 어느 가중치인가.** `from_pretrained` 를 거치지 않는 호출은 라이선스 검사의
 #   정규식이 보지 못한다. 선언을 검사가 대장과 대조한다(DECISIONS §14).

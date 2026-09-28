@@ -77,3 +77,37 @@ def test_후처리_있는_팔과_없는_팔이_둘_다_있다():
     """사전을 미리 주면 후처리가 필요 없어지는가 — 그것이 이 판의 물음이다."""
     assert "gemma3-4b+ph+gloss+endings" in backends.REGISTRY
     assert "gemma3-4b+ph+gloss+endings+terms" in backends.REGISTRY
+
+
+def test_울타리가_경계를_긋는다():
+    """목록만 주면 **행동이 번진다** — 사전에 없는 식별자까지 옮긴다(DECISIONS §140)."""
+    토막 = glossary.block([("quota", "할당량")], fence=True)
+    assert 토막.endswith(glossary.FENCE) and "- quota → 할당량" in 토막
+    # 「부분이 영어 낱말처럼 보여도」 가 이 줄의 핵심이다 — 옮겨진 것은 `DocumentBatchWrite` 였다
+    assert "look like English words" in glossary.FENCE
+
+
+def test_울타리만_남기지_않는다():
+    """사전이 빈 줄에 경고만 주면 그것은 사전 처치가 아니라 딴 처치다."""
+    assert glossary.block([], fence=True) == ""
+
+
+def test_잰_팔의_뜻을_뒤에서_안_바꾼다():
+    """`runs/H-056-gloss-*` 가 이 함수의 기본값으로 잰 판이다 — 기본이 바뀌면 그 판이 거짓이 된다."""
+    assert glossary.block([("quota", "할당량")]) == glossary.block([("quota", "할당량")], fence=False)
+    assert glossary.FENCE not in glossary.block([("quota", "할당량")])
+
+
+def test_울타리_팔이_등록되고_배선이_같다():
+    """달라진 것이 **사전 토막 끝의 한 줄**이어야 그것이 원인인지 가른다(DECISIONS §134)."""
+    arm = "gemma3-4b+ph+gloss2+endings"
+    assert arm in backends.REGISTRY
+    assert backends.OLLAMA_OF[arm] == backends.OLLAMA_OF["gemma3-4b+ph+gloss+endings"]
+    assert backends.WEIGHTS[arm] == backends.WEIGHTS["gemma3-4b+ph+gloss+endings"]
+    assert backends.DECODING_OF[arm] == backends.DECODING_OF["gemma3-4b+ph+gloss+endings"]
+
+
+def test_d001_사례를_프롬프트에_안_적는다():
+    """실제 셋에서 본 식별자를 예시로 적으면 고침이 아니라 **시험 셋에 맞춘 프롬프트**다(§130)."""
+    for 본것 in ("CreateTable", "SCHEDULED", "DocumentBatchWrite", "processing-failed", "DynamicFrames"):
+        assert 본것 not in glossary.FENCE
