@@ -247,3 +247,25 @@ def test_더럽히는_빚은_무엇을_더럽히는지_들고_있다():
     붉은 = [x for x in plan.splitlines() if re.match(r"^\| \d+ \|", x) and "🔴" in x]
     assert all("더럽힌다" in x for x in 붉은), \
         "🔴 인 행은 무엇을 더럽히는지 들어야 한다 — 안 들면 「중요함」 의 다른 말이 된다"
+
+
+def test_빨간_행은_막는_문장을_든다():
+    """★ **🔴 의 뜻이 넓으면 표식이 죽는다**(DECISIONS §187). 「측정을 더럽힌다」 만으로는 끝이
+    없다 — 재는 것은 늘 조금씩 더럽고, 그러면 모든 행이 🔴 이 될 수 있다.
+
+    ★ 카나리아 — 막는 문장을 안 든 🔴 행을 만들어 검사가 살아 있는지 본다.
+    """
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("cd", ROOT / "tools/check_docs.py")
+    cd = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(cd)
+    나쁜 = ("## 1. 남은 일 — 1행\n\n| # | 상태 | 항목 | 전건 |\n|---|---|---|---|\n"
+            "| 1 | 🔴 | **뭔가 — 측정을 더럽힌다.** | — |\n")
+    got = []
+    cd.check_plan(나쁜, got)
+    assert any("어느 문장을 막는지" in x for x in got), "카나리아가 죽었다"
+
+    좋은 = 나쁜.replace("측정을 더럽힌다.**", "측정을 더럽힌다.** `docs/related.md` §3 의 「무엇」 을 막는다")
+    got2 = []
+    cd.check_plan(좋은, got2)
+    assert not any("어느 문장을 막는지" in x for x in got2)

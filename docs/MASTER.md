@@ -46,6 +46,7 @@ bash tools/apply_patch.sh                # INBOX 의 안 붙은 seshat-*.patch �
 | **기록판은 손으로 안 고친다 — 선 줄도 그렇다.** 기록은 `--update`, 선은 `--pin-target` 이 판에서 박는다(DECISIONS §171) | `tools/gate.py::_블록을_고친다` · `tools/gate.py::_선을_박는다` · `tests/test_gate.py` |
 | **점수를 내는 셋에서 캔 노드는 누수 장부에 적는다.** 출처를 사전 안에 적지 않는다 — 적으면 `onto_sha256` 이 바뀌어 **뜻이 안 바뀐 편집이 옛 판을 전부 막는다**(DECISIONS §168) | `data/ontology/mined.jsonl` · `tools/check_ontology.py` · `tools/mine_terms.py` 의 거절 · `tests/test_mined.py` |
 | **차이가 잡음인지는 손으로 안 정한다.** 허용치 · 배수 · 중앙값을 사람이 그으면 자가 변수에 안 맞는다 — 2026-09-28 하루에 세 번 틀렸다(§139 · §178 · §179). 짝지은 부트스트랩이 **크기와 확실함을 따로** 준다(DECISIONS §180) | `tools/bootstrap.py` · `tests/test_bootstrap.py` · `verify.sh` 의 `bootstrap` 단계 |
+| **🔴 는 「지금 적어 놓은 문장 하나를 못 쓰게 하는 빚」 이다.** 「측정을 더럽힌다」 만으로는 끝이 없다 — 재는 것은 늘 조금씩 더럽다. 각 🔴 행은 `docs/related.md` §3 의 **어느 줄을 막는지**를 든다. 그러면 🔴 의 수가 **말하려는 문장의 수로 위가 막힌다**(DECISIONS §187) | `tools/check_docs.py::check_plan` |
 | **가설을 닫는 판마다 빚 한 줄을 같이 움직인다.** 재면 **재는 도구의 결함이 보이므로** 가설 닫기는 빚을 만든다 — 2026-09-28 가설 17 을 닫고 빚이 18 에서 20 이 됐다(DECISIONS §168) | 패치 제목 아래 **갚은 줄**을 적는다 · `docs/PLAN.md` 의 「일부 갚음」 |
 | 위생 도구는 근거가 있을 때만 지운다 | `tools/sweep.py` · `tests/test_sweep.py` |
 
