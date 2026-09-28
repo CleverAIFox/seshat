@@ -134,3 +134,42 @@ def test_verify_가_CI_판정을_본다():
     v = (ROOT / "tools/verify.sh").read_text(encoding="utf-8")
     assert "tools/ci_status.py" in v
     assert v.index("ci_status.py") > v.index("tools/lake.py"), "CI 판정은 마지막에 본다"
+
+
+def _CI():
+    import importlib.util
+    s = importlib.util.spec_from_file_location("ci_status", ROOT / "tools/ci_status.py")
+    m = importlib.util.module_from_spec(s)
+    s.loader.exec_module(m)
+    return m
+
+
+def test_가장_최근_판을_직접_고른다():
+    """★ **`gh run list -L 1` 이 「가장 최근」 을 준다고 믿었는데 아니었다**(DECISIONS §172).
+    열한 판 묵은 것을 주고 문은 그것을 「초록」 으로 찍었다 — **거짓 초록**이다."""
+    C = _CI()
+    판 = [{"headSha": "옛", "conclusion": "success", "createdAt": "2026-09-28T07:16:51Z"},
+          {"headSha": "새", "conclusion": "failure", "createdAt": "2026-09-28T10:02:26Z"}]
+    코드, 말 = C.고른다(판, "딴것")
+    assert 코드 == 1 and "failure" in 말, "온 순서를 믿으면 옛 초록을 집는다"
+    assert C.창 > 1, "창이 1 이면 목록이 빠뜨린 판을 영영 못 본다"
+
+
+def test_아직_안_본_커밋을_초록으로_안_찍는다():
+    """★ **「모른다」 는 통과가 아니다**(DECISIONS §172 · §110). 밀기 전 HEAD 는 CI 가 본 적이 없다."""
+    C = _CI()
+    판 = [{"headSha": "옛", "conclusion": "success", "createdAt": "2026-09-28T07:00:00Z"}]
+    코드, 말 = C.고른다(판, "아직")
+    assert 코드 == 0 and "아직 안 봤다" in 말, "밀기 전이면 막지 않는다"
+    assert "초록으로 봤다" not in 말, "안 본 것을 봤다고 적지 않는다"
+
+
+def test_이_커밋의_판이_있으면_그것으로_판정한다():
+    C = _CI()
+    판 = [{"headSha": "여기", "conclusion": "failure", "createdAt": "2026-09-28T10:00:00Z"},
+          {"headSha": "옛", "conclusion": "success", "createdAt": "2026-09-28T07:00:00Z"}]
+    assert C.고른다(판, "여기")[0] == 1
+    판[0]["conclusion"] = "success"
+    assert C.고른다(판, "여기")[0] == 0
+    판[0]["conclusion"] = ""        # 도는 중
+    assert C.고른다(판, "여기")[0] == 0
