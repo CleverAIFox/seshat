@@ -1,7 +1,7 @@
-"""주 1회 신규 논문 · 모델을 훑어 `docs/papers.md` 의 「읽을 것」 에 후보를 붙인다(DECISIONS §126).
+"""주 1회 신규 논문 · 모델을 훑어 `docs/next/papers.md` 의 「읽을 것」 에 후보를 붙인다(DECISIONS §126).
 
   python3 tools/watch_papers.py                 후보를 화면에
-  python3 tools/watch_papers.py --write         docs/papers.md 에 붙인다
+  python3 tools/watch_papers.py --write         docs/next/papers.md 에 붙인다
   python3 tools/watch_papers.py --days 14
 
 ★ **요약하지 않는다.** 제목 · 초록 첫 문장 · 왜 걸렸는지만 적고 **「읽을 것」 에 넣는다.** 표 본문의
@@ -27,7 +27,7 @@ import urllib.parse
 import urllib.request
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-PAPERS = ROOT / "docs/papers.md"
+PAPERS = ROOT / "docs/next/papers.md"
 UA = "seshat-watch-papers (https://github.com/CleverAIFox/seshat)"
 
 # 무엇을 찾는가 — DECISIONS §126 의 다섯. 제목 + 초록에서 하나라도 걸려야 후보다

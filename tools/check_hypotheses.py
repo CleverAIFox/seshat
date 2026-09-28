@@ -24,7 +24,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-LEDGER = ROOT / "docs/hypotheses.md"
+LEDGER = ROOT / "docs/next/hypotheses.md"
 STATES = {"제안", "실험", "채택", "기각"}
 TRACKS = {f"R{i}" for i in range(1, 8)}
 ROW = re.compile(r"^\| (H-\d{3}) \|(.*)\|\s*$")
@@ -88,7 +88,7 @@ def _canary() -> None:
 
 def main() -> int:
     _canary()
-    fails = check(LEDGER.read_text(encoding="utf-8")) if LEDGER.exists() else ["docs/hypotheses.md 가 없다"]
+    fails = check(LEDGER.read_text(encoding="utf-8")) if LEDGER.exists() else ["docs/next/hypotheses.md 가 없다"]
     for f in fails:
         print(f"    {f}")
     return 1 if fails else 0

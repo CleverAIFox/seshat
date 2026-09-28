@@ -190,11 +190,11 @@ note = "커밋하지 않는다 — 나눠 줄 때 저작자 표시와 동일 조
 [[source]]
 id = "papers"
 where = "lake:cache/papers/*"
-origin = "논문 PDF — 읽은 결과는 docs/papers.md 가 든다"
+origin = "논문 PDF — 읽은 결과는 docs/next/papers.md 가 든다"
 license = "논문마다 다르다"
 uses = ["reference"]
 how = "사람"
-feeds = "미투입 — 사람이 읽고 docs/papers.md 에 적는다"
+feeds = "미투입 — 사람이 읽고 docs/next/papers.md 에 적는다"
 
 [[source]]
 id = "weights"

@@ -39,7 +39,7 @@ ROOT = Path(__file__).resolve().parent.parent
 # ★ README 는 서술 규약에서 뺀다. 나머지 셋은 미래의 나를 향하고 README 는
 #   처음 읽는 사람을 향한다. 대상이 다르면 문체도 다르다. 빠진 것이 아니라
 #   뺀 것이다. **참조 검사는 README 도 본다** — 처음 읽는 사람이 죽은 링크를 만난다.
-DOCS = ["docs/MASTER.md", "docs/PLAN.md", "docs/DECISIONS.md"]
+DOCS = ["docs/now/MASTER.md", "docs/next/PLAN.md", "docs/why/DECISIONS.md"]
 
 # 1·2인칭. 문서는 3인칭으로 쓴다.
 PERSON = re.compile(r"(?<![가-힣])(우리|저희|여러분|당신|제가|내가|너희)(?![가-힣])")
@@ -235,7 +235,7 @@ def check_plan(text: str, fails: list) -> None:
         #   **말하려는 문장의 수로 위가 막힌다.** 막는 문장이 없으면 그것은 넓히는 일(🟡)이다
         if "🔴" in marks and "related.md" not in item:
             fails.append(f"PLAN #{n} 이 🔴 인데 **어느 문장을 막는지** 안 적었다 — "
-                         f"`docs/related.md` §3 의 줄을 든다(DECISIONS §187). "
+                         f"`docs/now/related.md` §3 의 줄을 든다(DECISIONS §187). "
                          f"막는 문장이 없으면 🔴 가 아니라 🟡 다")
         for tok in PLAN_REF.findall(deps):
             if int(tok) not in known:
@@ -254,7 +254,8 @@ def check_plan(text: str, fails: list) -> None:
 
 
 def _targets(root: Path) -> list[Path]:
-    out = [root / "README.md", root / "docs/MASTER.md", root / "docs/PLAN.md"]
+    out = [root / "README.md", root / MAP,        # ★ 지도의 참조도 검사한다(§199)
+           root / "docs/now/MASTER.md", root / "docs/next/PLAN.md"]
     out += sorted((root / "docs/bench").glob("*")) if (root / "docs/bench").exists() else []
     for d in REF_DIRS:
         base = root / d
@@ -275,9 +276,9 @@ def check_refs(root: Path, fails: list) -> None:
       DECISIONS 는 지우지 않으므로 없는 절을 가리키면 오타다.
     ★ 1판은 `PLAN §x #N` 꼴만 보았다. `MASTER §x` 와 `DECISIONS §N` 은 아무도 보지 않았다.
     """
-    plan = (root / "docs/PLAN.md").read_text(encoding="utf-8")
-    master = (root / "docs/MASTER.md").read_text(encoding="utf-8")
-    dec = (root / "docs/DECISIONS.md").read_text(encoding="utf-8")
+    plan = (root / "docs/next/PLAN.md").read_text(encoding="utf-8")
+    master = (root / "docs/now/MASTER.md").read_text(encoding="utf-8")
+    dec = (root / "docs/why/DECISIONS.md").read_text(encoding="utf-8")
     rows = {n for n, _ in plan_rows(plan)[0]}
     plan_secs = {int(m.group(1)) for _, t in _h2(plan) if (m := H2_NUM.match(t))}
     master_secs = set(HEAD_ANY.findall(master))
@@ -320,6 +321,90 @@ def check_refs(root: Path, fails: list) -> None:
                     continue
                 if int(m.group(1)) not in plan_secs:
                     fails.append(f"{rel}:{n} 가 없는 PLAN §{m.group(1)} 을 가리킨다")
+
+
+# ★ **문서 지도와 색인은 손으로 안 맞춘다**(DECISIONS §199). 지도는 늘 실물보다 늦게 고쳐지고,
+#   늦은 지도는 없는 지도보다 나쁘다 — 읽는 쪽이 그것을 믿기 때문이다.
+MAP = "docs/README.md"
+색인_시작, 색인_끝 = "<!-- 색인 시작 -->", "<!-- 색인 끝 -->"
+
+
+def _절들(text: str) -> list[tuple[int, str, str]]:
+    """DECISIONS 의 (번호, 제목, 날짜)."""
+    out = []
+    for m in re.finditer(r"^## §(\d+)\. (.+)$", text, re.M):
+        뒤 = text[m.end():m.end() + 400]
+        날 = DATE.search(뒤)
+        out.append((int(m.group(1)), m.group(2).strip(), 날.group(0).strip("*") if 날 else ""))
+    return out
+
+
+def 색인_글(절들: list[tuple[int, str, str]]) -> str:
+    줄 = [f"{색인_시작}",
+          f"<details><summary><b>절 색인</b> — {len(절들)} 절. "
+          f"<code>python3 tools/check_docs.py --fix-index</code> 가 다시 쓴다</summary>",
+          "", "| § | 날짜 | 무엇 |", "|---|---|---|"]
+    줄 += [f"| {n} | {d} | {제} |" for n, 제, d in 절들]
+    줄 += ["", "</details>", 색인_끝]
+    return "\n".join(줄)
+
+
+def _색인을_박는다(text: str) -> str:
+    새 = 색인_글(_절들(text))
+    if 색인_시작 in text and 색인_끝 in text:
+        앞, 뒤 = text.split(색인_시작, 1)
+        return 앞 + 새 + 뒤.split(색인_끝, 1)[1]
+    첫 = text.index("## §1.")
+    return text[:첫] + 새 + "\n\n" + text[첫:]
+
+
+def check_index(text: str, fails: list) -> None:
+    """색인이 절과 맞나. **자동으로 다시 쓸 수 있는 것은 손으로 고치라고 하지 않는다.**"""
+    if 색인_시작 not in text:
+        fails.append("DECISIONS 에 절 색인이 없다 — `python3 tools/check_docs.py --fix-index`")
+        return
+    if _색인을_박는다(text) != text:
+        fails.append("DECISIONS 색인이 절과 어긋난다 — `python3 tools/check_docs.py --fix-index`")
+
+
+def check_map(root: Path, fails: list) -> None:
+    """문서 지도가 실물과 맞나 — **빠진 문서도 없는 문서도 다 잡는다**(DECISIONS §199).
+
+    ★ 이름으로 견준다. 이름은 축을 건너 유일하고, 자리를 옮기는 것보다 **안 적히는 것**이 병이다.
+    """
+    p = root / MAP
+    if not p.exists():
+        fails.append(f"{MAP} 가 없다 — 축이 셋인데 지도가 없으면 새 문서가 아무 데나 생긴다")
+        return
+    글 = p.read_text(encoding="utf-8")
+    실물 = {q.name: q.relative_to(root / "docs").as_posix()
+            for q in (root / "docs").rglob("*.md") if q.name != "README.md"}
+    # 최상위 `README.md` 와 이 지도 자신은 문서가 아니라 **문**이다 — 목록 밖이다
+    적힌 = set(re.findall(r"[\w가-힣-]+\.md", 글)) - {"README.md"}
+    for 이름, 자리 in sorted(실물.items()):
+        if 이름 not in 적힌:
+            fails.append(f"{MAP} 에 `docs/{자리}` 가 없다 — 지도에 없는 문서는 아무도 안 연다")
+    for 유령 in sorted(적힌 - set(실물)):
+        fails.append(f"{MAP} 이 없는 `{유령}` 을 든다")
+    for 축 in ("now", "next", "why"):
+        if f"{축}/" not in 글:
+            fails.append(f"{MAP} 에 축 `{축}/` 이 없다")
+
+
+def check_tools_listed(root: Path, master: str, fails: list) -> None:
+    """`tools/` 의 파일이 MASTER §14 에 다 올라 있나(DECISIONS §199).
+
+    ★ 목록이 두 곳에 살면 **한쪽만 는다.** 2026-09-29 README 와 MASTER 를 견주니 여덟이 한쪽에만,
+      다섯이 다른 쪽에만 있었다 — 그 다섯은 **그 주에 만든 도구들**이었다. 새것부터 빠진다.
+    """
+    i = master.find("## 14. 도구")
+    if i < 0:
+        fails.append("MASTER 에 `## 14. 도구` 가 없다 — 명령의 정본이 사라졌다")
+        return
+    절 = master[i:]
+    for q in sorted((root / "tools").iterdir()):
+        if q.suffix in (".py", ".sh") and q.name != "__init__.py" and f"tools/{q.name}" not in 절:
+            fails.append(f"MASTER §14 에 `tools/{q.name}` 이 없다 — 목록이 도구보다 늦다")
 
 
 def check_master(text: str, fails: list) -> None:
@@ -384,6 +469,13 @@ def _canary() -> None:
 def main(argv=None) -> int:
     args = sys.argv[1:] if argv is None else argv
     _canary()
+    if "--fix-index" in args:
+        p = ROOT / "docs/why/DECISIONS.md"
+        옛 = p.read_text(encoding="utf-8")
+        새 = _색인을_박는다(옛)
+        p.write_text(새, encoding="utf-8")
+        print(f"    색인 {len(_절들(새))} 절 — {'고쳤다' if 새 != 옛 else '그대로다'}")
+        return 0
     if "--list" in args:
         print(__doc__)
         return 0
@@ -399,9 +491,12 @@ def main(argv=None) -> int:
         check_headings(p.name, texts[rel], fails)
         check_eof(p.name, texts[rel], fails)
     if len(texts) == len(DOCS):
-        check_plan(texts["docs/PLAN.md"], fails)
-        check_master(texts["docs/MASTER.md"], fails)
-        check_decisions(texts["docs/DECISIONS.md"], fails)
+        check_plan(texts["docs/next/PLAN.md"], fails)
+        check_master(texts["docs/now/MASTER.md"], fails)
+        check_decisions(texts["docs/why/DECISIONS.md"], fails)
+        check_index(texts["docs/why/DECISIONS.md"], fails)
+        check_map(ROOT, fails)
+        check_tools_listed(ROOT, texts["docs/now/MASTER.md"], fails)
         check_refs(ROOT, fails)
     for f in fails:
         print(f"    {f}")

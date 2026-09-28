@@ -47,8 +47,8 @@ bash tools/apply_patch.sh                # INBOX 의 안 붙은 seshat-*.patch �
 | **기록판은 손으로 안 고친다 — 선 줄도 그렇다.** 기록은 `--update`, 선은 `--pin-target` 이 판에서 박는다(DECISIONS §171) | `tools/gate.py::_블록을_고친다` · `tools/gate.py::_선을_박는다` · `tests/test_gate.py` |
 | **점수를 내는 셋에서 캔 노드는 누수 장부에 적는다.** 출처를 사전 안에 적지 않는다 — 적으면 `onto_sha256` 이 바뀌어 **뜻이 안 바뀐 편집이 옛 판을 전부 막는다**(DECISIONS §168) | `data/ontology/mined.jsonl` · `tools/check_ontology.py` · `tools/mine_terms.py` 의 거절 · `tests/test_mined.py` |
 | **차이가 잡음인지는 손으로 안 정한다.** 허용치 · 배수 · 중앙값을 사람이 그으면 자가 변수에 안 맞는다 — 2026-09-28 하루에 세 번 틀렸다(§139 · §178 · §179). 짝지은 부트스트랩이 **크기와 확실함을 따로** 준다(DECISIONS §180) | `tools/bootstrap.py` · `tests/test_bootstrap.py` · `verify.sh` 의 `bootstrap` 단계 |
-| **🔴 는 「지금 적어 놓은 문장 하나를 못 쓰게 하는 빚」 이다.** 「측정을 더럽힌다」 만으로는 끝이 없다 — 재는 것은 늘 조금씩 더럽다. 각 🔴 행은 `docs/related.md` §3 의 **어느 줄을 막는지**를 든다. 그러면 🔴 의 수가 **말하려는 문장의 수로 위가 막힌다**(DECISIONS §187) | `tools/check_docs.py::check_plan` |
-| **가설을 닫는 판마다 빚 한 줄을 같이 움직인다.** 재면 **재는 도구의 결함이 보이므로** 가설 닫기는 빚을 만든다 — 2026-09-28 가설 17 을 닫고 빚이 18 에서 20 이 됐다(DECISIONS §168) | 패치 제목 아래 **갚은 줄**을 적는다 · `docs/PLAN.md` 의 「일부 갚음」 |
+| **🔴 는 「지금 적어 놓은 문장 하나를 못 쓰게 하는 빚」 이다.** 「측정을 더럽힌다」 만으로는 끝이 없다 — 재는 것은 늘 조금씩 더럽다. 각 🔴 행은 `docs/now/related.md` §3 의 **어느 줄을 막는지**를 든다. 그러면 🔴 의 수가 **말하려는 문장의 수로 위가 막힌다**(DECISIONS §187) | `tools/check_docs.py::check_plan` |
+| **가설을 닫는 판마다 빚 한 줄을 같이 움직인다.** 재면 **재는 도구의 결함이 보이므로** 가설 닫기는 빚을 만든다 — 2026-09-28 가설 17 을 닫고 빚이 18 에서 20 이 됐다(DECISIONS §168) | 패치 제목 아래 **갚은 줄**을 적는다 · `docs/next/PLAN.md` 의 「일부 갚음」 |
 | 위생 도구는 근거가 있을 때만 지운다 | `tools/sweep.py` · `tests/test_sweep.py` |
 
 ---
@@ -95,7 +95,7 @@ tools/fetch_awsdocs.py   AWS 공식 안내서(CC BY-SA 4.0)에서 도메인 문�
 - 한 요청 최대 50건. thoth 워커의 상한과 같다
 - 백엔드가 길이를 어기면 서버가 먼저 `500 backend_length_mismatch` 로 죽는다
 
-정본은 thoth `docs/MASTER.md` §7-4 다. 이 절은 그 요약이고, 어긋나면 저쪽이 맞다.
+정본은 thoth `docs/now/MASTER.md` §7-4 다. 이 절은 그 요약이고, 어긋나면 저쪽이 맞다.
 
 ## 3. 평가
 
@@ -104,6 +104,8 @@ uv run --group eval python -m seshat.evaluate --url <서버> --set data/eval/see
 HF_TOKEN=<토큰> uv run --group data python tools/fetch_flores.py            # 처음 한 번
 AWS_PROFILE=<프로파일> uv run --group eval --group aws python -m seshat.evaluate \
   --backend aws-translate --set data/bench/flores_plus.devtest.jsonl --name aws-translate
+uv run --group eval python -m seshat.evaluate --url https://<워커> --thoth \
+  --thoth-token <토큰> --set data/eval/seed.jsonl --name nova-lite   # thoth 배포본(Nova Lite)
 ```
 
 ★ **`--backend` 는 서버 없이 백엔드를 부른다.** 기준선은 서빙하지 않으므로 서버를 띄우지 않는다.
@@ -218,12 +220,12 @@ bash tools/verify.sh --only=pytest  # 부분 실행 — 마지막에 일부러 �
 ## 7. 연구 트랙
 
 **seshat 은 개발이 아니라 연구다**(DECISIONS §12). 화면은 thoth 가 맡고, 이 저장소는 번역의 뇌 — 모델 ·
-데이터 · 평가 · 서빙 백엔드 — 만 든다. 가설은 `docs/hypotheses.md` 에, 남의 연구는 `docs/papers.md` 에 쌓는다.
+데이터 · 평가 · 서빙 백엔드 — 만 든다. 가설은 `docs/next/hypotheses.md` 에, 남의 연구는 `docs/next/papers.md` 에 쌓는다.
 비공개 저장소라 쌓는 지식은 공개하지 않는다. 데이터 · 가중치는 그래도 커밋하지 않는다(§2).
 
 | 트랙 | 무엇 | 쌓이는 것 |
 |---|---|---|
-| R1 한 · 영 문법 대조 | **`docs/grammar.md` 가 열 축을 든다**(관형절 · 명사절 · 피동 · 부정 · 최상급 · 비교급 · 조건절 · 목적 · 등위 · 연쇄). 조사 · 높임법은 축이 아니라 지표다(`josa` · `style`) | `seshat/grammar.py` 가 문장을 축에 넣고 `tools/slice.py` 가 결과를 축으로 가른다(DECISIONS §125) |
+| R1 한 · 영 문법 대조 | **`docs/now/grammar.md` 가 열 축을 든다**(관형절 · 명사절 · 피동 · 부정 · 최상급 · 비교급 · 조건절 · 목적 · 등위 · 연쇄). 조사 · 높임법은 축이 아니라 지표다(`josa` · `style`) | `seshat/grammar.py` 가 문장을 축에 넣고 `tools/slice.py` 가 결과를 축으로 가른다(DECISIONS §125) |
 | R2 도메인 지식 · 온톨로지 | AWS 서비스 · 기능 · API · 파라미터 · 공식 한국어 표기의 그래프 | 용어 자리표시 · 참조(RAG) · 용어 보상의 원천 |
 | R3 모델 · 구조 | 2026 년 흐름 — 디코더 LLM + 추론 시점 연산 · 검증 가능한 보상의 강화학습 · 소형 번역 특화 · SSM 혼합 · 증류 · 병합 | 후보 표 · 구조 대결 |
 | R4 에이전트 교사 공장 | 초안 → 문법 · 용어 검토 → 수정의 그래프. **오프라인에서만** 돈다 — 실시간은 단일 모델 | 증류용 최고 품질 데이터 |
@@ -338,7 +340,7 @@ uv run python tools/check_catalog.py --list     # 층과 출처를 표로
 |---|---|
 | `data/ontology/` · `data/eval/seed.jsonl` | 사람이 고치는 작은 정본이다. diff 로 봐야 한다 |
 | 받는 도구(`fetch_flores.py` · `fetch_awsdocs.py`) · 만드는 도구(`make_probes.py`) | 산출물은 다시 만든다 |
-| `docs/papers.md` | 논문의 **읽은 결과**가 자산이다. PDF 는 cache 다 |
+| `docs/next/papers.md` | 논문의 **읽은 결과**가 자산이다. PDF 는 cache 다 |
 
 ```bash
 python3 tools/lake.py init                   # 한 번 — 층 디렉터리와 MANIFEST.tsv
@@ -418,3 +420,72 @@ thoth 의 sweep · doctor(`OLLAMA_KEEP_ALSO`)가 본다. 두 저장소가 같은
   오프라인에서 최고 품질을 대량 생성하고(PLAN #18), 그것으로 작은 학생을 만들어 학생만 띄운다.
 ★ **연말 장비는 서빙 장비가 아니라 공장이다.** 학생을 만들 때까지만 쓰고, 만든 뒤에는 Lambda 가 일한다.
 ★ 가중치 보관은 공짜다(HuggingFace Hub 비공개 저장소). **상시 응답은 공짜가 없다** — 그래서 유휴 0 을 고른다.
+
+## 14. 도구
+
+**명령의 정본은 이 절 하나다**(DECISIONS §199). 최상위 `README.md` 는 문이고 목록을 안 든다 —
+두 곳에 적었더니 2026-09-29 기준 여덟 개가 한쪽에만, 다섯 개가 다른 쪽에만 있었다.
+`tools/` 의 파일은 **빠짐없이 이 표에 있다**(`tools/check_docs.py::check_tools_listed`).
+
+**돌리기 전에 · 기계를 본다**
+
+| 도구 | 무엇 | 언제 |
+|---|---|---|
+| `tools/verify.sh` | 점검 전부. 실패해도 끝까지 돌고 표로 보인다 — **점검 목록의 정본** | 밀기 전에 늘 |
+| `tools/ci_status.py` | **CI 가 지금 커밋을 초록으로 봤는가** — 이 기계의 초록은 CI 의 초록이 아니다 | 밀고 나서 |
+| `tools/hookcheck.sh` | 커밋 훅이 **도는가** — 있는지가 아니라 도는지를 실행으로 잰다 | `verify` 안에서 |
+| `tools/doctor.py` | 이 기계 — 레이크 · 가중치 · 작업대 · `.env` · 디스크 | 기계가 이상할 때 |
+| `tools/sweep.py [--fix]` | WSL 위생 — seshat 이 저장소 밖에 남긴 흔적만 | 이따금 |
+
+**패치를 주고받는다**
+
+| 도구 | 무엇 | 언제 |
+|---|---|---|
+| `tools/apply_patch.sh` | INBOX 의 **안 붙은** 패치를 번호 순서로 붙인다 | 패치를 받을 때마다 |
+| `tools/make_patch.sh N 자리` | 패치를 만든다 — **기준 나무**를 패치가 들고 간다 | 보내는 쪽에서 |
+| `tools/patch_subjects.py` | 패치의 커밋 제목과 붙음 · 겹침 판정 | 위 둘이 부른다 |
+| `tools/deps.sh --merge` | 의존성 봇 — 초록만 합치고 가지를 지운다(thoth 사본) | Actions 만 |
+
+**대장을 지킨다** — 규약마다 강제자가 있다(§0)
+
+| 도구 | 무엇 |
+|---|---|
+| `tools/check_docs.py` | 문서 ↔ 문서 — 문체 · 절 · PLAN 표 · 참조 · DECISIONS · **문서 지도** · **도구 목록**. `--fix-index` 가 DECISIONS 색인을 다시 쓴다 |
+| `tools/doc_fsck.py` | 문서 ↔ 실물 — 경로 · 테스트 · 아무도 안 부르는 도구 |
+| `tools/check_hypotheses.py` | 가설 대장 — 실험의 문 |
+| `tools/check_ontology.py` | 온톨로지 — 표기 유일 · 부모 · 끝소리 |
+| `tools/check_catalog.py` | 데이터 카탈로그 — 칸 · 쓰임 · `data/` 의 카탈로그 밖 파일(§11) |
+| `tools/check_model_licenses.py` | 코드가 부르는 가중치가 대장에 있고 상업 가부가 적혀 있나 |
+| `tools/lake.py` | SSD 레이크 — 넣기만 한다 · 대장 밖을 짚는다 · `ls` 로 찾는다 |
+| `tools/dupcheck.py` | **같은 것이 몇 벌인가** — 구조가 같은 함수를 센다 |
+
+**셋을 만든다** — 무엇으로 잴 것인가
+
+| 도구 | 무엇 |
+|---|---|
+| `tools/fetch_awsdocs.py` | AWS 공식 문서(CC BY-SA)에서 도메인 셋을 만든다 — 정답 없이 · `--exclude` 로 떼어둔다 |
+| `tools/fetch_flores.py` | FLORES+ 영→한을 셋 모양으로 받는다 |
+| `tools/make_probes.py` | 문형 탐침 — 템플릿 × 온톨로지 어휘로 통제된 문장을 만든다 |
+| `tools/mine_terms.py` | 셋에 자주 나오는데 **사전이 모르는** 말을 캔다 — 점수를 내는 셋은 거절한다 |
+| `tools/noise.py` | 같은 팔을 여러 판 돌려 **흔들림**을 잰다 |
+
+**잰다 · 판정한다**
+
+| 도구 | 무엇 |
+|---|---|
+| `python -m seshat.evaluate` | 한 판. 가설이 **실험** 상태가 아니면 문이 막는다 · 끊기면 `--resume` |
+| `tools/rescore.py` | 이미 있는 결과를 **GPU 없이** 다시 채점한다 |
+| `tools/bootstrap.py A B --set S` | **차이가 잡음인가** — 짝지은 재표집이 크기와 확실함을 따로 준다 |
+| `tools/compare_runs.py` | 두 결과를 줄 단위로 대조 — 판정 전의 EDA |
+| `tools/term_diff.py` | **개념 단위** 대조 — 누가 어느 용어에서 이겼나 |
+| `tools/slice.py` | 결과를 **문법 축으로 갈라** 다시 센다 |
+| `tools/show_misses.py` | 숫자 뒤의 줄을 본다 — 어느 줄이 어떻게 틀렸나 |
+| `tools/style_na.py` | **합쇼체가 설 수 없는 줄**의 후보 — 판정은 사람이 한다 |
+| `tools/labels.py` | 사람의 눈가림 판정 — 표를 만들고 · 읽고 · 일치를 잰다 |
+| `tools/gate.py` | 회귀를 막는 문 · 기록판과 선을 **판에서** 박는다(손으로 안 고친다) |
+
+**바깥을 본다**
+
+| 도구 | 무엇 |
+|---|---|
+| `tools/watch_papers.py` | 주 1회 신규 논문 · 모델을 훑어 `docs/next/papers.md` 에 후보를 붙인다 |

@@ -16,9 +16,9 @@ thoth 는 영어 자격증 문제 화면에 한글 번역을 겹쳐 보여주는
 
 | 쌓는 곳 | 무엇 |
 |---|---|
-| `docs/hypotheses.md` | 가설 대장 — 실험의 문. 검증 방법과 비용 상한 없이는 실험에 못 들어간다 |
-| `docs/papers.md` | 논문 대장 — 남이 이미 한 학습을 파싱한다 |
-| `docs/MASTER.md` §7 · §8 | 연구 트랙 일곱 · 인프라 |
+| `docs/next/hypotheses.md` | 가설 대장 — 실험의 문. 검증 방법과 비용 상한 없이는 실험에 못 들어간다 |
+| `docs/next/papers.md` | 논문 대장 — 남이 이미 한 학습을 파싱한다 |
+| `docs/now/MASTER.md` §7 · §8 | 연구 트랙 일곱 · 인프라 |
 
 사전학습 모델과 공개 연구를 최대한 쓰고, 학습은 장비가 허락하는 만큼만 한다 — 지금은 학습 없이, 연말 전에는
 원격 GPU, 새 장비부터 강화학습 · 구조 실험.
@@ -33,7 +33,7 @@ thoth 는 영어 자격증 문제 화면에 한글 번역을 겹쳐 보여주는
 
 ## thoth 와의 계약
 
-thoth 워커가 `ENGINE=http` 로 이 저장소의 서버를 부른다(thoth `docs/MASTER.md` §7-4).
+thoth 워커가 `ENGINE=http` 로 이 저장소의 서버를 부른다(thoth `docs/now/MASTER.md` §7-4).
 
 ```
 POST /translate  {"texts": [...], "source": "en", "target": "ko", "terms": {...}}
@@ -47,41 +47,13 @@ thoth 에 그대로 끼워진다.
 ## 실행
 
 ```bash
-cp .env.example .env                              # SESHAT_DATA(SSD 레이크) · SESHAT_INBOX(다운로드 폴더)
+cp .env.example .env     # SESHAT_DATA(SSD 레이크) · SESHAT_INBOX(다운로드 폴더)
 uv sync
-bash tools/verify.sh                              # 점검 전부 — CI 도 이것만 부른다
-bash tools/apply_patch.sh                         # INBOX 의 최신 seshat-*.patch 를 커밋째 붙인다
-python3 tools/lake.py check                       # SSD 레이크 대장 · 가설 근거
-python3 tools/check_catalog.py --list             # 데이터 카탈로그 — 출처 · 라이선스 · 쓰임
-python3 tools/sweep.py [--fix]                    # WSL 위생 — seshat 이 남긴 흔적만
-uv run pytest                                     # 계약 · 평가 · 평가셋 불변식
-uv run python -m seshat.serve                     # echo 백엔드 · 127.0.0.1:8100
-uv run --group eval python -m seshat.evaluate \
-    --url http://127.0.0.1:8100 --set data/eval/seed.jsonl
-python3 tools/doctor.py                           # 이 기계 — 레이크 · 가중치 · 작업대 · .env · 디스크
-python3 tools/check_docs.py                       # 문서 ↔ 문서 (규약은 docs/MASTER.md §0)
-python3 tools/doc_fsck.py                         # 문서 ↔ 실물
-python3 tools/check_model_licenses.py --list      # 가중치 라이선스 대장
-python3 tools/check_hypotheses.py                 # 가설 대장 — 실험의 문
-python3 tools/make_probes.py --name h001          # 문형 탐침 200줄 → data/probes/
-python3 tools/fetch_awsdocs.py --name d001        # AWS 공식 문서(CC BY-SA) → data/domain/
-python3 tools/compare_runs.py <A> <B> --set <셋>   # 두 결과를 줄 단위로 대조
-python3 tools/rescore.py <결과> --set <셋> --hypothesis H-NNN   # GPU 없이 다시 채점
-python3 tools/show_misses.py <결과> [--what keep|term|hangul|style]  # 숫자 뒤의 줄을 본다
-python3 tools/term_diff.py <A> <B>                # 두 결과를 개념 단위로 — 누가 어느 용어에서 이겼나
-python3 tools/labels.py make --set <셋> --a <A> --b <B>   # 눈가림 채점표 → /tmp · 사람이 뜻을 본다
-python3 tools/labels.py read --name <이름> --judge <판정자>   # 채운 표를 읽어 팔마다 비율을 낸다
-python3 tools/labels.py agree --name <이름> --judges a,b      # 판정자 둘의 일치와 카파
-python3 tools/labels.py prompt                    # 다른 판정자에게 줄 지시문
+bash tools/verify.sh     # 점검 전부 — CI 도 이것만 부른다
 ```
 
-thoth 배포본(Nova Lite)을 기준선으로 잴 때는 워커를 그대로 부른다. 평가 문장은
-학습 쌍에 섞이지 않게 `.local` 출처로 나간다.
-
-```bash
-uv run --group eval python -m seshat.evaluate --url https://<워커> --thoth \
-    --thoth-token <토큰> --set data/eval/seed.jsonl --name nova-lite
-```
+**도구의 정본 목록은 `docs/now/MASTER.md` §14 하나다.** 여기에 다시 적지 않는다 —
+두 곳에 적었더니 한쪽에만 있는 도구가 열셋이 됐다(DECISIONS §199).
 
 ## 데이터
 
@@ -91,10 +63,7 @@ uv run --group eval python -m seshat.evaluate --url https://<워커> --thoth \
 
 ## 문서
 
-| | |
-|---|---|
-| [`docs/PLAN.md`](docs/PLAN.md) | 남은 일 · 미결정 · 범위 밖 |
-| [`docs/MASTER.md`](docs/MASTER.md) | 지금 무엇이 있는가 |
-| [`docs/DECISIONS.md`](docs/DECISIONS.md) | 왜 그렇게 됐나 |
+**축이 셋이다 — `docs/now/` 지금 · `docs/next/` 앞으로 · `docs/why/` 왜.**
+어느 문서를 열지와 **무엇을 어디에 적을지**는 [`docs/README.md`](docs/README.md) 가 든다.
 
-**새 세션은 `PLAN` §0 부터 읽는다.**
+**새 세션은 [`docs/next/PLAN.md`](docs/next/PLAN.md) §0 부터 읽는다.**

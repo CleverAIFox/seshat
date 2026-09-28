@@ -9,7 +9,7 @@
   선**이었다. 이 도구가 들어오면 그 선을 손으로 안 긋는다.
 ★ **새것이 아니다.** Koehn, *Statistical Significance Tests for Machine Translation Evaluation*,
   EMNLP 2004(aclanthology.org/W04-3250). 그 논문도 Efron 1979 의 부트스트랩을 MT 점수에 댄 것이다 —
-  **이 저장소가 늦은 것은 22년이 아니라 「이것을 아는가」 한 칸**이다(docs/related.md).
+  **이 저장소가 늦은 것은 22년이 아니라 「이것을 아는가」 한 칸**이다(docs/now/related.md).
 ★ **짝지어 뽑는다.** 두 판에서 **같은 줄 번호**를 뽑아 양쪽을 같이 센다. 따로 뽑으면 줄 난이도가
   잡음으로 들어와 차이가 묻힌다 — 그것이 「짝지은」 의 뜻이다.
 ★ **비율 지표는 줄마다 분자와 분모를 들고 다시 더한다.** `term_off` 는 줄마다 자리 수가 다르므로

@@ -84,7 +84,7 @@ def test_카탈로그에_없는_자리에는_못_넣는다(tmp_path):
 
 def test_실제_가설_대장에서_근거를_찾는다():
     """정규식 카나리아 — 대장에 runs/ 근거가 하나는 있다(H-016)."""
-    assert lake.EVIDENCE.findall((ROOT / "docs/hypotheses.md").read_text(encoding="utf-8"))
+    assert lake.EVIDENCE.findall((ROOT / "docs/next/hypotheses.md").read_text(encoding="utf-8"))
 
 
 def test_셸이_env_를_이긴다(tmp_path, monkeypatch):

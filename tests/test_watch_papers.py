@@ -74,8 +74,8 @@ def test_못_물으면_죽는다(monkeypatch):
 
 
 def test_대장에_있는_논문은_다시_안_올린다():
-    """`docs/papers.md` 는 `arXiv 2508.14909` 꼴로 적는다."""
-    본문 = (ROOT / "docs/papers.md").read_text(encoding="utf-8")
+    """`docs/next/papers.md` 는 `arXiv 2508.14909` 꼴로 적는다."""
+    본문 = (ROOT / "docs/next/papers.md").read_text(encoding="utf-8")
     assert "2508.14909" in W.seen(본문)
 
 
@@ -89,7 +89,7 @@ def test_라이선스는_미확인으로_적는다(monkeypatch):
 
 def test_읽을_것_아래에만_붙인다():
     """표 본문의 「무엇을 했나 · 가져올 것」 은 읽은 사람이 쓴다 — 도구가 그 칸을 안 채운다."""
-    본문 = (ROOT / "docs/papers.md").read_text(encoding="utf-8")
+    본문 = (ROOT / "docs/next/papers.md").read_text(encoding="utf-8")
     새 = W.write(본문, ["- **arXiv 2026-09-27** 새 줄"], "2026-09-27")
     앞, 뒤 = 새.split("## 읽을 것")
     assert "새 줄" in 뒤 and "새 줄" not in 앞

@@ -146,7 +146,7 @@ def check(lake: Path, ledger: Path | None = None, entries: list[dict] | None = N
             rel = p.relative_to(lake).as_posix()
             if p.is_file() and catalog.match(entries, "lake", rel) is None:
                 fails.append(f"카탈로그 밖 {rel} — data/catalog.toml 에 자리를 적거나 치운다")
-    ledger = ledger or ROOT / "docs/hypotheses.md"
+    ledger = ledger or ROOT / "docs/next/hypotheses.md"
     if ledger.exists():
         for name in sorted(set(EVIDENCE.findall(ledger.read_text(encoding="utf-8")))):
             if f"runs/{name}" not in have:

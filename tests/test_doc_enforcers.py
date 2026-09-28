@@ -161,10 +161,11 @@ def test_날짜_없는_절이_걸린다():
 # ---------- 참조 ----------
 
 def _tree(tmp_path, plan=PLAN, master="# m\n\n## 1. a\n\n### 1-1. b\n", dec=None, extra=None):
-    (tmp_path / "docs").mkdir()
-    (tmp_path / "docs/PLAN.md").write_text(plan, encoding="utf-8")
-    (tmp_path / "docs/MASTER.md").write_text(master, encoding="utf-8")
-    (tmp_path / "docs/DECISIONS.md").write_text(dec or _dec(1, "본문"), encoding="utf-8")
+    for 축 in ("now", "next", "why"):          # 축마다 한 칸(DECISIONS §199)
+        (tmp_path / "docs" / 축).mkdir(parents=True)
+    (tmp_path / "docs/next/PLAN.md").write_text(plan, encoding="utf-8")
+    (tmp_path / "docs/now/MASTER.md").write_text(master, encoding="utf-8")
+    (tmp_path / "docs/why/DECISIONS.md").write_text(dec or _dec(1, "본문"), encoding="utf-8")
     (tmp_path / "README.md").write_text(extra or "", encoding="utf-8")
     return tmp_path
 
@@ -243,7 +244,7 @@ def test_더럽힌다고_적었으면_무엇을_더럽히는지_적어야_한다
 def test_더럽히는_빚은_무엇을_더럽히는지_들고_있다():
     """**수를 박지 않는다.** 갚으면 줄어드는 것이 정상이고, 수를 박으면 갚을 때 시험이 빨개진다
     (2026-09-28 #34 를 갚자 「넷 이상」 이 깨졌다 · DECISIONS §161)."""
-    plan = (ROOT / "docs/PLAN.md").read_text(encoding="utf-8")
+    plan = (ROOT / "docs/next/PLAN.md").read_text(encoding="utf-8")
     붉은 = [x for x in plan.splitlines() if re.match(r"^\| \d+ \|", x) and "🔴" in x]
     assert all("더럽힌다" in x for x in 붉은), \
         "🔴 인 행은 무엇을 더럽히는지 들어야 한다 — 안 들면 「중요함」 의 다른 말이 된다"
@@ -265,7 +266,92 @@ def test_빨간_행은_막는_문장을_든다():
     cd.check_plan(나쁜, got)
     assert any("어느 문장을 막는지" in x for x in got), "카나리아가 죽었다"
 
-    좋은 = 나쁜.replace("측정을 더럽힌다.**", "측정을 더럽힌다.** `docs/related.md` §3 의 「무엇」 을 막는다")
+    좋은 = 나쁜.replace("측정을 더럽힌다.**", "측정을 더럽힌다.** `docs/now/related.md` §3 의 「무엇」 을 막는다")
     got2 = []
     cd.check_plan(좋은, got2)
     assert not any("어느 문장을 막는지" in x for x in got2)
+
+
+# ---------- 지도 · 색인 · 도구 목록(DECISIONS §199) ----------
+
+지도 = ("# 문서 지도\n\n```\ndocs/\n  now/    MASTER.md       지금\n"
+        "          related.md      결과\n  next/   PLAN.md         앞으로\n"
+        "  why/    DECISIONS.md    왜\n```\n")
+
+
+def _축(tmp_path, 지도글=지도, 더=()):
+    for 축 in ("now", "next", "why"):
+        (tmp_path / "docs" / 축).mkdir(parents=True)
+    for 자리 in ("now/MASTER.md", "now/related.md", "next/PLAN.md", "why/DECISIONS.md", *더):
+        (tmp_path / "docs" / 자리).write_text("x\n", encoding="utf-8")
+    (tmp_path / "docs/README.md").write_text(지도글, encoding="utf-8")
+    return tmp_path
+
+
+def test_지도가_실물과_맞으면_조용하다(tmp_path):
+    f = []
+    cd.check_map(_축(tmp_path), f)
+    assert f == []
+
+
+def test_지도에_없는_문서가_걸린다(tmp_path):
+    """★ 지도에 없는 문서는 아무도 안 연다 — 흩어짐은 파일이 아니라 **안 적힌 파일**이다."""
+    f = []
+    cd.check_map(_축(tmp_path, 더=("now/grammar.md",)), f)
+    assert any("grammar.md" in x for x in f)
+
+
+def test_지도가_없는_문서를_들면_걸린다(tmp_path):
+    f = []
+    cd.check_map(_축(tmp_path, 지도글=지도.replace("결과", "결과\n          ghost.md      유령")), f)
+    assert any("ghost.md" in x for x in f)
+
+
+def test_지도가_아예_없으면_걸린다(tmp_path):
+    (tmp_path / "docs").mkdir()
+    f = []
+    cd.check_map(tmp_path, f)
+    assert any("지도" in x or "README" in x for x in f)
+
+
+def test_색인이_절과_어긋나면_걸린다():
+    글 = _dec(1, "본문") + _dec(2, "본문")
+    박은 = cd._색인을_박는다(글)
+    f = []
+    cd.check_index(박은, f)
+    assert f == [], f
+    f = []
+    cd.check_index(박은 + _dec(3, "본문"), f)      # 절만 늘고 색인은 그대로
+    assert any("어긋난다" in x for x in f)
+
+
+def test_색인이_없으면_고치는_길을_말한다():
+    f = []
+    cd.check_index(_dec(1, "본문"), f)
+    assert any("--fix-index" in x for x in f)
+
+
+def test_도구가_목록에_없으면_걸린다(tmp_path):
+    """★ 목록이 두 곳에 살면 **한쪽만 는다** — 새로 만든 것부터 빠진다(DECISIONS §199)."""
+    (tmp_path / "tools").mkdir()
+    (tmp_path / "tools/새도구.py").write_text("x\n", encoding="utf-8")
+    (tmp_path / "tools/옛도구.py").write_text("x\n", encoding="utf-8")
+    f = []
+    cd.check_tools_listed(tmp_path, "## 14. 도구\n\n`tools/옛도구.py` 만 적혀 있다\n", f)
+    assert len(f) == 1 and "새도구.py" in f[0]
+
+
+def test_도구_절이_사라지면_걸린다(tmp_path):
+    (tmp_path / "tools").mkdir()
+    f = []
+    cd.check_tools_listed(tmp_path, "# m\n\n## 1. a\n", f)
+    assert any("14" in x for x in f)
+
+
+def test_저장소의_지도와_목록이_통과한다():
+    """★ 시험이 인공 나무에서만 초록이면 **저장소를 안 지킨다**(DECISIONS §170 과 같은 병)."""
+    f = []
+    cd.check_map(ROOT, f)
+    cd.check_tools_listed(ROOT, (ROOT / "docs/now/MASTER.md").read_text(encoding="utf-8"), f)
+    cd.check_index((ROOT / "docs/why/DECISIONS.md").read_text(encoding="utf-8"), f)
+    assert f == [], f
