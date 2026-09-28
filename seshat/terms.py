@@ -177,6 +177,33 @@ def hide(text: str, spans: list, letter: str = "U") -> tuple[str, dict[str, dict
     return 새, slots
 
 
+def hide_all(text: str, groups: list[tuple[list, str]]) -> tuple[str, dict[str, dict[str, dict]]]:
+    """여러 종류를 **한 번에** 뺀다 — 종류마다 따로 부르면 앞의 것이 뒤의 자리를 민다(DECISIONS §152).
+
+      hide_all("Set books-policy under Encryption.", [(lit_spans, "L"), (ui_spans, "U")])
+
+    ★ 2026-09-28 `lit` 을 먼저 빼고 `ui` 를 부르자 「자리가 틀리다」 로 멈췄다 — **멈춘 것이 옳았다.**
+      자리 검사가 없었으면 엉뚱한 글자를 뺐을 것이다(`evaluate.marked` 와 같은 값어치).
+    ★ 자리는 **원문 기준**이고 자르기는 **뒤에서부터**다. 종류가 섞여도 규칙은 하나다.
+    """
+    모 = []
+    for spans, letter in groups:
+        for x, at in (spans or []):
+            모.append((int(at), str(x), letter))
+    slots: dict[str, dict[str, dict]] = {letter: {} for _, letter in groups}
+    센다 = {letter: len([1 for spans, L in groups if L == letter for _ in (spans or [])]) for _, letter in groups}
+    새 = text
+    for at, x, letter in sorted(모, reverse=True):
+        if text[at:at + len(x)] != x:
+            raise SystemExit(f"{letter} 자리가 틀리다 — {x!r} @ {at}\n"
+                             f"    `python3 tools/fetch_awsdocs.py` 로 셋을 다시 만든다")
+        key = f"{letter}{센다[letter]}"
+        slots[letter][key] = {"text": x, "coda": None}
+        새 = 새[:at] + f"{OPEN}{key}{CLOSE}" + 새[at + len(x):]
+        센다[letter] -= 1
+    return 새, slots
+
+
 def unmask(ko: str, slots: dict[str, dict], letter: str = "T") -> tuple[str, list[str]]:
     seen = set()
 

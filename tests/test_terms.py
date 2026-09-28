@@ -122,3 +122,38 @@ def test_표시가_없으면_아무것도_안_한다():
     from seshat import backends
     got = backends.with_marks_hidden(lambda t, x, m=None: list(t))(["그대로"], {}, [{}])
     assert got == ["그대로"]
+
+
+def test_여러_종류를_한_번에_뺀다():
+    """종류마다 따로 부르면 앞의 것이 뒤의 자리를 민다(DECISIONS §152).
+
+    2026-09-28 `lit` 을 먼저 빼고 `ui` 를 부르자 자리 검사가 멈췄다 — **멈춘 것이 옳았다.**
+    """
+    숨, 표 = terms.hide_all("Set books-policy under Encryption here.",
+                            [([["books-policy", 4]], "L"), ([["Encryption", 23]], "U")])
+    assert 숨 == "Set ⟦L1⟧ under ⟦U1⟧ here."
+    assert 표["L"]["L1"]["text"] == "books-policy" and 표["U"]["U1"]["text"] == "Encryption"
+
+
+def test_두_종류를_빼고_되돌린다():
+    from seshat import backends
+    본것 = []
+
+    def 그대로(texts, terms_, marks=None):
+        본것.extend(texts)
+        return list(texts)
+
+    got = backends.with_marks_hidden(그대로, kinds=(("lit", "L"), ("ui", "U")))(
+        ["Set books-policy under Encryption here."], {},
+        [{"lit": [["books-policy", 4]], "ui": [["Encryption", 23]]}])
+    assert 본것 == ["Set ⟦L1⟧ under ⟦U1⟧ here."]
+    assert got == ["Set books-policy under Encryption here."]
+
+
+def test_표시된_글자를_둘_다_뺀_팔이_있다():
+    from seshat import backends
+    새, 옛 = ("gemma3-4b+ph+marks+gloss2+retry+endings+terms",
+             "gemma3-4b+ph+gloss2+retry+endings+terms")
+    assert 새 in backends.REGISTRY and 새 in backends.REPAIR_ARMS
+    assert backends.DECODING_OF[새] == backends.DECODING_OF[옛]
+    assert backends.WEIGHTS[새] == backends.WEIGHTS[옛]

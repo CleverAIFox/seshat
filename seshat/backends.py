@@ -318,23 +318,35 @@ def with_placeholders(inner: Backend, repair: tuple[Backend, ...] = ()) -> Backe
     return call
 
 
-def with_marks_hidden(inner: Backend, kind: str = "ui", letter: str = "U") -> Backend:
+def with_marks_hidden(inner: Backend, kinds: tuple[tuple[str, str], ...] = (("ui", "U"),)) -> Backend:
     """**줄이 아는 자리**를 `⟦U1⟧` 로 빼고 번역한 뒤 되돌린다(DECISIONS §151 · H-064).
 
     ★ **이것은 프롬프트가 아니라 입력을 고친다.** 콘솔 라벨은 「Security Groups」 처럼 평범한 영어
       낱말이 평범한 자리에 있어 **원문에 단서가 없다** — 무엇을 시키든 모델은 알 수 없는 것을 맞혀야
       한다(§150). 자리를 빼 주면 맞힐 것이 없어진다.
     ★ **자리표시 밖에 선다.** 이름 빼기(`with_placeholders`)보다 먼저 빼야 두 자리가 안 겹친다 —
-      수확기가 이미 `keep` 과 겹치는 `ui` 를 뺐지만(`fetch_awsdocs.rows`) 순서까지 믿지 않는다.
+      수확기가 이미 `keep` 과 겹치는 것을 뺐고(`fetch_awsdocs.rows`) `lit` 과 `ui` 는 d001 에서
+      **겹침이 0** 이다(2026-09-28 확인).
+    ★ **`lit` 도 같은 종류다**(DECISIONS §152). 둘 다 「문서가 표시한 글자가 그대로 남아야 한다」 이고,
+      모델은 둘 다 못 지킨다(`lit` 142 중 28 · `ui` 82 중 67). 한쪽만 지키는 것이 이상한 것이었다.
     ★ **끝소리를 모른다.** 임의의 영어 라벨의 읽기는 사전에 없으므로 조사는 손대지 않는다
       (`terms.particle` 이 `None` 을 그대로 돌려준다).
     """
     def call(texts: list[str], terms_: dict, marks: list[dict] | None = None) -> list[str]:
         from . import terms
         마크 = marks or [{}] * len(texts)
-        숨긴 = [terms.hide(t, m.get(kind) or [], letter) for t, m in zip(texts, 마크)]
-        outs = inner([h for h, _ in 숨긴], terms_, 마크)
-        return [terms.unmask(o, sl, letter=letter)[0] for o, (_, sl) in zip(outs, 숨긴)]
+        # ★ **한 번에 뺀다.** 종류마다 따로 부르면 앞의 것이 뒤의 자리를 민다(DECISIONS §152)
+        숨긴 = [terms.hide_all(t, [(m.get(kind) or [], letter) for kind, letter in kinds])
+               for t, m in zip(texts, 마크)]
+        보낼 = [h for h, _ in 숨긴]
+        표들 = [표 for _, 표 in 숨긴]
+        outs = inner(보낼, terms_, 마크)
+        나온 = []
+        for o, 표 in zip(outs, 표들):
+            for letter, sl in 표.items():
+                o = terms.unmask(o, sl, letter=letter)[0]
+            나온.append(o)
+        return 나온
     return call
 
 
@@ -455,6 +467,12 @@ REGISTRY: dict[str, tuple[Backend, str]] = {
         with_marks_hidden(with_terms(with_endings(with_placeholders(
             ollama_chat_ref("gemma3:4b", GENERIC_SYSTEM, fence=True), repair=_gemma3_repair)))),
         "gemma3:4b+ph+ui+gloss2+retry+endings+terms"),
+    # ★ **표시된 글자를 둘 다 뺀 팔**(H-065). `lit` 과 `ui` 는 같은 종류인데 한쪽만 지키고 있었다
+    "gemma3-4b+ph+marks+gloss2+retry+endings+terms": (
+        with_marks_hidden(with_terms(with_endings(with_placeholders(
+            ollama_chat_ref("gemma3:4b", GENERIC_SYSTEM, fence=True), repair=_gemma3_repair))),
+            kinds=(("lit", "L"), ("ui", "U"))),
+        "gemma3:4b+ph+marks+gloss2+retry+endings+terms"),
     "gemma3-4b+ph+gloss2+retry+endings+terms": (
         with_terms(with_endings(with_placeholders(
             ollama_chat_ref("gemma3:4b", GENERIC_SYSTEM, fence=True), repair=_gemma3_repair))),
@@ -481,7 +499,8 @@ OLLAMA_OF.update({"translategemma-4b": "translategemma:4b", "translategemma-4b+p
                   "gemma3-4b+ph+gloss2+endings": "gemma3:4b",
                   "gemma3-4b+ph+gloss2+retry+endings+terms": "gemma3:4b",
                   "gemma3-4b+ph+gloss3+endings": "gemma3:4b",
-                  "gemma3-4b+ph+ui+gloss2+retry+endings+terms": "gemma3:4b"})
+                  "gemma3-4b+ph+ui+gloss2+retry+endings+terms": "gemma3:4b",
+                  "gemma3-4b+ph+marks+gloss2+retry+endings+terms": "gemma3:4b"})
 
 # ★ **어느 ollama 모델이 어느 가중치인가.** `from_pretrained` 를 거치지 않는 호출은 라이선스 검사의
 #   정규식이 보지 못한다. 선언을 검사가 대장과 대조한다(DECISIONS §14).
@@ -511,6 +530,7 @@ DECODING_OF.update({arm: {"temperature": 0.8, "seed0": 101, "num_predict": 512, 
 REPAIR_ARMS.update({"gemma3-4b+ph+retry+endings+terms", "gemma3-4b+ph+retry",
                     "gemma3-4b+ph+gloss2+retry+endings+terms",
                     "gemma3-4b+ph+ui+gloss2+retry+endings+terms",
+                    "gemma3-4b+ph+marks+gloss2+retry+endings+terms",
                     "gemma3-12b+ph+retry", "gemma3-12b+ph+retry+endings+terms"})
 for _arm in REPAIR_ARMS:
     DECODING_OF[_arm] = {**DECODING, "repair": REPAIR}
