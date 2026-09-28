@@ -101,6 +101,29 @@ def fix_terms(onto: list[dict], ko: str, src: str | None = None) -> tuple[str, l
     return ko, hits
 
 
+# 이름 바로 뒤의 조사. `_AFTER` 와 같은 목록이고 같은 규칙이다 — 뒤에 한글이 이어지면 조사가 아니다
+_JOSA_AFTER = "(으로|이나|이라|을|를|이|가|은|는|과|와|나|라|로)(?![가-힣])"
+
+
+def fix_particles(text: str, slots: dict[str, dict]) -> str:
+    """이름 뒤 조사를 끝소리에 맞춘다 — **자리표시를 안 거친 글에도**(DECISIONS §149).
+
+    ★ 고치는 판(`with_placeholders(..., repair=)`)은 **원문을 그대로 준다.** 그래서 그 답에는 `⟦Tn⟧` 이
+      없고 `unmask` 가 안 불리며, **H-013 의 끝소리 조사 고르기가 통째로 건너뛰어진다.** 2026-09-28
+      `keep` 이 0.9979 로 오르는 동안 `josa` 가 구성상 1.000 에서 0.9918 로 내려간 것이 그 자국이다 —
+      고치는 판이 **이름은 살리고 조사는 버렸다.**
+    ★ 긴 이름부터 본다 — `Amazon EMR` 을 `EMR` 로 먼저 잡으면 앞이 남는다.
+    ★ 틀린 조사만 바뀐다. 맞는 것은 `particle` 이 그대로 돌려준다.
+    """
+    for slot in sorted(slots.values(), key=lambda s: -len(s["text"])):
+        name, coda = slot["text"], slot.get("coda")
+        if not coda:
+            continue
+        text = re.sub(re.escape(name) + _JOSA_AFTER,
+                      lambda m: name + particle(coda, m.group(1)), text)
+    return text
+
+
 def unmask(ko: str, slots: dict[str, dict]) -> tuple[str, list[str]]:
     seen = set()
 

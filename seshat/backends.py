@@ -285,7 +285,8 @@ REPAIR_STATS: dict[str, int] = {"tried": 0, "fixed": 0}
 def with_placeholders(inner: Backend, repair: tuple[Backend, ...] = ()) -> Backend:
     """H-001 의 처치군 — 영어로 남을 이름을 `⟦Tn⟧` 로 빼고 번역한 뒤 되돌린다(`seshat/terms.py`).
 
-    ★ `repair` 는 차례로 시도하는 판들이다. **원문을 그대로 준다** — 자리표시 없이.
+    ★ `repair` 는 차례로 시도하는 판들이다. **원문을 그대로 준다** — 자리표시 없이. 그래서 그 답에는
+      되돌리기가 없고, **조사는 `terms.fix_particles` 가 따로 맞춘다**(DECISIONS §149).
     ★ 다 실패하면 **첫 답을 그대로 둔다** — 없는 이름을 지어 넣지 않는다. 사라진 것은 사라진 것으로 재야
       `keep` 이 진실을 말한다.
     """
@@ -303,7 +304,9 @@ def with_placeholders(inner: Backend, repair: tuple[Backend, ...] = ()) -> Backe
                 for ask in repair:
                     cand = ask([t], terms_)[0]
                     if all(n in cand for n in names):
-                        ko = cand
+                        # ★ **고치는 판에도 조사 규칙을 세운다**(DECISIONS §149). 이 답에는 `⟦Tn⟧` 이
+                        #   없어 `unmask` 가 안 불린다 — 그대로 두면 이름은 살고 조사는 버려진다
+                        ko = terms.fix_particles(cand, slots)
                         REPAIR_STATS["fixed"] += 1
                         break
             fixed.append(ko)
