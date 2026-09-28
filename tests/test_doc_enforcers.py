@@ -8,6 +8,7 @@
 """
 import importlib.util
 import pathlib
+import re
 import subprocess
 
 import pytest
@@ -220,3 +221,28 @@ def test_사본은_원본의_참조를_들어도_된다(tmp_path):
     cd.check_refs(root, f)
     assert [x for x in f if "copy.py" in x] == []
     assert any("mine.py" in x for x in f)
+
+
+def test_더럽힌다고_적었으면_무엇을_더럽히는지_적어야_한다(tmp_path):
+    """안 적으면 🔴 이 「중요함」 의 다른 말이 되고, 그러면 곧 전부 🔴 이 된다(DECISIONS §159)."""
+    plan = tmp_path / "PLAN.md"
+    plan.write_text(
+        "## 1. 남은 일 — 1행\n\n| # | 상태 | 항목 | 전건 |\n|---|---|---|---|\n"
+        "| 1 | 🔴 📄 | 아주 중요한 일이다 | — |\n", encoding="utf-8")
+    fails = []
+    cd.check_plan(plan.read_text(encoding="utf-8"), fails)
+    assert any("무엇을 더럽히는지" in f for f in fails)
+    plan.write_text(
+        "## 1. 남은 일 — 1행\n\n| # | 상태 | 항목 | 전건 |\n|---|---|---|---|\n"
+        "| 1 | 🔴 📄 | 사전이 좁아 `term` 을 더럽힌다 | — |\n", encoding="utf-8")
+    fails = []
+    cd.check_plan(plan.read_text(encoding="utf-8"), fails)
+    assert not [f for f in fails if "더럽히는지" in f]
+
+
+def test_더럽히는_빚이_실제로_표시돼_있다():
+    """§159 가 넷을 셌다 — 목록이 평평하면 더럽히는 빚이 열다섯 번째까지 밀린다."""
+    plan = (ROOT / "docs/PLAN.md").read_text(encoding="utf-8")
+    붉은 = [x for x in plan.splitlines() if re.match(r"^\| \d+ \|", x) and "🔴" in x]
+    assert len(붉은) >= 4, "측정을 더럽히는 빚이 표시돼 있어야 한다"
+    assert all("더럽힌다" in x for x in 붉은)

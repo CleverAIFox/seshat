@@ -20,7 +20,7 @@
 |---|---|
 | `check_style` | 1·2인칭 · 경어체 종결 · 대화체 |
 | `check_headings` | `##` 에 번호가 없다 · 번호가 겹친다 · 연속이 아니다 |
-| `check_plan` | 표가 §1 밖에 있다 · 제목의 행 수가 틀리다 · 번호가 겹치거나 역순이다 · 상태가 어휘 밖이다 · ⏳ 인데 막고 있는 것이 비었다 · 전건이 없는 번호다 |
+| `check_plan` | 표가 §1 밖에 있다 · 제목의 행 수가 틀리다 · 번호가 겹치거나 역순이다 · 상태가 어휘 밖이다 · ⏳ 인데 막고 있는 것이 비었다 · **🔴 인데 무엇을 더럽히는지 안 적었다** · 전건이 없는 번호다 |
 | `check_refs` | `PLAN #N` · `PLAN §N` · `MASTER §x` · `DECISIONS §N` 이 없는 것을 가리킨다 |
 | `check_master` | 미래형. 계획은 PLAN 에 적는다 |
 | `check_decisions` | `배운 것` · 날짜가 없다 · 번호가 연속이 아니다 · §108 부터 `강제자` 가 없다 |
@@ -58,7 +58,10 @@ ROW = re.compile(r"^\| *(\d+) *\|")           # PLAN 항목 행
 PLAN_S1 = re.compile(r"^## 1\. 남은 일 — (\d+)행\s*$", re.M)
 # ★ **상태 어휘는 닫혀 있다**(파이어레인 PLAN §0-2). 닫힘 표식을 만들면 사람은 행을
 #   지우는 대신 표식을 단다. `✅` · `⬛` 는 어휘 밖이다.
-STATUS = {"📄", "🟡", "⏳", "⚠"}
+# ★ 🔴 — **이 빚이 안 갚히면 측정이 더러워진다**(DECISIONS §159). 「아직 안 한 일」 과 다르다.
+#   오늘 세 번 증명됐다 — `term` 버그가 모든 수를 부풀렸고(§145), 짐작한 `tol` 이 회귀를
+#   통과시켰고(§139), `josa` 구멍이 엉뚱한 범인을 가리켰다(§149). **더럽히는 빚이 먼저다.**
+STATUS = {"📄", "🟡", "⏳", "⚠", "🔴"}
 CLOSED_MARKS = ("✅", "⬛", "해결됨", "완료")
 PLAN_REF = re.compile(r"(?<![\w§-])#(\d+)(?!\d)")
 
@@ -221,6 +224,11 @@ def check_plan(text: str, fails: list) -> None:
             fails.append(f"PLAN #{n} 에 닫힘 표시가 있다 — 닫힌 행은 지운다")
         if "⏳" in marks and not deps:
             fails.append(f"PLAN #{n} 이 ⏳ 인데 막고 있는 것이 비었다")
+        # ★ **더럽힌다고 적었으면 무엇을 더럽히는지 적어야 한다**(DECISIONS §159).
+        #   안 적으면 「중요함」 의 다른 말이 되고, 그러면 곧 전부 🔴 이 된다
+        if "🔴" in marks and "더럽힌다" not in item:
+            fails.append(f"PLAN #{n} 이 🔴 인데 **무엇을 더럽히는지** 안 적었다 — "
+                         f"「… 를 더럽힌다」 를 항목 안에 적는다")
         for tok in PLAN_REF.findall(deps):
             if int(tok) not in known:
                 fails.append(f"PLAN #{n} 의 전건 #{tok} 이 존재하지 않는다")
