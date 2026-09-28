@@ -157,3 +157,69 @@ def test_표시된_글자를_둘_다_뺀_팔이_있다():
     assert 새 in backends.REGISTRY and 새 in backends.REPAIR_ARMS
     assert backends.DECODING_OF[새] == backends.DECODING_OF[옛]
     assert backends.WEIGHTS[새] == backends.WEIGHTS[옛]
+
+
+def test_잃은_표시를_센다():
+    """사라진 자리표시는 **모델이 그 조각을 버린 것**이다 — 세지 않으면 안 보인다(DECISIONS §154)."""
+    from seshat import backends
+    backends.MARKS_STATS.update({"뺀 것": 0, "잃은 것": 0, "다시 물음": 0, "되찾음": 0})
+    backends.with_marks_hidden(lambda t, x, m=None: ["다 버렸습니다."],
+                               kinds=(("lit", "L"), ("ui", "U")))(
+        ["Set books-policy under Encryption here."], {},
+        [{"lit": [["books-policy", 4]], "ui": [["Encryption", 23]]}])
+    assert backends.MARKS_STATS == {"뺀 것": 2, "잃은 것": 2, "다시 물음": 0, "되찾음": 0}
+
+
+def test_지켜지면_잃은_것이_0_이다():
+    from seshat import backends
+    backends.MARKS_STATS.update({"뺀 것": 0, "잃은 것": 0, "다시 물음": 0, "되찾음": 0})
+    backends.with_marks_hidden(lambda t, x, m=None: list(t), kinds=(("lit", "L"),))(
+        ["Set books-policy here."], {}, [{"lit": [["books-policy", 4]]}])
+    assert backends.MARKS_STATS == {"뺀 것": 1, "잃은 것": 0, "다시 물음": 0, "되찾음": 0}
+
+
+def test_표시를_빼는_팔이_머리줄에_실린다():
+    """처치가 일했는지를 결과가 말한다(DECISIONS §60 과 같은 규율)."""
+    from seshat import backends
+    assert backends.MARK_ARMS <= set(backends.REGISTRY)
+    assert "gemma3-4b+ph+marks+gloss2+retry+endings+terms" in backends.MARK_ARMS
+
+
+def test_사라진_표시를_숨긴_글로_다시_묻는다():
+    """원문을 주면 표시 보호가 풀린다 — §149 가 조사에서 본 것과 같은 자리(DECISIONS §154)."""
+    from seshat import backends
+    backends.MARKS_STATS.update({"뺀 것": 0, "잃은 것": 0, "다시 물음": 0, "되찾음": 0})
+    본것 = []
+
+    def 버린다(texts, terms_, marks=None):
+        return ["다 버렸습니다."]
+
+    def 고친다(texts, terms_, marks=None):
+        본것.extend(texts)
+        return ["⟦L1⟧ 아래 ⟦U1⟧ 입니다."]
+
+    got = backends.with_marks_hidden(버린다, kinds=(("lit", "L"), ("ui", "U")), repair=(고친다,))(
+        ["Set books-policy under Encryption here."], {},
+        [{"lit": [["books-policy", 4]], "ui": [["Encryption", 23]]}])
+    assert 본것 == ["Set ⟦L1⟧ under ⟦U1⟧ here."], "고치는 판에 원문을 주면 보호가 풀린다"
+    assert got == ["books-policy 아래 Encryption 입니다."]
+    assert backends.MARKS_STATS["되찾음"] == 1 and backends.MARKS_STATS["잃은 것"] == 0
+
+
+def test_다시_물어도_안_되면_첫_답을_둔다():
+    """없는 것을 지어 넣지 않는다 — `with_placeholders` 와 같은 규율(DECISIONS §60)."""
+    from seshat import backends
+    backends.MARKS_STATS.update({"뺀 것": 0, "잃은 것": 0, "다시 물음": 0, "되찾음": 0})
+    got = backends.with_marks_hidden(lambda t, x, m=None: ["버렸습니다."], kinds=(("lit", "L"),),
+                                     repair=(lambda t, x, m=None: ["또 버렸습니다."],))(
+        ["Set books-policy here."], {}, [{"lit": [["books-policy", 4]]}])
+    assert got == ["버렸습니다."]
+    assert backends.MARKS_STATS["되찾음"] == 0 and backends.MARKS_STATS["잃은 것"] == 1
+
+
+def test_되묻는_팔이_하나만_다르다():
+    from seshat import backends
+    새, 옛 = ("gemma3-4b+ph+marks2+gloss2+retry+endings+terms",
+             "gemma3-4b+ph+marks+gloss2+retry+endings+terms")
+    assert 새 in backends.REGISTRY and 새 in backends.MARK_ARMS
+    assert backends.DECODING_OF[새] == backends.DECODING_OF[옛]

@@ -282,6 +282,7 @@ def nbest(model: str, system: str, n: int = 8, temp: float = 0.8, seed0: int = 1
 REPAIR = {"temperature": 0.4, "seed": 43, "num_predict": 512}
 REPAIR_ARMS: set[str] = set()
 # 처치가 일했는지를 결과가 말한다 — 안 걸린 것과 걸렸는데 실패한 것은 다르다(DECISIONS §60)
+MARKS_STATS: dict[str, int] = {"뺀 것": 0, "잃은 것": 0, "다시 물음": 0, "되찾음": 0}
 REPAIR_STATS: dict[str, int] = {"tried": 0, "fixed": 0}
 
 
@@ -318,7 +319,8 @@ def with_placeholders(inner: Backend, repair: tuple[Backend, ...] = ()) -> Backe
     return call
 
 
-def with_marks_hidden(inner: Backend, kinds: tuple[tuple[str, str], ...] = (("ui", "U"),)) -> Backend:
+def with_marks_hidden(inner: Backend, kinds: tuple[tuple[str, str], ...] = (("ui", "U"),),
+                      repair: tuple[Backend, ...] = ()) -> Backend:
     """**줄이 아는 자리**를 `⟦U1⟧` 로 빼고 번역한 뒤 되돌린다(DECISIONS §151 · H-064).
 
     ★ **이것은 프롬프트가 아니라 입력을 고친다.** 콘솔 라벨은 「Security Groups」 처럼 평범한 영어
@@ -327,6 +329,9 @@ def with_marks_hidden(inner: Backend, kinds: tuple[tuple[str, str], ...] = (("ui
     ★ **자리표시 밖에 선다.** 이름 빼기(`with_placeholders`)보다 먼저 빼야 두 자리가 안 겹친다 —
       수확기가 이미 `keep` 과 겹치는 것을 뺐고(`fetch_awsdocs.rows`) `lit` 과 `ui` 는 d001 에서
       **겹침이 0** 이다(2026-09-28 확인).
+    ★ `repair` — **사라진 표시를 다시 묻는다**(H-066 · DECISIONS §154). 이름이 사라지면 고치는 판이
+      다시 묻는데(§60) 표시가 사라지면 아무도 안 물었다 — 같은 구조의 결함 다섯 번째다.
+      **숨긴 글을 준다.** 원문을 주면 표시 보호가 풀린다(§149 가 조사에서 본 것과 같은 자리).
     ★ **`lit` 도 같은 종류다**(DECISIONS §152). 둘 다 「문서가 표시한 글자가 그대로 남아야 한다」 이고,
       모델은 둘 다 못 지킨다(`lit` 142 중 28 · `ui` 82 중 67). 한쪽만 지키는 것이 이상한 것이었다.
     ★ **끝소리를 모른다.** 임의의 영어 라벨의 읽기는 사전에 없으므로 조사는 손대지 않는다
@@ -342,9 +347,22 @@ def with_marks_hidden(inner: Backend, kinds: tuple[tuple[str, str], ...] = (("ui
         표들 = [표 for _, 표 in 숨긴]
         outs = inner(보낼, terms_, 마크)
         나온 = []
-        for o, 표 in zip(outs, 표들):
+        for i, (o, 표) in enumerate(zip(outs, 표들)):
+            if repair and any(terms.unmask(o, sl, letter=L)[1] for L, sl in 표.items()):
+                MARKS_STATS["다시 물음"] += 1
+                for ask in repair:
+                    cand = ask([보낼[i]], terms_, [마크[i]])[0]
+                    if not any(terms.unmask(cand, sl, letter=L)[1] for L, sl in 표.items()):
+                        o = cand
+                        MARKS_STATS["되찾음"] += 1
+                        break
             for letter, sl in 표.items():
-                o = terms.unmask(o, sl, letter=letter)[0]
+                MARKS_STATS["뺀 것"] += len(sl)
+                o, 없어진 = terms.unmask(o, sl, letter=letter)
+                # ★ **사라진 자리표시를 센다**(DECISIONS §154). 없어진 것은 되돌리기가 못 알아본 것이
+                #   아니라 **모델이 그 조각을 통째로 버린 것**이다 — 2026-09-28 셋을 열어 보니 출력에
+                #   흔적이 하나도 없었다. 그래서 이 수는 **뜻이 빠진 줄의 수**다
+                MARKS_STATS["잃은 것"] += len(없어진)
             나온.append(o)
         return 나온
     return call
@@ -473,6 +491,13 @@ REGISTRY: dict[str, tuple[Backend, str]] = {
             ollama_chat_ref("gemma3:4b", GENERIC_SYSTEM, fence=True), repair=_gemma3_repair))),
             kinds=(("lit", "L"), ("ui", "U"))),
         "gemma3:4b+ph+marks+gloss2+retry+endings+terms"),
+    # ★ **사라진 표시를 다시 묻는 팔**(H-066). `+marks+` 와 **되묻기 하나만** 다르다.
+    #   고치는 판은 `_gemma3_repair` 를 그대로 쓰되 **숨긴 글**을 받는다
+    "gemma3-4b+ph+marks2+gloss2+retry+endings+terms": (
+        with_marks_hidden(with_terms(with_endings(with_placeholders(
+            ollama_chat_ref("gemma3:4b", GENERIC_SYSTEM, fence=True), repair=_gemma3_repair))),
+            kinds=(("lit", "L"), ("ui", "U")), repair=_gemma3_repair),
+        "gemma3:4b+ph+marks2+gloss2+retry+endings+terms"),
     "gemma3-4b+ph+gloss2+retry+endings+terms": (
         with_terms(with_endings(with_placeholders(
             ollama_chat_ref("gemma3:4b", GENERIC_SYSTEM, fence=True), repair=_gemma3_repair))),
@@ -500,7 +525,8 @@ OLLAMA_OF.update({"translategemma-4b": "translategemma:4b", "translategemma-4b+p
                   "gemma3-4b+ph+gloss2+retry+endings+terms": "gemma3:4b",
                   "gemma3-4b+ph+gloss3+endings": "gemma3:4b",
                   "gemma3-4b+ph+ui+gloss2+retry+endings+terms": "gemma3:4b",
-                  "gemma3-4b+ph+marks+gloss2+retry+endings+terms": "gemma3:4b"})
+                  "gemma3-4b+ph+marks+gloss2+retry+endings+terms": "gemma3:4b",
+                  "gemma3-4b+ph+marks2+gloss2+retry+endings+terms": "gemma3:4b"})
 
 # ★ **어느 ollama 모델이 어느 가중치인가.** `from_pretrained` 를 거치지 않는 호출은 라이선스 검사의
 #   정규식이 보지 못한다. 선언을 검사가 대장과 대조한다(DECISIONS §14).
@@ -527,10 +553,16 @@ DECODING_OF.update({arm: {"temperature": 0.8, "seed0": 101, "num_predict": 512, 
                     for arm, n in MBR_ARMS.items()})
 
 # ★ 고치는 판을 쓰는 팔은 그 조건도 머리줄에 싣는다 — 안 적으면 되풀이할 수 없다(DECISIONS §57)
+# ★ 표시를 빼는 팔 — 머리줄에 `marks` 를 싣는다(DECISIONS §154)
+MARK_ARMS: set[str] = {"gemma3-4b+ph+ui+gloss2+retry+endings+terms",
+                       "gemma3-4b+ph+marks+gloss2+retry+endings+terms",
+                    "gemma3-4b+ph+marks2+gloss2+retry+endings+terms",
+                       "gemma3-4b+ph+marks2+gloss2+retry+endings+terms"}
 REPAIR_ARMS.update({"gemma3-4b+ph+retry+endings+terms", "gemma3-4b+ph+retry",
                     "gemma3-4b+ph+gloss2+retry+endings+terms",
                     "gemma3-4b+ph+ui+gloss2+retry+endings+terms",
                     "gemma3-4b+ph+marks+gloss2+retry+endings+terms",
+                    "gemma3-4b+ph+marks2+gloss2+retry+endings+terms",
                     "gemma3-12b+ph+retry", "gemma3-12b+ph+retry+endings+terms"})
 for _arm in REPAIR_ARMS:
     DECODING_OF[_arm] = {**DECODING, "repair": REPAIR}

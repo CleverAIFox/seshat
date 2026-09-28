@@ -455,6 +455,8 @@ def conditions(a, rows: list[dict], 코드: dict | None = None) -> dict:
         out["ollama"] = ollama_placement()
     if (a.backend or "") in backends.REPAIR_ARMS:   # 처치가 일했는지를 결과가 말한다(DECISIONS §60)
         out["repair"] = dict(backends.REPAIR_STATS)
+    if (a.backend or "") in backends.MARK_ARMS:   # 표시를 빼는 팔은 **몇을 잃었는지**를 싣는다(§154)
+        out["marks"] = dict(backends.MARKS_STATS)
     if (a.backend or "") in backends.MBR_ARMS:      # 고르기가 일했는가 — 첫째를 안 고른 비율이 말한다
         from . import mbr
         n = max(mbr.STATS["판"], 1)
@@ -543,6 +545,7 @@ def main(argv=None) -> int:
     코드 = 코드_상태()                                # 판이 끝난 뒤가 아니라 **지금** 찍는다(§81)
     from . import backends as _b
     _b.REPAIR_STATS.update(tried=0, fixed=0)         # 이번 실행의 셈만 센다
+    _b.MARKS_STATS.update({"뺀 것": 0, "잃은 것": 0, "다시 물음": 0, "되찾음": 0})
 
     # ★ **중간 결과를 나오는 대로 쓴다**(DECISIONS §135). 끝나야 쓰면 26 분짜리 판이 끊길 때
     #   GPU 시간이 통째로 사라진다 — 그 시간은 다시 못 만든다(§28 과 같은 까닭)
