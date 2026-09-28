@@ -20,6 +20,7 @@ python3 tools/check_hypotheses.py        # 가설 대장 — 실험의 문
 python3 tools/check_ontology.py          # 온톨로지 — 표기 유일 · 부모 · 끝소리
 python3 tools/check_catalog.py           # 데이터 카탈로그 — 칸 · 쓰임 · data/ 의 카탈로그 밖 파일(§11)
 python3 tools/bootstrap.py A B --set S   # ★ **차이가 잡음인가** — 짝지은 재표집(§180 · Koehn 2004)
+python3 tools/style_na.py 판들...        # 합쇼체가 설 수 없는 줄의 **후보** — 판정은 사람이 한다(§189)
 python3 tools/ci_status.py               # ★ **마지막 CI 가 초록인가** — 이 기계의 초록은 CI 의 초록이 아니다(§170)
 python3 tools/sweep.py [--fix]           # WSL 위생 — seshat 이 남긴 흔적만(§12)
 bash tools/deps.sh --merge               # 의존성 봇(Actions 만) — 초록만 합치고 가지를 지운다
