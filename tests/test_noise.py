@@ -105,3 +105,34 @@ def test_흔들림을_판_수만큼_센다(tmp_path):
     """서로 다른 번역이 몇 개인가 — 셋 다 다르면 3 이다. H-058 이 이 수를 쓴다."""
     got = N.흔들린_줄([{"1": "가"}, {"1": "나"}, {"1": "다"}, {"1": "가"}])
     assert got == {"1": 3}
+
+
+def test_셋이_어느_사전으로_만들어졌는지_판이_든다(tmp_path):
+    """★ **셋의 `keep` · `lit` · `ui` 자리는 만들 때의 사전이 찍은 것이다**(PLAN #36 · DECISIONS §171).
+    2026-09-28 사전에 `AWS` 를 넣었는데 `keep` 이 한 자리도 안 움직였다 — **분모가 옛 사전에
+    묶여 있다**는 뜻인데 그 사실이 **아무 데도 안 적혀 있었다.**
+
+    ★ **「모른다」 를 「낡지 않았다」 로 치지 않는다**(§110). 옛 셋은 None 이고, None 이 판에 실린다.
+    """
+    from seshat import evaluate
+    옛셋 = tmp_path / "옛.jsonl"
+    옛셋.write_text(json.dumps({"meta": True, "about": "칸이 없다"}, ensure_ascii=False) + "\n",
+                   encoding="utf-8")
+    assert evaluate.셋의_사전(옛셋) is None
+    assert evaluate.셋이_낡았나(옛셋) is None, "모르는 것은 낡지 않은 것이 아니다"
+
+    낡은 = tmp_path / "낡은.jsonl"
+    낡은.write_text(json.dumps({"meta": True, "onto_score": "옛지문"}, ensure_ascii=False) + "\n",
+                   encoding="utf-8")
+    assert evaluate.셋이_낡았나(낡은) is True
+
+    새것 = tmp_path / "새.jsonl"
+    새것.write_text(json.dumps({"meta": True, "onto_score": evaluate.onto_score_sha256()},
+                              ensure_ascii=False) + "\n", encoding="utf-8")
+    assert evaluate.셋이_낡았나(새것) is False
+
+
+def test_셋을_만드는_도구가_사전을_적는다():
+    """적는 자리가 없으면 다음 셋도 똑같이 썩는다 — **고치는 것은 셋이 아니라 만드는 길이다.**"""
+    t = (ROOT / "tools/fetch_awsdocs.py").read_text(encoding="utf-8")
+    assert '"onto_score": evaluate.onto_score_sha256()' in t

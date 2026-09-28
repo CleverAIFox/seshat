@@ -108,3 +108,41 @@ def test_사본_세기가_글자도_본다():
     dup = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(dup)
     assert hasattr(dup, "글자_사본"), "긴 글자 사본을 세는 자리가 있어야 한다"
+
+
+def test_사전축은_둘_다_들었을_때만_채점지문을_쓴다():
+    """★ **옛 판과 안 갈라선다**(DECISIONS §171). 한쪽이라도 그 칸이 없으면 옛 바이트 해시로 묻는다 —
+    「값이 없다」 를 「같다」 로 치는 것이 아니라 **옛 축으로 묻는 것**이다."""
+    새, 새2 = {"onto_sha256": "가", "onto_score": "ㄱ"}, {"onto_sha256": "나", "onto_score": "ㄱ"}
+    옛 = {"onto_sha256": "가"}
+    assert compare.사전축(새, 새2) == "onto_score"
+    assert compare.갈림(새, 새2, ("onto_sha256",)) == [], "뜻이 같으면 바이트가 달라도 안 막는다"
+    assert compare.사전축(새, 옛) == "onto_sha256"
+    assert compare.갈림(새, 옛, ("onto_sha256",)) == [], "옛 축으로는 같다"
+    assert compare.갈림(새2, 옛, ("onto_sha256",)), "옛 축으로 다르면 갈린 것이다"
+
+
+def test_채점지문은_점수를_안_바꾸는_칸을_무시한다():
+    """★ **해시의 범위는 「파일」 이 아니라 「채점기가 읽는 것」 이다**(DECISIONS §171)."""
+    from seshat import ontology
+    가 = [{"id": "con.a", "kind": "concept", "en": "A", "keep": False, "ko": "가",
+           "src": "author", "ko_ref": "s3/dev"}]
+    나 = [{**가[0], "src": "thoth-glossary", "ko_ref": "athena/ug", "note": "딴 말"}]
+    다 = [{**가[0], "ko": "나"}]
+    assert ontology.채점_지문(가) == ontology.채점_지문(나), "출처를 고쳐도 점수는 안 바뀐다"
+    assert ontology.채점_지문(가) != ontology.채점_지문(다), "표기를 고치면 점수가 바뀐다"
+
+
+def test_채점칸이_빠지면_거짓_초록이_된다():
+    """★ **칸을 더할 때 지문에도 더한다**(DECISIONS §171). 안 더하면 새 칸이 점수를 바꾸는데
+    지문은 그대로다 — **거짓 초록**이고 그쪽이 거짓 빨강보다 나쁘다."""
+    from seshat import ontology
+    읽는것 = {"id", "kind", "en", "aliases", "keep", "coda", "ko", "alt_ko", "bad_ko"}
+    assert set(ontology.채점칸) == 읽는것
+    # **점수를 안 바꾸는 칸** — 여기 이름이 있다는 것은 「읽는 코드가 없음을 확인했다」 는 뜻이다.
+    # `category` 는 41 노드가 들고 있는데 **읽는 코드가 하나도 없다**(2026-09-28 실측) — #22 의 관계
+    # 작업이 쓸 자리이고, 쓰기 시작하면 점수를 바꾸는지 다시 묻고 채점칸에 넣는다
+    안읽는칸 = {"src", "ko_ref", "parent", "note", "meta", "about", "category"}
+    실물 = {k for n in ontology.load() for k in n}
+    빠진 = 실물 - set(ontology.채점칸) - 안읽는칸
+    assert not 빠진, f"사전에 새 칸이 생겼다 — 점수를 바꾸는 칸이면 채점칸에 더한다: {sorted(빠진)}"

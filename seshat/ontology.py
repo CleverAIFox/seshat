@@ -93,6 +93,21 @@ def surfaces(onto: list[dict]) -> list[Surface]:
     return out
 
 
+# ★ **채점기가 읽는 칸**(DECISIONS §171). `find` 와 `surfaces` 와 `terms` 가 쓰는 것만이다 —
+#   `src` · `ko_ref` · `parent` · `note` 는 점수를 한 자리도 안 바꾼다. 여기 없는 칸을 고치는 것은
+#   **뜻이 안 바뀐 편집**이고, 그런 편집이 옛 판을 「사전이 바뀌었다」 로 막으면 안 된다(§169).
+# ★ **칸을 더할 때 여기도 더한다.** 안 더하면 새 칸이 점수를 바꾸는데 지문은 그대로다 —
+#   **거짓 초록**이고, 그쪽이 거짓 빨강보다 나쁘다. `tests/test_ontology.py` 가 이 목록을 지킨다.
+채점칸 = ("id", "kind", "en", "aliases", "keep", "coda", "ko", "alt_ko", "bad_ko")
+
+
+def 채점_지문(onto: list[dict]) -> str:
+    """**채점기가 읽는 것만** 추린 정규 글. 해시의 범위는 「파일」 이 아니라 「읽는 것」 이다."""
+    몸 = [{k: n[k] for k in 채점칸 if k in n} for n in onto]
+    몸.sort(key=lambda d: d.get("id", ""))
+    return json.dumps(몸, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+
+
 def validate(onto: list[dict]) -> list[str]:
     fails, ids = [], {}
     for n in onto:

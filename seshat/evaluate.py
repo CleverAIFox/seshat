@@ -171,6 +171,31 @@ def load(path: str) -> list[dict]:
     return rows
 
 
+def 셋의_사전(path: str | pathlib.Path) -> str | None:
+    """셋을 **만들 때의 채점 지문**. 없으면 None — 옛 셋이다(DECISIONS §171 · PLAN #36)."""
+    p = pathlib.Path(path)
+    if not p.exists():
+        return None
+    for line in p.read_text(encoding="utf-8").splitlines():
+        if line.strip():
+            d = json.loads(line)
+            return d.get("onto_score") if d.get("meta") else None
+    return None
+
+
+def 셋이_낡았나(path: str | pathlib.Path) -> bool | None:
+    """True 면 **이 셋은 지금 사전이 모르던 때에 만들어졌다.** None 은 「모른다」 다.
+
+    ★ **셋의 `keep` · `lit` · `ui` 자리는 만들 때의 사전이 찍은 것이다.** 사전을 넓혀도 그 자리는
+      안 늘어난다 — 2026-09-28 사전에 `AWS` 를 넣었는데 `keep` 이 한 자리도 안 움직였다(§166).
+      **분모가 옛 사전에 묶여 있다**는 뜻이고, 그것이 PLAN #36 이다.
+    ★ **「모른다」 를 「같다」 로 치지 않는다**(§110). 옛 셋에는 이 칸이 없으므로 None 이고,
+      None 은 판 머리줄에 **그대로 실린다** — 0 이나 False 로 뭉개면 낡은 것이 안 보인다.
+    """
+    있는것 = 셋의_사전(path)
+    return None if not 있는것 else 있는것 != onto_score_sha256()
+
+
 MARKS = ("lit", "ui")
 
 # ★ **자가 바뀌면 옛 수와 못 견준다.** 사전이 바뀌면 `onto_sha256` 이 말하고 셋이 바뀌면
@@ -410,6 +435,22 @@ def onto_sha256() -> str:
     return hashlib.sha256(ontology.DEFAULT.read_bytes()).hexdigest()[:16]
 
 
+def onto_score_sha256() -> str:
+    """**채점기가 읽는 칸만** 해싱한다(DECISIONS §171).
+
+    ★ `onto_sha256` 은 파일의 바이트다 — 주석 한 글자, `src`, `ko_ref`, 누수 장부 같은 **점수를
+      하나도 안 바꾸는 편집**이 그 해시를 바꾼다. 그러면 `compare.AXIS` 가 「사전이 바뀌었다」 로
+      **견줄 수 있는 두 판을 막는다**(§169 의 거울상). 2026-09-28 누수 장부를 딴 파일로 뺀 것은
+      **피한 것이지 고친 것이 아니었다.**
+    ★ **옛 판과 안 갈라선다.** 바이트 해시를 지우지 않고 이 칸을 **더한다** — 양쪽 다 이 칸을
+      들었을 때만 이것으로 견주고, 한쪽이라도 없으면 옛 바이트 해시로 견준다(`compare.사전축`).
+      자를 올릴 때처럼 한 번 갈라서는 길도 있었지만, **안 갈라서도 되는 길이 있으면 그쪽이다.**
+    """
+    import hashlib
+    from . import ontology
+    return hashlib.sha256(ontology.채점_지문(ontology.load()).encode("utf-8")).hexdigest()[:16]
+
+
 def set_sha256(path: str | pathlib.Path) -> str:
     """평가셋 파일의 해시. **머리줄에 적는 쪽이 한 군데여야 한다** — `rescore` 가 다른 셋을 대고도
     옛 해시를 그대로 옮겨 적고 있었다(DECISIONS §122)."""
@@ -450,6 +491,11 @@ def conditions(a, rows: list[dict], 코드: dict | None = None) -> dict:
            "dirty": 코드["dirty"],
            "set_sha256": set_sha256(a.set),
            "onto_sha256": onto_sha256(),
+           "onto_score": onto_score_sha256(),   # 채점기가 읽는 칸만(§171)
+           # ★ **셋이 어느 사전으로 만들어졌나**(PLAN #36). True 면 `keep` · `lit` · `ui` 의
+           #   분모가 옛 사전에 묶여 있다. **None 은 「모른다」** — 옛 셋에는 이 칸이 없다(§110)
+           "set_onto": 셋의_사전(a.set),
+           "set_stale": 셋이_낡았나(a.set),
            "metrics": METRICS_VER,      # 자가 바뀌면 옛 수와 못 견준다(DECISIONS §145)
            # ★ **이 셋에서 캐서 사전에 넣은 노드의 수**(DECISIONS §168 · PLAN #37). 0 이 아니면
            #   그만큼 **시험지가 분모를 골랐다.** 줄이는 길은 사전을 빼는 것이 아니라 **딴 셋에서 재는 것**

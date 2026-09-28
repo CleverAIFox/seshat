@@ -74,11 +74,25 @@ def 갈림(a: dict, b: dict, axes: tuple[str, ...]) -> list[갈린것]:
     """
     out = []
     for k in axes:
+        k = 사전축(a, b) if k == "onto_sha256" else k
         가, 나 = a.get(k), b.get(k)
         if (가 or "") != (나 or ""):
             축_ = AXIS[k]
             out.append(갈린것(k, 축_.이름, 축_.말머리, 축_.왜, 가, 나))
     return out
+
+
+def 사전축(a: dict, b: dict) -> str:
+    """**둘 다 들었으면 채점 지문으로, 아니면 바이트 해시로**(DECISIONS §171).
+
+    ★ **옛 판과 안 갈라서려고 이렇게 한다.** 바이트 해시는 주석 · `src` · `ko_ref` 까지 해싱해서
+      **뜻이 안 바뀐 편집이 견줄 수 있는 두 판을 막는다**(§169 의 거울상). 채점 지문은 채점기가
+      읽는 칸만 본다. 옛 판에는 그 칸이 없으므로 **한쪽이라도 없으면 옛 자로 돌아간다** —
+      「값이 없다」 를 「같다」 로 치는 것이 아니라 **옛 축으로 묻는 것**이다.
+    ★ 옛 판끼리는 종전과 똑같이 굴고, 새 판끼리는 뜻이 안 바뀐 편집에 안 막힌다. **섞인 쌍만
+      엄한 쪽(바이트)으로 간다** — 못 견주는 쪽으로 틀리는 것이 안전하다.
+    """
+    return "onto_score" if (a.get("onto_score") and b.get("onto_score")) else "onto_sha256"
 
 
 def 가린_지표(가: dict, 나: dict) -> set[str]:

@@ -188,22 +188,32 @@ def _쓴다(run: str, rec: dict, head: dict, 오른: dict, path: pathlib.Path | 
       (DECISIONS §143). `--update` 는 「이 실행을 기록으로 삼는다」 는 뜻이고, 그러면 그 실행의
       팔이 기록의 팔이다.
     """
-    path = path or PATH          # import 때 안 묶는다 — 위의 `load` 와 같은 까닭
-    catalog.gate(path)
-    줄 = path.read_text(encoding="utf-8").splitlines()
-    시작 = next(i for i, x in enumerate(줄) if x.strip() == "[[record]]"
-                and any(f'arm = "{rec["arm"]}"' == y.strip() for y in 줄[i:i + 12]))
-    끝 = next((i for i in range(시작 + 1, len(줄)) if 줄[i].startswith("[[")), len(줄))
     새값 = {**오른, "set_sha256": head.get("set_sha256", ""), "commit": head.get("commit", ""),
             "onto_sha256": head.get("onto_sha256", ""), "run": pathlib.Path(run).stem,
             "metrics": head.get("metrics", ""),
             "arm": head.get("backend") or head.get("model") or rec["arm"],
             "date": dt.date.today().isoformat(),
             **({"accepted": 받은} if 받은 else {})}
+    _블록을_고친다("record", rec["arm"], 새값, path)
+
+
+def _블록을_고친다(표: str, arm: str, 새값: dict, path: pathlib.Path | None = None) -> None:
+    """`[[표]]` 중 `arm` 이 맞는 블록의 칸을 고쳐 쓴다. **기록판을 고치는 유일한 자리다.**
+
+    ★ **선 줄도 같은 길로 고친다**(DECISIONS §170). 손으로 고치면 기록판이 금지한 바로 그것 —
+      **짐작으로 채우기** — 이 된다. 선 줄을 고치는 코드를 따로 적으면 §169 가 그대로 되풀이된다.
+    """
+    path = path or PATH          # import 때 안 묶는다 — 위의 `load` 와 같은 까닭
+    catalog.gate(path)
+    줄 = path.read_text(encoding="utf-8").splitlines()
+    시작 = next(i for i, x in enumerate(줄) if x.strip() == f"[[{표}]]"
+                and any(f'arm = "{arm}"' == y.strip() for y in 줄[i:i + 12]))
+    끝 = next((i for i in range(시작 + 1, len(줄)) if 줄[i].startswith("[[")), len(줄))
+    남은 = dict(새값)
     for i in range(시작, 끝):
         k = 줄[i].split("=", 1)[0].strip()
-        if k in 새값:
-            v = 새값.pop(k)
+        if k in 남은:
+            v = 남은.pop(k)
             # ★ **주석의 자리를 지킨다.** 이 파일은 주석이 절반이고 세로로 맞춰 읽는다 —
             #   2026-09-28 한 줄을 고쳐 쓰면서 `#` 앞 공백을 두 칸으로 뭉개 이어지는 주석 줄과
             #   어긋나게 만들었다. 고쳐 쓰는 도구가 **읽는 모양을 망가뜨리면 안 된다**
@@ -212,10 +222,47 @@ def _쓴다(run: str, rec: dict, head: dict, 오른: dict, path: pathlib.Path | 
             줄[i] = (새줄 + " " * max(1, len(앞) - len(새줄)) + "#" + 뒤) if 뒤 else 새줄
     # ★ **없는 키는 만든다.** 종전에는 있는 줄만 고쳐 썼다 — 그래서 새로 생긴 `metrics` 가 영영
     #   안 박히고 문이 매번 「기록에 자 판이 없다」 로 막았다(DECISIONS §145 · §143 과 같은 얼굴).
-    if 새값:
+    if 남은:
         뒤 = max(i for i in range(시작, 끝) if 줄[i].strip())      # 블록의 마지막 알맹이 줄
-        줄[뒤 + 1:뒤 + 1] = [f"{k} = {json.dumps(v, ensure_ascii=False)}" for k, v in 새값.items()]
+        줄[뒤 + 1:뒤 + 1] = [f"{k} = {json.dumps(v, ensure_ascii=False)}" for k, v in 남은.items()]
     path.write_text("\n".join(줄) + "\n", encoding="utf-8")
+
+
+def _선을_박는다(run: str | None, arm: str, board: dict) -> int:
+    """**선 줄을 이 판의 값으로 다시 박는다**(DECISIONS §171 · §169).
+
+    ★ **선은 지킴이 아니다.** 기록은 「넘지 말아야 할 내 최고」 이고 선은 「넘어야 할 남의 값」 이다 —
+      올랐는지 내렸는지를 안 묻고 **그 판의 값을 그대로 옮긴다.** 선이 내려가는 것은 나쁜 일이 아니라
+      **남을 다시 잰 것**이다.
+    ★ **손으로 고치는 길을 막으려고 만들었다.** 기록판이 첫 줄부터 「짐작으로 채우지 않는다」 라고
+      적어 놓고 선 줄만은 손으로 고치고 있었다 — 2026-09-28 선 둘이 자 2 · 옛 사전인 채로 남아
+      §166 의 잘못된 비교를 만들었다.
+    ★ **셋이 다르면 안 박는다.** 그것은 다시 잰 것이 아니라 **딴 글로 잰 것**이다.
+    """
+    if not run:
+        print("  ✗ 어느 판으로 박을지가 없다", file=sys.stderr)
+        return 1
+    head = head_of(run)
+    t = next((x for x in board.get("target", []) if x.get("arm") == arm), None)
+    if t is None:
+        있는 = " · ".join(x.get("arm", "?") for x in board.get("target", []))
+        print(f"  ✗ 선 줄에 그런 팔이 없다 — {arm}\n    있는 것 : {있는}", file=sys.stderr)
+        return 1
+    if t.get("set") != head.get("set"):
+        print(f"  ✗ 셋이 다르다 — 선 {t.get('set')} · 이번 {head.get('set')}", file=sys.stderr)
+        return 1
+    값 = {m: 재(head[m]) for m in ("term_off", "lit", "ui", "term_bad", "keep", "style")
+          if isinstance(head.get(m), (int, float))}
+    새값 = {**값, "run": pathlib.Path(run).stem, "metrics": head.get("metrics", ""),
+            "onto_sha256": head.get("onto_sha256", ""), "onto_score": head.get("onto_score", ""),
+            "date": dt.date.today().isoformat(),
+            **({"protects": list(head["protects"])} if head.get("protects") else {})}
+    _블록을_고친다("target", arm, 새값)
+    print(f"  선을 다시 박았다 — {arm}\n    " +
+          " · ".join(f"{m} {v}" for m, v in 값.items()))
+    print(f"    자 {head.get('metrics')} · 사전 {head.get('onto_score') or head.get('onto_sha256')} · "
+          f"{pathlib.Path(run).stem}")
+    return 0
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -227,8 +274,12 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--require", action="store_true", help="기록판에 없는 팔이면 멈춘다")
     ap.add_argument("--accept", metavar="까닭",
                     help="떨어진 지표를 **사람이 받아들인다**. 까닭을 적어야 한다 — 문은 맞바꿈을 못 정한다")
+    ap.add_argument("--pin-target", metavar="팔",
+                    help="이 판으로 **선 줄**을 다시 박는다. 손으로 고치면 짐작으로 채우게 된다")
     a = ap.parse_args(argv)
     board = load()
+    if a.pin_target:
+        return _선을_박는다(a.run, a.pin_target, board)
     if a.show or not a.run:
         for r in board.get("record", []):
             print(f"  최고  {r['arm']:<40} {r.get('note', '')}")

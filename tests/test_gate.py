@@ -524,3 +524,41 @@ def test_check_와_올릴것이_같은_물음을_쓴다():
     for fn in (G.check, G.올릴_것):
         assert "compare.분모" in inspect.getsource(fn), f"{fn.__name__} 이 제 손으로 축을 적는다"
     assert "set_sha256" not in compare.분모, "다른 시험지는 GATE_막 이 막는다 — 선 줄이 침묵한다"
+
+
+def test_선을_판으로_박는다(tmp_path, monkeypatch, capsys):
+    """★ **선 줄만 손으로 고치고 있었다**(DECISIONS §171). 기록판 첫 줄이 「짐작으로 채우지
+    않는다」 인데 선은 짐작으로 채우고 있었고, 그래서 자 2 · 옛 사전인 채로 남아 §166 을 만들었다.
+
+    ★ **선은 올랐는지를 안 묻는다.** 기록은 내 최고이고 선은 남의 값이다 — 내려가도 박는다.
+    """
+    board = tmp_path / "b.toml"
+    board.write_text('[[record]]\nset = "s"\nset_sha256 = "셋"\nonto_sha256 = "사전"\nmetrics = "' + 자 + '"\n'
+                     'arm = "우리"\nterm_off = 0.95\nguard = ["term_off"]\ntol = 0.0\n\n'
+                     '[[target]]\nnote = "배포본"\nset = "s"\narm = "배포본"\nmetrics = "2"\n'
+                     'term_off = 0.9026\nlit = 0.9225\n', encoding="utf-8")
+    run = tmp_path / "재-20260928-1.jsonl"
+    run.write_text(json.dumps(머리(backend="배포본", set="s", set_sha256="셋", onto_sha256="새사전",
+                                   onto_score="새지문", metrics=자, term_off=0.8859, lit=0.9225),
+                              ensure_ascii=False) + "\n", encoding="utf-8")
+    monkeypatch.setattr(G, "PATH", board)
+    assert G.main([str(run), "--pin-target", "배포본"]) == 0
+    쓴 = board.read_text(encoding="utf-8")
+    assert "0.8859" in 쓴, "선이 내려가도 박는다 — 남을 다시 잰 것이다"
+    assert f'metrics = "{자}"' in 쓴 and '"새지문"' in 쓴
+    assert 'note = "배포본"' in 쓴, "주석과 note 는 그대로 둔다"
+    assert "term_off = 0.95" in 쓴, "기록 줄은 안 건드린다"
+
+
+def test_선을_딴_셋의_판으로는_못_박는다(tmp_path, monkeypatch, capsys):
+    board = tmp_path / "b.toml"
+    board.write_text('[[record]]\nset = "s"\nset_sha256 = "셋"\nmetrics = "' + 자 + '"\narm = "우리"\n'
+                     'term_off = 0.95\nguard = ["term_off"]\ntol = 0.0\n\n'
+                     '[[target]]\nset = "s"\narm = "배포본"\nterm_off = 0.9\n', encoding="utf-8")
+    run = tmp_path / "재-20260928-1.jsonl"
+    run.write_text(json.dumps(머리(backend="배포본", set="딴셋", metrics=자, term_off=0.99),
+                              ensure_ascii=False) + "\n", encoding="utf-8")
+    monkeypatch.setattr(G, "PATH", board)
+    assert G.main([str(run), "--pin-target", "배포본"]) == 1
+    assert "셋이 다르다" in capsys.readouterr().err
+    assert "0.99" not in board.read_text(encoding="utf-8")

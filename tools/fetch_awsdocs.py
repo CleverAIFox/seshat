@@ -42,7 +42,7 @@ import typing
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
-from seshat import catalog, ontology, paths  # noqa: E402
+from seshat import catalog, evaluate, ontology, paths  # noqa: E402
 
 OUT = ROOT / "data/domain"
 LICENSE = "CC BY-SA 4.0"
@@ -332,6 +332,11 @@ def main(argv: list[str] | None = None) -> int:
             "attribution": f"© Amazon Web Services, Inc. · {ORG} · {LICENSE}",
             "sources": {g: shas[g] for g in sorted(shas)},
             "made_by": "tools/fetch_awsdocs.py",
+            # ★ **어느 사전으로 만든 셋인가**(DECISIONS §171 · PLAN #36). `keep` 자리는 이 셋을 만들 때의
+            #   온톨로지가 찍은 것이라 **사전이 넓어져도 안 늘어난다** — 2026-09-28 사전에 `AWS` 를 넣었는데
+            #   `keep` 이 한 자리도 안 움직인 것이 그 자국이다(§166). 종전에는 **이 사실이 아무 데도
+            #   안 적혀 있어서** 셋이 썩는 것을 아무도 못 봤다. 이제 적고, `evaluate` 가 어긋나면 말한다
+            "onto_score": evaluate.onto_score_sha256(),   # 채점 지문(§171)
             "marks": "lit 은 원문의 `코드` — 그대로 남아야 한다(지표 lit). ui 는 **굵게** — 콘솔 라벨이고 "
                      "지금은 기록만 한다. 한국어 콘솔이 라벨을 현지화하는지 확인 전이다(DECISIONS §122)",
             "note": "참조(ref)가 없다 — 도메인 지표는 참조 없이 센다. chrF 는 FLORES+ 가 든다"}
