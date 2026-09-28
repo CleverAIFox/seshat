@@ -131,3 +131,30 @@ def test_셸이_이긴다는_규칙은_그대로다(tmp_path, monkeypatch):
     monkeypatch.setenv("HF_TOKEN", "hf_셸")
     paths.load_dotenv(env)
     assert os.environ["HF_TOKEN"] == "hf_셸"
+
+
+def test_레이크에서_찾는다(tmp_path):
+    """★ **넣는 길만 있고 찾는 길이 없었다**(DECISIONS §175). 판이 레이크로 간 뒤로는
+    `runs/H-050-*.jsonl` 이 글로브가 안 맞아 그대로 넘어가고 도구가 추적을 뱉는다."""
+    (tmp_path / "runs").mkdir()
+    for n in ("H-050-nova-d001-20260927-181909.jsonl", "H-045-12b-d001-20260927-135211.jsonl"):
+        (tmp_path / "runs" / n).write_text("{}\n", encoding="utf-8")
+    assert len(lake.찾는다(tmp_path, "H-050-nova")) == 1, "조각만 줘도 찾는다"
+    assert len(lake.찾는다(tmp_path, "H-0*-d001-*.jsonl")) == 2, "글로브는 그대로 쓴다"
+    assert lake.찾는다(tmp_path, "없는것") == []
+
+
+def _rs():
+    s = importlib.util.spec_from_file_location("rescore", ROOT / "tools/rescore.py")
+    m = importlib.util.module_from_spec(s)
+    s.loader.exec_module(m)
+    return m
+
+
+def test_없는_판에_추적을_안_뱉는다(tmp_path):
+    """★ **막는 도구는 넘는 길을 같이 준다**(DECISIONS §174 · §175)."""
+    import pytest as _p
+    with _p.raises(SystemExit) as e:
+        _rs().rescore(str(tmp_path / "runs/H-050-nova-d001-20260927-181909.jsonl"), "x")
+    말 = str(e.value)
+    assert "레이크" in 말 and "lake.py ls" in 말 and "H-050-nova-d001" in 말

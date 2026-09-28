@@ -22,7 +22,13 @@ from seshat import endings, evaluate, ontology, terms  # noqa: E402
 
 
 def rescore(run_path: str, set_path: str, post: str = "none") -> tuple[dict, list[dict]]:
-    lines = [json.loads(x) for x in Path(run_path).read_text(encoding="utf-8").splitlines() if x.strip()]
+    쪽 = Path(run_path)
+    if not 쪽.exists():
+        # ★ **없는 파일에 추적을 뱉지 않는다**(DECISIONS §175). 판은 레이크로 옮겨 가므로
+        #   `runs/…` 글로브가 안 맞는 것이 흔하다 — **어디서 찾는지**를 같이 말한다
+        raise SystemExit(f"{run_path} 가 없다 — 레이크로 옮겨졌을 수 있다\n"
+                         f"  찾는다 : python3 tools/lake.py ls {쪽.stem.split('-2026')[0]}")
+    lines = [json.loads(x) for x in 쪽.read_text(encoding="utf-8").splitlines() if x.strip()]
     head = next(x for x in lines if x.get("meta"))
     body = [x for x in lines if not x.get("meta")]
     spec = {r["id"]: r for r in evaluate.load(set_path)}

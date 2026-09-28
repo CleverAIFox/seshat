@@ -4,6 +4,7 @@
   python3 tools/lake.py put runs 파일...             실험 결과를 넣는다. 같은 이름이 있으면 해시를 본다
   python3 tools/lake.py put raw --into aws-docs 파일...  원본을 넣는다. 자리는 카탈로그가 정한다
   python3 tools/lake.py check                       대장과 디스크를 맞춘다 · 가설 대장의 근거가 레이크에 있는가
+  python3 tools/lake.py ls H-050-nova*              레이크에서 찾는다 — **자리를 그대로 찍는다**(§175)
 
 ★ **넣기만 하고 바꾸지 않는다.** 같은 이름에 다른 내용이 오면 거절한다. 덮어쓰면 가설 대장이 가리키던
   근거가 조용히 다른 파일이 된다. 다시 쟀으면 이름(시각)이 다르다.
@@ -153,6 +154,17 @@ def check(lake: Path, ledger: Path | None = None, entries: list[dict] | None = N
     return fails
 
 
+def 찾는다(lake: Path, 무늬: str, tier: str = "runs") -> list[Path]:
+    """레이크에서 이름이 맞는 것. **자리를 그대로 준다**(DECISIONS §175).
+
+    ★ 판은 `runs/` 에 잠깐 있다가 레이크로 간다. 그 뒤로는 `runs/H-050-*.jsonl` 이 **글로브가
+      안 맞아 그대로 넘어가고**, 도구는 `FileNotFoundError` 를 뱉는다 — 파일이 **어디 있는지는
+      아무도 안 알려준다.** 레이크에 넣는 길만 있고 **찾는 길이 없었다.**
+    """
+    무늬 = 무늬 if any(c in 무늬 for c in "*?[") else f"*{무늬}*"
+    return sorted((lake / tier).glob(무늬))
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -162,6 +174,9 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--into", default="", help="층 아래 자리 — 카탈로그의 lake: 자리와 맞아야 한다")
     p.add_argument("files", nargs="+", type=Path)
     sub.add_parser("check")
+    q = sub.add_parser("ls")
+    q.add_argument("무늬", nargs="?", default="*", help="이름 조각이나 글로브")
+    q.add_argument("--tier", default="runs", choices=list(paths.TIERS))
     a = ap.parse_args(argv)
     if a.cmd == "init":
         d = paths.data()
@@ -172,6 +187,12 @@ def main(argv: list[str] | None = None) -> int:
     lake = paths.require_lake()
     if a.cmd == "put":
         return put(lake, a.tier, a.files, into=a.into)
+    if a.cmd == "ls":
+        got = 찾는다(lake, a.무늬, a.tier)
+        for x in got:
+            print(f"  {x}")
+        print(f"  {len(got)}건 — {lake / a.tier}")
+        return 0 if got else 1
     fails = check(lake)
     for f in fails:
         print(f"  {f}")
