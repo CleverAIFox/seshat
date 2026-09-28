@@ -135,3 +135,19 @@
 {"id": "con.schema-evolution", "kind": "concept", "en": "schema evolution", "keep": false, "ko": "스키마 진화", "aliases": [], "parent": null, "src": "author", "alt_ko": ["스키마 업데이트"], "ko_ref": "athena/querying-iceberg-evolving-table-schema"}
 {"id": "con.provisioned-capacity", "kind": "concept", "en": "provisioned capacity", "keep": false, "ko": "프로비저닝된 용량", "aliases": [], "parent": null, "src": "author", "alt_ko": ["프로비저닝된 용량 모드", "프로비저닝된 처리량 용량"], "ko_ref": "dynamodb/on-demand-capacity-mode", "bad_ko": ["제공된 용량"]}
 {"id": "con.on-demand-capacity", "kind": "concept", "en": "on-demand capacity", "keep": false, "ko": "온디맨드 용량", "aliases": [], "parent": null, "src": "author", "alt_ko": ["온디맨드 용량 모드", "요청형 용량", "주문형 용량"], "ko_ref": "dynamodb/on-demand-capacity-mode", "bad_ko": ["즉각적인 용량"]}
+{"id": "brand.aws", "kind": "brand", "en": "AWS", "keep": true, "coda": "closed", "aliases": ["Amazon Web Services"], "parent": null, "src": "author"}
+{"id": "con.table", "kind": "concept", "en": "table", "keep": false, "ko": "테이블", "aliases": [], "parent": null, "src": "aws-glossary", "alt_ko": [], "ko_ref": "glossary/reference"}
+{"id": "con.console", "kind": "concept", "en": "console", "keep": false, "ko": "콘솔", "aliases": [], "parent": null, "src": "aws-glossary", "alt_ko": [], "ko_ref": "glossary/reference"}
+{"id": "con.account", "kind": "concept", "en": "account", "keep": false, "ko": "계정", "aliases": [], "parent": null, "src": "aws-glossary", "alt_ko": [], "ko_ref": "glossary/reference"}
+{"id": "con.key", "kind": "concept", "en": "key", "keep": false, "ko": "키", "aliases": [], "parent": null, "src": "aws-glossary", "alt_ko": [], "ko_ref": "glossary/reference"}
+{"id": "con.metric", "kind": "concept", "en": "metric", "keep": false, "ko": "지표", "aliases": [], "parent": null, "src": "aws-glossary", "alt_ko": ["메트릭"], "ko_ref": "glossary/reference"}
+{"id": "con.region", "kind": "concept", "en": "region", "keep": false, "ko": "리전", "aliases": [], "parent": null, "src": "aws-glossary", "alt_ko": ["지역"], "ko_ref": "glossary/reference"}
+{"id": "con.resource", "kind": "concept", "en": "resource", "keep": false, "ko": "리소스", "aliases": [], "parent": null, "src": "aws-glossary", "alt_ko": ["자원"], "ko_ref": "glossary/reference"}
+{"id": "con.service", "kind": "concept", "en": "service", "keep": false, "ko": "서비스", "aliases": [], "parent": null, "src": "aws-glossary", "alt_ko": [], "ko_ref": "glossary/reference"}
+{"id": "con.session", "kind": "concept", "en": "session", "keep": false, "ko": "세션", "aliases": [], "parent": null, "src": "aws-glossary", "alt_ko": [], "ko_ref": "glossary/reference"}
+{"id": "con.tag", "kind": "concept", "en": "tag", "keep": false, "ko": "태그", "aliases": [], "parent": null, "src": "aws-glossary", "alt_ko": [], "ko_ref": "glossary/reference"}
+{"id": "con.user", "kind": "concept", "en": "user", "keep": false, "ko": "사용자", "aliases": [], "parent": null, "src": "aws-glossary", "alt_ko": ["유저"], "ko_ref": "glossary/reference"}
+{"id": "con.alarm", "kind": "concept", "en": "alarm", "keep": false, "ko": "경보", "aliases": [], "parent": null, "src": "aws-glossary", "alt_ko": ["알람"], "ko_ref": "glossary/reference"}
+{"id": "con.event", "kind": "concept", "en": "event", "keep": false, "ko": "이벤트", "aliases": [], "parent": null, "src": "aws-glossary", "alt_ko": [], "ko_ref": "glossary/reference"}
+{"id": "con.credentials", "kind": "concept", "en": "credentials", "keep": false, "ko": "보안 인증", "aliases": ["credential"], "parent": null, "src": "aws-glossary", "alt_ko": ["자격 증명", "자격증명", "인증 정보"], "ko_ref": "glossary/reference"}
+{"id": "feat.aws-console", "kind": "feature", "en": "AWS Management Console", "keep": true, "coda": "closed", "aliases": ["Management Console"], "parent": "brand.aws", "src": "author"}

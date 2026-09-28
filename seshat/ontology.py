@@ -25,9 +25,12 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT = ROOT / "data/ontology/aws.jsonl"
-KINDS = {"service", "feature", "api", "concept"}
+# ★ `brand` — **서비스도 개념도 아닌 제공자 이름**(DECISIONS §165). `AWS` 는 50줄에 나오는데
+#   어휘에 자리가 없어 사전 밖이었고, 그래서 `Amazon Web Services` 의 `Services` 가 개념으로 잡혔다.
+#   억지로 `service` 로 넣으면 그 줄이 거짓말이 된다 — **자리가 없으면 자리를 만든다.**
+KINDS = {"service", "feature", "api", "concept", "brand"}
 CODAS = {"none", "closed", "rieul"}
-SOURCES = {"author", "thoth-glossary"}
+SOURCES = {"author", "thoth-glossary", "aws-glossary"}   # AWS 공식 한국어 용어집(§165)
 _HANGUL = re.compile(r"[가-힣]")
 _ACRONYM = re.compile(r"^[A-Z0-9-]+$")
 # 공식 표기의 근거 — AWS 한국어 문서의 <서비스>/<페이지>. URL 은 적지 않는다(DECISIONS §34)
@@ -91,7 +94,7 @@ def validate(onto: list[dict]) -> list[str]:
         ids[i] = n
         if n.get("kind") not in KINDS:
             fails.append(f"{i} 의 kind '{n.get('kind')}' 가 어휘 밖이다")
-        if not i.startswith({"service": "svc.", "feature": "feat.", "api": "api.", "concept": "con."}.get(n.get("kind"), "?")):
+        if not i.startswith({"service": "svc.", "feature": "feat.", "api": "api.", "concept": "con.", "brand": "brand."}.get(n.get("kind"), "?")):
             fails.append(f"{i} 의 접두사가 kind 와 맞지 않는다")
         if n.get("src") not in SOURCES:
             fails.append(f"{i} 의 출처 '{n.get('src')}' 가 어휘 밖이다")

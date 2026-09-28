@@ -452,3 +452,20 @@ def test_박는_판에서는_낡음을_안_막는다():
     rec = {**REC, "metrics": "1"}
     막, _ = G.check(rec, 머리(metrics="9", term_off=0.99, lit=0.99), pin=True, 지금="9")
     assert not [x for x in 막 if "낡았다" in x]
+
+
+def test_박는_판에서_자_바뀜은_안_막는다():
+    """「재채점하고 `--update` 로 박아라」 고 이르면서 박을 길을 막으면 안 된다(DECISIONS §165).
+
+    2026-09-28 §144 의 닭과 달걀이 자에서 그대로 되풀이됐다 — 열 번째 구멍이다.
+    """
+    rec = {**REC, "metrics": "2"}
+    막, 말 = G.check(rec, 머리(metrics="3", term_off=0.99, lit=0.99), pin=True, 지금="3")
+    assert 막 == [] and any("다시 박는다" in x for x in 말)
+
+
+def test_박는_판에서도_셋이_다르면_막는다():
+    """다른 글로 잰 수를 기록으로 삼으면 그 기록이 거짓말한다."""
+    rec = {**REC, "metrics": "3"}
+    막, _ = G.check(rec, 머리(metrics="3", set_sha256="딴셋", term_off=0.99), pin=True, 지금="3")
+    assert 막 and "셋이 다르다" in 막[0]

@@ -112,9 +112,14 @@ def check(rec: dict, head: dict, pin: bool = False, 지금: str | None = None) -
                   f"    `--update` 로 박는다(실험 상태의 가설이 있어야 한다)")
         return 막, 말
     # ★ **축은 `seshat/compare.py` 하나에만 적는다**(DECISIONS §157)
-    갈린 = compare.갈림(rec, head, compare.GATE_막)
-    if 갈린:
-        막.append(갈린[0].글())
+    # ★ **박으러 온 판에서 자 바뀜은 막지 않는다**(DECISIONS §165). 「재채점하고 `--update` 로
+    #   박아라」 고 이르면서 박을 길을 막으면 §144 의 닭과 달걀이 그대로 되풀이된다. 셋은 여전히
+    #   막는다 — 다른 글로 잰 수를 기록으로 삼으면 그 기록이 거짓말한다
+    for g in compare.갈림(rec, head, compare.GATE_막):
+        if pin and g.키 == "metrics":
+            말.append(g.글() + " — **이번 실행으로 다시 박는다**")
+            continue
+        막.append(g.글())
         return 막, 말
     if rec.get("onto_sha256"):
         for x in compare.갈림(rec, head, ("onto_sha256",)):
