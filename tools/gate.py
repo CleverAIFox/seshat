@@ -79,7 +79,13 @@ def 고른다(board: dict, head: dict, arm: str | None, 꼭: bool = False) -> di
     return 맞[0] if 맞 else None
 
 
-def check(rec: dict, head: dict, pin: bool = False) -> tuple[list[str], list[str]]:
+def 지금_자() -> str:
+    """**코드가 지금 쓰는 자.** 기록판이 낡은 것을 문이 스스로 알아야 한다(DECISIONS §162)."""
+    from seshat import evaluate
+    return evaluate.METRICS_VER
+
+
+def check(rec: dict, head: dict, pin: bool = False, 지금: str | None = None) -> tuple[list[str], list[str]]:
     """(막는 것, 말만 하는 것). **비었으면 통과다.**
 
     ★ `pin` 은 `--update` 로 부를 때다. 셋 해시가 아직 없는 기록은 **박으러 온 것**이지 어긴 것이
@@ -95,6 +101,15 @@ def check(rec: dict, head: dict, pin: bool = False) -> tuple[list[str], list[str
             "기록에 **자 판**이 없다"
             + (" — 이번 실행으로 박는다" if pin else
                " — 채점 코드가 바뀌었을 수 있다. `tools/rescore.py` 로 기준을 다시 재고 `--update` 로 박는다"))
+        return 막, 말
+    # ★ **기록판이 낡았는지를 문이 스스로 본다**(DECISIONS §162). 2026-09-28 자를 3 으로 올렸는데
+    #   기록판도 그 실행도 2 라 **둘이 같아서 통과했다** — 문은 두 산출물끼리만 견주고 지금 코드의
+    #   자는 안 봤다. 낡은 기록으로 내리는 모든 판정이 옛 자의 판정이다
+    지금 = 지금 or 지금_자()
+    if not pin and rec.get("metrics") and rec["metrics"] != 지금:
+        막.append(f"**기록판이 낡았다** — 기록의 자 {rec['metrics']} · 지금 코드의 자 {지금}\n"
+                  f"    이 기록으로 내리는 판정은 옛 자의 판정이다. `tools/rescore.py` 로 다시 재고\n"
+                  f"    `--update` 로 박는다(실험 상태의 가설이 있어야 한다)")
         return 막, 말
     # ★ **축은 `seshat/compare.py` 하나에만 적는다**(DECISIONS §157)
     갈린 = compare.갈림(rec, head, compare.GATE_막)

@@ -6,19 +6,25 @@ import re
 
 import pytest
 
+from seshat import evaluate as _E
+
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 _spec = importlib.util.spec_from_file_location("gate", ROOT / "tools/gate.py")
 G = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(G)
 
+# ★ **자 판을 손으로 박지 않는다**(DECISIONS §162). 코드의 자가 올라가면 픽스처도 같이 올라야
+#   한다 — 박으면 자를 올리는 날 시험이 빨개지고, 그러면 시험을 고치느라 고침이 늦어진다
+자 = _E.METRICS_VER
+
 # `metrics` — 자 판. 없으면 문이 「재채점하고 박아라」 로 막는다(DECISIONS §145)
-REC = {"arm": "가짜", "set_sha256": "셋해시", "onto_sha256": "사전해시", "metrics": "2",
+REC = {"arm": "가짜", "set_sha256": "셋해시", "onto_sha256": "사전해시", "metrics": 자,
        "term_off": 0.90, "lit": 0.80, "guard": ["term_off", "lit"], "tol": 0.01}
 
 
 def 머리(**kw):
     return {"meta": True, "backend": "가짜", "set_sha256": "셋해시", "onto_sha256": "사전해시",
-            "metrics": "2", **kw}
+            "metrics": 자, **kw}
 
 
 def test_올랐으면_통과한다():
@@ -148,7 +154,7 @@ def test_처음부터_끝까지_한_번_돈다(tmp_path, monkeypatch, capsys):
     run = tmp_path / "H-999-x.jsonl"
     run.write_text("\n".join(json.dumps(x, ensure_ascii=False) for x in (
         {"meta": True, "backend": arm, "set_sha256": "셋1", "onto_sha256": "사전1",
-         "metrics": "2", "term_off": 0.8858, "lit": 0.803, "keep": 0.9853, "josa": 0.99},
+         "metrics": 자, "term_off": 0.8858, "lit": 0.803, "keep": 0.9853, "josa": 0.99},
         {"id": "a", "src": "x", "out": "y"})) + "\n", encoding="utf-8")
 
     assert G.main([str(run), "--update"]) == 0           # ① 처음 박는다
@@ -158,14 +164,14 @@ def test_처음부터_끝까지_한_번_돈다(tmp_path, monkeypatch, capsys):
     assert G.main([str(run)]) == 0                       # ② 같은 값이면 통과
     좋 = tmp_path / "H-999-y.jsonl"
     좋.write_text(json.dumps({"meta": True, "backend": arm, "set_sha256": "셋1", "onto_sha256": "사전1",
-                              "metrics": "2", "term_off": 0.95, "lit": 0.90, "keep": 0.99, "josa": 1.0}, ensure_ascii=False) + "\n",
+                              "metrics": 자, "term_off": 0.95, "lit": 0.90, "keep": 0.99, "josa": 1.0}, ensure_ascii=False) + "\n",
                   encoding="utf-8")
     assert G.main([str(좋), "--update"]) == 0            # ③ 오르면 기록이 바뀐다
     assert G.load(sb)["record"][0]["term_off"] == 0.95
 
     나 = tmp_path / "H-999-z.jsonl"
     나.write_text(json.dumps({"meta": True, "backend": arm, "set_sha256": "셋1", "onto_sha256": "사전1",
-                              "metrics": "2", "term_off": 0.80, "lit": 0.90, "keep": 0.99, "josa": 1.0}, ensure_ascii=False) + "\n",
+                              "metrics": 자, "term_off": 0.80, "lit": 0.90, "keep": 0.99, "josa": 1.0}, ensure_ascii=False) + "\n",
                   encoding="utf-8")
     assert G.main([str(나)]) == 1                        # ④ 떨어지면 막는다
     assert G.load(sb)["record"][0]["term_off"] == 0.95   # 막힌 값은 기록에 안 남는다
@@ -201,7 +207,7 @@ def test_승격하면_이름과_날짜도_바뀐다(tmp_path, monkeypatch):
     board = tmp_path / "board.toml"
     board.write_text(
         '[[record]]\nset = "s.jsonl"\nset_sha256 = "셋"\narm = "옛팔"\nrun = "옛실행"\n'
-        'commit = "0000000"\ndate = "2020-01-01"\nonto_sha256 = "사전"\nmetrics = "2"\n'
+        'commit = "0000000"\ndate = "2020-01-01"\nonto_sha256 = "사전"\nmetrics = "' + 자 + '"\n'
         'term_off = 0.80\nlit = 0.70\nkeep = 0.90\nstyle = 0.90\n'
         'guard = ["term_off", "lit", "keep"]\ntol = 0.0\n', encoding="utf-8")
     run = tmp_path / "새실행-20260928-120000.jsonl"
@@ -223,7 +229,7 @@ def test_고친_기록으로_다시_부르면_문이_지킨다(tmp_path, monkeyp
     board = tmp_path / "board.toml"
     board.write_text(
         '[[record]]\nset = "s.jsonl"\nset_sha256 = "셋"\narm = "옛팔"\nrun = "r"\n'
-        'commit = "0"\ndate = "2020-01-01"\nonto_sha256 = "사전"\nmetrics = "2"\n'
+        'commit = "0"\ndate = "2020-01-01"\nonto_sha256 = "사전"\nmetrics = "' + 자 + '"\n'
         'term_off = 0.80\nlit = 0.70\nkeep = 0.90\nstyle = 0.90\n'
         'guard = ["term_off", "lit", "keep"]\ntol = 0.0\n', encoding="utf-8")
     run = tmp_path / "새실행-20260928-120000.jsonl"
@@ -267,8 +273,10 @@ def test_반올림_안쪽_상승은_기록하지_않는다():
 
 def test_자가_바뀌면_막는다():
     """채점 코드가 바뀌면 옛 수와 못 견준다 — 사전이 바뀌는 것과 다르다(DECISIONS §145)."""
-    rec = {**REC, "metrics": "1"}  # 기록은 옛 자
-    막, _ = G.check(rec, 머리(metrics="2", term_off=0.99, lit=0.99))
+    # `지금` 을 기록과 같게 준다 — 그래야 **기록 대 실행** 축만 남는다.
+    # 안 주면 「기록판이 낡았다」(DECISIONS §162)가 먼저 걸리고 둘 다 참이라 무엇을 보는지 흐려진다
+    rec = {**REC, "metrics": "1"}
+    막, _ = G.check(rec, 머리(metrics=자, term_off=0.99, lit=0.99), 지금="1")
     assert len(막) == 1 and "자가 바뀌었다" in 막[0]
 
 
@@ -281,8 +289,8 @@ def test_기록에_자_판이_없으면_박으라고_한다():
 
 
 def test_같은_자면_통과한다():
-    rec = {**REC, "metrics": "2"}
-    assert G.check(rec, 머리(metrics="2", term_off=0.92, lit=0.85)) == ([], [])
+    rec = {**REC, "metrics": 자}
+    assert G.check(rec, 머리(metrics=자, term_off=0.92, lit=0.85)) == ([], [])
 
 
 def test_없는_키는_만든다(tmp_path, monkeypatch):
@@ -306,28 +314,28 @@ def test_자가_바뀌면_내려가도_그대로_박는다():
     """
     rec = {**REC, "metrics": "1", "term_off": 0.9772, "lit": 0.8099, "keep": 0.9979,
            "guard": ["term_off", "lit", "keep"]}
-    got = G.올릴_것(rec, 머리(metrics="2", term_off=0.9619, lit=0.8099, keep=0.9979), pin=True)
+    got = G.올릴_것(rec, 머리(metrics=자, term_off=0.9619, lit=0.8099, keep=0.9979), pin=True)
     assert got["term_off"] == 0.9619, "내려간 값이 안 박히면 기록판이 거짓말한다"
 
 
 def test_자가_같으면_내려간_값은_안_박는다():
     """봐주는 것이 아니다 — 같은 자에서 내려간 것은 회귀다."""
-    rec = {**REC, "metrics": "2", "term_off": 0.9772, "guard": ["term_off"]}
-    assert "term_off" not in G.올릴_것(rec, 머리(metrics="2", term_off=0.9619), pin=True)
+    rec = {**REC, "metrics": 자, "term_off": 0.9772, "guard": ["term_off"]}
+    assert "term_off" not in G.올릴_것(rec, 머리(metrics=자, term_off=0.9619), pin=True)
 
 
 def test_다른_자로_잰_선은_차를_안_찍는다(tmp_path, monkeypatch, capsys):
     """비교를 거절하는 도구가 스스로 섞어 재고 있었다(DECISIONS §147)."""
     board = tmp_path / "b.toml"
     board.write_text(
-        '[[record]]\nset = "s"\nset_sha256 = "셋"\nonto_sha256 = "사전"\nmetrics = "2"\narm = "팔"\n'
+        '[[record]]\nset = "s"\nset_sha256 = "셋"\nonto_sha256 = "사전"\nmetrics = "' + 자 + '"\narm = "팔"\n'
         'term_off = 0.96\nlit = 0.81\nguard = ["term_off"]\ntol = 0.0\n\n'
         '[[target]]\nset = "s"\narm = "옛선"\nterm_off = 0.9163\nlit = 0.923\n\n'
-        '[[target]]\nset = "s"\narm = "새선"\nmetrics = "2"\nterm_off = 0.90\nlit = 0.93\n',
+        '[[target]]\nset = "s"\narm = "새선"\nmetrics = "' + 자 + '"\nterm_off = 0.90\nlit = 0.93\n',
         encoding="utf-8")
     run = tmp_path / "r-20260928-1.jsonl"
     run.write_text(json.dumps(머리(backend="팔", set_sha256="셋", onto_sha256="사전",
-                                   metrics="2", term_off=0.97, lit=0.82), ensure_ascii=False) + "\n",
+                                   metrics=자, term_off=0.97, lit=0.82), ensure_ascii=False) + "\n",
                    encoding="utf-8")
     monkeypatch.setattr(G, "PATH", board)
     assert G.main([str(run)]) == 0
@@ -355,12 +363,12 @@ def test_주석의_자리를_지킨다(tmp_path, monkeypatch):
 def test_맞바꿈은_사람이_받는다(tmp_path, monkeypatch, capsys):
     """문은 맞바꿈을 못 정한다 — 한쪽이 크게 오르고 한쪽이 조금 떨어지는 판(DECISIONS §155)."""
     board = tmp_path / "b.toml"
-    board.write_text('[[record]]\nset = "s"\nset_sha256 = "셋"\nonto_sha256 = "사전"\nmetrics = "2"\n'
+    board.write_text('[[record]]\nset = "s"\nset_sha256 = "셋"\nonto_sha256 = "사전"\nmetrics = "' + 자 + '"\n'
                      'arm = "옛팔"\nrun = "r"\ncommit = "0"\ndate = "2020-01-01"\n'
                      'term_off = 0.9619\nlit = 0.8099\nguard = ["term_off", "lit"]\ntol = 0.0\n',
                      encoding="utf-8")
     run = tmp_path / "새-20260928-1.jsonl"
-    run.write_text(json.dumps(머리(backend="새팔", set_sha256="셋", onto_sha256="사전", metrics="2",
+    run.write_text(json.dumps(머리(backend="새팔", set_sha256="셋", onto_sha256="사전", metrics=자,
                                    term_off=0.9559, lit=0.9930), ensure_ascii=False) + "\n",
                    encoding="utf-8")
     monkeypatch.setattr(G, "PATH", board)
@@ -377,10 +385,10 @@ def test_맞바꿈은_사람이_받는다(tmp_path, monkeypatch, capsys):
 
 def test_까닭_없는_받아들임은_문을_끈_것이다(tmp_path, monkeypatch):
     board = tmp_path / "b.toml"
-    board.write_text('[[record]]\nset = "s"\nset_sha256 = "셋"\nonto_sha256 = "사전"\nmetrics = "2"\n'
+    board.write_text('[[record]]\nset = "s"\nset_sha256 = "셋"\nonto_sha256 = "사전"\nmetrics = "' + 자 + '"\n'
                      'arm = "팔"\nterm_off = 0.9\nguard = ["term_off"]\ntol = 0.0\n', encoding="utf-8")
     run = tmp_path / "새-20260928-1.jsonl"
-    run.write_text(json.dumps(머리(backend="팔", set_sha256="셋", onto_sha256="사전", metrics="2",
+    run.write_text(json.dumps(머리(backend="팔", set_sha256="셋", onto_sha256="사전", metrics=자,
                                    term_off=0.8), ensure_ascii=False) + "\n", encoding="utf-8")
     monkeypatch.setattr(G, "PATH", board)
     monkeypatch.setattr(G.catalog, "gate", lambda p: None)
@@ -391,20 +399,20 @@ def test_까닭_없는_받아들임은_문을_끈_것이다(tmp_path, monkeypatc
 def test_다른_자는_못_받는다(tmp_path, monkeypatch, capsys):
     """맞바꿈이 아니라 **다른 것을 잰 것**이다(§145 · §147) — 까닭을 적어도 안 받는다."""
     rec = {**REC, "metrics": "1"}
-    막, _ = G.check(rec, 머리(metrics="2", term_off=0.99, lit=0.99))
+    막, _ = G.check(rec, 머리(metrics=자, term_off=0.99, lit=0.99))
     assert 막 and "떨어졌다" not in 막[0]
 
 
 def test_기계가_지킨_수와_모델이_지킨_수를_안_견준다(tmp_path, monkeypatch, capsys):
     """자도 셋도 같아서 다른 검사가 다 통과한다 — `protects` 만이 이것을 본다(DECISIONS §156)."""
     board = tmp_path / "b.toml"
-    board.write_text('[[record]]\nset = "s"\nset_sha256 = "셋"\nonto_sha256 = "사전"\nmetrics = "2"\n'
+    board.write_text('[[record]]\nset = "s"\nset_sha256 = "셋"\nonto_sha256 = "사전"\nmetrics = "' + 자 + '"\n'
                      'arm = "우리"\nprotects = ["lit", "ui"]\nterm_off = 0.95\nlit = 0.99\n'
                      'guard = ["term_off"]\ntol = 0.0\n\n'
-                     '[[target]]\nset = "s"\narm = "배포본"\nmetrics = "2"\nterm_off = 0.90\nlit = 0.92\n',
+                     '[[target]]\nset = "s"\narm = "배포본"\nmetrics = "' + 자 + '"\nterm_off = 0.90\nlit = 0.92\n',
                      encoding="utf-8")
     run = tmp_path / "새-20260928-1.jsonl"
-    run.write_text(json.dumps(머리(backend="우리", set_sha256="셋", onto_sha256="사전", metrics="2",
+    run.write_text(json.dumps(머리(backend="우리", set_sha256="셋", onto_sha256="사전", metrics=자,
                                    term_off=0.96, lit=0.99), ensure_ascii=False) + "\n", encoding="utf-8")
     monkeypatch.setattr(G, "PATH", board)
     assert G.main([str(run)]) == 0
@@ -415,15 +423,32 @@ def test_기계가_지킨_수와_모델이_지킨_수를_안_견준다(tmp_path,
 
 def test_보호가_같으면_그대로_견준다(tmp_path, monkeypatch, capsys):
     board = tmp_path / "b.toml"
-    board.write_text('[[record]]\nset = "s"\nset_sha256 = "셋"\nonto_sha256 = "사전"\nmetrics = "2"\n'
+    board.write_text('[[record]]\nset = "s"\nset_sha256 = "셋"\nonto_sha256 = "사전"\nmetrics = "' + 자 + '"\n'
                      'arm = "우리"\nprotects = ["lit"]\nterm_off = 0.95\nlit = 0.99\n'
                      'guard = ["term_off"]\ntol = 0.0\n\n'
-                     '[[target]]\nset = "s"\narm = "같은보호"\nmetrics = "2"\nprotects = ["lit"]\n'
+                     '[[target]]\nset = "s"\narm = "같은보호"\nmetrics = "' + 자 + '"\nprotects = ["lit"]\n'
                      'term_off = 0.90\nlit = 0.92\n', encoding="utf-8")
     run = tmp_path / "새-20260928-1.jsonl"
-    run.write_text(json.dumps(머리(backend="우리", set_sha256="셋", onto_sha256="사전", metrics="2",
+    run.write_text(json.dumps(머리(backend="우리", set_sha256="셋", onto_sha256="사전", metrics=자,
                                    term_off=0.96, lit=0.99), ensure_ascii=False) + "\n", encoding="utf-8")
     monkeypatch.setattr(G, "PATH", board)
     assert G.main([str(run)]) == 0
     out = capsys.readouterr().out
     assert "안 찍는다" not in out and "lit" in out.split("선까지")[1]
+
+
+def test_기록판이_낡은_것을_문이_스스로_안다():
+    """2026-09-28 자를 3 으로 올렸는데 기록판도 그 실행도 2 라 **둘이 같아서 통과했다**.
+
+    문은 두 산출물끼리만 견주고 **지금 코드의 자**는 안 봤다(DECISIONS §162).
+    """
+    rec = {**REC, "metrics": "1"}
+    막, _ = G.check(rec, 머리(metrics="1", term_off=0.99, lit=0.99), 지금="9")
+    assert 막 and "기록판이 낡았다" in 막[0] and "rescore" in 막[0]
+
+
+def test_박는_판에서는_낡음을_안_막는다():
+    """`--update` 는 **박으러 온 것**이다 — 막으면 박을 길이 없다(§144 의 닭과 달걀)."""
+    rec = {**REC, "metrics": "1"}
+    막, _ = G.check(rec, 머리(metrics="9", term_off=0.99, lit=0.99), pin=True, 지금="9")
+    assert not [x for x in 막 if "낡았다" in x]

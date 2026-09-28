@@ -90,3 +90,21 @@ def test_긴_조사가_앞이다():
     from seshat import terms
     for 짧, 김 in (("로", "으로"), ("나", "이나"), ("라", "이라")):
         assert terms.JOSA.index(김) < terms.JOSA.index(짧), f"{김} 이 {짧} 보다 앞이어야 한다"
+
+
+def test_사본_세는_도구의_프로브가_살아_있다():
+    """아무것도 안 찾는 검사와 고장 난 검사는 구별되지 않는다(DECISIONS §163)."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("dup", ROOT / "tools/dupcheck.py")
+    dup = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(dup)
+    assert dup.main(["--selftest"]) == 0
+
+
+def test_사본_세기가_글자도_본다():
+    """함수만 보는 도구였으면 2026-09-28 의 사본 넷을 하나도 못 잡았다 — 전부 상수였다."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("dup", ROOT / "tools/dupcheck.py")
+    dup = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(dup)
+    assert hasattr(dup, "글자_사본"), "긴 글자 사본을 세는 자리가 있어야 한다"
