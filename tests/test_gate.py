@@ -393,3 +393,37 @@ def test_다른_자는_못_받는다(tmp_path, monkeypatch, capsys):
     rec = {**REC, "metrics": "1"}
     막, _ = G.check(rec, 머리(metrics="2", term_off=0.99, lit=0.99))
     assert 막 and "떨어졌다" not in 막[0]
+
+
+def test_기계가_지킨_수와_모델이_지킨_수를_안_견준다(tmp_path, monkeypatch, capsys):
+    """자도 셋도 같아서 다른 검사가 다 통과한다 — `protects` 만이 이것을 본다(DECISIONS §156)."""
+    board = tmp_path / "b.toml"
+    board.write_text('[[record]]\nset = "s"\nset_sha256 = "셋"\nonto_sha256 = "사전"\nmetrics = "2"\n'
+                     'arm = "우리"\nprotects = ["lit", "ui"]\nterm_off = 0.95\nlit = 0.99\n'
+                     'guard = ["term_off"]\ntol = 0.0\n\n'
+                     '[[target]]\nset = "s"\narm = "배포본"\nmetrics = "2"\nterm_off = 0.90\nlit = 0.92\n',
+                     encoding="utf-8")
+    run = tmp_path / "새-20260928-1.jsonl"
+    run.write_text(json.dumps(머리(backend="우리", set_sha256="셋", onto_sha256="사전", metrics="2",
+                                   term_off=0.96, lit=0.99), ensure_ascii=False) + "\n", encoding="utf-8")
+    monkeypatch.setattr(G, "PATH", board)
+    assert G.main([str(run)]) == 0
+    out = capsys.readouterr().out
+    assert "term_off" in out.split("선까지")[1]
+    assert "lit 는 안 찍는다" in out, "보호가 다른 lit 을 견주면 「넘었다」 가 거짓이 된다"
+
+
+def test_보호가_같으면_그대로_견준다(tmp_path, monkeypatch, capsys):
+    board = tmp_path / "b.toml"
+    board.write_text('[[record]]\nset = "s"\nset_sha256 = "셋"\nonto_sha256 = "사전"\nmetrics = "2"\n'
+                     'arm = "우리"\nprotects = ["lit"]\nterm_off = 0.95\nlit = 0.99\n'
+                     'guard = ["term_off"]\ntol = 0.0\n\n'
+                     '[[target]]\nset = "s"\narm = "같은보호"\nmetrics = "2"\nprotects = ["lit"]\n'
+                     'term_off = 0.90\nlit = 0.92\n', encoding="utf-8")
+    run = tmp_path / "새-20260928-1.jsonl"
+    run.write_text(json.dumps(머리(backend="우리", set_sha256="셋", onto_sha256="사전", metrics="2",
+                                   term_off=0.96, lit=0.99), ensure_ascii=False) + "\n", encoding="utf-8")
+    monkeypatch.setattr(G, "PATH", board)
+    assert G.main([str(run)]) == 0
+    out = capsys.readouterr().out
+    assert "안 찍는다" not in out and "lit" in out.split("선까지")[1]

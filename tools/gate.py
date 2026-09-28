@@ -12,6 +12,9 @@
 ★ **사전이 바뀌면 막지 않고 말한다.** 사전을 고치면 같은 번역의 점수가 바뀐다(§32 · §96). 그것을
   회귀로 읽으면 사전을 영영 못 고친다 — 재채점으로 기준을 다시 박으라고 이른다.
 ★ **못 재면 0 이 아니다.** 결과에 그 지표가 없으면 「통과」 가 아니라 빨간불이다(§110 과 같은 규율).
+★ **기계가 지킨 수와 모델이 지킨 수를 견주지 않는다.** 자리표시로 보호하는 팔의 `lit`·`ui` 는
+  **파이프라인이 만든 1.0** 이고, 보호가 없는 팔의 같은 지표는 **모델이 지킨 값**이다. 자 판도 셋도
+  같으니 위의 검사가 다 통과한다 — `protects` 칸이 그것을 든다(DECISIONS §156).
 ★ **문은 맞바꿈을 못 정한다.** 한 지표가 크게 오르고 다른 지표가 조금 떨어지는 판은 **사람이 정한다** —
   `--accept "<까닭>"` 이 그것이다. 까닭 없이는 안 받는다. 받은 것은 기록판에 **떨어진 지표와 함께**
   남고, 다음 판부터 그 새 값이 선이 된다(DECISIONS §155).
@@ -245,8 +248,16 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  선    {t['arm']:<40} **다른 자로 잰 선이다** — 기록 판 {t.get('metrics') or '없다'} · "
                   f"이번 판 {head.get('metrics')}. 차를 안 찍는다. `tools/rescore.py` 로 그 판을 다시 잰다")
             continue
-        남 = {m: round(t[m] - head[m], 4) for m in ("term_off", "lit") if m in t and head.get(m) is not None}
+        # ★ **보호가 다르면 그 지표는 안 찍는다**(DECISIONS §156). 기계가 지킨 0.993 과 모델이 지킨
+        #   0.9225 를 견주면 「넘었다」 가 거짓이 된다 — 자도 셋도 같아서 위의 검사가 다 통과한다
+        못볼것 = set(rec.get("protects") or []) ^ set(t.get("protects") or [])
+        남 = {m: round(t[m] - head[m], 4) for m in ("term_off", "lit")
+              if m in t and head.get(m) is not None and m not in 못볼것}
         print(f"  선까지 {t['arm']:<40} " + " · ".join(f"{m} {v:+.4f}" for m, v in 남.items()))
+        가린 = sorted(못볼것 & {"term_off", "lit"})
+        if 가린:
+            print(f"        ※ **{' · '.join(가린)} 는 안 찍는다** — 이쪽은 자리표시가 지키고 "
+                  f"저쪽은 모델이 지킨다. 같은 처치를 걸고 다시 재야 견준다(§156)")
     if 오른 and (a.update or 받은):
         _쓴다(a.run, rec, head, 오른, 받은=받은)
         print(f"  기록판을 고쳤다 — {' · '.join(f'{m} → {v}' for m, v in 오른.items())}")
