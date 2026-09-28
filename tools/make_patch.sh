@@ -41,7 +41,10 @@ fi
 # ★ **재는 자를 바꾸는 일과 그 자로 판정하는 일을 같이 두지 않는다**(DECISIONS §96 · §86).
 #   붙이는 사람이 둘을 순서대로 할 방법이 없다 — 근거 숫자가 없어진 사전으로 잰 것이 된다
 VERDICT="$(grep -cE '^\+\| H-[0-9]+ \| (채택|기각) \|' "$OUT" || true)"
-if [ "$VERDICT" -gt 0 ] && grep -q '^diff --git a/data/ontology/' "$OUT"; then
+# ★ **채점기가 읽는 사전만 본다**(DECISIONS §193). 누수 장부(`mined.jsonl`)는 `data/ontology/` 에
+#   살지만 **채점기 밖**이다 — 거기 적는 것은 점수를 한 자리도 안 바꾼다(§171). 그것까지 막으면
+#   **가짜 양성**이고, 가짜 양성은 사람을 검사에서 멀어지게 한다(§172).
+if [ "$VERDICT" -gt 0 ] && grep '^diff --git a/data/ontology/' "$OUT" | grep -qv 'mined\.jsonl'; then
   echo "  ※ 이 패치가 판정과 온톨로지를 같이 바꾼다 — 근거 숫자를 없어진 사전으로 잰 것이 된다" >&2
   echo "    사전 먼저 · 다시 재고 · 그다음 판정. 셋으로 나눈다(DECISIONS §96)" >&2
 fi

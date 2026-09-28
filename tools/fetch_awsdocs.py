@@ -282,7 +282,7 @@ def 이미_쓴_문장(셋들: list[str]) -> set[str]:
     """이미 만든 셋들이 든 원문. **떼어둔 셋은 겹치면 떼어둔 것이 아니다**(DECISIONS §188).
 
     ★ 씨만 바꾸면 겹친다 — 같은 못에서 다시 뜨는 것이므로 몇십 줄은 반드시 같이 나온다.
-      그 줄은 **사전을 캘 때 본 줄**이고, 그 줄로 다시 재면 누수가 그대로 남는다(PLAN #37).
+      그 줄은 **사전을 캘 때 본 줄**이고, 그 줄로 다시 재면 누수가 그대로 남는다(DECISIONS §192).
     """
     본 = set()
     for x in 셋들:
@@ -326,7 +326,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--cap", type=int, default=400, help="안내서 하나에서 가져올 최대 문장")
     ap.add_argument("--guides", default="", help="쉼표로 고른다. 비면 전부")
     ap.add_argument("--exclude", action="append", default=[], metavar="셋",
-                    help="이 셋들이 든 문장은 뺀다 — **떼어둔 셋**을 만든다(PLAN #37)")
+                    help="이 셋들이 든 문장은 뺀다 — **떼어둔 셋**을 만든다(DECISIONS §192)")
     ap.add_argument("--list", action="store_true")
     a = ap.parse_args(argv)
     if a.list:
@@ -361,7 +361,7 @@ def main(argv: list[str] | None = None) -> int:
             "attribution": f"© Amazon Web Services, Inc. · {ORG} · {LICENSE}",
             "sources": {g: shas[g] for g in sorted(shas)},
             "made_by": "tools/fetch_awsdocs.py",
-            # ★ **떼어둔 셋인가** — 어느 셋과 안 겹치는지 적는다(PLAN #37 · DECISIONS §188)
+            # ★ **떼어둔 셋인가** — 어느 셋과 안 겹치는지 적는다(DECISIONS §188 · §192)
             **({"held_out_from": list(a.exclude)} if a.exclude else {}),
             # ★ **어느 사전으로 만든 셋인가**(DECISIONS §171 · PLAN #36). `keep` 자리는 이 셋을 만들 때의
             #   온톨로지가 찍은 것이라 **사전이 넓어져도 안 늘어난다** — 2026-09-28 사전에 `AWS` 를 넣었는데

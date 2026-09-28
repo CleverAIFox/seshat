@@ -1,4 +1,4 @@
-{"meta": true, "about": "어느 노드를 어느 셋에서 캐서 넣었나 — 누수 장부(seshat PLAN #37 · DECISIONS §168)", "why_sidecar": "온톨로지 파일에 적으면 onto_sha256 이 바뀐다. 뜻이 안 바뀐 편집이 옛 판을 전부 못 견주게 만든다 — 출처는 채점기 밖에 산다", "rule": "캐서 넣은 노드는 반드시 여기 적는다. 안 적힌 누수는 없는 누수가 아니라 안 보이는 누수다"}
+{"meta": true, "about": "어느 노드를 어느 셋에서 캐서 넣었나 — 누수 장부(seshat DECISIONS §168 · §192)", "why_sidecar": "온톨로지 파일에 적으면 onto_sha256 이 바뀐다. 뜻이 안 바뀐 편집이 옛 판을 전부 못 견주게 만든다 — 출처는 채점기 밖에 산다", "rule": "캐서 넣은 노드는 반드시 여기 적는다. 안 적힌 누수는 없는 누수가 아니라 안 보이는 누수다"}
 {"id": "brand.aws", "mined_from": "data/domain/d001.jsonl", "date": "2026-09-28", "note": "표기는 AWS 공식 용어집에서 베꼈으나(src=aws-glossary) 무엇을 넣을지는 d001 이 골랐다 — tools/mine_terms.py data/domain/d001.jsonl"}
 {"id": "con.table", "mined_from": "data/domain/d001.jsonl", "date": "2026-09-28", "note": "표기는 AWS 공식 용어집에서 베꼈으나(src=aws-glossary) 무엇을 넣을지는 d001 이 골랐다 — tools/mine_terms.py data/domain/d001.jsonl"}
 {"id": "con.console", "mined_from": "data/domain/d001.jsonl", "date": "2026-09-28", "note": "표기는 AWS 공식 용어집에서 베꼈으나(src=aws-glossary) 무엇을 넣을지는 d001 이 골랐다 — tools/mine_terms.py data/domain/d001.jsonl"}

@@ -89,7 +89,7 @@ def _fetch():
 
 def test_떼어둔_셋은_겹친_문장을_뺀다(tmp_path):
     """★ **씨만 바꾸면 겹친다**(DECISIONS §188). 같은 못에서 다시 뜨는 것이므로 몇십 줄은
-    반드시 같이 나오고, 그 줄은 **사전을 캘 때 본 줄**이다 — 그러면 떼어둔 것이 아니다(PLAN #37)."""
+    반드시 같이 나오고, 그 줄은 **사전을 캘 때 본 줄**이다 — 그러면 떼어둔 것이 아니다(DECISIONS §192)."""
     fa = _fetch()
     옛 = tmp_path / "d001.jsonl"
     옛.write_text("\n".join(json.dumps(x, ensure_ascii=False) for x in [

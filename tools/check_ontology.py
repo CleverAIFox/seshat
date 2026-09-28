@@ -39,7 +39,7 @@ def main(argv=None) -> int:
         con = [n for n in onto if n["kind"] == "concept"]
         print(f"  공식 표기 대조 {sum(1 for n in con if n.get('ko_ref'))}/{len(con)} 개념 (PLAN #22)")
         for 셋, v in sorted(Counter(d["mined_from"] for d in 장부).items()):
-            print(f"  누수 {v} — {셋} 에서 캐서 넣었다 (PLAN #37)")
+            print(f"  누수 {v} — {셋} 에서 캐서 넣었다 (DECISIONS §192)")
         return 0
     fails = ontology.validate(onto)
     fails += [f"누수 장부의 {d.get('id')!r} 가 사전에 없다 — 지웠으면 장부에서도 지운다"

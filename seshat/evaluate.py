@@ -536,7 +536,7 @@ def conditions(a, rows: list[dict], 코드: dict | None = None) -> dict:
            "set_onto": 셋의_사전(a.set),
            "set_stale": 셋이_낡았나(a.set),
            "metrics": METRICS_VER,      # 자가 바뀌면 옛 수와 못 견준다(DECISIONS §145)
-           # ★ **이 셋에서 캐서 사전에 넣은 노드의 수**(DECISIONS §168 · PLAN #37). 0 이 아니면
+           # ★ **이 셋에서 캐서 사전에 넣은 노드의 수**(DECISIONS §168 · DECISIONS §192). 0 이 아니면
            #   그만큼 **시험지가 분모를 골랐다.** 줄이는 길은 사전을 빼는 것이 아니라 **딴 셋에서 재는 것**
            "onto_leak": len(ontology.캔_노드(a.set)),
            "chars": chars,
