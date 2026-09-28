@@ -152,6 +152,10 @@ def find(onto: list[dict], text: str, keep_only: bool = False) -> list[tuple[int
     """본문에서 표기를 찾는다. **긴 것이 이긴다** — `Amazon Kinesis Data Streams` 가 `Kinesis Data
     Streams` 보다 먼저다. 낱말 경계를 지키고 겹치지 않는다. 개념은 복수 `s` 까지 받는다.
 
+    ★ **복수는 규칙만 받는다 — `s` · `es` · `y→ies`.** 2026-09-28 까지 `y→ies` 가 빠져 있어
+      `policies`(d001 16줄) · `queries` · `categories` 가 **한 번도 안 세어졌다**(DECISIONS §160).
+      「짐작하지 않는다」 는 **파생**(compression → compress)에 대한 말이지 **굴절**에 대한 말이 아니다 —
+      `s` 를 이미 짐작하면서 `ies` 를 안 짐작하는 것은 규율이 아니라 빠뜨린 것이다.
     ★ **개념은 동사로도 나타난다**(DECISIONS §69). `The catalog is ingested by …` 는 수집을 말하는
       문장인데 사전에 `ingestion` 만 있으면 못 찾는다. 변화형은 노드의 `aliases` 가 든다 — 여기서
       어미를 짐작하지 않는다. 짐작하면 `compression` 에서 `compress` 를 만들고 `data` 에서 `dat` 를 만든다.
@@ -160,8 +164,13 @@ def find(onto: list[dict], text: str, keep_only: bool = False) -> list[tuple[int
     taken = [False] * len(text)
     out = []
     for s in cands:
-        suffix = "" if s.node["keep"] else "(?:e?s)?"
-        pat = re.compile(r"(?<![\w-])" + re.escape(s.text) + suffix + r"(?![\w-])",
+        if s.node["keep"]:
+            몸 = re.escape(s.text)                     # 이름은 복수로 안 쓴다
+        elif re.search(r"[^aeiouAEIOU]y$", s.text):
+            몸 = re.escape(s.text[:-1]) + "(?:y|ies)"   # policy · policies
+        else:
+            몸 = re.escape(s.text) + "(?:e?s)?"
+        pat = re.compile(r"(?<![\w-])" + 몸 + r"(?![\w-])",
                          0 if (s.node["keep"] and _ACRONYM.match(s.text)) else re.I)
         for m in pat.finditer(text):
             if not any(taken[m.start():m.end()]):

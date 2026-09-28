@@ -177,7 +177,8 @@ MARKS = ("lit", "ui")
 #   `set_sha256` 이 말하는데, **채점 코드가 바뀌는 것을 말하는 것이 없었다**(DECISIONS §145).
 #   지표의 뜻을 바꿀 때 손으로 올린다. 문(`tools/gate.py`)이 이 값이 다르면 비교를 거절한다.
 #   2 — `term` 이 줄 단위 `in` 에서 **출현 횟수**로 바뀌었다(2026-09-28)
-METRICS_VER = "2"
+#   3 — 복수 `y→ies` 를 받는다(2026-09-28 · DECISIONS §160). `policies` 가 세어지기 시작한다
+METRICS_VER = "3"
 
 
 def marked(row: dict) -> list[tuple[int, int]]:

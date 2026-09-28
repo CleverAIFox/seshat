@@ -300,3 +300,31 @@ def test_평범한_붙임표_영어는_식별자가_아니다():
 
 def test_지금_사전에_식별자가_없다():
     assert not [f for f in ontology.validate(ontology.load()) if "식별자" in f]
+
+
+def test_규칙_복수를_전부_받는다():
+    """`s` 를 짐작하면서 `ies` 를 안 짐작하는 것은 규율이 아니라 빠뜨린 것이다(DECISIONS §160).
+
+    2026-09-28 까지 `policies` 가 d001 16줄에서 **한 번도 안 세어졌다.**
+    """
+    onto = ontology.load()
+
+    def 잡히나(글):
+        return [x.node["id"] for _, _, x in ontology.find(onto, 글)]
+
+    assert 잡히나("Attach the policy.") == 잡히나("Attach the policies.") != []
+    assert 잡히나("One bucket.") == 잡히나("Two buckets.") != []
+
+
+def test_이름은_복수로_안_받는다():
+    """`Amazon S3s` 는 없는 말이다 — 이름에 복수를 붙이면 엉뚱한 자리를 집는다."""
+    onto = ontology.load()
+    assert [x.node["id"] for _, _, x in ontology.find(onto, "Amazon S3s")] == []
+
+
+def test_모음_뒤_y_는_그대로다():
+    """`key` → `keies` 가 아니라 `keys` 다 — 모음 뒤 y 에 ies 를 붙이면 안 된다."""
+    import re
+    for 글 in ("key", "day", "array"):
+        assert not re.search(r"[^aeiouAEIOU]y$", 글), f"{글} 은 자음+y 가 아니다"
+    assert re.search(r"[^aeiouAEIOU]y$", "policy")
