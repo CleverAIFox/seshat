@@ -196,3 +196,26 @@ def test_labels_도_치운다(tmp_path):
     # 자리를 틀리게 대면 「레이크 밖」 이다 — 이름만 맞히면 안 된다
     _, keep2, _ = sweep.scan_bench(lake.manifest(d), [(bench, "runs")])
     assert [p.name for p, _ in keep2] == ["d001-60.claude.jsonl"]
+
+
+def test_자리가_안_맞는_패치가_뒤엣것을_안_막는다(tmp_path):
+    """★ 2026-09-29, 자리가 어긋난 `193` 이 **그것을 품은 합본 `194`** 를 막았다(DECISIONS §205).
+
+    §124 가 겹침에 대해 내린 판단과 같다 — 안 붙는 패치 하나가 줄 전체를 세우면, 고치려고 보낸
+    바로 그 패치가 못 들어온다. **다른 실패는 그대로 멈춘다** — 건너뛰는 것은 「자리가 안 맞는다」 뿐이다.
+    """
+    repo = _사본(_repo(tmp_path, "seshat-099: 한글 제목"))
+    inbox = tmp_path / "inbox"; inbox.mkdir()
+    # 193 자리 — 있지도 않은 나무를 기준으로 든다. 뒤엣것(194)은 기준 줄이 없어 그냥 붙는다
+    (inbox / "seshat-193.patch").write_text(
+        PATCH.replace("seshat-099: 한글 제목", "seshat-193: 못 붙는다")
+             .replace("From 0 Mon", "Seshat-Base-Tree: " + "f" * 40 + "\nFrom 0 Mon", 1), encoding="utf-8")
+    (inbox / "seshat-194.patch").write_text(
+        PATCH.replace("seshat-099: 한글 제목", "seshat-194: 합본"), encoding="utf-8")
+    (repo / ".env").write_text(f"SESHAT_INBOX={inbox}\n", encoding="utf-8")
+    r = subprocess.run(["bash", "tools/apply_patch.sh"], capture_output=True, text=True, cwd=repo,
+                       env={**os.environ, "SESHAT_INBOX": str(inbox)})
+    assert r.returncode == 0, (r.stdout, r.stderr)
+    assert "건너뛴" in r.stdout
+    # ★ **뒤엣것까지 갔다는 것**이 이 시험이 지키는 전부다 — 그것이 못 가던 병이다
+    assert "seshat-194" in r.stdout, r.stdout

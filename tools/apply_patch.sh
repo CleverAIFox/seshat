@@ -39,7 +39,14 @@ if [ -z "$ARG" ]; then
   [ "${#PENDING[@]}" -gt 0 ] || { echo "  안 붙은 패치가 없다"; exit 0; }
   if [ "${#PENDING[@]}" -gt 1 ]; then
     echo "  밀린 패치 ${#PENDING[@]}개 — 번호 순서로 붙인다"
-    for f in "${PENDING[@]}"; do bash "$0" "$f"; done
+    # ★ **안 붙는 패치 하나가 뒤엣것을 막지 않는다**(DECISIONS §205). 기준 나무가 다른 패치는
+    #   대개 **뒤에 오는 합본이 이미 품고 있다** — 2026-09-29 죽은 193 이 그것을 품은 194 를 막았다.
+    #   §124 가 겹침에 대해 한 판단과 같은 까닭이다. **다른 실패는 그대로 멈춘다**(3 만 건너뛴다)
+    SKIPPED=0
+    for f in "${PENDING[@]}"; do
+      bash "$0" "$f" || { rc=$?; [ "$rc" = 3 ] || exit "$rc"; SKIPPED=$((SKIPPED+1)); }
+    done
+    [ "$SKIPPED" = 0 ] || echo "  ※ 자리가 안 맞아 건너뛴 패치 ${SKIPPED}개 — 뒤엣것이 품고 있으면 그것으로 붙었다"
     exit 0
   fi
   SRC="${PENDING[0]}"
@@ -82,8 +89,10 @@ if [ -n "$BASE" ] && [ "$BASE" != "$(git rev-parse HEAD^{tree})" ]; then
     echo "이 패치가 선 자리가 여기와 다르다 — 만든 쪽이 모르는 커밋이 여기 있다(봇 PR 등)" >&2
     echo "       기준 나무 $BASE" >&2
     echo "       지금 나무 $(git rev-parse HEAD^{tree})" >&2
+    echo "       뒤에 온 합본이 이것을 품고 있으면 그것으로 붙는다 — 아니면" >&2
     echo "       git log --oneline -8 을 만든 쪽에 보이고 다시 받는다" >&2
-    exit 1
+    exit 3        # ★ **3 은 「자리가 안 맞는다」 다**(DECISIONS §205). 1 과 갈라야 뒤엣것을 이어 붙인다
+    
   fi
 fi
 
