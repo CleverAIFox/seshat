@@ -35,7 +35,9 @@ def pair(eng: list[dict], kor: list[dict], split: str) -> list[dict]:
     e = {r["id"]: r["text"] for r in eng}
     k = {r["id"]: r["text"] for r in kor}
     if set(e) != set(k):
-        raise SystemExit(f"{split}: id 가 어긋난다 — 영어만 {len(set(e) - set(k))} · 한국어만 {len(set(k) - set(e))}")
+        raise SystemExit(f"{split}: id 가 어긋난다 — 영어만 {len(set(e) - set(k))} · 한국어만 {len(set(k) - set(e))}\n"
+                         f"    받은 것을 지우고 다시 받는다 : rm -rf ~/.cache/huggingface/datasets/*flores*\n"
+                         f"    그래도 어긋나면 FLORES+ 쪽이 바뀐 것이다 — 이 도구를 고친다")
     return [{"id": f"flores-{split}-{i}", "src": e[i], "ref": k[i]} for i in sorted(e)]
 
 

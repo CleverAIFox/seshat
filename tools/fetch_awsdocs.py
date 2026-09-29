@@ -247,7 +247,9 @@ def clone(cache: pathlib.Path, guide: str) -> str:
                              f"    가지   : {branch}\n"
                              f"    받는 곳: {cache}")
         if not (d / "LICENSE").exists():
-            raise SystemExit(f"{guide}: LICENSE 가 없다 — 라이선스를 못 읽은 것을 {LICENSE} 라고 적지 않는다")
+            raise SystemExit(f"{guide}: LICENSE 가 없다 — 라이선스를 못 읽은 것을 {LICENSE} 라고 적지 않는다\n"
+                         f"    받는다 : git clone --depth 1 https://github.com/awsdocs/{guide}\n"
+                         f"    그 안내서를 뺀다 : --guides <나머지>")
     return subprocess.run(["git", "-C", str(d), "rev-parse", "HEAD"],
                           capture_output=True, text=True, check=True).stdout.strip()
 
@@ -294,7 +296,9 @@ def 이미_쓴_문장(셋들: list[str]) -> set[str]:
     for x in 셋들:
         길 = pathlib.Path(x)
         if not 길.exists():
-            raise SystemExit(f"뺄 셋이 없다 — {x}")
+            raise SystemExit(f"뺄 셋이 없다 — {x}\n"
+                             f"    있는 것 : python3 tools/lake.py ls\n"
+                             f"    안 뺄 것이면 : --exclude 를 뺀다")
         for line in 길.read_text(encoding="utf-8").splitlines():
             if line.strip():
                 d = json.loads(line)

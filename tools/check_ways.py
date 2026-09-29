@@ -23,31 +23,20 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 
 # ★ **넘는 길로 읽는 것들.** 명령 · 깃발 · 「무엇을 한다」 꼴. 늘려도 되지만 **넓히면 거짓 초록**이 된다
-길표 = re.compile(r"(tools/[a-z_]+\.(py|sh)|uv run|python3 |bash |--[a-z-]{2,}|ollama |git |rm "
-                  r"|적는다|친다 :|한다 :|띄운다|올린다|넣는다|고친다|지운다|만든다|본다 :|받는다)")
+# ★ **넘는 길로 읽는 것들.** 이 저장소의 꼴은 둘이다 — **명령**(`tools/x.py` · `--깃발` · `ls`)과
+#   **이름 붙인 걸음**(`    친다 : …` · `    있는 것 : …`). 늘려도 되지만 **넓히면 거짓 초록**이 된다.
+# ★ `.글()` 은 `compare.AXIS` 의 축이 제 길을 들고 오는 자리다 — 릴레이는 길이 있는 것으로 친다
+길표 = re.compile(r"(tools/[a-z_]+\.(py|sh)|docs/[a-z/]+\.md|uv run|python3 |bash |ls |sed |git |rm "
+                  r"|--[a-z][a-z-]*|ollama |\.글\(\)"
+                  r"|적는다|친다|한다 :|띄운다|올린다|넣는다|고친다|지운다|만든다|본다|받는다|연다|누른다"
+                  r"|\\n *[^:\\\"]{1,14} : )")
 
 # ★ 자가 시험과 카나리아는 **사람에게 하는 말이 아니다** — 죽은 검사를 알리는 소리다
 안보는함수 = {"_selftest", "_canary", "_프로브"}
 
-# ★ **장부.** 파일마다 「길이 안 보이는 자리」 의 수. 늘면 막는다. 줄이면 `--update` 로 박는다.
-#   0 이 된 파일은 여기서 지운다 — 그러면 **다시 생기는 순간** 새 파일로 걸린다
-장부: dict[str, int] = {
-    "seshat/evaluate.py": 2,
-    "tools/bootstrap.py": 1,
-    "tools/ci_status.py": 1,
-    "tools/fetch_awsdocs.py": 2,
-    "tools/fetch_flores.py": 3,
-    "tools/gate.py": 3,
-    "tools/labels.py": 7,
-    "tools/lake.py": 1,
-    "tools/mine_terms.py": 1,
-    "tools/noise.py": 1,
-    "tools/show_misses.py": 1,
-    "tools/slice.py": 1,
-    "tools/style_na.py": 1,
-    "tools/term_diff.py": 2,
-    "tools/watch_papers.py": 3,
-}
+# ★ **장부가 비었다**(2026-09-29 · DECISIONS §213). 서른 곳을 한 판에 다 갚았으므로 라쳇은 이제
+#   **절대 규칙**이다 — 길 없는 막음은 하나도 못 들어온다. 다시 채우지 않는다.
+장부: dict[str, int] = {}
 
 
 def _막는자리(나무: ast.AST) -> list[ast.Call]:
@@ -66,14 +55,16 @@ def _막는자리(나무: ast.AST) -> list[ast.Call]:
 
 
 def 길없는자리(root: pathlib.Path | None = None) -> list[tuple[str, int, str]]:
-    """(파일, 줄, 글). **앞 일곱 줄까지 같이 본다** — 넘는 길을 바로 위에서 짓는 자리가 있다."""
+    """(파일, 줄, 글). **앞 일곱 줄 · 뒤 다섯 줄까지 같이 본다** — 길이 옆 줄에 사는 자리가 있다."""
     root = root or ROOT
     out = []
     for f in sorted(list((root / "seshat").glob("*.py")) + list((root / "tools").glob("*.py"))):
         줄 = f.read_text(encoding="utf-8").splitlines()
         for n in _막는자리(ast.parse("\n".join(줄))):
             글 = ast.unparse(n)
-            둘레 = "\n".join(줄[max(0, n.lineno - 7):(n.end_lineno or n.lineno)])
+            # ★ **앞뒤를 같이 본다.** 넘는 길은 바로 위에서 지어지기도 하고(변수), 바로 아래에서
+            #   한 줄 더 찍히기도 한다 — `mine_terms` 가 그 꼴이다
+            둘레 = "\n".join(줄[max(0, n.lineno - 7):(n.end_lineno or n.lineno) + 5])
             if not (길표.search(글) or 길표.search(둘레)):
                 out.append((f.relative_to(root).as_posix(), n.lineno, 글.replace("\n", " ")[:90]))
     return out

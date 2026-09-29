@@ -66,7 +66,9 @@ def read_labels(path: str) -> dict[str, dict[str, str]]:
         if not d.get("meta") and d.get("id") and d.get("verdict"):
             out.setdefault(d.get("arm", "?"), {})[d["id"]] = d["verdict"]
     if not out:
-        raise SystemExit(f"{pathlib.Path(path).name} 에 판정이 없다 — 0 건이 아니라 못 읽은 것이다")
+        raise SystemExit(f"{pathlib.Path(path).name} 에 판정이 없다 — 0 건이 아니라 못 읽은 것이다\n"
+                         f"    다시 잰다 : uv run --group eval python tools/rescore.py {path} "
+                         f"--set <셋> --hypothesis H-NNN")
     return out
 
 

@@ -86,7 +86,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"  ✗ CI 를 못 봤다 — {판}", file=sys.stderr)
         return 1
     if not 판:
-        print(f"  ✗ CI 를 못 봤다 — {a.branch} 에 판이 없다", file=sys.stderr)
+        print(f"  ✗ CI 를 못 봤다 — {a.branch} 에 판이 없다\n"
+              f"    밀고 나서 본다 : git push && sleep 60 && python3 tools/ci_status.py\n"
+              f"    판 목록 : gh run list -b {a.branch} -L 5", file=sys.stderr)
         return 1
     코드, 말 = 고른다(판, 지금_커밋())
     print(말, file=sys.stderr if 코드 else sys.stdout)

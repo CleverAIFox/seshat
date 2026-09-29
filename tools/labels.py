@@ -65,7 +65,8 @@ def read_run(path: pathlib.Path) -> tuple[dict, dict[str, str]]:
     for i, r in enumerate(body):
         rid = r.get("id")
         if not rid:
-            raise SystemExit(f"{path.name}: {i + 1}번째 줄에 id 가 없다 — 줄 id 가 있어야 짝을 짓는다")
+            raise SystemExit(f"{path.name}: {i + 1}번째 줄에 id 가 없다 — 줄 id 가 있어야 짝을 짓는다\n"
+                             f"    그 줄을 본다 : sed -n '{i + 2}p' {path}")
         out[rid] = r.get("out", r.get("ko", ""))
     return head, out
 
@@ -83,14 +84,19 @@ def make(arms: dict[str, pathlib.Path], rows: list[dict], name: str, n: int, see
         h, o = read_run(path)
         got[arm], shas[arm] = o, h.get("set_sha256")
     if len(set(shas.values())) != 1:
-        raise SystemExit("팔들이 다른 셋이다 — " + " · ".join(f"{a} {s}" for a, s in sorted(shas.items())))
+        raise SystemExit("팔들이 다른 셋이다 — " + " · ".join(f"{a} {s}" for a, s in sorted(shas.items()))
+                         + "\n    같은 셋으로 잰 판을 고른다 : ls -t runs/*.jsonl | head\n"
+                           "    한쪽을 다시 잰다 : uv run --group eval python tools/rescore.py "
+                           "<판> --set <셋> --hypothesis H-NNN")
     src = {r["id"]: r["src"] for r in rows}
     common = set(src)
     for o in got.values():
         common &= set(o)
     both = sorted(common)
     if len(both) < n:
-        raise SystemExit(f"팔 {len(arms)} 에 다 있는 줄이 {len(both)} 뿐인데 {n} 을 달라고 했다")
+        raise SystemExit(f"팔 {len(arms)} 에 다 있는 줄이 {len(both)} 뿐인데 {n} 을 달라고 했다\n"
+                         f"    줄여서 뽑는다 : --n {len(both)}\n"
+                         f"    같은 셋을 다 돌린 판으로 바꾼다 : ls -t runs/*.jsonl | head")
     rng = random.Random(seed)
     picked = sorted(rng.sample(both, n))          # ★ 줄을 먼저 뽑는다 — 출력을 보기 전에
     sheet, key = [], []
@@ -184,14 +190,20 @@ def read(name: str, sheet: pathlib.Path, judge: str = "claude") -> int:
             blank += 1
             continue
         if verdict not in VERDICTS:
-            raise SystemExit(f"{t}: 모르는 판정 {verdict!r} — {' · '.join(VERDICTS)} 중 하나다")
+            raise SystemExit(f"{t}: 모르는 판정 {verdict!r} — {' · '.join(VERDICTS)} 중 하나다\n"
+                             f"    그 줄을 고친다 : {sheet}\n"
+                             f"    지시문을 다시 본다 : python3 tools/labels.py prompt")
         if t not in key:
-            raise SystemExit(f"{t}: 열쇠에 없는 표 — 채점표를 바꿔 썼나")
+            raise SystemExit(f"{t}: 열쇠에 없는 표 — 채점표를 바꿔 썼나\n"
+                             f"    열쇠가 아는 표 : {' · '.join(sorted(key)[:5])} …\n"
+                             f"    표를 다시 만든다 : python3 tools/labels.py make --set <셋> --a <A> --b <B>")
         got.append({**key[t], "verdict": verdict})
     if blank:
         print(f"  ※ 아직 안 매긴 줄 {blank}", file=sys.stderr)
     if not got:
-        raise SystemExit("매긴 줄이 없다")
+        raise SystemExit("매긴 줄이 없다\n"
+                         "    채점표의 `판정` 칸을 채우고 다시 부른다 — 빈 칸은 안 센다\n"
+                         "    지시문 : python3 tools/labels.py prompt")
     path = out_dir() / f"{name}.{judge}.jsonl"
     meta = {"meta": True, "about": f"{name} · 판정자 {judge} — 뜻만 본다. 표기는 term_off 가 센다(H-046)",
             "judge": judge, "license": "자체 — 판정만 든다", "made_by": "tools/labels.py"}
@@ -220,7 +232,9 @@ def agree(name: str, judges: list[str]) -> int:   # noqa: C901
     a, b = judges
     keys = sorted(set(got[a]) & set(got[b]))
     if not keys:
-        raise SystemExit("두 판정자가 같은 줄을 안 봤다")
+        raise SystemExit("두 판정자가 같은 줄을 안 봤다\n"
+                         "    같은 이름의 표를 둘이 채워야 한다 : python3 tools/labels.py read "
+                         "--name <이름> --judge <판정자>")
     xs, ys = [got[a][k] for k in keys], [got[b][k] for k in keys]
     same = sum(x == y for x, y in zip(xs, ys))
     k = cohen_kappa(xs, ys)

@@ -258,13 +258,17 @@ def _선을_박는다(run: str | None, arm: str, board: dict, 옮김: str = "") 
     ★ **셋이 다르면 안 박는다.** 그것은 다시 잰 것이 아니라 **딴 글로 잰 것**이다.
     """
     if not run:
-        print("  ✗ 어느 판으로 박을지가 없다", file=sys.stderr)
+        print("  ✗ 어느 판으로 박을지가 없다\n"
+              "    친다 : python3 tools/gate.py <판.jsonl> --pin-target <팔>\n"
+              "    지금 선 : python3 tools/gate.py --show", file=sys.stderr)
         return 1
     head = head_of(run)
     t = next((x for x in board.get("target", []) if x.get("arm") == arm), None)
     if t is None:
         있는 = " · ".join(x.get("arm", "?") for x in board.get("target", []))
-        print(f"  ✗ 선 줄에 그런 팔이 없다 — {arm}\n    있는 것 : {있는}", file=sys.stderr)
+        print(f"  ✗ 선 줄에 그런 팔이 없다 — {arm}\n    있는 것 : {있는}\n"
+              f"    이름째 적는다(괄호 · 빈칸 포함) : --pin-target \"{(있는.split(' · ') or [arm])[0]}\"",
+              file=sys.stderr)
         return 1
     같나 = compare.같은_셋인가(t, head)
     if 같나 is None:

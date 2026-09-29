@@ -203,7 +203,8 @@ def load(path: str) -> list[dict]:
         e = catalog.match(entries, "repo", p.as_posix())
         how = f"\n    얻는다 : {e['how']}" if e and e.get("how") and e["how"] != "사람" else ""
         who = f"({e['id']} · {e['origin']})" if e else "(카탈로그 밖이다)"
-        raise SystemExit(f"평가셋이 없다 — {path} {who}{how}")
+        raise SystemExit(f"평가셋이 없다 — {path} {who}{how}\n"
+                         f"    있는 것 : python3 tools/lake.py ls")
     rows = []
     for line in p.read_text(encoding="utf-8").splitlines():
         if line.strip() and not line.lstrip().startswith("//"):

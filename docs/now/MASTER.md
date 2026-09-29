@@ -457,7 +457,7 @@ thoth 의 sweep · doctor(`OLLAMA_KEEP_ALSO`)가 본다. 두 저장소가 같은
 | `tools/check_hypotheses.py` | 가설 대장 — 실험의 문 |
 | `tools/check_ontology.py` | 온톨로지 — 표기 유일 · 부모 · 끝소리 |
 | `tools/docseal.py` | **절과 그 절이 짚은 코드의 정합 도장** — 찍은 뒤로 바뀌었으면 「다시 봐야 한다」(`audit` · `stamp --only N` · DECISIONS §211) |
-| `tools/check_ways.py` | **막는 자리마다 넘는 길이 있나** — 길 없는 자리가 **늘면** 막는다(`--list` 로 본다 · DECISIONS §210) |
+| `tools/check_ways.py` | **막는 자리마다 넘는 길이 있나** — **길 없는 막음을 막는다** — 2026-09-29 서른 곳을 다 갚아 장부가 비었다(DECISIONS §210 · §213) |
 | `tools/check_catalog.py` | 데이터 카탈로그 — 칸 · 쓰임 · `data/` 의 카탈로그 밖 파일(§11) |
 | `tools/check_model_licenses.py` | 코드가 부르는 가중치가 대장에 있고 상업 가부가 적혀 있나 |
 | `tools/lake.py` | SSD 레이크 — 넣기만 한다 · 대장 밖을 짚는다 · `ls` 로 찾는다 |

@@ -57,7 +57,10 @@ def 같은_것인가(머리들: list[dict], 이름: list[str]) -> None:
         if 갈린:
             줄 = "\n".join(f"    {g.이름} — {이름[0]} {g.가 or '없다'} · {n} {g.나 or '없다'}"
                           for g in 갈린)
-            raise SystemExit(f"{갈린[0].키} 가 판마다 다르다 — 다른 것을 잰 차이는 잡음이 아니다\n{줄}")
+            raise SystemExit(f"{갈린[0].키} 가 판마다 다르다 — 다른 것을 잰 차이는 잡음이 아니다\n{줄}\n"
+                         f"    같은 조건의 판만 고른다 : ls -t runs/*.jsonl | head\n"
+                         f"    옛 판을 새 자로 맞춘다 : uv run --group eval python tools/rescore.py "
+                         f"<판> --set <셋> --hypothesis H-NNN")
 
 
 def 퍼짐(머리들: list[dict]) -> dict[str, tuple[float, float, float]]:

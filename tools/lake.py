@@ -61,7 +61,9 @@ def manifest(lake: Path) -> dict[str, str]:
             continue
         h, rel, *_ = line.split("\t")
         if rel in out:
-            raise SystemExit(f"MANIFEST.tsv:{n} {rel} 가 두 번 적혔다")
+            raise SystemExit(f"MANIFEST.tsv:{n} {rel} 가 두 번 적혔다\n"
+                                 f"    대장은 손으로 안 고친다 — 뒤엣줄을 지운다 : "
+                                 f"sed -i '{n}d' <레이크>/MANIFEST.tsv")
         out[rel] = h
     return out
 

@@ -30,7 +30,8 @@ WHAT = ("keep", "term", "hangul", "style", "all")
 def read(path: Path) -> tuple[dict, list[dict]]:
     lines = [json.loads(x) for x in path.read_text(encoding="utf-8").splitlines() if x.strip()]
     if not lines or not lines[0].get("meta"):
-        raise SystemExit(f"결과 파일이 아니다 — 머리줄이 없다 : {path}")
+        raise SystemExit(f"결과 파일이 아니다 — 머리줄이 없다 : {path}\n"
+                         f"    있는 것 : ls -t runs/*.jsonl | head")
     return lines[0], lines[1:]
 
 

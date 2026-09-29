@@ -94,7 +94,8 @@ def main(argv: list[str] | None = None) -> int:
     if 걸린 and not a.leak_ok:
         print(f"  ✗ {걸린[0]} 은 **점수를 내는 셋**이다 — 여기서 캐서 사전에 넣으면 "
               f"시험지가 분모를 고른다(DECISIONS §168 · §192)", file=sys.stderr)
-        print("    딴 셋에서 캐거나, 알면서 캐려면 --leak-ok 를 든다 — 그때 장부 줄을 찍어 준다",
+        print("    딴 셋에서 캔다 : python3 tools/mine_terms.py <딴 셋> --top 80\n"
+              "    알면서 캔다 : --leak-ok 를 든다 — 그때 장부에 적을 줄을 찍어 준다",
               file=sys.stderr)
         return 1
 

@@ -28,7 +28,8 @@ def read(path: Path) -> tuple[dict, dict[str, dict]]:
     lines = [json.loads(x) for x in path.read_text(encoding="utf-8").splitlines() if x.strip()]
     head = next((x for x in lines if x.get("meta")), None)
     if head is None:
-        raise SystemExit(f"결과 파일이 아니다 — 머리줄이 없다 : {path}")
+        raise SystemExit(f"결과 파일이 아니다 — 머리줄이 없다 : {path}\n"
+                         f"    있는 것 : ls -t runs/*.jsonl | head")
     return head, {x["id"]: x for x in lines if not x.get("meta")}
 
 
@@ -36,7 +37,9 @@ def 같은_자인가(a: dict, b: dict) -> None:
     for key, 무엇 in (("set_sha256", "평가셋"), ("onto_sha256", "사전")):
         if a.get(key) != b.get(key):
             raise SystemExit(f"{무엇}이 다르다 — {a.get(key)} 대 {b.get(key)}\n"
-                             f"    다른 자로 잰 것을 나란히 놓지 않는다(DECISIONS §32)")
+                             f"    다른 자로 잰 것을 나란히 놓지 않는다(DECISIONS §32)\n"
+                             f"    옛 판을 지금 자로 다시 잰다 : uv run --group eval python "
+                             f"tools/rescore.py <옛 판> --set <셋> --hypothesis H-NNN")
 
 
 def 가른다(onto: list[dict], a_rows: dict, b_rows: dict) -> list[dict]:

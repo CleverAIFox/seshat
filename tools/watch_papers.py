@@ -54,7 +54,9 @@ def fetch(url: str, timeout: int = 30) -> bytes:
             return r.read()
     except (urllib.error.URLError, TimeoutError, OSError) as e:
         raise SystemExit(f"{urllib.parse.urlsplit(url).netloc} 을 못 물었다 — {type(e).__name__}: {e}\n"
-                         f"    **0 건이 아니다.** 못 잰 것을 「새 것이 없다」 로 적지 않는다") from e
+                         f"    **0 건이 아니다.** 못 잰 것을 「새 것이 없다」 로 적지 않는다\n"
+                         f"    그물을 본다 : curl -sI {url}\n"
+                         f"    잠깐 넘어진 것이면 다시 부른다 — 이 도구는 주 1회 도는 것이다") from e
 
 
 def topics_of(text: str) -> tuple[str, ...]:
@@ -79,7 +81,9 @@ def arxiv(days: int, cap: int = 200) -> list[dict]:
     entries = re.findall(r"<entry>(.*?)</entry>", body, re.S)
     if not entries:
         raise SystemExit("arXiv 이 항목을 하나도 안 줬다 — 질의나 Atom 모양이 바뀌었다(0 건이 아니다)\n"
-                         f"    {url}\n    받은 길이 {len(body)}")
+                         f"    {url}\n    받은 길이 {len(body)}\n"
+                         f"    눈으로 본다 : curl -s \"{url}\" | head -40\n"
+                         f"    Atom 모양이 바뀐 것이면 이 도구의 <entry> 파싱을 고친다")
     out = []
     for e in entries:
         i = _tag(e, "id")
@@ -140,7 +144,8 @@ def write(text: str, 새것: list[str], 오늘: str) -> str:
     """「읽을 것」 아래에 붙인다. **표 본문은 안 건드린다** — 그 칸은 읽은 사람이 쓴다."""
     머리 = "## 읽을 것"
     if 머리 not in text:
-        raise SystemExit(f"{PAPERS.name} 에 「{머리}」 가 없다 — 붙일 자리를 못 찾았다")
+        raise SystemExit(f"{PAPERS.name} 에 「{머리}」 가 없다 — 붙일 자리를 못 찾았다\n"
+                         f"    그 제목 줄을 되살린다 : git log -p -- docs/next/papers.md | head -40")
     덩이 = "\n".join([f"\n### 훑은 날 {오늘}", *새것])
     i = text.index(머리) + len(머리)
     return text[:i] + "\n" + 덩이 + "\n" + text[i:].lstrip("\n")
