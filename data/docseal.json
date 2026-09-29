@@ -975,7 +975,7 @@
  },
  "214": {
   "날짜": "2026-09-29",
-  "지문": "231e433177b7e274",
+  "지문": "757c14ef3e384345",
   "파일": [
    "docs/next/hypotheses.md",
    "tools/show_misses.py",
@@ -984,10 +984,19 @@
  },
  "215": {
   "날짜": "2026-09-29",
-  "지문": "1f3b8336fcf4337f",
+  "지문": "fb30e59d7ab25911",
   "파일": [
    "tools/docseal.py::_대장_조각",
    "tests/test_docseal.py::test_줄_대장은_부른_행만_문다"
+  ]
+ },
+ "216": {
+  "날짜": "2026-09-29",
+  "지문": "2b514b19b63a5fc5",
+  "파일": [
+   "docs/next/hypotheses.md",
+   "tools/show_misses.py::짧은_줄",
+   "docs/next/PLAN.md"
   ]
  },
  "22": {
