@@ -158,6 +158,9 @@ PROMPT = """아래 표는 영어 기술 문서를 한국어로 옮긴 결과입�
    **맞히려 하지 마세요.** 알 수 없게 섞은 것이 이 시험의 일부입니다.
 7. **줄마다 따로 판정합니다.** 같은 원문이 표에 여러 번 나올 수 있는데, 그중 어느 것이 더
    나은지를 고르는 일이 아닙니다. **한 줄만 놓고** 원문의 뜻이 전달됐는지 봅니다.
+8. **검색하지 마세요. 이 표에 있는 것만 보고 판정합니다.** 이 문서들의 공식 한국어판이 웹에
+   있는데, 그것은 기계 번역에 사람 후편집을 얹은 것이라 **정답이 아닙니다.** 그것과 대조하면
+   이 시험은 「그 번역과 얼마나 같은가」 가 되어 버립니다. 판정하는 것은 **원문과 번역 둘 사이**입니다.
 
 답
   줄마다 `태그<탭>판정` 한 줄씩, 표에 나온 순서 그대로, **표에 있는 줄 수만큼**.
@@ -187,7 +190,7 @@ def verdict_of(cols: list[str]) -> str:
     return cols[1].strip() if len(cols) == 2 else ""
 
 
-def read(name: str, sheet: pathlib.Path, judge: str = "claude") -> int:
+def read(name: str, sheet: pathlib.Path, judge: str = "claude", model: str = "") -> int:
     if not sheet.exists():
         raise SystemExit(f"채점표가 없다 — {sheet}\n"
                          f"    만든다 : python3 tools/labels.py make --set <셋> --a <A> --b <B>\n"
@@ -223,12 +226,15 @@ def read(name: str, sheet: pathlib.Path, judge: str = "claude") -> int:
                          "    채점표의 `판정` 칸을 채우고 다시 부른다 — 빈 칸은 안 센다\n"
                          "    지시문 : python3 tools/labels.py prompt")
     path = out_dir() / f"{name}.{judge}.jsonl"
+    # ★ **이름이 아니라 무엇이 판정했는지를 적는다**(DECISIONS §227). 무료 등급은 뒤의 모델을 말없이
+    #   바꾸므로 `gemini` 라는 이름만으로는 **다음 달에 같은 자가 아니다.** 판정자의 조건은 능력과
+    #   독립성이고(§101), 둘 다 **무엇이었는지 알아야** 물을 수 있다
     meta = {"meta": True, "about": f"{name} · 판정자 {judge} — 뜻만 본다. 표기는 term_off 가 센다(H-046)",
-            "judge": judge, "license": "자체 — 판정만 든다", "made_by": "tools/labels.py"}
+            "judge": judge, "model": model, "license": "자체 — 판정만 든다", "made_by": "tools/labels.py"}
     path.write_text("\n".join(json.dumps(x, ensure_ascii=False) for x in [meta, *sorted(got, key=lambda r: (r["id"], r["arm"]))]) + "\n",
                     encoding="utf-8")
     print(f"  {_짧게(path)}  {len(got)}줄")
-    print(f"  판정자 {judge}")
+    print(f"  판정자 {judge} · 모델 {model}")
     for arm in sorted({r["arm"] for r in got}):
         mine = [r for r in got if r["arm"] == arm]
         tally = {v: sum(1 for r in mine if r["verdict"] == v) for v in VERDICTS}
@@ -244,12 +250,31 @@ def 판정들(name: str, judges: list[str]) -> dict[str, dict[tuple[str, str], s
         p = out_dir() / f"{name}.{j}.jsonl"
         if not p.exists():
             raise SystemExit(f"{_짧게(p)} 가 없다\n"
-                             f"    읽는다 : python3 tools/labels.py read --name {name} --judge {j}\n"
+                             f"    읽는다 : python3 tools/labels.py read --name {name} --judge {j} --model <무엇>\n"
                              f"    누가 있나 : ls {_짧게(out_dir())}/{name}.*.jsonl")
         got[j] = {(r["id"], r["arm"]): r["verdict"]
                   for r in (json.loads(x) for x in p.read_text(encoding="utf-8").splitlines() if x.strip())
                   if not r.get("meta")}
     return got
+
+
+def 무엇이_판정했나(name: str, judges: list[str]) -> dict[str, str]:
+    """판정자 이름 → 그때 적어 둔 모델. **이름은 자리이고 모델이 자다**(DECISIONS §227)."""
+    out = {}
+    for j in judges:
+        p = out_dir() / f"{name}.{j}.jsonl"
+        머리 = json.loads(p.read_text(encoding="utf-8").splitlines()[0]) if p.exists() else {}
+        out[j] = (머리.get("model") or "").strip() or "**안 적혔다**"
+    return out
+
+
+def 판정자를_찍는다(name: str, judges: list[str]) -> None:
+    """무엇이 판정했는지를 결과 위에 붙인다 — 이 줄이 없으면 수만 남고 자가 사라진다."""
+    무엇 = 무엇이_판정했나(name, judges)
+    print("  판정자 — " + " · ".join(f"{j}({무엇[j]})" for j in judges))
+    if any("안 적혔다" in v for v in 무엇.values()):
+        print("    ※ 모델을 안 적은 판정자가 있다 — 무료 등급은 뒤의 모델을 말없이 바꾼다.\n"
+              f"      다시 읽는다 : python3 tools/labels.py read --name {name} --judge <이름> --model <무엇>")
 
 
 def agree(name: str, judges: list[str]) -> int:   # noqa: C901
@@ -259,6 +284,7 @@ def agree(name: str, judges: list[str]) -> int:   # noqa: C901
       안 맞는지**를 지우면 기준을 좁힐 자리를 못 찾는다(§116 에서 움직인 쪽은 claude 하나였다).
     """
     got = 판정들(name, judges)
+    판정자를_찍는다(name, judges)
     for a, b in itertools.combinations(judges, 2):
         keys = sorted(set(got[a]) & set(got[b]))
         if not keys:
@@ -315,10 +341,10 @@ def gap(name: str, arm: str, vs: str, judges: list[str], n: int = 10000, seed: i
         raise SystemExit("재표집이 아무 판도 못 냈다 — 줄이 없다\n"
                          f"    줄을 센다 : python3 tools/labels.py agree --name {name} --judges {','.join(judges)}")
     품나 = r["아래"] <= 0 <= r["위"]
-    말 = "못 가른다" if 품나 else (f"**{arm} 이 앞선다**" if r["차"] > 0 else f"**{vs} 가 앞선다**")
-    print(f"  {name} · 줄 {len(ids)} · 판정자 {len(judges)}({' · '.join(judges)}) · 판 {r['판']}")
+    print(f"  {name} · 줄 {len(ids)} · 판정자 {len(judges)} · 판 {r['판']}")
+    판정자를_찍는다(name, judges)
     print(f"  뜻이 맞다 — {vs} {r['가']:.4f} · {arm} {r['나']:.4f}")
-    print(f"  차({arm} − {vs}) {r['차']:+.4f}  [{r['아래']:+.4f}, {r['위']:+.4f}]  p={r['p']:.3f} → {말}")
+    print(f"  차({arm} − {vs}) {r['차']:+.4f}  [{r['아래']:+.4f}, {r['위']:+.4f}]  p={r['p']:.3f}")
     print("  판정자마다 —")
     for j in judges:
         한 = {j: got[j]}
@@ -326,13 +352,31 @@ def gap(name: str, arm: str, vs: str, judges: list[str], n: int = 10000, seed: i
         차 = sum(x for x, _ in 나) / len(나) - sum(x for x, _ in 가) / len(가)
         print(f"    {j:10} {vs} {sum(x for x, _ in 가) / len(가):.4f} · {arm} "
               f"{sum(x for x, _ in 나) / len(나):.4f} · 차 {차:+.4f}")
+    # ★ **하나를 빼도 부호가 남나.** 이 구간은 **줄만** 재표집하므로 판정자 사이의 퍼짐을 안 본다 —
+    #   그런데 §118 이 「수준은 판정자가 정한다」 를 실측했다(같은 팔에 0.883 과 0.433). 그래서 이것은
+    #   구경거리가 아니라 **선의 일부**다(H-081 ③)
+    뒤집힘 = []
     if len(judges) > 2:
-        # ★ **하나를 빼도 부호가 남나.** 관측이다 — 이 수로 판정을 뒤집지 않는다(§216)
         print("  하나를 빼면 —")
         for j in judges:
             남 = {k: v for k, v in got.items() if k != j}
             차 = (sum(x for x, _ in 줄점수(남, arm, ids)) - sum(x for x, _ in 줄점수(남, vs, ids))) / len(ids)
-            print(f"    {j} 빼고  차 {차:+.4f}" + ("" if (차 > 0) == (r["차"] > 0) else "  ← **부호가 뒤집힌다**"))
+            같나 = (차 > 0) == (r["차"] > 0)
+            if not 같나:
+                뒤집힘.append(j)
+            print(f"    {j} 빼고  차 {차:+.4f}" + ("" if 같나 else "  ← **부호가 뒤집힌다**"))
+    앞선쪽 = arm if r["차"] > 0 else vs
+    if 품나:
+        말 = "**못 가른다** — 구간이 0 을 품는다"
+    elif 뒤집힘:
+        말 = (f"**못 가른다** — 구간은 0 을 안 품지만 {' · '.join(뒤집힘)} 없이는 부호가 뒤집힌다. "
+              f"**그 판정자 없이는 말할 수 없다**")
+    else:
+        말 = f"**{앞선쪽} 이(가) 앞선다** — 판정자를 하나씩 빼도 부호가 남는다"
+    print(f"  판정 : {말}")
+    # ★ **크기는 안 옮긴다**(§118). 방향만 결과 문서로 가고, 수는 조건을 달고 쓴다
+    print(f"    ※ 옮기는 것은 **방향**이다. 격차 {abs(r['차']):.4f} 는 «이 판정자들에서» 의 수다 — "
+          f"판정자가 바뀌면 크기는 바뀐다(DECISIONS §118)")
     return 0
 
 
@@ -351,7 +395,8 @@ def main(argv: list[str] | None = None) -> int:
     r = sub.add_parser("read")
     r.add_argument("--name", required=True)
     r.add_argument("--sheet", default="")
-    r.add_argument("--judge", default="claude")
+    r.add_argument("--judge", default="claude", help="판정자의 이름 — 자리다")
+    r.add_argument("--model", default="", help="무엇이 판정했나 — 모델과 판. 이쪽이 자다")
     sub.add_parser("prompt")
     g = sub.add_parser("agree")
     g.add_argument("--name", required=True)
@@ -379,7 +424,15 @@ def main(argv: list[str] | None = None) -> int:
                              f"    누가 있나 : ls {_짧게(out_dir())}/{a.name}.*.jsonl")
         return agree(a.name, js) if a.cmd == "agree" else gap(a.name, a.arm, a.vs, js, a.n, a.seed)
     if a.cmd == "read":
-        return read(a.name, pathlib.Path(a.sheet or f"/tmp/labels-{a.name}.tsv"), a.judge)
+        # ★ **무엇이 판정했는지 없이는 판정을 안 받는다**(DECISIONS §227). 이름은 자리이고 모델이
+        #   자다 — 무료 등급은 뒤의 모델을 말없이 바꾸므로 이름만 남으면 **다음 달에 같은 자가 아니다**
+        if not a.model.strip():
+            raise SystemExit("--model 이 없다 — 무엇이 판정했는지를 적는다\n"
+                             f"    보기 : --judge gemini --model 'Gemini 2.5 Flash · 무료 · 2026-09-29'\n"
+                             f"    모르면 화면에 뜬 이름 그대로 적는다 — **빈 채로 두지 않는다**\n"
+                             f"    다시 : python3 tools/labels.py read --name {a.name} "
+                             f"--judge {a.judge} --model <무엇>")
+        return read(a.name, pathlib.Path(a.sheet or f"/tmp/labels-{a.name}.tsv"), a.judge, a.model.strip())
 
     arms: dict[str, pathlib.Path] = {}
     if a.a:

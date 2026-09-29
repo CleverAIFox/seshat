@@ -279,8 +279,11 @@ def test_격차에_구간이_붙는다(tmp_path, monkeypatch, capsys):
     L.gap("t", "4b", "12b", ["gpt", "gemini", "pplx"], n=400)
     out = capsys.readouterr().out
     assert "뜻이 맞다 — 12b 1.0000 · 4b 0.5000" in out
-    assert "12b 가 앞선다" in out and "못 가른다" not in out
+    assert "12b 이(가) 앞선다" in out and "못 가른다" not in out
+    assert "판정자를 하나씩 빼도 부호가 남는다" in out
     assert "판정자 3" in out
+    # ★ **크기는 안 옮긴다**(§118) — 수를 그냥 적으면 다음 판정자에서 틀린 말이 된다
+    assert "«이 판정자들에서»" in out
 
 
 def test_같은_둘은_0_을_품는다(tmp_path, monkeypatch, capsys):
@@ -322,3 +325,60 @@ def test_판정자_하나로도_격차는_난다(tmp_path, monkeypatch, capsys):
     _셋(tmp_path, 맞는쪽=20)
     L.gap("t", "4b", "12b", ["gpt"], n=200)
     assert "판정자 1" in capsys.readouterr().out
+
+
+def test_모델을_안_적으면_판정을_안_받는다(tmp_path, monkeypatch):
+    """★ **이름은 자리이고 모델이 자다**(DECISIONS §227). 무료 등급은 뒤의 모델을 말없이 바꾼다."""
+    monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
+    try:
+        L.main(["read", "--name", "t", "--judge", "gemini"])
+    except SystemExit as e:
+        assert "--model 이 없다" in str(e) and "--model <무엇>" in str(e)
+    else:
+        raise AssertionError("무엇이 판정했는지 없이 통과했다")
+
+
+def test_무엇이_판정했는지가_결과에_붙는다(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
+    _셋(tmp_path, 맞는쪽=20)
+    (tmp_path / "t.gpt.jsonl").write_text(
+        json.dumps({"meta": True, "judge": "gpt", "model": "GPT-5 · 무료"}, ensure_ascii=False) + "\n"
+        + "\n".join(x for x in (tmp_path / "t.gpt.jsonl").read_text(encoding="utf-8").splitlines()[1:]) + "\n",
+        encoding="utf-8")
+    L.gap("t", "4b", "12b", ["gpt", "gemini"], n=200)
+    out = capsys.readouterr().out
+    assert "gpt(GPT-5 · 무료)" in out
+    assert "gemini(**안 적혔다**)" in out and "말없이 바꾼다" in out
+
+
+def test_지시문이_검색을_막는다():
+    """★ 공식 한국어판은 **기계 번역 + 후편집**이라 정답이 아니다(DECISIONS §223).
+
+    검색하는 판정자는 그것과 대조하고, 그러면 이 시험은 **천장과 얼마나 같은가**가 된다.
+    """
+    assert "검색하지 마세요" in L.PROMPT
+    assert "정답이 아닙니다" in L.PROMPT
+
+
+def test_한_판정자에게_달린_부호는_못_가른다로_적는다(tmp_path, monkeypatch, capsys):
+    """★ **§118 이 「수준은 판정자가 정한다」 를 실측했다** — 같은 팔에 0.883 과 0.433 이 나왔다.
+
+    구간은 **줄만** 재표집하므로 판정자 사이의 퍼짐을 안 본다. 그래서 하나를 뺀 부호는
+    구경거리가 아니라 **선의 일부**다(H-081 ③).
+    """
+    monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
+    # 둘은 4b 를 낫다고 보고, 하나는 반대로 본다 — 합치면 4b 쪽이지만 한 판정자에게 달렸다
+    n = 30
+    센쪽 = {}
+    반대 = {}
+    for i in range(n):
+        rid = f"x{i:03d}"
+        센쪽[(rid, "4b")], 센쪽[(rid, "12b")] = "맞다", ("맞다" if i < 10 else "어긋난다")
+        반대[(rid, "4b")], 반대[(rid, "12b")] = ("맞다" if i < 3 else "어긋난다"), "맞다"
+    _판정(tmp_path, "gpt", 센쪽)
+    _판정(tmp_path, "gemini", 센쪽)
+    _판정(tmp_path, "pplx", 반대)
+    L.gap("t", "4b", "12b", ["gpt", "gemini", "pplx"], n=400)
+    out = capsys.readouterr().out
+    assert "부호가 뒤집힌다" in out
+    assert "판정 : **못 가른다**" in out and "gpt · gemini 없이는" in out
