@@ -171,6 +171,7 @@ DECISIONS §92)에서 산문 문장만 꺼내고 **온톨로지가 든 줄만** 
 | | |
 |---|---|
 | GPU | GTX 1660 Ti · 6GB · Turing(sm_75). fp16 · int8 가능, bf16 · FlashAttention 2 불가. **연말에 학습용 데스크탑으로 바뀐다**(PLAN #21) |
+| 카드에 안 들어가는 모델 | **로컬로 안 부른다.** 12B Q4 는 7.6GB 로 6GB 카드를 넘고, 2026-09-29 재니 `eval rate` 0.94 tok/s · 한 줄 21분이었다. 같은 일로 윈도우가 두 번 뻗었다 — 느린 것이 아니라 위험하다(DECISIONS §84). **빌려서 잰다** — Colab 무료 T4 · 터널 · `OLLAMA_URL`. `backends.들어가나` 가 부르기 전에 막고 그 길을 준다(DECISIONS §201) |
 | 파이썬 | 3.12 이상. 기본 의존성 0 |
 | 의존성 그룹 | `dev`(pytest · ruff) · `eval`(sacrebleu) · `aws`(boto3 — 기준선) · `data`(huggingface_hub · pyarrow) |
 | 저장소 | **비공개**(DECISIONS §8). 데이터는 그래도 커밋하지 않는다 |

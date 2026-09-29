@@ -124,6 +124,75 @@ _잠깐 = {429, 500, 502, 503, 504}
 _시도 = 3
 
 
+# ★ **이 기계에 안 들어가는 모델은 부르기 전에 막는다**(DECISIONS §201). 이것은 §82 · §84 와
+#   바로 위 주석이 **이미 알고 있던 것**이다 — 아는데 아무도 막지 않아서 2026-09-29 새벽에 또 돌렸다.
+#   0.94 tok/s 가 나왔고 한 줄에 21 분이었다. §84 의 「강제자 없음」 이 그날의 값이다.
+_VRAM_기본 = 6.0        # MASTER §4 — GTX 1660 Ti. 재지 못할 때만 쓴다
+_들어가나_셈: dict[str, bool] = {}
+
+
+def 카드_GB() -> float:
+    """이 기계의 VRAM. **숫자를 코드에 안 박는다** — 기계마다 다르다(§82)."""
+    import os
+    import subprocess
+    v = os.environ.get("SESHAT_VRAM_GB", "").strip()
+    try:
+        if v:
+            return float(v)
+        r = subprocess.run(["nvidia-smi", "--query-gpu=memory.total", "--format=csv,noheader,nounits"],
+                           capture_output=True, text=True, timeout=10)
+        if r.returncode == 0 and r.stdout.strip():
+            return float(r.stdout.split("\n")[0].strip()) / 1024
+    except (OSError, ValueError, subprocess.SubprocessError):
+        pass
+    return _VRAM_기본
+
+
+def _로컬인가(url: str) -> bool:
+    return any(x in url for x in ("127.0.0.1", "localhost", "0.0.0.0"))
+
+
+def 모델_GB(url: str, model: str) -> float | None:
+    """ollama 가 든 그 모델의 크기. 못 물으면 None — **모르는 것으로 막지 않는다**."""
+    import json as _json
+    import urllib.request
+    try:
+        with urllib.request.urlopen(url.rstrip("/") + "/api/tags", timeout=10) as r:
+            for m in _json.loads(r.read()).get("models", []):
+                if m.get("name") == model or m.get("model") == model:
+                    return m.get("size", 0) / 1024 ** 3
+    except Exception:
+        # ★ **막는 문이 판을 죽이면 안 된다.** 못 물었으면 모르는 것이고, 모르는 것으로 막지 않는다
+        return None
+    return None
+
+
+def 들어가나(model: str) -> None:
+    """카드에 안 올라가는 모델을 **로컬로** 부르려 하면 멈추고 빌리는 길을 준다(DECISIONS §201).
+
+    ★ 느린 것이 아니라 **위험한 것**이다 — 2026-09-23 · 09-26 같은 일로 윈도우가 두 번 뻗었다(§84).
+    ★ 막기만 하지 않는다. §84 가 이미 낸 길(빌린 GPU · 터널 · `OLLAMA_URL`)을 같이 적는다.
+    """
+    import os
+    if model in _들어가나_셈 or os.environ.get("SESHAT_LOCAL_OK", "").strip():
+        return
+    _들어가나_셈[model] = True
+    url = os.environ.get("OLLAMA_URL", OLLAMA_URL)
+    if not _로컬인가(url):
+        return                      # 빌린 장비다 — 이 기계의 카드로 잴 일이 아니다
+    크기 = 모델_GB(url, model)
+    카드 = 카드_GB()
+    if 크기 is None or 크기 <= 카드 * 0.9:
+        return
+    raise SystemExit(
+        f"{model} 은 이 기계에 안 들어간다 — 모델 {크기:.1f}GB · 카드 {카드:.1f}GB\n"
+        f"    느린 것이 아니라 **위험하다** — 같은 일로 윈도우가 두 번 뻗었다(DECISIONS §84)\n"
+        f"    빌려서 잰다 : Colab 무료 T4 에 ollama 를 올리고 터널로 연 뒤\n"
+        f"                  OLLAMA_URL=https://<터널> uv run --group eval python -m seshat.evaluate …\n"
+        f"                  (§84 에서 줄당 2.3~3.8초 · 0원)\n"
+        f"    그래도 여기서 : SESHAT_LOCAL_OK=1 — 2026-09-29 12B 로 재니 0.94 tok/s · 한 줄 21분이었다")
+
+
 def _늦다(model: str, 초: int, 무엇: str) -> SystemExit:
     return SystemExit(f"{model} 이 {초}초 안에 답하지 않았다\n"
                       f"    올린다 : OLLAMA_TIMEOUT=2400 uv run python -m seshat.evaluate …\n"
@@ -144,6 +213,7 @@ def _ask(req, model: str, 무엇: str = ""):
     import time
     import urllib.error
     import urllib.request
+    들어가나(model)              # ★ 부르기 전에 잰다(DECISIONS §201)
     초 = _timeout()
     for 번째 in range(_시도):
         마지막 = 번째 == _시도 - 1
