@@ -137,7 +137,7 @@
  },
  "118": {
   "날짜": "2026-09-27",
-  "지문": "275048457077f851",
+  "지문": "86d7a9eeaaa9bc7b",
   "파일": [
    "docs/next/hypotheses.md"
   ]
@@ -227,7 +227,7 @@
  },
  "129": {
   "날짜": "2026-09-27",
-  "지문": "dd07cde3b7ee82b1",
+  "지문": "c3d4e4ffa1b63af9",
   "파일": [
    "docs/next/hypotheses.md"
   ]
@@ -423,7 +423,7 @@
  },
  "153": {
   "날짜": "2026-09-28",
-  "지문": "3eac5a5c19865631",
+  "지문": "9cd1a25cfa1e3620",
   "파일": [
    "docs/now/related.md"
   ]
@@ -490,7 +490,7 @@
  },
  "161": {
   "날짜": "2026-09-28",
-  "지문": "f25c792aef67e08e",
+  "지문": "42792e0004677eb7",
   "파일": [
    "docs/now/related.md",
    "tools/check_docs.py"
@@ -529,14 +529,14 @@
  },
  "166": {
   "날짜": "2026-09-28",
-  "지문": "cbcdffbe3511de27",
+  "지문": "b48cd0e90b49c970",
   "파일": [
    "docs/now/related.md"
   ]
  },
  "167": {
   "날짜": "2026-09-28",
-  "지문": "7a4284aba27c5332",
+  "지문": "284b659b07d2a295",
   "파일": [
    "docs/now/related.md"
   ]
@@ -636,7 +636,7 @@
  },
  "176": {
   "날짜": "2026-09-28",
-  "지문": "fd6c6a28ad0081c6",
+  "지문": "d17da0a5aeec9152",
   "파일": [
    "data/scoreboard.toml",
    "docs/now/related.md"
@@ -652,7 +652,7 @@
  },
  "178": {
   "날짜": "2026-09-28",
-  "지문": "5fef941bee7ad132",
+  "지문": "bec9ecd514716310",
   "파일": [
    "tools/compare_runs.py",
    "docs/next/hypotheses.md"
@@ -668,7 +668,7 @@
  },
  "180": {
   "날짜": "2026-09-28",
-  "지문": "f2edaf1d3d241978",
+  "지문": "c51b875de99f6310",
   "파일": [
    "tools/bootstrap.py",
    "tests/test_bootstrap.py",
@@ -678,7 +678,7 @@
  },
  "181": {
   "날짜": "2026-09-28",
-  "지문": "38bc5a41c68801d8",
+  "지문": "557900a10553898b",
   "파일": [
    "tools/bootstrap.py",
    "docs/now/related.md"
@@ -686,7 +686,7 @@
  },
  "182": {
   "날짜": "2026-09-28",
-  "지문": "0cd9d06d08b8a3cb",
+  "지문": "66ed784fabe2c5d1",
   "파일": [
    "seshat/backends.py",
    "tools/bootstrap.py",
@@ -703,7 +703,7 @@
  },
  "184": {
   "날짜": "2026-09-28",
-  "지문": "0eccf4a78987e759",
+  "지문": "1f1fdd218a0ce1b8",
   "파일": [
    "docs/now/related.md",
    "tools/bootstrap.py"
@@ -711,7 +711,7 @@
  },
  "185": {
   "날짜": "2026-09-28",
-  "지문": "a458c2f8849445cc",
+  "지문": "b144f0bbcc854f13",
   "파일": [
    "tools/bootstrap.py",
    "docs/now/related.md"
@@ -728,7 +728,7 @@
  },
  "187": {
   "날짜": "2026-09-28",
-  "지문": "b4713512dc0d4389",
+  "지문": "ee48986a7a0b4d2a",
   "파일": [
    "tools/check_docs.py::check_plan",
    "docs/now/related.md"
@@ -779,7 +779,7 @@
  },
  "192": {
   "날짜": "2026-09-28",
-  "지문": "588adb5518307ddb",
+  "지문": "36fc1860f45a3972",
   "파일": [
    "docs/now/related.md",
    "seshat/evaluate.py"
@@ -907,7 +907,7 @@
  },
  "207": {
   "날짜": "2026-09-29",
-  "지문": "8b6e3a319a0c127c",
+  "지문": "58a03438919e1da8",
   "파일": [
    "data/scoreboard.toml",
    "tests/test_gate.py::test_까닭을_주면_셋을_갈아끼운다",
@@ -967,10 +967,19 @@
  },
  "213": {
   "날짜": "2026-09-29",
-  "지문": "8e86fb070622c2b4",
+  "지문": "cb58b318c20ab662",
   "파일": [
    "tools/check_ways.py",
    "tests/test_ways.py::test_저장소가_장부와_맞는다"
+  ]
+ },
+ "214": {
+  "날짜": "2026-09-29",
+  "지문": "78979ce63e4ecdb7",
+  "파일": [
+   "docs/next/hypotheses.md",
+   "tools/show_misses.py",
+   "tools/compare_runs.py"
   ]
  },
  "22": {
@@ -1111,7 +1120,7 @@
  },
  "37": {
   "날짜": "2026-09-23",
-  "지문": "aba432fc2bec2060",
+  "지문": "77859f74f589cf0c",
   "파일": [
    "docs/next/hypotheses.md",
    "tools/check_hypotheses.py"
@@ -1119,7 +1128,7 @@
  },
  "38": {
   "날짜": "2026-09-23",
-  "지문": "ed365dc62058293d",
+  "지문": "29165d50857ede8f",
   "파일": [
    "docs/next/hypotheses.md",
    "seshat/terms.py::mask"
@@ -1164,7 +1173,7 @@
  },
  "43": {
   "날짜": "2026-09-23",
-  "지문": "1e733ce007f45833",
+  "지문": "b8422970bfdef2af",
   "파일": [
    "docs/next/hypotheses.md",
    "tools/check_hypotheses.py"
@@ -1495,7 +1504,7 @@
  },
  "93": {
   "날짜": "2026-09-27",
-  "지문": "54b83b0537a7dbfa",
+  "지문": "b1f5685f1d3775b0",
   "파일": [
    "docs/next/hypotheses.md",
    "tools/term_diff.py"
@@ -1511,7 +1520,7 @@
  },
  "95": {
   "날짜": "2026-09-27",
-  "지문": "11b49053f0535ce1",
+  "지문": "ee1e661e22336ad8",
   "파일": [
    "docs/next/hypotheses.md"
   ]
