@@ -1,7 +1,7 @@
 {
  "1": {
   "날짜": "2026-09-22",
-  "읽음": false,
+  "읽음": true,
   "지문": "222321f4e17fd49e",
   "파일": [
    "tools/check_docs.py",
@@ -1126,8 +1126,8 @@
  },
  "217": {
   "날짜": "2026-09-29",
-  "읽음": false,
-  "지문": "1d3f7009ba39c128",
+  "읽음": true,
+  "지문": "c4ab552029881028",
   "파일": [
    "tools/docseal.py",
    "docs/next/PLAN.md",
@@ -1181,6 +1181,23 @@
   "파일": [
    "tools/check_docs.py::check_plan_closed",
    "tests/test_doc_enforcers.py::test_닫힌_행의_번호가_DECISIONS_에_남는다"
+  ]
+ },
+ "222": {
+  "날짜": "2026-09-29",
+  "읽음": false,
+  "지문": "6e60970dc44b490d",
+  "파일": [
+   "tools/plan_closed.py",
+   "tests/test_plan_closed.py::test_닫힌_행의_본문을_이력에서_꺼낸다"
+  ]
+ },
+ "223": {
+  "날짜": "2026-09-29",
+  "읽음": false,
+  "지문": "98b3c59904ec7b3d",
+  "파일": [
+   "docs/next/PLAN.md"
   ]
  },
  "23": {
@@ -1352,7 +1369,7 @@
  },
  "4": {
   "날짜": "2026-09-22",
-  "읽음": false,
+  "읽음": true,
   "지문": "770a95a2c160f128",
   "파일": [
    "pyproject.toml"
@@ -1582,7 +1599,7 @@
  },
  "7": {
   "날짜": "2026-09-22",
-  "읽음": false,
+  "읽음": true,
   "지문": "0770c5f4f644be17",
   "파일": [
    "tools/check_docs.py::check_plan"
