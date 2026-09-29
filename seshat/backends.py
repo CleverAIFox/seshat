@@ -644,10 +644,21 @@ DECODING_OF.update({arm: {"temperature": 0.8, "seed0": 101, "num_predict": 512, 
 MARK_ARMS: set[str] = set(보호)      # 표시를 빼는 팔 — 위 표에서 나온다(두 곳에 안 적는다)
 
 
-def 지키는_지표(arm: str | None) -> frozenset[str]:
-    """이 팔이 **기계로** 지키는 지표. 표에 없어도 `+ph` 면 `keep` 은 지킨다(H-001 · §15)."""
+# ★ **기계가 지킬 수 있는 지표**(DECISIONS §206). 팔을 모를 때 「무엇을 못 견주는가」 의 답이다 —
+#   모르면 이 셋 전부를 못 견주는 것으로 친다. **못 견주는 쪽으로 틀리는 것이 안전하다**
+지킬수있는것 = frozenset({"keep", "lit", "ui"})
+
+
+def 지키는_지표(arm: str | None) -> frozenset[str] | None:
+    """이 팔이 **기계로** 지키는 지표. 표에 없어도 `+ph` 면 `keep` 은 지킨다(H-001 · §15).
+
+    ★ **이름이 없으면 `None` 이다 — 「아무것도 안 지킨다」 가 아니라 「모른다」**(DECISIONS §206).
+      2026-09-29 재채점한 배포본 판에 팔 이름이 없어 도구가 「지키는 것 없다」 로 찍었고, 그 판은
+      정말로 아무것도 안 지켜서 **우연히 맞았다.** 모르는 것을 없는 것으로 치는 것이 §173 이
+      금지한 그 모양이다 — 다음 판에서는 우연이 안 맞는다.
+    """
     if not arm:
-        return frozenset()
+        return None
     if arm in 보호:
         return 보호[arm]
     return frozenset({"keep"}) if "+ph" in arm else frozenset()

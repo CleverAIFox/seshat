@@ -131,7 +131,12 @@ def 가린_지표(가: dict, 나: dict) -> set[str]:
       같으므로 위의 축들은 전부 통과한다 — 이것만이 그 차이를 본다.
     """
     from . import backends
-    return set(backends.지키는_지표(_팔(가))) ^ set(backends.지키는_지표(_팔(나)))
+    가것, 나것 = backends.지키는_지표(_팔(가)), backends.지키는_지표(_팔(나))
+    # ★ **한쪽 팔을 모르면 지킬 수 있는 것을 전부 못 견주는 것으로 친다**(DECISIONS §206).
+    #   빈 집합으로 치면 「이 팔은 아무것도 안 지킨다」 라고 **아는 척**하는 것이다(§173)
+    if 가것 is None or 나것 is None:
+        return set(backends.지킬수있는것)
+    return set(가것) ^ set(나것)
 
 
 def _팔(d: dict) -> str | None:

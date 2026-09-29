@@ -133,4 +133,10 @@ def test_보호_표가_MARK_ARMS_를_만든다():
     assert backends.MARK_ARMS == set(backends.보호)
     assert backends.지키는_지표("gemma3-12b+ph+retry+endings+terms") == {"keep"}, "+ph 는 이름을 지킨다"
     assert backends.지키는_지표("aws-translate") == frozenset()
-    assert backends.지키는_지표(None) == frozenset()
+    # ★ **이름이 없으면 「모른다」 다** — 「안 지킨다」 가 아니다(DECISIONS §206)
+    assert backends.지키는_지표(None) is None
+    assert backends.지키는_지표("") is None
+    from seshat import compare
+    # 모르는 팔이 섞이면 **지킬 수 있는 것을 전부** 못 견주는 것으로 친다
+    assert compare.가린_지표({"arm": None}, {"arm": "aws-translate"}) == set(backends.지킬수있는것)
+    assert compare.가린_지표({"arm": "aws-translate"}, {"arm": "aws-translate"}) == set()

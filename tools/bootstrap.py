@@ -160,11 +160,20 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     가팔, 나팔 = 가머리.get("backend") or 가머리.get("model"), 나머리.get("backend") or 나머리.get("model")
-    못견줌 = backends.지키는_지표(가팔) ^ backends.지키는_지표(나팔)
+    못견줌 = compare.가린_지표({"arm": 가팔}, {"arm": 나팔})
+
+    def _지킴(팔):
+        """**「모른다」 와 「안 지킨다」 를 다르게 적는다**(DECISIONS §206)."""
+        got = backends.지키는_지표(팔)
+        return "**모른다**" if got is None else (" · ".join(sorted(got)) or "없다")
+    if 가팔 is None or 나팔 is None:
+        print("  ※ **팔 이름이 없는 판이 있다** — 무엇을 기계로 지키는지 모른다(DECISIONS §206).\n"
+              "    지킬 수 있는 것을 **전부 못 견주는 것으로** 친다 — 모르는 쪽으로 기운다\n"
+              "    판 머리줄의 `backend` 가 비었다 — 서버(`--url`)로 잰 판이 그렇다", file=sys.stderr)
     if 못견줌:
         print(f"  ※ **못 견주는 지표 {' · '.join(sorted(못견줌))}** — 한쪽만 자리표시가 지킨다(§156)\n"
-              f"    A {가팔} 가 지키는 것 {sorted(backends.지키는_지표(가팔)) or '없다'}\n"
-              f"    B {나팔} 가 지키는 것 {sorted(backends.지키는_지표(나팔)) or '없다'}", file=sys.stderr)
+              f"    A {가팔} 가 지키는 것 {_지킴(가팔)}\n"
+              f"    B {나팔} 가 지키는 것 {_지킴(나팔)}", file=sys.stderr)
 
     spec = {r["id"]: r for r in evaluate.load(a.set_)}
     같은줄 = [i for i in 가줄 if i in 나줄 and i in spec]
