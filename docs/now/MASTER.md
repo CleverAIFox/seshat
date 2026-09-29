@@ -472,6 +472,7 @@ thoth 의 sweep · doctor(`OLLAMA_KEEP_ALSO`)가 본다. 두 저장소가 같은
 | `tools/doc_fsck.py` | 문서 ↔ 실물 — 경로 · 테스트 · 아무도 안 부르는 도구 |
 | `tools/check_hypotheses.py` | 가설 대장 — 실험의 문 |
 | `tools/check_ontology.py` | 온톨로지 — 표기 유일 · 부모 · 끝소리 |
+| `tools/plan_closed.py` | **닫힌 PLAN 행을 이력에서 되살려 보여준다** — 번호 · 마지막 본문 · 사라진 판 · 그 번호를 든 절(DECISIONS §222) |
 | `tools/docseal.py` | **절과 그 절이 짚은 코드의 정합 도장** — 찍은 뒤로 바뀌었으면 「다시 봐야 한다」(`audit` · `stamp --only N` · DECISIONS §211) |
 | `tools/check_ways.py` | **막는 자리마다 넘는 길이 있나** — **길 없는 막음을 막는다** — 2026-09-29 서른 곳을 다 갚아 장부가 비었다(DECISIONS §210 · §213) |
 | `tools/check_catalog.py` | 데이터 카탈로그 — 칸 · 쓰임 · `data/` 의 카탈로그 밖 파일(§11) |

@@ -1177,7 +1177,7 @@
  "221": {
   "날짜": "2026-09-29",
   "읽음": false,
-  "지문": "ab781f8dff6d2d30",
+  "지문": "9935e2c1d58f8fa7",
   "파일": [
    "tools/check_docs.py::check_plan_closed",
    "tests/test_doc_enforcers.py::test_닫힌_행의_번호가_DECISIONS_에_남는다"
