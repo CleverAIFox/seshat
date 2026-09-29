@@ -407,6 +407,26 @@ def check_tools_listed(root: Path, master: str, fails: list) -> None:
             fails.append(f"MASTER §14 에 `tools/{q.name}` 이 없다 — 목록이 도구보다 늦다")
 
 
+def check_plan_closed(root: Path, plan: str, dec: str, fails: list) -> None:
+    """**닫은 행의 번호가 DECISIONS 어딘가에 남아 있나**(DECISIONS §221).
+
+    ★ PLAN 은 닫힌 행을 **지운다** — 닫힘 표식을 만들면 표가 무덤이 된다(§0 의 어휘 규칙).
+      그러면 그 빚의 기록은 **DECISIONS 한 벌**뿐이고, 그 한 벌이 없으면 **영 벌**이 된다.
+    ★ 2026-09-29 `#46` 이 그렇게 샜다. 갚는 절을 쓰며 본문의 「(PLAN #46)」 을 「§213」 으로
+      **고쳐** 버렸고, 행은 지워졌는데 번호는 아무 데도 안 남았다. **옮기는 것과 지우는 것은 다르다.**
+    ★ 번호가 든 절이 **참인지**는 안 본다 — 그것은 도장(`tools/docseal.py`)의 일이다.
+    """
+    있는 = sorted(int(m) for m in re.findall(r"^\| (\d+) \|", plan, re.M))
+    if not 있는:
+        return
+    for n in range(1, max(있는) + 1):
+        if n in 있는:
+            continue
+        if not re.search(rf"(?<![\w§-])#{n}(?!\d)", dec):
+            fails.append(f"PLAN #{n} 은 닫혔는데 DECISIONS 에 그 번호가 없다 — "
+                         f"닫는 절이 **번호를 든 채** 남아야 한다. 갚은 절에 `PLAN #{n}` 을 적는다")
+
+
 def check_master(text: str, fails: list) -> None:
     """MASTER 는 완료된 사실만 담는다. 계획은 PLAN 이 담는다(DECISIONS §9)."""
     for i, line in body_lines(text):
@@ -495,6 +515,7 @@ def main(argv=None) -> int:
         check_master(texts["docs/now/MASTER.md"], fails)
         check_decisions(texts["docs/why/DECISIONS.md"], fails)
         check_index(texts["docs/why/DECISIONS.md"], fails)
+        check_plan_closed(ROOT, texts["docs/next/PLAN.md"], texts["docs/why/DECISIONS.md"], fails)
         check_map(ROOT, fails)
         check_tools_listed(ROOT, texts["docs/now/MASTER.md"], fails)
         check_refs(ROOT, fails)

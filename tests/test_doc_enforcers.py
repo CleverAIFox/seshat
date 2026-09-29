@@ -355,3 +355,15 @@ def test_저장소의_지도와_목록이_통과한다():
     cd.check_tools_listed(ROOT, (ROOT / "docs/now/MASTER.md").read_text(encoding="utf-8"), f)
     cd.check_index((ROOT / "docs/why/DECISIONS.md").read_text(encoding="utf-8"), f)
     assert f == [], f
+
+
+def test_닫힌_행의_번호가_DECISIONS_에_남는다(tmp_path):
+    """★ PLAN 은 닫힌 행을 **지운다** — 그러면 기록이 DECISIONS 한 벌뿐이고, 그것마저 없으면
+    **영 벌**이 된다(DECISIONS §221). 2026-09-29 `#46` 이 그렇게 샜다."""
+    plan = "## 1. 남은 일 — 2행\n\n| # | 상태 | 항목 | 전건 |\n|---|---|---|---|\n| 1 | 📄 | a | |\n| 3 | 📄 | b | |\n"
+    f = []
+    cd.check_plan_closed(tmp_path, plan, "## §9. 무엇\n\nPLAN #2 를 닫았다.\n", f)
+    assert f == [], f
+    f = []
+    cd.check_plan_closed(tmp_path, plan, "## §9. 무엇\n\n아무 번호도 없다.\n", f)
+    assert len(f) == 1 and "#2" in f[0]
