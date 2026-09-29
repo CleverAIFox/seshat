@@ -46,3 +46,33 @@ def test_규칙마다_걸린다(a, b, want):
 def test_제안은_검증_없이도_된다():
     # ★ 직관은 공짜다. 문은 실험에 들어갈 때 닫힌다.
     assert ch.check(GOOD.splitlines()[0] + "\n" + GOOD.splitlines()[1] + "\n| H-001 | 제안 | R3 | 무엇 | | | |\n") == []
+
+
+NEW = """| H | 상태 | 트랙 | 직관 | 검증 | 상한 | 근거 |
+|---|---|---|---|---|---|---|
+| H-090 | 실험 | R7 | 무엇 | 600줄 · **미리 긋는 선: 구간이 0 을 안 품으면 채택** · `tools/bootstrap.py` | 0 | |
+"""
+
+
+def test_문턱_위는_선과_자를_둘_다_요구한다():
+    """★ **선을 그으면서 재는 자를 안 적으면 그 선은 못 긋는다**(DECISIONS §226).
+
+    H-081 이 「95% 구간」 을 그어 놓고 구간을 낼 줄 모르는 도구를 적었고, **돌리기 직전에야** 드러났다.
+    """
+    assert ch.check(NEW) == []
+    없선 = NEW.replace("**미리 긋는 선: 구간이 0 을 안 품으면 채택** · ", "")
+    assert any("미리 긋는 선이 없다" in f for f in ch.check(없선)), ch.check(없선)
+    없자 = NEW.replace(" · `tools/bootstrap.py`", "")
+    assert any("선을 잴 도구가 없다" in f for f in ch.check(없자)), ch.check(없자)
+
+
+def test_문턱_아래는_소급하지_않는다():
+    """★ 마흔넷이 미리 긋는 선 없이 닫혔다 — 하루에 다 고치는 것은 거짓말이다(`check_ways` 라쳇)."""
+    옛 = NEW.replace("| H-090 | 실험", f"| H-{ch.선_부터 - 1:03d} | 실험").replace(
+        "600줄 · **미리 긋는 선: 구간이 0 을 안 품으면 채택** · `tools/bootstrap.py`", "600줄을 돌린다")
+    assert ch.check(옛) == [], ch.check(옛)
+
+
+def test_문턱은_내려가지_않는다():
+    """★ 문턱을 내리면 옛 줄이 한꺼번에 붉어지고, 그러면 **규칙을 끄게 된다**(§213 과 같은 판단)."""
+    assert ch.선_부터 == 77

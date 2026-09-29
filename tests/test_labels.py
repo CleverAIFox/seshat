@@ -134,7 +134,7 @@ def test_없는_판정자는_말한다(tmp_path, monkeypatch):
     try:
         L.agree("t", ["claude", "gemini"])
     except SystemExit as e:
-        assert "read --judge gemini" in str(e)
+        assert "labels.py read" in str(e) and "--judge gemini" in str(e)
     else:
         raise AssertionError("없는 판정자인데 통과했다")
 
@@ -227,3 +227,98 @@ def test_arm_형식이_틀리면_말한다(tmp_path, monkeypatch):
         assert "이름=경로" in str(e)
     else:
         raise AssertionError("형식이 틀린데 통과했다")
+
+
+def _판정(tmp_path, judge: str, 표: dict[tuple[str, str], str]) -> None:
+    """판정자 하나의 파일을 짓는다. `표` 는 {(줄 id, 팔): 판정}."""
+    rows = [{"meta": True}]
+    rows += [{"tag": f"{i}-{a}", "id": i, "arm": a, "verdict": v} for (i, a), v in 표.items()]
+    (tmp_path / f"t.{judge}.jsonl").write_text(
+        "\n".join(json.dumps(r, ensure_ascii=False) for r in rows) + "\n", encoding="utf-8")
+
+
+def _셋(tmp_path, 맞는쪽: int, n: int = 40) -> None:
+    """팔 `4b` 가 `맞는쪽` 줄에서만 맞고 `12b` 는 다 맞는 표를 판정자 셋에게 똑같이 준다."""
+    표 = {}
+    for i in range(n):
+        rid = f"x{i:03d}"
+        표[(rid, "4b")] = "맞다" if i < 맞는쪽 else "어긋난다"
+        표[(rid, "12b")] = "맞다"
+    for j in ("gpt", "gemini", "pplx"):
+        _판정(tmp_path, j, 표)
+
+
+def test_카파는_쌍마다_난다(tmp_path, monkeypatch, capsys):
+    """★ 셋을 한 수로 합치면 **어느 둘이 안 맞는지**가 사라진다 — §116 에서 움직인 쪽은 하나였다."""
+    monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
+    _판정(tmp_path, "gpt", {("x0", "a"): "맞다", ("x1", "a"): "맞다"})
+    _판정(tmp_path, "gemini", {("x0", "a"): "맞다", ("x1", "a"): "어긋난다"})
+    _판정(tmp_path, "pplx", {("x0", "a"): "어긋난다", ("x1", "a"): "어긋난다"})
+    L.agree("t", ["gpt", "gemini", "pplx"])
+    out = capsys.readouterr().out
+    for a, b in (("gpt", "gemini"), ("gpt", "pplx"), ("gemini", "pplx")):
+        assert f"{a} 대 {b}" in out, f"{a}·{b} 쌍이 안 났다"
+    assert "3 이 다 본 줄 2 · 만장일치 0" in out
+    assert "카파는 관측이지" in out           # 이 수로 가설을 판정하지 않는다(§216)
+
+
+def test_판정자가_겹치면_멈춘다(tmp_path, monkeypatch):
+    monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
+    try:
+        L.main(["agree", "--name", "t", "--judges", "gpt,gpt"])
+    except SystemExit as e:
+        assert "같은 이름이 두 번" in str(e)
+    else:
+        raise AssertionError("한 판정자를 두 번 셌는데 통과했다")
+
+
+def test_격차에_구간이_붙는다(tmp_path, monkeypatch, capsys):
+    """★ **H-081 의 미리 긋는 선을 이 도구가 낸다**(DECISIONS §226). 뚜렷이 다른 둘은 0 을 안 품는다."""
+    monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
+    _셋(tmp_path, 맞는쪽=20)                   # 4b 0.5 · 12b 1.0
+    L.gap("t", "4b", "12b", ["gpt", "gemini", "pplx"], n=400)
+    out = capsys.readouterr().out
+    assert "뜻이 맞다 — 12b 1.0000 · 4b 0.5000" in out
+    assert "12b 가 앞선다" in out and "못 가른다" not in out
+    assert "판정자 3" in out
+
+
+def test_같은_둘은_0_을_품는다(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
+    _셋(tmp_path, 맞는쪽=40)                   # 둘 다 1.0
+    L.gap("t", "4b", "12b", ["gpt", "gemini", "pplx"], n=400)
+    assert "못 가른다" in capsys.readouterr().out
+
+
+def test_판정자마다의_수와_하나_뺀_부호를_같이_낸다(tmp_path, monkeypatch, capsys):
+    """★ **부호가 한 판정자에게 달렸으면 결론에 단서를 단다** — 관측이지 판정 기준이 아니다."""
+    monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
+    표 = {("x0", "4b"): "맞다", ("x0", "12b"): "어긋난다",
+         ("x1", "4b"): "맞다", ("x1", "12b"): "어긋난다"}
+    _판정(tmp_path, "gpt", 표)
+    _판정(tmp_path, "gemini", 표)
+    뒤집 = {k: ("어긋난다" if v == "맞다" else "맞다") for k, v in 표.items()}
+    _판정(tmp_path, "pplx", 뒤집)
+    L.gap("t", "4b", "12b", ["gpt", "gemini", "pplx"], n=200)
+    out = capsys.readouterr().out
+    assert "판정자마다" in out and "하나를 빼면" in out
+    assert "부호가 뒤집힌다" in out            # pplx 를 빼면 4b 쪽으로 더 쏠리는 것이 아니라...
+
+
+def test_없는_팔은_있는_팔을_들고_멈춘다(tmp_path, monkeypatch):
+    monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
+    _셋(tmp_path, 맞는쪽=10, n=4)
+    try:
+        L.gap("t", "4b", "nova", ["gpt", "gemini", "pplx"])
+    except SystemExit as e:
+        assert "표에 있는 팔 : 12b · 4b" in str(e) and "--arm" in str(e)
+    else:
+        raise AssertionError("없는 팔인데 통과했다")
+
+
+def test_판정자_하나로도_격차는_난다(tmp_path, monkeypatch, capsys):
+    """`agree` 는 둘이 있어야 하지만 `gap` 은 하나로도 난다 — 다만 구간이 넓어질 뿐이다."""
+    monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
+    _셋(tmp_path, 맞는쪽=20)
+    L.gap("t", "4b", "12b", ["gpt"], n=200)
+    assert "판정자 1" in capsys.readouterr().out
