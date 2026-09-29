@@ -23,11 +23,27 @@ def test_닫힌_번호를_빠짐없이_센다():
     assert PC.닫힌_번호(), "닫힌 행이 하나도 없다고 한다 — 스물 넘게 닫았다"
 
 
+def test_얕은_사본이면_이력이_없다고_말한다(capsys):
+    """★ **CI 의 `checkout` 은 깊이 1 이다**(DECISIONS §224). 이력이 없을 때 죽지 말고 말해야 한다.
+
+    2026-09-29 이 시험의 앞 판이 CI 에서만 빨개졌다 — 이 기계에는 이력이 있고 거기엔 없었다(§170).
+    """
+    import subprocess
+    얕나 = subprocess.run(["git", "rev-parse", "--is-shallow-repository"],
+                         capture_output=True, text=True, cwd=ROOT).stdout.strip() == "true"
+    if not 얕나:
+        return
+    assert PC.main([str(PC.닫힌_번호()[-1])]) == 1
+    말 = capsys.readouterr().err
+    assert "--unshallow" in 말 and "fetch-depth" in 말, "막기만 하고 넘는 길을 안 준다"
+
+
 def test_닫힌_행의_본문을_이력에서_꺼낸다():
     """★ **지워진 것과 못 찾는 것은 다르다.** 본문은 이력에 있고 이 길이 그것을 꺼낸다."""
-    n = PC.닫힌_번호()[-1]
     판 = PC.판본들()
-    assert 판, "PLAN 의 이력을 못 읽는다 — `--follow` 가 옮긴 자리를 따라가야 한다"
+    if len(판) < 2:
+        return                       # 얕은 사본 — 위 시험이 그 길을 본다
+    n = PC.닫힌_번호()[-1]
     본문 = next((PC.그때의_행(c, n) for c, _, _ in 판 if PC.그때의_행(c, n)), "")
     assert 본문.startswith(f"| {n} |"), 본문[:80]
 

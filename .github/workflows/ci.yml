@@ -26,7 +26,11 @@ jobs:
   verify:
     runs-on: ubuntu-24.04
     steps:
+      # ★ **이력째 받는다**(DECISIONS §224). 기본 `checkout` 은 **깊이 1** 이라 `git log` 가 비고,
+      #   `tools/plan_closed.py` 처럼 이력을 읽는 도구와 그 시험이 CI 에서만 죽는다 —
+      #   2026-09-29 그렇게 빨개졌다. 「이 기계에 있는 것」 의 목록에 **이력**이 새로 들어왔다(§170)
       - uses: actions/checkout@v7
+        with: { fetch-depth: 0 }
       - uses: astral-sh/setup-uv@v7
       - uses: actions/setup-python@v7
         with: { python-version: "3.12" }

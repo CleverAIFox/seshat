@@ -48,6 +48,14 @@ def 그때의_행(커밋: str, n: int) -> str:
     return ""
 
 
+def 얕은가() -> bool:
+    """**이력이 잘린 사본인가**(DECISIONS §224). CI 의 `checkout` 은 기본이 깊이 1 이다.
+
+    ★ 얕아도 `git log` 는 **한 판을 준다** — 그래서 「이력이 비었나」 로는 못 가른다. 물어야 한다.
+    """
+    return _git("rev-parse", "--is-shallow-repository").strip() == "true"
+
+
 def 닫힌_번호() -> list[int]:
     글 = (ROOT / PLAN).read_text(encoding="utf-8")
     있는 = sorted(int(m) for m in 행.findall(글))
@@ -88,7 +96,15 @@ def main(argv: list[str] | None = None) -> int:
             죽은판 = 판[i - 1] if i else None      # 그 바로 뒤 판에서 사라졌다
             break
     if not 본문:
-        print(f"  #{n} 은 이력에도 없다 — 번호가 맞나", file=sys.stderr)
+        # ★ **못 찾은 것과 볼 수 없는 것을 가른다**(DECISIONS §224). 얕은 사본에서도 `git log` 는
+        #   한 판을 주므로 「이력이 비었나」 로는 못 가른다 — 얕은지를 **묻는다**
+        if 얕은가():
+            print(f"  ✗ 이력이 잘린 사본이라 못 본다 — `#{n}` 이 없는 것이 아니다\n"
+                  f"    이력째 받는다 : git fetch --unshallow\n"
+                  f"    CI 라면 : `actions/checkout` 에 `with: {{ fetch-depth: 0 }}`", file=sys.stderr)
+        else:
+            print(f"  ✗ #{n} 은 이력에도 없다 — 번호가 맞나\n"
+                  f"    닫힌 번호를 본다 : python3 tools/plan_closed.py", file=sys.stderr)
         return 1
     절 = 든_절(n)
     print(f"  #{n} — 마지막으로 살아 있던 본문\n")
