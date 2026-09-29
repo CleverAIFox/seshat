@@ -362,7 +362,23 @@ MARKS_STATS: dict[str, int] = {"뺀 것": 0, "잃은 것": 0, "다시 물음": 0
 REPAIR_STATS: dict[str, int] = {"tried": 0, "fixed": 0}
 
 
-def with_placeholders(inner: Backend, repair: tuple[Backend, ...] = ()) -> Backend:
+def 이름을_박아_묻는다(model: str):
+    """지켜야 할 이름을 **글로 적어** 다시 묻는다(H-080 · DECISIONS §218).
+
+    ★ 지금 되묻기는 **같은 프롬프트에 온도만 흔든다**(0 · 0.4). 그런데 못 되찾은 줄의 넷은
+      **이름이 든 절이 통째로 없다**(§214) — 온도를 흔들어도 그 절은 안 돌아온다. 모델에게
+      **무엇이 빠졌는지 말해 주는 것**은 아직 안 해 봤다.
+    ★ **원문을 그대로 준다** — 자리표시 없이. 그래서 조사는 `terms.fix_particles` 가 맞춘다(§149).
+    """
+    def ask(text: str, names: list[str]) -> str:
+        지시 = (GENERIC_SYSTEM + "\n\nThese names MUST appear in your Korean translation exactly as "
+                f"written, untranslated and untransliterated: {' · '.join(names)}.\n"
+                "Translate every clause of the source sentence. Do not drop any part of it.")
+        return ollama_chat(model, 지시, {"options": REPAIR})([text], {}, [{}])[0]
+    return ask
+
+
+def with_placeholders(inner: Backend, repair: tuple[Backend, ...] = (), 이름_물음=None) -> Backend:
     """H-001 의 처치군 — 영어로 남을 이름을 `⟦Tn⟧` 로 빼고 번역한 뒤 되돌린다(`seshat/terms.py`).
 
     ★ `repair` 는 차례로 시도하는 판들이다. **원문을 그대로 준다** — 자리표시 없이. 그래서 그 답에는
@@ -379,12 +395,16 @@ def with_placeholders(inner: Backend, repair: tuple[Backend, ...] = ()) -> Backe
         마크 = marks or [{}] * len(texts)
         for i, (t, o, (_, slots)) in enumerate(zip(texts, outs, masked)):
             ko, missing = terms.unmask(o, slots)
-            if missing and repair:
+            if missing and (repair or 이름_물음):
                 REPAIR_STATS["tried"] += 1
                 names = [sl["text"] for sl in slots.values()]
-                for ask in repair:
-                    cand = ask([t], terms_, [마크[i]])[0]
+                묻는다 = [*((lambda a: lambda: a([t], terms_, [마크[i]])[0])(x) for x in repair),
+                        *([lambda: 이름_물음(t, names)] if 이름_물음 else [])]
+                for 몇째, 물음 in enumerate(묻는다):
+                    cand = 물음()
                     if all(n in cand for n in names):
+                        if 이름_물음 and 몇째 == len(묻는다) - 1:
+                            REPAIR_STATS["이름박기"] = REPAIR_STATS.get("이름박기", 0) + 1
                         # ★ **고치는 판에도 조사 규칙을 세운다**(DECISIONS §149). 이 답에는 `⟦Tn⟧` 이
                         #   없어 `unmask` 가 안 불린다 — 그대로 두면 이름은 살고 조사는 버려진다
                         ko = terms.fix_particles(cand, slots)
@@ -574,6 +594,13 @@ REGISTRY: dict[str, tuple[Backend, str]] = {
             ollama_chat_ref("gemma3:4b", GENERIC_SYSTEM, fence=True), repair=_gemma3_repair))),
             kinds=(("lit", "L"), ("ui", "U")), repair=_gemma3_repair),
         "gemma3:4b+ph+marks2+gloss2+retry+endings+terms"),
+    # ★ **H-080 의 처치군.** `+retry+` 와 **세 번째 물음 하나만** 다르다 — 지켜야 할 이름을 글로 박는다
+    "gemma3-4b+ph+marks2+gloss2+retry2+endings+terms": (
+        with_marks_hidden(with_terms(with_endings(with_placeholders(
+            ollama_chat_ref("gemma3:4b", GENERIC_SYSTEM, fence=True), repair=_gemma3_repair,
+            이름_물음=이름을_박아_묻는다("gemma3:4b")))),
+            kinds=(("lit", "L"), ("ui", "U")), repair=_gemma3_repair),
+        "gemma3:4b+ph+marks2+gloss2+retry2+endings+terms"),
     "gemma3-4b+ph+gloss2+retry+endings+terms": (
         with_terms(with_endings(with_placeholders(
             ollama_chat_ref("gemma3:4b", GENERIC_SYSTEM, fence=True), repair=_gemma3_repair))),
@@ -602,7 +629,8 @@ OLLAMA_OF.update({"translategemma-4b": "translategemma:4b", "translategemma-4b+p
                   "gemma3-4b+ph+gloss3+endings": "gemma3:4b",
                   "gemma3-4b+ph+ui+gloss2+retry+endings+terms": "gemma3:4b",
                   "gemma3-4b+ph+marks+gloss2+retry+endings+terms": "gemma3:4b",
-                  "gemma3-4b+ph+marks2+gloss2+retry+endings+terms": "gemma3:4b"})
+                  "gemma3-4b+ph+marks2+gloss2+retry+endings+terms": "gemma3:4b",
+                  "gemma3-4b+ph+marks2+gloss2+retry2+endings+terms": "gemma3:4b"})
 
 # ★ **어느 ollama 모델이 어느 가중치인가.** `from_pretrained` 를 거치지 않는 호출은 라이선스 검사의
 #   정규식이 보지 못한다. 선언을 검사가 대장과 대조한다(DECISIONS §14).
@@ -640,6 +668,7 @@ DECODING_OF.update({arm: {"temperature": 0.8, "seed0": 101, "num_predict": 512, 
     "gemma3-4b+ph+ui+gloss2+retry+endings+terms": frozenset({"keep", "ui"}),
     "gemma3-4b+ph+marks+gloss2+retry+endings+terms": frozenset({"keep", "lit", "ui"}),
     "gemma3-4b+ph+marks2+gloss2+retry+endings+terms": frozenset({"keep", "lit", "ui"}),
+    "gemma3-4b+ph+marks2+gloss2+retry2+endings+terms": frozenset({"keep", "lit", "ui"}),
 }
 MARK_ARMS: set[str] = set(보호)      # 표시를 빼는 팔 — 위 표에서 나온다(두 곳에 안 적는다)
 
@@ -667,6 +696,7 @@ REPAIR_ARMS.update({"gemma3-4b+ph+retry+endings+terms", "gemma3-4b+ph+retry",
                     "gemma3-4b+ph+ui+gloss2+retry+endings+terms",
                     "gemma3-4b+ph+marks+gloss2+retry+endings+terms",
                     "gemma3-4b+ph+marks2+gloss2+retry+endings+terms",
+                    "gemma3-4b+ph+marks2+gloss2+retry2+endings+terms",   # H-080
                     "gemma3-12b+ph+retry", "gemma3-12b+ph+retry+endings+terms"})
 for _arm in REPAIR_ARMS:
     DECODING_OF[_arm] = {**DECODING, "repair": REPAIR}

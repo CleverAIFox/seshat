@@ -95,3 +95,13 @@ def test_무더기로_읽었다를_못_찍는다(tmp_path, monkeypatch, capsys):
     아무것도 안 말하고, 그 순간 감사의 수가 진도를 잃는다."""
     assert DS.main(["stamp", "--read"]) == 1
     assert "--only" in capsys.readouterr().err
+
+
+def test_PLAN_도_부른_행만_문다():
+    """★ §215 를 `hypotheses.md` 에만 적용하고 `PLAN.md` 는 파일째 뒀다(DECISIONS §219)."""
+    대장 = "| 43 | 🟡 | 가 | |\n| 47 | 🟡 | 나 | |\n"
+    본문 = "## §9. 무엇\n\n**2026-09-29**\n\n### 배운 것\n\nPLAN #47 이 든다.\n"
+    앞 = DS._대장_조각("docs/next/PLAN.md", 본문, 대장)
+    assert 앞
+    assert DS._대장_조각("docs/next/PLAN.md", 본문, 대장.replace("| 43 | 🟡 |", "| 43 | 📄 |")) == 앞
+    assert DS._대장_조각("docs/next/PLAN.md", 본문, 대장.replace("| 47 | 🟡 |", "| 47 | 📄 |")) != 앞

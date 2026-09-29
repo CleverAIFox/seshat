@@ -774,7 +774,7 @@
  "182": {
   "날짜": "2026-09-28",
   "읽음": false,
-  "지문": "66ed784fabe2c5d1",
+  "지문": "6ae4e9947e67f9ed",
   "파일": [
    "seshat/backends.py",
    "tools/bootstrap.py",
@@ -811,7 +811,7 @@
  "186": {
   "날짜": "2026-09-28",
   "읽음": false,
-  "지문": "9c177c13160a244e",
+  "지문": "e32cec2b95820773",
   "파일": [
    "seshat/compare.py",
    "seshat/backends.py",
@@ -1108,7 +1108,7 @@
  "215": {
   "날짜": "2026-09-29",
   "읽음": false,
-  "지문": "fb30e59d7ab25911",
+  "지문": "ad7b65a4970b5238",
   "파일": [
    "tools/docseal.py::_대장_조각",
    "tests/test_docseal.py::test_줄_대장은_부른_행만_문다"
@@ -1117,7 +1117,7 @@
  "216": {
   "날짜": "2026-09-29",
   "읽음": false,
-  "지문": "4e261c282e156f34",
+  "지문": "0656349599672ed4",
   "파일": [
    "docs/next/hypotheses.md",
    "tools/show_misses.py::짧은_줄",
@@ -1127,11 +1127,31 @@
  "217": {
   "날짜": "2026-09-29",
   "읽음": false,
-  "지문": "04f41d8b4659b5a5",
+  "지문": "4582776cb4913065",
   "파일": [
    "tools/docseal.py",
    "docs/next/PLAN.md",
    "docs/now/related.md"
+  ]
+ },
+ "218": {
+  "날짜": "2026-09-29",
+  "읽음": false,
+  "지문": "51c8b98ac1e78f13",
+  "파일": [
+   "seshat/backends.py::이름을_박아_묻는다",
+   "tests/test_backends.py::test_되묻기가_다_실패하면_이름을_박아_한_번_더_묻는다",
+   "docs/next/hypotheses.md"
+  ]
+ },
+ "219": {
+  "날짜": "2026-09-29",
+  "읽음": false,
+  "지문": "5dd6e0c6f6b3459c",
+  "파일": [
+   "tests/test_backends.py::test_되묻기가_다_실패하면_이름을_박아_한_번_더_묻는다",
+   "tools/docseal.py::_대장_조각",
+   "tests/test_docseal.py::test_PLAN_도_부른_행만_문다"
   ]
  },
  "22": {

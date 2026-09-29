@@ -92,3 +92,43 @@ def test_못_물으면_안_막는다(monkeypatch):
         raise OSError("연결 거부")
     monkeypatch.setattr(urllib.request, "urlopen", 터진다)
     b.들어가나("큰놈:12b")
+
+
+# ---------- 이름을 박아 다시 묻는다(H-080 · DECISIONS §218) ----------
+
+def test_이름을_박은_물음이_그_이름을_글로_든다(monkeypatch):
+    """★ 온도만 흔드는 되묻기는 **사라진 절**을 안 돌려준다(§214). 무엇이 빠졌는지 말해 준다."""
+    from seshat import backends as b
+    본것 = {}
+
+    def 가짜(model, system, extra=None, suffix=""):
+        본것["system"] = system
+        return lambda texts, terms_, marks=None: ["돌아온 말 Amazon SNS"]
+    monkeypatch.setattr(b, "ollama_chat", 가짜)
+    out = b.이름을_박아_묻는다("gemma3:4b")("원문", ["Amazon SNS", "AWS"])
+    assert "Amazon SNS" in 본것["system"] and "AWS" in 본것["system"]
+    assert "clause" in 본것["system"], "절을 빠뜨리지 말라는 말이 없다"
+    assert out == "돌아온 말 Amazon SNS"
+
+
+def test_되묻기가_다_실패하면_이름을_박아_한_번_더_묻는다(monkeypatch):
+    """★ **`+retry2` 는 `+retry` 와 물음 하나만 다르다** — 무엇이 효과인지 가르려면 그래야 한다."""
+    from seshat import backends as b
+    # ★ **모듈 상태를 되돌려 놓는다.** 안 그러면 뒤에 도는 시험이 내가 남긴 셈을 본다 —
+    #   2026-09-29 `test_baselines` 둘이 그렇게 빨개졌다(따로 돌리면 초록이라 더 늦게 잡힌다)
+    옛 = dict(b.REPAIR_STATS)
+    monkeypatch.setattr(b, "REPAIR_STATS", {"tried": 0, "fixed": 0})
+    assert 옛 is not b.REPAIR_STATS
+
+    안 = lambda texts, terms_, marks=None: ["이름이 사라진 말"]          # noqa: E731
+    막 = lambda texts, terms_, marks=None: ["또 사라진 말"]              # noqa: E731
+    쟀다 = {}
+
+    def 이름물음(text, names):
+        쟀다["names"] = list(names)
+        return "되찾은 말 Amazon SNS"
+    호출 = b.with_placeholders(안, repair=(막,), 이름_물음=이름물음)
+    out =호출(["Use Amazon SNS to send messages."], {}, [{}])
+    assert 쟀다.get("names") == ["Amazon SNS"], 쟀다
+    assert "Amazon SNS" in out[0]
+    assert b.REPAIR_STATS["fixed"] == 1 and b.REPAIR_STATS.get("이름박기") == 1
