@@ -137,7 +137,7 @@
  },
  "118": {
   "날짜": "2026-09-27",
-  "지문": "86d7a9eeaaa9bc7b",
+  "지문": "50cb6568906129d6",
   "파일": [
    "docs/next/hypotheses.md"
   ]
@@ -227,7 +227,7 @@
  },
  "129": {
   "날짜": "2026-09-27",
-  "지문": "c3d4e4ffa1b63af9",
+  "지문": "31808467d53663c2",
   "파일": [
    "docs/next/hypotheses.md"
   ]
@@ -652,7 +652,7 @@
  },
  "178": {
   "날짜": "2026-09-28",
-  "지문": "bec9ecd514716310",
+  "지문": "5a7965aa32de9eec",
   "파일": [
    "tools/compare_runs.py",
    "docs/next/hypotheses.md"
@@ -951,7 +951,7 @@
  },
  "211": {
   "날짜": "2026-09-29",
-  "지문": "ec5872b51e30ae1a",
+  "지문": "6de916bdf5951287",
   "파일": [
    "tools/docseal.py::지문",
    "tests/test_docseal.py::test_저장소의_도장이_유효하다"
@@ -975,11 +975,19 @@
  },
  "214": {
   "날짜": "2026-09-29",
-  "지문": "78979ce63e4ecdb7",
+  "지문": "231e433177b7e274",
   "파일": [
    "docs/next/hypotheses.md",
    "tools/show_misses.py",
    "tools/compare_runs.py"
+  ]
+ },
+ "215": {
+  "날짜": "2026-09-29",
+  "지문": "1f3b8336fcf4337f",
+  "파일": [
+   "tools/docseal.py::_대장_조각",
+   "tests/test_docseal.py::test_줄_대장은_부른_행만_문다"
   ]
  },
  "22": {
@@ -1120,7 +1128,7 @@
  },
  "37": {
   "날짜": "2026-09-23",
-  "지문": "77859f74f589cf0c",
+  "지문": "d1fa62af7dbd0ab9",
   "파일": [
    "docs/next/hypotheses.md",
    "tools/check_hypotheses.py"
@@ -1128,7 +1136,7 @@
  },
  "38": {
   "날짜": "2026-09-23",
-  "지문": "29165d50857ede8f",
+  "지문": "5d46b6e2b48f8768",
   "파일": [
    "docs/next/hypotheses.md",
    "seshat/terms.py::mask"
@@ -1173,7 +1181,7 @@
  },
  "43": {
   "날짜": "2026-09-23",
-  "지문": "b8422970bfdef2af",
+  "지문": "13b1405ecfb2a51b",
   "파일": [
    "docs/next/hypotheses.md",
    "tools/check_hypotheses.py"
@@ -1504,7 +1512,7 @@
  },
  "93": {
   "날짜": "2026-09-27",
-  "지문": "b1f5685f1d3775b0",
+  "지문": "b5cfb16e09618a0b",
   "파일": [
    "docs/next/hypotheses.md",
    "tools/term_diff.py"
@@ -1520,7 +1528,7 @@
  },
  "95": {
   "날짜": "2026-09-27",
-  "지문": "ee1e661e22336ad8",
+  "지문": "7e34747d626e0027",
   "파일": [
    "docs/next/hypotheses.md"
   ]

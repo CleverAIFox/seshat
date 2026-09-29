@@ -68,3 +68,23 @@ def test_저장소에_없는_파일은_도장이_안_문다():
     파일 = DS.절들(글)[0]["파일"]
     assert not any(f.startswith("data/domain/") for f in 파일), 파일
     assert any(f.startswith("tools/docseal.py") for f in 파일)
+
+
+def test_줄_대장은_부른_행만_문다():
+    """★ **소음이 된 무효는 안 읽힌다**(DECISIONS §215).
+
+    `hypotheses.md` 는 194 행이라 가설 하나를 열고 닫을 때마다 바뀐다. 파일로 물면 그 대장을 짚은
+    절이 전부 무효가 되고, 아홉 중 여덟은 **내가 안 건드린 남의 행** 탓이다.
+    """
+    대장 = "| H-001 | 채택 | R1 | 가 | 나 | 0 | 다 |\n| H-079 | 실험 | R7 | 가 | 나 | 0 | |\n"
+    본문 = "## §9. 무엇\n\n**2026-09-29**\n\n### 배운 것\n\nH-079 를 연다.\n"
+    앞 = DS._대장_조각("docs/next/hypotheses.md", 본문, 대장)
+    assert 앞, "부른 행을 못 찾았다"
+    # 남의 행이 바뀌어도 그대로다
+    assert DS._대장_조각("docs/next/hypotheses.md", 본문,
+                        대장.replace("| H-001 | 채택 |", "| H-001 | 기각 |")) == 앞
+    # 내 행이 바뀌면 달라진다
+    assert DS._대장_조각("docs/next/hypotheses.md", 본문,
+                        대장.replace("| H-079 | 실험 |", "| H-079 | 채택 |")) != 앞
+    # 아무 행도 안 부르면 그 파일은 지문 밖이다
+    assert DS._대장_조각("docs/next/hypotheses.md", "## §9. 무엇\n\n번호가 없다.\n", 대장) == ""

@@ -5,6 +5,7 @@
   uv run python tools/show_misses.py 결과.jsonl --what term      뜻이 안 남은 줄만
   uv run python tools/show_misses.py 결과.jsonl --what hangul    번역이 아닌 줄만
   uv run python tools/show_misses.py 결과.jsonl --what style     합쇼체가 아닌 줄만
+  uv run python tools/show_misses.py 결과.jsonl --what short     **가장 짧게 나온 줄**(H-079)
 
 ★ **지표는 어디가 아픈지 말해 주지 않는다.** keep 0.962 는 「이름 하나가 사라졌다」 인데 어느 이름인지는
   숫자에 없다. 매번 손으로 캐내면 안 캐내게 된다 — 그러면 0.786 과 0.857 의 차이를 못 읽는다.
@@ -24,7 +25,14 @@ sys.path.insert(0, str(ROOT))
 from seshat import evaluate as ev  # noqa: E402
 from seshat import ontology  # noqa: E402
 
-WHAT = ("keep", "term", "hangul", "style", "all")
+WHAT = ("keep", "term", "hangul", "style", "short", "all")
+
+# ★ **누락은 아무 지표도 안 본다**(H-079 · DECISIONS §214). `hangul` 은 「원문의 세 배보다 길면」 만 보고
+#   **하한이 없다.** 2026-09-29 `keep` 이 잡은 다섯 줄 중 넷이 절 통째 누락이었는데, 규칙 지표 여섯이
+#   그 줄을 전부 통과시켰다 — 이름이 든 줄이라 우연히 보인 것이다.
+# ★ **선을 여기서 긋지 않는다**(§139). 이 갈래는 **가장 짧은 N 줄을 보여 줄 뿐**이고, 그 줄이 정말
+#   누락인지는 사람이 본다. 자로 쓸지는 H-079 가 그 판정으로 정한다.
+SHORT_N = 20
 
 
 def read(path: Path) -> tuple[dict, list[dict]]:
@@ -52,11 +60,28 @@ def keeps(meta: dict, rows: list[dict]) -> dict[str, list[str]]:
     return out
 
 
+def 짧은_줄(rows: list[dict], n: int = SHORT_N) -> list[tuple[str, dict, str]]:
+    """**원문 대비 번역이 가장 짧은 N 줄.** 이 셋의 가운데 비를 기준으로 얼마나 짧은지 같이 적는다.
+
+    ★ 글자 수로 잰다. 한국어는 영어보다 촘촘해서 비가 1 보다 작은 것이 정상이고, **정상값이
+      얼마인지는 셋마다 다르다** — 그래서 절대값이 아니라 **이 셋의 가운데**와 견준다.
+    """
+    잰 = [(len(r.get("out", "")) / max(len(r["src"]), 1), r) for r in rows if r.get("src")]
+    if not 잰:
+        return []
+    가운데 = sorted(x for x, _ in 잰)[len(잰) // 2]
+    잰.sort(key=lambda x: x[0])
+    return [("short", r, f"길이 비 {비:.2f} · 이 셋의 가운데 {가운데:.2f} 의 {비 / 가운데:.0%}")
+            for 비, r in 잰[:n]]
+
+
 def misses(meta: dict, rows: list[dict], what: str) -> list[tuple[str, dict, str]]:
     """(까닭, 줄, 자세히) — 까닭은 WHAT 의 이름이다."""
     onto = ontology.load()
     table = keeps(meta, rows) if what in ("keep", "all") else {}
     out = []
+    if what == "short":                  # **자가 아니라 눈이 볼 후보다** — 다른 까닭과 섞지 않는다
+        return 짧은_줄(rows)
     for r in rows:
         src, o = r["src"], r.get("out", "")
         if what in ("hangul", "all") and not ev.ko_line(src, o):
@@ -93,6 +118,9 @@ def main(argv: list[str]) -> int:
         print(f"\n  [{why}] {r.get('id')} — {detail}")
         print(f"    원문 {r['src']}")
         print(f"    번역 {r.get('out', '')[:300]}")
+    if a.what == "short" and found:
+        print(f"\n  ※ **후보다, 판정이 아니다.** 절이 통째로 빠진 줄을 눈으로 세고 그 수를 "
+              f"H-079 의 근거 칸에 적는다 — {SHORT_N} 중 10 이상이면 자로 삼는다(미리 그은 선)")
     return 0
 
 

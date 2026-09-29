@@ -146,11 +146,32 @@ def 절들(글: str | None = None) -> list[dict]:
     return out
 
 
+# ★ **줄 대장은 줄 단위로 문다**(DECISIONS §215). `hypotheses.md` 는 194 행짜리 대장이라 가설 하나를
+#   열고 닫을 때마다 바뀐다 — 그 파일을 짚은 절이 **전부 한꺼번에 무효**가 되고, 그 무효는 아홉 중
+#   여덟이 「내가 안 건드린 남의 행」 때문이다. **소음이 된 무효는 안 읽힌다**(§211 과 같은 규율).
+대장 = {"docs/next/hypotheses.md": r"^\| (H-\d+) \|"}
+
+
+def _대장_조각(자리: str, 본문: str, 글: str) -> str:
+    """절이 이름으로 부른 행만 남긴다. **아무 행도 안 부르면 그 파일은 지문 밖이다.**"""
+    번호 = set(re.findall(r"H-\d+", 본문))
+    if not 번호:
+        return ""
+    줄 = [x for x in 글.splitlines()
+          if (m := re.match(대장[자리], x)) and m.group(1) in 번호]
+    return _짧게("\n".join(줄)) if 줄 else ""
+
+
 def 지문(절: dict) -> str:
     """절 본문 + 그 절이 지목한 파일들의 로직. **둘 중 하나만 바뀌어도 도장이 무효다.**"""
     조각 = [_짧게(절["본문"])]
     for f in 절["파일"]:
         자리, _, 심볼 = f.partition("::")
+        if 자리 in 대장:
+            몫 = _대장_조각(자리, 절["본문"], (ROOT / 자리).read_text(encoding="utf-8"))
+            if 몫:
+                조각.append(f"{f}\0{몫}")
+            continue                      # 이름으로 안 부른 대장은 안 문다
         조각.append(f"{f}\0{로직_지문(ROOT / 자리, 심볼)}")
     return _짧게("\n".join(조각))
 
