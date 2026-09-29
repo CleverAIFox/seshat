@@ -285,7 +285,7 @@
  "131": {
   "날짜": "2026-09-27",
   "읽음": false,
-  "지문": "5217d3b9d2fa66e9",
+  "지문": "ac8a86b370e4e46c",
   "파일": [
    "tests/test_gate.py",
    ".github/workflows/gpu-eval.yml"
@@ -658,7 +658,7 @@
  "171": {
   "날짜": "2026-09-28",
   "읽음": false,
-  "지문": "f30c7fafb103b73a",
+  "지문": "901959f2e75d7c3c",
   "파일": [
    "seshat/ontology.py",
    "seshat/evaluate.py",
@@ -718,7 +718,7 @@
  "176": {
   "날짜": "2026-09-28",
   "읽음": false,
-  "지문": "105e95a736f4f9aa",
+  "지문": "3881f1b31570d816",
   "파일": [
    "data/scoreboard.toml",
    "docs/now/related.md"
@@ -1022,7 +1022,7 @@
  "207": {
   "날짜": "2026-09-29",
   "읽음": false,
-  "지문": "d5112ef16d048877",
+  "지문": "416a9e900c682d6d",
   "파일": [
    "data/scoreboard.toml",
    "tests/test_gate.py::test_까닭을_주면_셋을_갈아끼운다",
@@ -1168,7 +1168,7 @@
  "220": {
   "날짜": "2026-09-29",
   "읽음": false,
-  "지문": "ff29b702cc703fc6",
+  "지문": "8ee00609d8ce802d",
   "파일": [
    "tools/gate.py::_팔을_갈아끼운다",
    "tests/test_gate.py::test_까닭을_주면_팔을_갈아끼운다"

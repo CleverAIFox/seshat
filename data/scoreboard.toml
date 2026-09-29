@@ -18,13 +18,13 @@ note = "서빙 후보 — 이 기계에서 도는 4B"
 set = "data/domain/d002.jsonl"
 set_sha256 = "a6d283587bd846fc"
 onto_sha256 = "4a8d41c4302afc7b"  # 사전이 바뀌면 막지 않고 말한다(DECISIONS §32 · §96)
-arm = "gemma3-4b+ph+marks2+gloss2+retry+endings+terms"
-run = "H-078-rescore-H-077-H-077-떼어둔셋-20260928-225440-20260928-233851-20260929-115702"
-commit = "c75224e"
+arm = "gemma3-4b+ph+marks2+gloss2+retry2+endings+terms"
+run = "H-080-retry2-20260929-201747"
+commit = "a4e11b9"
 date = "2026-09-29"
-term_off = 0.9578
+term_off = 0.9543
 lit = 1.0
-keep = 0.9896
+keep = 0.9979
 style = 0.9833
 josa = 0.9895                           # **구성상 1.000 이던 지표다**(H-013 · DECISIONS §15) — 자리표시를
                                      # 되돌릴 때 끝소리로 조사를 골랐으므로. 떨어졌다는 것은 **이름이
@@ -42,6 +42,8 @@ metrics = "5"
 onto_score = "ec178d892d863721"
 moved_from = "f72846dd0b143d43"
 moved_why = "H-078 채택 — 떼어둔 셋에서 12B 대비 순서가 유지됐다(term_off +0.0715 [+0.0493, +0.0927] p<0.001)"
+swapped_from = "gemma3-4b+ph+marks2+gloss2+retry+endings+terms"
+swapped_why = "H-080 채택 — keep +0.0083 [+0.0020, +0.0175] p=0.028 을 얻고 term_off −0.0035 는 못 가른다(p=0.294)"
 accepted = "식별자 26 · 콘솔 라벨 67 을 지키는 대가로 개념 4 자리를 내준다. 이름이 증발하면 독자가 아무것도 못 하고, 용어가 동의어로 빗나가면 그래도 읽힌다"
 
 [[target]]

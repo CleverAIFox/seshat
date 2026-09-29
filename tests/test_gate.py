@@ -734,7 +734,9 @@ def test_팔이_다르면_update_는_그_줄을_아예_못_찾는다(tmp_path, m
     sb = _빈판(tmp_path, monkeypatch)
     옛 = G.load(sb)["record"][0]["arm"]
     G.main([_팔판(tmp_path, 옛, "a", term_off=0.9, lit=0.9, keep=0.98, josa=1.0), "--update"])
-    새 = 옛.replace("+retry+", "+retry2+")
+    # ★ **살아 있는 기록판에서 새 이름을 짓지 않는다**(§132 와 같은 병). 2026-09-29 기록판이
+    #   `+retry2` 로 갈리자 `replace` 가 아무것도 안 바꿔 이 시험이 제 꼬리를 물었다
+    새 = 옛 + "+아직없는처치"
     assert G.main([_팔판(tmp_path, 새, "b", term_off=0.9, lit=0.9, keep=0.99, josa=1.0), "--update"]) == 0
     assert "기록판에 없는 팔" in capsys.readouterr().out
     assert G.load(sb)["record"][0]["arm"] == 옛, "몰래 바뀌었다"
@@ -744,7 +746,12 @@ def test_까닭을_주면_팔을_갈아끼운다(tmp_path, monkeypatch, capsys):
     sb = _빈판(tmp_path, monkeypatch)
     옛 = G.load(sb)["record"][0]["arm"]
     G.main([_팔판(tmp_path, 옛, "a", term_off=0.9578, lit=1.0, keep=0.9896, josa=0.99), "--update"])
-    새 = 옛.replace("+retry+", "+retry2+")
+    새 = "gemma3-4b+ph+marks2+gloss2+retry2+endings+terms"      # 보호가 같은 실재 팔
+    옛_ = "gemma3-4b+ph+marks2+gloss2+retry+endings+terms"
+    _블록 = G.load(sb)["record"][0]
+    G._블록을_고친다("record", _블록["arm"], {"arm": 옛_}, path=sb)
+    G.main([_팔판(tmp_path, 옛_, "a2", term_off=0.9578, lit=1.0, keep=0.9896, josa=0.99), "--update"])
+    옛 = 옛_
     판 = _팔판(tmp_path, 새, "b", term_off=0.9543, lit=1.0, keep=0.9979, josa=0.99)
     assert G.main([판, "--swap-arm", "H-080 채택 — keep 을 얻고 term_off 는 못 가른다"]) == 0
     rec = G.load(sb)["record"][0]
@@ -769,7 +776,7 @@ def test_셋이_다르면_안_갈아끼운다(tmp_path, monkeypatch, capsys):
     sb = _빈판(tmp_path, monkeypatch)
     옛 = G.load(sb)["record"][0]["arm"]
     G.main([_팔판(tmp_path, 옛, "a", term_off=0.9, lit=0.9, keep=0.98, josa=1.0), "--update"])
-    새 = 옛.replace("+retry+", "+retry2+")
+    새 = 옛 + "+아직없는처치"
     판 = _팔판(tmp_path, 새, "b", term_off=0.9, lit=0.9, keep=0.99, josa=1.0)
     import json as _j
     줄 = [_j.loads(x) for x in pathlib.Path(판).read_text(encoding="utf-8").splitlines()]
