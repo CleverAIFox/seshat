@@ -43,7 +43,7 @@ bash tools/apply_patch.sh                # INBOX 의 안 붙은 seshat-*.patch �
 | 레이크는 넣기만 한다 · 대장 밖을 짚는다 · 가설의 근거가 레이크에 있다 | `tools/lake.py::check` · `tests/test_lake.py` |
 | 데이터는 전부 카탈로그에 있다 · 미확인 라이선스는 학습에 못 쓴다 | `tools/check_catalog.py` · `seshat/catalog.py::validate` · `tests/test_catalog.py` |
 | **사전 지문은 채점기가 읽는 칸만 해싱한다**(`onto_score`). 주석 · `src` · `ko_ref` 를 고치는 것은 **뜻이 안 바뀐 편집**이고 옛 판을 막으면 안 된다. 옛 판과는 안 갈라선다 — 둘 다 그 칸을 들었을 때만 새 축으로 묻는다(DECISIONS §171) | `seshat/ontology.py::채점_지문` · `seshat/compare.py::사전축` · `tests/test_compare.py` |
-| **셋은 어느 사전으로 만들어졌는지를 든다**(`onto_score`). 셋의 `keep` · `lit` · `ui` 자리는 만들 때의 사전이 찍은 것이라 사전이 넓어져도 안 늘어난다 — 판마다 `set_stale` 이 그것을 말한다(DECISIONS §171 · PLAN #36) | `tools/fetch_awsdocs.py` · `seshat/evaluate.py::셋이_낡았나` · `tests/test_noise.py` |
+| **셋은 어느 사전으로 만들어졌는지를 든다**(`onto_score`). 셋의 `keep` · `lit` · `ui` 자리는 만들 때의 사전이 찍은 것이라 사전이 넓어져도 안 늘어난다 — 판마다 `set_stale` 이 그것을 말한다(DECISIONS §171 · §207) | `tools/fetch_awsdocs.py` · `seshat/evaluate.py::셋이_낡았나` · `tests/test_noise.py` |
 | **기록판은 손으로 안 고친다 — 선 줄도 그렇다.** 기록은 `--update`, 선은 `--pin-target` 이 판에서 박는다(DECISIONS §171) | `tools/gate.py::_블록을_고친다` · `tools/gate.py::_선을_박는다` · `tests/test_gate.py` |
 | **점수를 내는 셋에서 캔 노드는 누수 장부에 적는다.** 출처를 사전 안에 적지 않는다 — 적으면 `onto_sha256` 이 바뀌어 **뜻이 안 바뀐 편집이 옛 판을 전부 막는다**(DECISIONS §168) | `data/ontology/mined.jsonl` · `tools/check_ontology.py` · `tools/mine_terms.py` 의 거절 · `tests/test_mined.py` |
 | **차이가 잡음인지는 손으로 안 정한다.** 허용치 · 배수 · 중앙값을 사람이 그으면 자가 변수에 안 맞는다 — 2026-09-28 하루에 세 번 틀렸다(§139 · §178 · §179). 짝지은 부트스트랩이 **크기와 확실함을 따로** 준다(DECISIONS §180) | `tools/bootstrap.py` · `tests/test_bootstrap.py` · `verify.sh` 의 `bootstrap` 단계 |

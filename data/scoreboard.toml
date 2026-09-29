@@ -15,18 +15,18 @@
 
 [[record]]
 note = "서빙 후보 — 이 기계에서 도는 4B"
-set = "data/domain/d001.jsonl"
-set_sha256 = "f72846dd0b143d43"  # 표시를 든 d001 로 다시 만든 판. --update 가 박는다
+set = "data/domain/d002.jsonl"
+set_sha256 = "a6d283587bd846fc"
 onto_sha256 = "4a8d41c4302afc7b"  # 사전이 바뀌면 막지 않고 말한다(DECISIONS §32 · §96)
 arm = "gemma3-4b+ph+marks2+gloss2+retry+endings+terms"
-run = "H-073-넓은사전-20260928-173121"
-commit = "7c4f2c3"
-date = "2026-09-28"
-term_off = 0.9532
-lit = 0.993
-keep = 0.9979
-style = 0.9667
-josa = 1.0                           # **구성상 1.000 이던 지표다**(H-013 · DECISIONS §15) — 자리표시를
+run = "H-078-rescore-H-077-H-077-떼어둔셋-20260928-225440-20260928-233851-20260929-115702"
+commit = "c75224e"
+date = "2026-09-29"
+term_off = 0.9578
+lit = 1.0
+keep = 0.9896
+style = 0.9833
+josa = 0.9895                           # **구성상 1.000 이던 지표다**(H-013 · DECISIONS §15) — 자리표시를
                                      # 되돌릴 때 끝소리로 조사를 골랐으므로. 떨어졌다는 것은 **이름이
                                      # 자리표시를 안 거치고 나온 길이 생겼다**는 뜻이다(§143 · H-061).
                                      # 까닭을 알기 전에 먼저 막는다 — 더 미끄러지는 것을 막는 데는
@@ -38,39 +38,42 @@ tol = 0.0                            # **잰 값이다 — 같은 팔 판 넷 ·
                                      # 아니다. 기계 · ollama 가 바뀌면 `tools/noise.py` 로 다시 잰다
 tol_run = ["H-056-대조-a-20260928-030639", "H-056-대조-b-20260928-031737",
            "H-058-대조-c-20260928-100400", "H-058-대조-d-20260928-101527"]
-metrics = "3"
+metrics = "5"
+onto_score = "ec178d892d863721"
+moved_from = "f72846dd0b143d43"
+moved_why = "H-078 채택 — 떼어둔 셋에서 12B 대비 순서가 유지됐다(term_off +0.0715 [+0.0493, +0.0927] p<0.001)"
 accepted = "식별자 26 · 콘솔 라벨 67 을 지키는 대가로 개념 4 자리를 내준다. 이름이 증발하면 독자가 아무것도 못 하고, 용어가 동의어로 빗나가면 그래도 읽힌다"
 
 [[target]]
 note = "배포본 — thoth 가 지금 쓰는 것. 이것을 넘어야 engine=http 슬롯이 열린다(thoth PLAN #59)"
-set = "data/domain/d001.jsonl"
+set = "data/domain/d002.jsonl"
 arm = "nova-lite (thoth 워커)"
-run = "H-074-rescore-H-050-nova-d001-20260927-181909-20260928-193948"
-metrics = "3"                        # 선도 같은 자로 잰 것이어야 한다(DECISIONS §147)
-term_off = 0.8859
-lit = 0.9225
-term_bad = 0.0061                    # 옛 자는 0 이라고 했다 — 새 자가 오역 6건을 처음 봤다(§148)
-ui = 0.1951
-keep = 0.9789
-style = 0.9833
-set_sha256 = "f72846dd0b143d43"
+run = "H-078-rescore-H-077-nova-20260928-232957-20260929-115919"
+metrics = "5"                        # 선도 같은 자로 잰 것이어야 한다(DECISIONS §147)
+term_off = 0.8839
+lit = 0.9113
+term_bad = 0.0023                    # 옛 자는 0 이라고 했다 — 새 자가 오역 6건을 처음 봤다(§148)
+ui = 0.1889
+keep = 0.9812
+style = 0.9917
+set_sha256 = "a6d283587bd846fc"
 onto_sha256 = "4a8d41c4302afc7b"
 onto_score = "ec178d892d863721"
-date = "2026-09-28"
+date = "2026-09-29"
 
 [[target]]
 note = "체급 — 6GB 에 안 올라간다. 살 값어치를 재는 선이다"
-set = "data/domain/d001.jsonl"
+set = "data/domain/d002.jsonl"
 arm = "gemma3-12b+ph+retry+endings+terms"
-run = "H-074-rescore-H-045-12b-d001-20260927-135211-20260928-193950"
-metrics = "3"                        # 선도 같은 자로 잰 것이어야 한다(DECISIONS §147)
-term_off = 0.8931
-lit = 0.8944
-ui = 0.2683
+run = "H-078-12b-20260929-115339"
+metrics = "5"                        # 선도 같은 자로 잰 것이어야 한다(DECISIONS §147)
+term_off = 0.8863
+lit = 0.8952
+ui = 0.2667
 term_bad = 0.0
-keep = 0.9958
-style = 0.9683
-set_sha256 = "f72846dd0b143d43"
+keep = 1.0
+style = 0.9867
+set_sha256 = "a6d283587bd846fc"
 onto_sha256 = "4a8d41c4302afc7b"
 onto_score = "ec178d892d863721"
-date = "2026-09-28"
+date = "2026-09-29"

@@ -369,7 +369,7 @@ def main(argv: list[str] | None = None) -> int:
             "made_by": "tools/fetch_awsdocs.py",
             # ★ **떼어둔 셋인가** — 어느 셋과 안 겹치는지 적는다(DECISIONS §188 · §192)
             **({"held_out_from": list(a.exclude)} if a.exclude else {}),
-            # ★ **어느 사전으로 만든 셋인가**(DECISIONS §171 · PLAN #36). `keep` 자리는 이 셋을 만들 때의
+            # ★ **어느 사전으로 만든 셋인가**(DECISIONS §171 · DECISIONS §207). `keep` 자리는 이 셋을 만들 때의
             #   온톨로지가 찍은 것이라 **사전이 넓어져도 안 늘어난다** — 2026-09-28 사전에 `AWS` 를 넣었는데
             #   `keep` 이 한 자리도 안 움직인 것이 그 자국이다(§166). 종전에는 **이 사실이 아무 데도
             #   안 적혀 있어서** 셋이 썩는 것을 아무도 못 봤다. 이제 적고, `evaluate` 가 어긋나면 말한다

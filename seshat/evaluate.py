@@ -234,7 +234,7 @@ def 문체_밖(셋: pathlib.Path) -> set[str]:
 
 
 def 셋의_사전(path: str | pathlib.Path) -> str | None:
-    """셋을 **만들 때의 채점 지문**. 없으면 None — 옛 셋이다(DECISIONS §171 · PLAN #36)."""
+    """셋을 **만들 때의 채점 지문**. 없으면 None — 옛 셋이다(DECISIONS §171 · §207)."""
     p = pathlib.Path(path)
     if not p.exists():
         return None
@@ -250,7 +250,7 @@ def 셋이_낡았나(path: str | pathlib.Path) -> bool | None:
 
     ★ **셋의 `keep` · `lit` · `ui` 자리는 만들 때의 사전이 찍은 것이다.** 사전을 넓혀도 그 자리는
       안 늘어난다 — 2026-09-28 사전에 `AWS` 를 넣었는데 `keep` 이 한 자리도 안 움직였다(§166).
-      **분모가 옛 사전에 묶여 있다**는 뜻이고, 그것이 PLAN #36 이다.
+      **분모가 옛 사전에 묶여 있다**는 뜻이다 — 그 빚은 주 셋을 `d002` 로 옮기며 해소됐다(DECISIONS §207).
     ★ **「모른다」 를 「같다」 로 치지 않는다**(§110). 옛 셋에는 이 칸이 없으므로 None 이고,
       None 은 판 머리줄에 **그대로 실린다** — 0 이나 False 로 뭉개면 낡은 것이 안 보인다.
     """
@@ -567,7 +567,7 @@ def conditions(a, rows: list[dict], 코드: dict | None = None) -> dict:
            "set_sha256": set_sha256(a.set),
            "onto_sha256": onto_sha256(),
            "onto_score": onto_score_sha256(),   # 채점기가 읽는 칸만(§171)
-           # ★ **셋이 어느 사전으로 만들어졌나**(PLAN #36). True 면 `keep` · `lit` · `ui` 의
+           # ★ **셋이 어느 사전으로 만들어졌나**(DECISIONS §207). True 면 `keep` · `lit` · `ui` 의
            #   분모가 옛 사전에 묶여 있다. **None 은 「모른다」** — 옛 셋에는 이 칸이 없다(§110)
            "set_onto": 셋의_사전(a.set),
            "set_stale": 셋이_낡았나(a.set),

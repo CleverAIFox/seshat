@@ -673,3 +673,44 @@ def test_선도_같이_옮긴다(tmp_path, monkeypatch, capsys):
     assert "--move-set" in capsys.readouterr().err, "막으면서 넘는 길을 안 준다"
     assert G.main([판, "--pin-target", 선팔, "--move-set", "H-078 채택"]) == 0
     assert G.load(sb)["target"][0]["set_sha256"] == "셋2"
+
+
+def test_옛_값을_가리키는_주석은_같이_지운다(tmp_path, monkeypatch):
+    """★ 값을 옮기면서 **그 값에 대한 말**을 안 옮기면 주석이 거짓말한다(DECISIONS §208).
+
+    2026-09-29 주 셋을 `d002` 로 옮겼더니 `set_sha256` 옆에 「표시를 든 **d001** 로 다시 만든 판」 이
+    그대로 남아 `d002` 의 해시를 `d001` 이라고 설명했다.
+    """
+    p = tmp_path / "sb.toml"
+    p.write_text('[[record]]\narm = "a"\n'
+                 'set = "data/domain/d001.jsonl"  # 표시를 든 d001 로 다시 만든 판\n'
+                 'onto_sha256 = "x"  # 사전이 바뀌면 막지 않고 말한다\n', encoding="utf-8")
+    monkeypatch.setattr(G.catalog, "gate", lambda *a, **k: None)
+    G._블록을_고친다("record", "a", {"set": "data/domain/d002.jsonl", "onto_sha256": "y"}, path=p)
+    글 = p.read_text(encoding="utf-8")
+    assert "d001" not in 글, 글                      # 값에 대한 말은 갔다
+    assert "사전이 바뀌면 막지 않고 말한다" in 글    # 규칙에 대한 말은 남는다
+
+
+def test_값이_같으면_주석도_남는다(tmp_path, monkeypatch):
+    """지우는 쪽으로 기울되 **안 바뀐 값의 주석까지 걷어내지는 않는다.**"""
+    p = tmp_path / "sb.toml"
+    p.write_text('[[record]]\narm = "a"\nterm_off = 0.95  # H-013 에서 잰 값이다\n', encoding="utf-8")
+    monkeypatch.setattr(G.catalog, "gate", lambda *a, **k: None)
+    G._블록을_고친다("record", "a", {"term_off": 0.96}, path=p)
+    assert "H-013" in p.read_text(encoding="utf-8")
+
+
+def test_선을_박으면_셋_자리도_같이_박힌다(tmp_path, monkeypatch, capsys):
+    """★ 문은 「선도 같은 셋인가」 를 `set` 으로 묻는다(DECISIONS §209).
+
+    2026-09-29 주 셋을 옮기니 기록은 `d002` · 선은 `set_sha256` 만 `d002` 이고 `set` 은 `d001` 인
+    채로 남았다. 그러면 **선까지의 차가 조용히 안 찍힌다** — 막지도 않고 말하지도 않는다.
+    """
+    sb = _빈판(tmp_path, monkeypatch)
+    선팔 = G.load(sb)["target"][0]["arm"]
+    판 = _옮길판(tmp_path, 선팔, "H-999-t", "셋2", term_off=0.88, lit=0.9, keep=1.0, style=0.98)
+    assert G.main([판, "--pin-target", 선팔, "--move-set", "H-078 채택"]) == 0
+    t = G.load(sb)["target"][0]
+    assert t["set_sha256"] == "셋2"
+    assert t["set"] == "data/domain/새셋.jsonl", "해시만 갈고 자리를 안 갈았다"

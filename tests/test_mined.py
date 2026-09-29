@@ -47,11 +47,25 @@ def test_장부의_id_가_사전에_있다():
         assert ontology.MINED_FROM.fullmatch(d["mined_from"])
 
 
-def _잰셋() -> str:
-    """장부가 든 셋의 자리. **파일이 거기 있다고 치지 않는다** — `data/domain/` 은 저장소에 없다."""
+def _캔셋() -> str:
+    """**사전을 캔 셋**의 자리. 장부가 든다 — `data/domain/` 은 저장소에 없으므로 이름만 쓴다."""
     장부 = ontology.누수_장부()
     assert 장부, "누수 장부가 비었다"
     return sorted(d["mined_from"] for d in 장부)[0]
+
+
+def _점수셋() -> str:
+    """**지금 점수를 내는 셋**의 자리. 기록판이 든다(DECISIONS §207).
+
+    ★ **캔 셋과 점수를 내는 셋은 다른 물음이다.** 2026-09-29 주 셋이 `d002` 로 옮겨가면서 둘이
+      갈렸다 — `d001` 은 캔 셋이고 이제 점수를 안 내며, `d002` 는 점수를 내고 캔 적이 없다.
+      시험이 둘을 한 이름으로 부르고 있어서 옮기는 날 빨개졌다.
+    """
+    import tomllib
+    board = tomllib.loads((ROOT / "data/scoreboard.toml").read_text(encoding="utf-8"))
+    셋 = {r.get("set") for r in board.get("record", []) if r.get("set")}
+    assert 셋, "기록판에 셋이 없다"
+    return sorted(셋)[0]
 
 
 def test_판이_누수를_싣는다(tmp_path):
@@ -70,7 +84,7 @@ def test_판이_누수를_싣는다(tmp_path):
     got = evaluate.conditions(A(), [{"src": "a"}], {"commit": "0" * 7, "dirty": False})
     assert got["onto_leak"] == 0, "딴 자리의 같은 이름은 그 셋이 아니다"
 
-    잰 = _잰셋()
+    잰 = _캔셋()
     assert len(ontology.캔_노드(잰)) > 0, f"{잰} 은 지금 누수가 있는 셋이다 — 0 이 되면 #37 이 갚아졌다(§192)"
     assert len(ontology.캔_노드("data/domain/안캔셋.jsonl")) == 0
 
@@ -80,7 +94,7 @@ def test_mine_terms_가_점수를_내는_셋을_거절한다(tmp_path):
 
     ★ 거절은 **파일을 열기 전**에 난다 — 그래서 셋이 저장소에 없어도 이 시험은 돈다.
     """
-    r = subprocess.run([sys.executable, str(ROOT / "tools/mine_terms.py"), _잰셋(), "--top", "1"],
+    r = subprocess.run([sys.executable, str(ROOT / "tools/mine_terms.py"), _점수셋(), "--top", "1"],
                        capture_output=True, text=True)
     assert r.returncode == 1, "기록판에 오른 셋인데 그냥 돌았다"
     assert "점수를 내는 셋" in r.stderr
@@ -89,7 +103,7 @@ def test_mine_terms_가_점수를_내는_셋을_거절한다(tmp_path):
 
 def test_알면서_캐면_장부에_적을_줄을_찍어_준다(tmp_path):
     """★ **막는 것보다 적게 만드는 것이 낫다**(§168). 못 캐게 하면 딴 길로 캔다."""
-    잰 = _잰셋()
+    잰 = _점수셋()
     셋 = tmp_path / pathlib.Path(잰).name
     셋.parent.mkdir(parents=True, exist_ok=True)
     셋.write_text(json.dumps({"src": "Use the Amazon S3 console to create a bucket."},

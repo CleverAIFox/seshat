@@ -197,6 +197,19 @@ def _쓴다(run: str, rec: dict, head: dict, 오른: dict, path: pathlib.Path | 
     _블록을_고친다("record", rec["arm"], 새값, path)
 
 
+def _낡은_주석인가(주석: str, 옛값: str) -> bool:
+    """이 주석이 **바뀐 값을 가리키고 있나**(DECISIONS §208).
+
+    ★ 주석에는 두 가지가 섞여 산다 — **이 값에 대한 말**(「표시를 든 d001 로 다시 만든 판」)과
+      **규칙에 대한 말**(「사전이 바뀌면 막지 않고 말한다」). 앞엣것은 값이 바뀌면 **거짓말이 되고**
+      뒤엣것은 그대로 참이다. 기계가 가를 수 있는 것은 **옛 값을 글자로 들고 있나** 하나뿐이다.
+    ★ 못 가르는 쪽으로 틀리면 거짓 주석이 남는다. **가르는 쪽으로 틀리면 참말 하나를 잃는다** —
+      잃는 쪽이 낫다. 기록판의 주석은 이력이 들고 있다.
+    """
+    조각 = [x for x in (옛값 or "").replace("/", " ").replace(".", " ").split() if len(x) >= 4]
+    return any(x in 주석 for x in 조각)
+
+
 def _블록을_고친다(표: str, arm: str, 새값: dict, path: pathlib.Path | None = None) -> None:
     """`[[표]]` 중 `arm` 이 맞는 블록의 칸을 고쳐 쓴다. **기록판을 고치는 유일한 자리다.**
 
@@ -218,6 +231,11 @@ def _블록을_고친다(표: str, arm: str, 새값: dict, path: pathlib.Path | 
             #   2026-09-28 한 줄을 고쳐 쓰면서 `#` 앞 공백을 두 칸으로 뭉개 이어지는 주석 줄과
             #   어긋나게 만들었다. 고쳐 쓰는 도구가 **읽는 모양을 망가뜨리면 안 된다**
             앞, _, 뒤 = 줄[i].partition("#")
+            # ★ **옛 값을 가리키는 주석은 같이 지운다**(DECISIONS §208). 2026-09-29 주 셋을 옮기니
+            #   `set_sha256` 옆에 「표시를 든 d001 로 다시 만든 판」 이 그대로 남아 **d002 의 해시를
+            #   d001 이라고 설명했다.** 값을 옮기는 도구가 그 값에 대한 말을 안 옮기면 거짓이 된다
+            if 뒤 and _낡은_주석인가(뒤, str(앞.split("=", 1)[1].strip() if "=" in 앞 else "")):
+                뒤 = ""
             새줄 = f"{k} = {json.dumps(v, ensure_ascii=False)}"
             줄[i] = (새줄 + " " * max(1, len(앞) - len(새줄)) + "#" + 뒤) if 뒤 else 새줄
     # ★ **없는 키는 만든다.** 종전에는 있는 줄만 고쳐 썼다 — 그래서 새로 생긴 `metrics` 가 영영
@@ -266,6 +284,10 @@ def _선을_박는다(run: str | None, arm: str, board: dict, 옮김: str = "") 
     값 = {m: 재(head[m]) for m in ("term_off", "lit", "ui", "term_bad", "keep", "style")
           if isinstance(head.get(m), (int, float))}
     새값 = {**값, "run": pathlib.Path(run).stem, "metrics": head.get("metrics", ""),
+            # ★ **해시만 박고 자리를 안 박으면 선이 기록과 딴 셋을 든다**(DECISIONS §209). 문은
+            #   「선도 같은 셋인가」 를 `set` 으로 묻는데, 여기서 `set_sha256` 만 갈아 끼우면
+            #   그 물음이 영영 거짓이 되고 **선까지의 차가 조용히 안 찍힌다**
+            **({"set": head["set"]} if head.get("set") else {}),
             # ★ **다음 판은 해시로 묻게 한다.** 선 줄이 자리만 들고 있어서 이 물음이 갈렸다(§173)
             **({"set_sha256": head["set_sha256"]} if head.get("set_sha256") else {}),
             "onto_sha256": head.get("onto_sha256", ""), "onto_score": head.get("onto_score", ""),
