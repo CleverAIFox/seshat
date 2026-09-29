@@ -94,7 +94,10 @@ def test_못_견주는_둘은_거절한다(tmp_path, capsys):
     나.write_text(json.dumps({"meta": True, "set_sha256": "셋", "metrics": "3",
                               "onto_sha256": "사전"}) + "\n", encoding="utf-8")
     assert bs.main([str(가), str(나), "--set", "x"]) == 1
-    assert "자가 바뀌었다" in capsys.readouterr().err
+    말 = capsys.readouterr().err
+    assert "자가 바뀌었다" in 말
+    # ★ **막으면서 넘는 길을 준다**(DECISIONS §202) — 옛 판은 줄을 들고 있으니 다시 채점하면 된다
+    assert "rescore.py" in 말, "막기만 하고 어떻게 견줄지를 안 말한다"
 
 
 def test_낮을수록_좋은_지표의_부호를_안다():
