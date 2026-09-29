@@ -616,7 +616,9 @@ def _옮길판(tmp_path, arm, 이름, 셋해시, **값):
 
 def _빈판(tmp_path, monkeypatch):
     sb = tmp_path / "sb.toml"
-    sb.write_text(re.sub(r'^(set_sha256|onto_sha256) = "[^"]*"', r'\1 = ""',
+    # ★ `onto_score` 도 비운다 — 안 비우면 저장소의 실제 지문과 시험의 가짜 지문이 갈려
+    #   갈아끼움이 「채점하는 칸이 바뀌었다」 로 막힌다(DECISIONS §220 을 세우며 걸렸다)
+    sb.write_text(re.sub(r'^(set_sha256|onto_sha256|onto_score) = "[^"]*"', r'\1 = ""',
                          (ROOT / "data/scoreboard.toml").read_text(encoding="utf-8"), flags=re.M),
                   encoding="utf-8")
     monkeypatch.setattr(G, "PATH", sb)
@@ -714,3 +716,65 @@ def test_선을_박으면_셋_자리도_같이_박힌다(tmp_path, monkeypatch, 
     t = G.load(sb)["target"][0]
     assert t["set_sha256"] == "셋2"
     assert t["set"] == "data/domain/새셋.jsonl", "해시만 갈고 자리를 안 갈았다"
+
+
+# ---------- 팔을 갈아끼운다(DECISIONS §220) ----------
+
+def _팔판(tmp_path, arm, 이름, **값):
+    p = tmp_path / f"{이름}.jsonl"
+    p.write_text(json.dumps({"meta": True, "backend": arm, "set": "data/domain/d.jsonl",
+                             "set_sha256": "셋1", "onto_sha256": "사전1", "onto_score": "채점1",
+                             "metrics": 자, "commit": "abc1234", **값}, ensure_ascii=False) + "\n",
+                 encoding="utf-8")
+    return str(p)
+
+
+def test_팔이_다르면_update_는_그_줄을_아예_못_찾는다(tmp_path, monkeypatch, capsys):
+    """★ **조용히 끝나는 것이 가장 나쁘다** — 막지도 않고 박지도 않는다(DECISIONS §220)."""
+    sb = _빈판(tmp_path, monkeypatch)
+    옛 = G.load(sb)["record"][0]["arm"]
+    G.main([_팔판(tmp_path, 옛, "a", term_off=0.9, lit=0.9, keep=0.98, josa=1.0), "--update"])
+    새 = 옛.replace("+retry+", "+retry2+")
+    assert G.main([_팔판(tmp_path, 새, "b", term_off=0.9, lit=0.9, keep=0.99, josa=1.0), "--update"]) == 0
+    assert "기록판에 없는 팔" in capsys.readouterr().out
+    assert G.load(sb)["record"][0]["arm"] == 옛, "몰래 바뀌었다"
+
+
+def test_까닭을_주면_팔을_갈아끼운다(tmp_path, monkeypatch, capsys):
+    sb = _빈판(tmp_path, monkeypatch)
+    옛 = G.load(sb)["record"][0]["arm"]
+    G.main([_팔판(tmp_path, 옛, "a", term_off=0.9578, lit=1.0, keep=0.9896, josa=0.99), "--update"])
+    새 = 옛.replace("+retry+", "+retry2+")
+    판 = _팔판(tmp_path, 새, "b", term_off=0.9543, lit=1.0, keep=0.9979, josa=0.99)
+    assert G.main([판, "--swap-arm", "H-080 채택 — keep 을 얻고 term_off 는 못 가른다"]) == 0
+    rec = G.load(sb)["record"][0]
+    assert rec["arm"] == 새 and rec["keep"] == 0.9979
+    # ★ **떨어진 값도 그대로 박힌다** — 대신 그만큼 문이 느슨해졌다고 말한다
+    assert rec["term_off"] == 0.9543
+    assert rec["swapped_from"] == 옛 and "H-080" in rec["swapped_why"]
+    assert "느슨" in capsys.readouterr().out
+
+
+def test_보호가_다른_팔로는_안_갈아끼운다(tmp_path, monkeypatch, capsys):
+    """★ 보호가 다르면 같은 칸의 수가 **뜻을 바꾼다**(§156)."""
+    sb = _빈판(tmp_path, monkeypatch)
+    옛 = G.load(sb)["record"][0]["arm"]
+    G.main([_팔판(tmp_path, 옛, "a", term_off=0.9, lit=0.9, keep=0.98, josa=1.0), "--update"])
+    판 = _팔판(tmp_path, "aws-translate", "b", term_off=0.9, lit=0.9, keep=0.98, josa=1.0)
+    assert G.main([판, "--swap-arm", "까닭"]) == 1
+    assert "지키는 지표가 다르다" in capsys.readouterr().err
+
+
+def test_셋이_다르면_안_갈아끼운다(tmp_path, monkeypatch, capsys):
+    sb = _빈판(tmp_path, monkeypatch)
+    옛 = G.load(sb)["record"][0]["arm"]
+    G.main([_팔판(tmp_path, 옛, "a", term_off=0.9, lit=0.9, keep=0.98, josa=1.0), "--update"])
+    새 = 옛.replace("+retry+", "+retry2+")
+    판 = _팔판(tmp_path, 새, "b", term_off=0.9, lit=0.9, keep=0.99, josa=1.0)
+    import json as _j
+    줄 = [_j.loads(x) for x in pathlib.Path(판).read_text(encoding="utf-8").splitlines()]
+    줄[0]["set_sha256"] = "셋2"
+    pathlib.Path(판).write_text("\n".join(_j.dumps(x, ensure_ascii=False) for x in 줄) + "\n",
+                                encoding="utf-8")
+    assert G.main([판, "--swap-arm", "까닭"]) == 1
+    assert "셋이 다르다" in capsys.readouterr().err

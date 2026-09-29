@@ -285,7 +285,7 @@
  "131": {
   "날짜": "2026-09-27",
   "읽음": false,
-  "지문": "c81fe61761b8ab2a",
+  "지문": "5217d3b9d2fa66e9",
   "파일": [
    "tests/test_gate.py",
    ".github/workflows/gpu-eval.yml"
@@ -480,7 +480,7 @@
  "153": {
   "날짜": "2026-09-28",
   "읽음": false,
-  "지문": "9cd1a25cfa1e3620",
+  "지문": "aaba9cc33ed1b2fc",
   "파일": [
    "docs/now/related.md"
   ]
@@ -556,7 +556,7 @@
  "161": {
   "날짜": "2026-09-28",
   "읽음": false,
-  "지문": "42792e0004677eb7",
+  "지문": "058374a5fd9c4d67",
   "파일": [
    "docs/now/related.md",
    "tools/check_docs.py"
@@ -600,7 +600,7 @@
  "166": {
   "날짜": "2026-09-28",
   "읽음": false,
-  "지문": "b48cd0e90b49c970",
+  "지문": "c9ba580021d3bfee",
   "파일": [
    "docs/now/related.md"
   ]
@@ -608,7 +608,7 @@
  "167": {
   "날짜": "2026-09-28",
   "읽음": false,
-  "지문": "284b659b07d2a295",
+  "지문": "2150f2537391ef7e",
   "파일": [
    "docs/now/related.md"
   ]
@@ -627,7 +627,7 @@
  "169": {
   "날짜": "2026-09-28",
   "읽음": false,
-  "지문": "3e0492175602ee7e",
+  "지문": "e675e3c861b5414b",
   "파일": [
    "seshat/compare.py",
    "tools/gate.py",
@@ -658,7 +658,7 @@
  "171": {
   "날짜": "2026-09-28",
   "읽음": false,
-  "지문": "36e49d1d82b62f5f",
+  "지문": "f30c7fafb103b73a",
   "파일": [
    "seshat/ontology.py",
    "seshat/evaluate.py",
@@ -718,7 +718,7 @@
  "176": {
   "날짜": "2026-09-28",
   "읽음": false,
-  "지문": "d17da0a5aeec9152",
+  "지문": "78112569fa0ba251",
   "파일": [
    "data/scoreboard.toml",
    "docs/now/related.md"
@@ -754,7 +754,7 @@
  "180": {
   "날짜": "2026-09-28",
   "읽음": false,
-  "지문": "c51b875de99f6310",
+  "지문": "3c3ab8148a029843",
   "파일": [
    "tools/bootstrap.py",
    "tests/test_bootstrap.py",
@@ -765,7 +765,7 @@
  "181": {
   "날짜": "2026-09-28",
   "읽음": false,
-  "지문": "557900a10553898b",
+  "지문": "c0a574df1db4f2ac",
   "파일": [
    "tools/bootstrap.py",
    "docs/now/related.md"
@@ -774,7 +774,7 @@
  "182": {
   "날짜": "2026-09-28",
   "읽음": false,
-  "지문": "6ae4e9947e67f9ed",
+  "지문": "41ec4402ea4087be",
   "파일": [
    "seshat/backends.py",
    "tools/bootstrap.py",
@@ -793,7 +793,7 @@
  "184": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "1f1fdd218a0ce1b8",
+  "지문": "99e290e47725013d",
   "파일": [
    "docs/now/related.md",
    "tools/bootstrap.py"
@@ -802,7 +802,7 @@
  "185": {
   "날짜": "2026-09-28",
   "읽음": false,
-  "지문": "b144f0bbcc854f13",
+  "지문": "e76c3add3bc6ca9a",
   "파일": [
    "tools/bootstrap.py",
    "docs/now/related.md"
@@ -821,7 +821,7 @@
  "187": {
   "날짜": "2026-09-28",
   "읽음": false,
-  "지문": "ee48986a7a0b4d2a",
+  "지문": "3df8380d32cc2615",
   "파일": [
    "tools/check_docs.py::check_plan",
    "docs/now/related.md"
@@ -878,7 +878,7 @@
  "192": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "36fc1860f45a3972",
+  "지문": "e408000b17f6c09e",
   "파일": [
    "docs/now/related.md",
    "seshat/evaluate.py"
@@ -1022,7 +1022,7 @@
  "207": {
   "날짜": "2026-09-29",
   "읽음": false,
-  "지문": "58a03438919e1da8",
+  "지문": "129b130eaea12426",
   "파일": [
    "data/scoreboard.toml",
    "tests/test_gate.py::test_까닭을_주면_셋을_갈아끼운다",
@@ -1127,7 +1127,7 @@
  "217": {
   "날짜": "2026-09-29",
   "읽음": false,
-  "지문": "4582776cb4913065",
+  "지문": "e1842595c8b162e0",
   "파일": [
    "tools/docseal.py",
    "docs/next/PLAN.md",
@@ -1137,7 +1137,7 @@
  "218": {
   "날짜": "2026-09-29",
   "읽음": false,
-  "지문": "51c8b98ac1e78f13",
+  "지문": "8c2d5d97be84a996",
   "파일": [
    "seshat/backends.py::이름을_박아_묻는다",
    "tests/test_backends.py::test_되묻기가_다_실패하면_이름을_박아_한_번_더_묻는다",
@@ -1147,7 +1147,7 @@
  "219": {
   "날짜": "2026-09-29",
   "읽음": false,
-  "지문": "5dd6e0c6f6b3459c",
+  "지문": "668b634514ac2cf5",
   "파일": [
    "tests/test_backends.py::test_되묻기가_다_실패하면_이름을_박아_한_번_더_묻는다",
    "tools/docseal.py::_대장_조각",
@@ -1163,6 +1163,15 @@
    "tests/test_catalog.py::test_미확인_라이선스는_학습에_못_쓴다",
    "tests/test_catalog.py::test_쓰임이_문이다",
    "tests/test_lake.py::test_카탈로그에_없는_자리에는_못_넣는다"
+  ]
+ },
+ "220": {
+  "날짜": "2026-09-29",
+  "읽음": false,
+  "지문": "f3277dfb6b82fa0e",
+  "파일": [
+   "tools/gate.py::_팔을_갈아끼운다",
+   "tests/test_gate.py::test_까닭을_주면_팔을_갈아끼운다"
   ]
  },
  "23": {

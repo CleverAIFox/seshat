@@ -32,7 +32,7 @@ import tomllib
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
-from seshat import catalog, compare  # noqa: E402
+from seshat import backends, catalog, compare  # noqa: E402
 
 PATH = ROOT / "data/scoreboard.toml"
 
@@ -350,6 +350,57 @@ def _셋을_옮긴다(run: str | None, arm: str | None, board: dict, 까닭: str
     return 0
 
 
+def _팔을_갈아끼운다(run: str | None, 옛팔: str | None, board: dict, 까닭: str) -> int:
+    """**기록판의 팔을 이 판의 팔로 갈아끼운다**(DECISIONS §220).
+
+    ★ `--update` 는 **같은 팔의 오른 값**을 박고 `--move-set` 은 **같은 팔의 다른 셋**을 박는다.
+      처치를 바꾸면 `고른다` 가 그 줄을 아예 못 찾아 「기록판에 없는 팔」 로 조용히 끝난다 —
+      §203 과 같은 모양이고 축만 다르다(셋 · **팔**).
+    ★ **셋 · 자 · 사전이 같아야 한다.** 그것이 다르면 갈아끼움이 아니라 **딴 것을 잰 것**이다.
+    ★ **지키는 지표가 같아야 한다**(§156). 보호가 다른 팔로 갈아끼우면 같은 칸의 수가 **뜻을 바꾼다**.
+    ★ **떨어진 지표도 그대로 박는다.** 대신 까닭에 적게 한다 — **문은 맞바꿈을 못 정한다**(§131).
+    """
+    if not run:
+        print("  ✗ 어느 판으로 갈아끼울지가 없다\n"
+              "    친다 : python3 tools/gate.py <판.jsonl> --swap-arm \"<까닭>\"", file=sys.stderr)
+        return 1
+    if not 까닭.strip():
+        raise SystemExit("`--swap-arm` 에 까닭이 비었다 — 무엇을 내주고 무엇을 얻는지 적는다")
+    head = head_of(run)
+    새팔 = head.get("backend") or head.get("model")
+    줄들 = board.get("record", [])
+    rec = next((r for r in 줄들 if r.get("arm") == 옛팔), None) if 옛팔 else (줄들[0] if len(줄들) == 1 else None)
+    if rec is None:
+        있는 = " · ".join(r.get("arm", "?") for r in 줄들)
+        print(f"  ✗ 갈아끼울 줄을 못 골랐다 — `--arm <옛 팔>` 을 준다\n    있는 것 : {있는}", file=sys.stderr)
+        return 1
+    갈린 = compare.갈림(rec, head, compare.분모 + ("set_sha256",))
+    if 갈린:
+        for g in 갈린:
+            print(f"  ✗ {g.글()}", file=sys.stderr)
+        print("  갈아끼움은 **같은 글을 같은 자로 잰 둘**에만 쓴다 — 아니면 딴 것을 잰 것이다", file=sys.stderr)
+        return 1
+    if backends.지키는_지표(rec["arm"]) != backends.지키는_지표(새팔):
+        print(f"  ✗ 지키는 지표가 다르다 — 옛 {sorted(backends.지키는_지표(rec['arm']) or [])} · "
+              f"새 {sorted(backends.지키는_지표(새팔) or [])}\n"
+              f"    보호가 다르면 같은 칸의 수가 뜻을 바꾼다(§156) — 갈아끼우지 않는다", file=sys.stderr)
+        return 1
+    값 = {m: 재(head[m]) for m in 기록되는지표
+          if m in rec and isinstance(head.get(m), (int, float))}
+    내린 = {m: (rec[m], 값[m]) for m in 값 if 값[m] < rec[m]}
+    새값 = {**값, "arm": 새팔, "run": pathlib.Path(run).stem, "metrics": head.get("metrics", ""),
+            **({"commit": head["commit"]} if head.get("commit") else {}),
+            "date": dt.date.today().isoformat(),
+            "swapped_from": rec["arm"], "swapped_why": 까닭.strip()}
+    _블록을_고친다("record", rec["arm"], 새값)
+    print(f"  팔을 갈아끼웠다 — {rec['arm']}\n                  → {새팔}\n    "
+          + " · ".join(f"{m} {v}" for m, v in 값.items()))
+    for m, (옛, 새) in 내린.items():
+        print(f"  ※ **{m} 이 {옛} → {새} 로 내려간 채 박혔다** — 그만큼 문이 느슨해진다")
+    print(f"    까닭 : {까닭.strip()}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("run", nargs="?")
@@ -361,6 +412,9 @@ def main(argv: list[str] | None = None) -> int:
                     help="떨어진 지표를 **사람이 받아들인다**. 까닭을 적어야 한다 — 문은 맞바꿈을 못 정한다")
     ap.add_argument("--pin-target", metavar="팔",
                     help="이 판으로 **선 줄**을 다시 박는다. 손으로 고치면 짐작으로 채우게 된다")
+    ap.add_argument("--swap-arm", metavar="까닭", dest="swap_arm", default="",
+                    help="**기록판의 팔을 이 판의 팔로 갈아끼운다**(DECISIONS §220). 셋 · 자 · 사전 · "
+                         "보호가 같아야 한다. 떨어진 지표도 박히므로 **까닭에 맞바꿈을 적는다**")
     ap.add_argument("--move-set", metavar="까닭", dest="move_set", default="",
                     help="**주 셋을 이 판의 셋으로 갈아끼운다**(DECISIONS §203). 올랐는지 안 묻는다 — "
                          "다른 글로 잰 수라 높낮이를 못 묻는다. 까닭을 적어야 한다")
@@ -368,6 +422,8 @@ def main(argv: list[str] | None = None) -> int:
     board = load()
     if a.pin_target:
         return _선을_박는다(a.run, a.pin_target, board, a.move_set)
+    if a.swap_arm:
+        return _팔을_갈아끼운다(a.run, a.arm, board, a.swap_arm)
     if a.move_set:
         return _셋을_옮긴다(a.run, a.arm, board, a.move_set)
     if a.show or not a.run:
