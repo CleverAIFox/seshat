@@ -88,3 +88,10 @@ def test_줄_대장은_부른_행만_문다():
                         대장.replace("| H-079 | 실험 |", "| H-079 | 채택 |")) != 앞
     # 아무 행도 안 부르면 그 파일은 지문 밖이다
     assert DS._대장_조각("docs/next/hypotheses.md", "## §9. 무엇\n\n번호가 없다.\n", 대장) == ""
+
+
+def test_무더기로_읽었다를_못_찍는다(tmp_path, monkeypatch, capsys):
+    """★ **찍는 것과 읽는 것은 다르다**(DECISIONS §217). 한꺼번에 「읽었다」 를 찍으면 그 표시가
+    아무것도 안 말하고, 그 순간 감사의 수가 진도를 잃는다."""
+    assert DS.main(["stamp", "--read"]) == 1
+    assert "--only" in capsys.readouterr().err

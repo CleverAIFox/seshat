@@ -3,8 +3,8 @@
   python3 tools/docseal.py                 무효가 된 도장을 낸다(rc 1) ← 기본
   python3 tools/docseal.py status          유효 · 무효 · 미날인이 몇인가
   python3 tools/docseal.py audit           **날인 전 감사** — git 이 아는 「절 뒤에 바뀐 파일」
-  python3 tools/docseal.py stamp           지금 상태로 전부 찍는다
-  python3 tools/docseal.py stamp --only 209
+  python3 tools/docseal.py stamp           지금 상태로 전부 찍는다(**읽었다는 뜻이 아니다**)
+  python3 tools/docseal.py stamp --only 209 --read   **읽고 나서** 찍는다 — 감사에서 빠진다
 
 ★ **파이어레인 `tools/docseal.py` 의 축을 옮긴 것이다**(파이어레인 DECISIONS §265). 거기가 적은
   진단이 이 저장소에도 그대로 맞는다 — **문서↔코드 강제자가 전부 한 방향**이다. `check_docs` 와
@@ -226,9 +226,13 @@ def main(argv: list[str] | None = None) -> int:
     찍힌 = 도장들()
 
     if 말 == "audit":
-        의심 = [(절, 바뀐) for 절 in 절들() if 절["파일"] and (바뀐 := 뒤에_바뀐_파일(절))]
+        # ★ **읽은 절은 뺀다**(DECISIONS §217). 무더기 도장은 안 빼 준다 — 그래야 이 수가 진도다
+        의심 = [(절, 바뀐) for 절 in 절들()
+                if 절["파일"] and not 찍힌.get(절["번호"], {}).get("읽음")
+                and (바뀐 := 뒤에_바뀐_파일(절))]
+        읽은 = sum(1 for v in 찍힌.values() if v.get("읽음"))
         print(f"  절 {len([x for x in 절들() if x['파일']])} 중 **그 뒤에 강제자 파일이 바뀐 절 "
-              f"{len(의심)}** — 「틀렸다」 가 아니라 **「다시 봐야 한다」** 다")
+              f"{len(의심)}** — 「틀렸다」 가 아니라 **「다시 봐야 한다」** 다 (읽고 찍은 절 {읽은})")
         for 절, 바뀐 in 의심:
             print(f"    §{절['번호']} {절['제목'][:40]} ({절['날짜']})\n        {' · '.join(바뀐)}")
         print("\n  ※ 하나씩 읽고, 지금도 참이면 `python3 tools/docseal.py stamp --only <번호>`")
@@ -236,11 +240,20 @@ def main(argv: list[str] | None = None) -> int:
 
     if 말 == "stamp":
         만 = args[args.index("--only") + 1] if "--only" in args else ""
+        읽었나 = "--read" in args
+        if 읽었나 and not 만:
+            print("    ✗ `--read` 는 한 절씩만 쓴다 — `--only <번호>` 를 같이 준다\n"
+                  "       무더기로 「읽었다」 를 찍으면 그 표시가 아무것도 안 말한다", file=sys.stderr)
+            return 1
         n = 0
         for 절 in 절들():
             if not 절["파일"] or (만 and 절["번호"] != 만):
                 continue
-            찍힌[절["번호"]] = {"지문": 지문(절), "날짜": 절["날짜"], "파일": 절["파일"]}
+            # ★ **찍는 것과 읽는 것은 다르다**(DECISIONS §217). 무더기로 찍은 도장은 「그때 이랬다」
+            #   일 뿐이고 **사람이 그 절을 다시 읽었다는 뜻이 아니다.** 읽은 것만 감사에서 뺀다
+            읽음 = 읽었나 or bool(찍힌.get(절["번호"], {}).get("읽음"))
+            찍힌[절["번호"]] = {"지문": 지문(절), "날짜": 절["날짜"], "파일": 절["파일"],
+                              "읽음": 읽음}
             n += 1
         SEAL.parent.mkdir(parents=True, exist_ok=True)
         SEAL.write_text(json.dumps(찍힌, ensure_ascii=False, indent=1, sort_keys=True) + "\n",
