@@ -20,7 +20,7 @@
  "100": {
   "날짜": "2026-09-27",
   "읽음": true,
-  "지문": "209dc389d0c9e298",
+  "지문": "782931ed668ac839",
   "파일": [
    "tools/labels.py",
    "tests/test_labels.py"
@@ -70,7 +70,7 @@
  "108": {
   "날짜": "2026-09-27",
   "읽음": true,
-  "지문": "fde482826a861733",
+  "지문": "c40964689ee93164",
   "파일": [
    "tools/labels.py"
   ]
@@ -352,8 +352,8 @@
  },
  "14": {
   "날짜": "2026-09-22",
-  "읽음": false,
-  "지문": "50296ff63e5ebc43",
+  "읽음": true,
+  "지문": "cfac0c99c338e697",
   "파일": [
    "seshat/evaluate.py::door",
    "tests/test_evaluate.py::test_가설_없이는_재지_않는다",
@@ -404,7 +404,7 @@
  "145": {
   "날짜": "2026-09-28",
   "읽음": false,
-  "지문": "88264d7c071ff480",
+  "지문": "9aa02b0af1e8fc57",
   "파일": [
    "tests/test_gate.py::test_자가_바뀌면_막는다",
    "tests/test_rescore.py::test_자_판은_물려받지_않고_지금_것을_적는다",
@@ -616,7 +616,7 @@
  "168": {
   "날짜": "2026-09-28",
   "읽음": false,
-  "지문": "cbc1177ef14a4a72",
+  "지문": "55c8c3b656942aa4",
   "파일": [
    "seshat/evaluate.py",
    "tools/mine_terms.py",
@@ -658,7 +658,7 @@
  "171": {
   "날짜": "2026-09-28",
   "읽음": false,
-  "지문": "901959f2e75d7c3c",
+  "지문": "b0edec76c707eee5",
   "파일": [
    "seshat/ontology.py",
    "seshat/evaluate.py",
@@ -698,7 +698,7 @@
  "174": {
   "날짜": "2026-09-28",
   "읽음": false,
-  "지문": "8796d4c78ddebdfc",
+  "지문": "57b604d8ea243f0c",
   "파일": [
    "seshat/evaluate.py",
    "tests/test_evaluate.py::test_문이_막을_때_열린_가설을_같이_찍는다"
@@ -878,7 +878,7 @@
  "192": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "d79f1dd4323d0cad",
+  "지문": "a41f06b100172fdd",
   "파일": [
    "docs/now/related.md",
    "seshat/evaluate.py"
@@ -1127,7 +1127,7 @@
  "217": {
   "날짜": "2026-09-29",
   "읽음": true,
-  "지문": "99f120b65cdebd51",
+  "지문": "2fc51e20e891d074",
   "파일": [
    "tools/docseal.py",
    "docs/next/PLAN.md",
@@ -1222,12 +1222,32 @@
  "226": {
   "날짜": "2026-09-29",
   "읽음": true,
-  "지문": "3632b7ce57bdad3f",
+  "지문": "d35d629403596573",
   "파일": [
    "tools/check_hypotheses.py",
    "tests/test_hypotheses.py::test_문턱_위는_선과_자를_둘_다_요구한다",
    "tools/labels.py",
    "tests/test_labels.py::test_격차에_구간이_붙는다"
+  ]
+ },
+ "227": {
+  "날짜": "2026-09-29",
+  "읽음": false,
+  "지문": "12d2ef7ded6c5c7e",
+  "파일": [
+   "tools/labels.py",
+   "tests/test_labels.py::test_모델을_안_적으면_판정을_안_받는다"
+  ]
+ },
+ "228": {
+  "날짜": "2026-09-30",
+  "읽음": false,
+  "지문": "6b692e05f790ed8b",
+  "파일": [
+   "tools/labels.py",
+   "tests/test_labels.py::test_머리줄이_없는_답은_첫_줄을_안_먹는다",
+   "seshat/evaluate.py::conditions",
+   "tests/test_evaluate.py::test_남의_서버로_돌아도_무엇이_번역했는지_적는다"
   ]
  },
  "23": {
@@ -1498,7 +1518,7 @@
  "50": {
   "날짜": "2026-09-23",
   "읽음": false,
-  "지문": "5390e0743a09b526",
+  "지문": "314882bbfa80acd5",
   "파일": [
    "tests/test_evaluate.py::test_한국어를_인용하는_사고문에_속지_않는다",
    "tests/test_baselines.py::test_오디션_후보가_대장과_등록부에_함께_있다",
@@ -1818,7 +1838,7 @@
  },
  "94": {
   "날짜": "2026-09-27",
-  "읽음": false,
+  "읽음": true,
   "지문": "51da5d289aa7d7c4",
   "파일": [
    "tools/check_ontology.py",

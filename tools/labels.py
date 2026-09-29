@@ -200,7 +200,13 @@ def read(name: str, sheet: pathlib.Path, judge: str = "claude", model: str = "")
         raise SystemExit(f"열쇠가 없다 — {_짧게(kp)}. `make` 가 채점표와 함께 낸다 (seed 가 같으면 같은 표다)")
     key = {r["tag"]: r for r in (json.loads(x) for x in kp.read_text(encoding="utf-8").splitlines() if x.strip())}
     got, blank = [], 0
-    for ln in sheet.read_text(encoding="utf-8").splitlines()[1:]:
+    # ★ **머리줄이 있는지를 열쇠에게 묻는다**(DECISIONS §228). 예전에는 첫 줄을 **무조건** 버렸는데,
+    #   판정자가 돌려주는 답에는 머리줄이 없어서 **진짜 판정 한 줄이 조용히 먹혔다.** 2026-09-30
+    #   네 판정자가 전부 179/180 으로 들어왔고 `gap` 의 줄이 60 에서 59 로 줄었다
+    줄 = sheet.read_text(encoding="utf-8").splitlines()
+    if 줄 and 줄[0].split("\t")[0].strip() not in key:
+        줄 = 줄[1:]                      # 열쇠가 모르는 첫 줄만 머리줄이다
+    for ln in 줄:
         if not ln.strip():
             continue
         cols = ln.split("\t")
@@ -233,8 +239,20 @@ def read(name: str, sheet: pathlib.Path, judge: str = "claude", model: str = "")
             "judge": judge, "model": model, "license": "자체 — 판정만 든다", "made_by": "tools/labels.py"}
     path.write_text("\n".join(json.dumps(x, ensure_ascii=False) for x in [meta, *sorted(got, key=lambda r: (r["id"], r["arm"]))]) + "\n",
                     encoding="utf-8")
-    print(f"  {_짧게(path)}  {len(got)}줄")
+    print(f"  {_짧게(path)}  {len(got)}줄 / 열쇠 {len(key)}")
     print(f"  판정자 {judge} · 모델 {model}")
+    # ★ **모자란 것은 도구가 소리친다**(DECISIONS §228). 2026-09-30 「180 줄 찍히는지 보라」 고 사람에게
+    #   맡겼더니 네 판정자가 전부 179 로 들어왔고 아무도 안 멈췄다. **사람 눈은 강제자가 아니다.**
+    #   미리 그은 선은 표의 줄 수에 걸려 있으므로, 줄이 줄면 **선이 다른 표에 그어진다**
+    빠진 = sorted(set(key) - {r["tag"] for r in got})
+    if 빠진:
+        print(f"  ✗ **열쇠 {len(key)} 중 {len(빠진)} 이 안 왔다** — 선은 {len(key)}줄 표에 그었다\n"
+              f"    안 온 표 : {' · '.join(빠진[:10])}{' …' if len(빠진) > 10 else ''}\n"
+              f"    그 줄만 다시 받아 답 파일에 덧붙이고 다시 읽는다 :\n"
+              f"      python3 tools/labels.py read --name {name} --sheet {sheet} "
+              f"--judge {judge} --model '{model}'\n"
+              f"    그 줄을 표에서 찾는다 : grep -n '{빠진[0]}' /tmp/labels-{name}.tsv",
+              file=sys.stderr)
     for arm in sorted({r["arm"] for r in got}):
         mine = [r for r in got if r["arm"] == arm]
         tally = {v: sum(1 for r in mine if r["verdict"] == v) for v in VERDICTS}

@@ -595,6 +595,13 @@ def conditions(a, rows: list[dict], 코드: dict | None = None) -> dict:
                       "퍼짐_평균": round(mbr.STATS["퍼짐_합"] / n, 2)}
     if a.url:                                       # 서버가 스스로 말하는 조건(DECISIONS §115)
         out["server"] = server_health(a.url, a.token, a.thoth_token)
+        # ★ **§14 는 머리줄에 백엔드를 적으라고 했는데 남의 서버로 돈 판은 `null` 이었다**
+        #   (DECISIONS §228). 2026-09-30 `H-077-nova` 를 열어 보고서야 알았다 — 그 판이 무엇으로
+        #   번역됐는지 **파일 이름 말고는 댈 데가 없다.** 서버가 말하는 만큼 적되, 모델까지는
+        #   서버가 안 말하므로 `remote:bedrock` 이다 — **모르는 것을 아는 척 채우지 않는다**
+        if not out["backend"]:
+            엔진 = (out["server"] or {}).get("engine")
+            out["backend"] = f"remote:{엔진}" if 엔진 else "remote:**서버가 안 말한다**"
     return out
 
 

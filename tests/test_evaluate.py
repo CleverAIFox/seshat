@@ -76,6 +76,25 @@ def test_머리줄이_재현_조건을_든다(tmp_path, monkeypatch):
     head = json.loads(next((tmp_path / "runs").glob("*.jsonl")).read_text(encoding="utf-8").splitlines()[0])
     for k in ("commit", "set_sha256", "chars", "backend", "weights", "decoding", "hypothesis"):
         assert k in head
+    # ★ **칸이 있는 것과 칸이 말을 하는 것은 다르다**(DECISIONS §228 · §209 와 같은 병).
+    #   `H-077-nova` 는 `backend: null` 로 이 시험을 통과하고 있었다 — 무엇이 번역했는지가 없다
+    assert head["backend"], "백엔드 칸이 비었다 — §14 가 머리줄에 적으라고 한 재현 조건이다"
+
+
+def test_남의_서버로_돌아도_무엇이_번역했는지_적는다(monkeypatch):
+    """★ 로컬 백엔드가 아니면 `backend` 가 `null` 이었다(DECISIONS §228).
+
+    서버가 제 모델까지는 안 말하므로 엔진까지만 적는다 — **모르는 것을 아는 척 채우지 않는다.**
+    """
+    import argparse
+    monkeypatch.setattr(ev, "server_health", lambda *a, **k: {"status": "ok", "engine": "bedrock"})
+    a = argparse.Namespace(hypothesis="H-001", set="data/eval/seed.jsonl", backend="",
+                           url="https://x.example", token="", thoth_token="")
+    assert ev.conditions(a, [{"src": "x"}])["backend"] == "remote:bedrock"
+
+    monkeypatch.setattr(ev, "server_health", lambda *a, **k: {"status": "ok"})
+    got = ev.conditions(a, [{"src": "x"}])["backend"]
+    assert got and "안 말한다" in got, got
 
 
 @pytest.mark.parametrize("out,want", [

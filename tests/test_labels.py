@@ -382,3 +382,50 @@ def test_한_판정자에게_달린_부호는_못_가른다로_적는다(tmp_pat
     out = capsys.readouterr().out
     assert "부호가 뒤집힌다" in out
     assert "판정 : **못 가른다**" in out and "gpt · gemini 없이는" in out
+
+
+def _표와_열쇠(tmp_path, n=6):
+    """작은 채점표와 열쇠. `make` 를 거치지 않고 `read` 만 시험한다."""
+    key = [{"tag": f"t{i}", "id": f"x{i//2:03d}", "arm": ("4b", "12b")[i % 2]} for i in range(n)]
+    (tmp_path / "t.key.jsonl").write_text(
+        "\n".join(json.dumps(r, ensure_ascii=False) for r in key) + "\n", encoding="utf-8")
+    return key
+
+
+def test_머리줄이_없는_답은_첫_줄을_안_먹는다(tmp_path, monkeypatch, capsys):
+    """★ **판정자의 답에는 머리줄이 없다**(DECISIONS §228).
+
+    예전에는 첫 줄을 무조건 버렸다. 2026-09-30 네 판정자가 전부 179/180 으로 들어왔고
+    `gap` 의 줄이 60 에서 59 로 줄었다 — **진짜 판정 한 줄이 조용히 먹혔다.**
+    """
+    monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
+    key = _표와_열쇠(tmp_path)
+    답 = tmp_path / "답.tsv"
+    답.write_text("\n".join(f"{r['tag']}\t맞다" for r in key) + "\n", encoding="utf-8")
+    L.read("t", 답, "gpt", "무엇")
+    out = capsys.readouterr()
+    assert f"{len(key)}줄 / 열쇠 {len(key)}" in out.out, out.out
+    assert "안 왔다" not in out.err
+
+
+def test_머리줄이_있으면_그대로_버린다(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
+    key = _표와_열쇠(tmp_path)
+    답 = tmp_path / "답.tsv"
+    답.write_text("\t".join(L.HEAD) + "\n"
+                  + "\n".join(f"{r['tag']}\t원문\t번역\t맞다" for r in key) + "\n", encoding="utf-8")
+    L.read("t", 답, "gpt", "무엇")
+    assert f"{len(key)}줄 / 열쇠 {len(key)}" in capsys.readouterr().out
+
+
+def test_모자라면_도구가_소리친다(tmp_path, monkeypatch, capsys):
+    """★ **사람 눈은 강제자가 아니다.** 「180 찍히는지 보라」 고 맡겼더니 넷 다 179 로 지나갔다."""
+    monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
+    key = _표와_열쇠(tmp_path)
+    답 = tmp_path / "답.tsv"
+    답.write_text("\n".join(f"{r['tag']}\t맞다" for r in key[1:]) + "\n", encoding="utf-8")
+    L.read("t", 답, "gpt", "무엇")
+    out = capsys.readouterr()
+    assert f"{len(key) - 1}줄 / 열쇠 {len(key)}" in out.out
+    assert "열쇠 6 중 1 이 안 왔다" in out.err and key[0]["tag"] in out.err
+    assert "labels.py read" in out.err            # 넘는 길을 든다(DECISIONS §210)
