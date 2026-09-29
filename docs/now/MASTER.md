@@ -483,7 +483,7 @@ thoth 의 sweep · doctor(`OLLAMA_KEEP_ALSO`)가 본다. 두 저장소가 같은
 | `tools/show_misses.py` | 숫자 뒤의 줄을 본다 — 어느 줄이 어떻게 틀렸나 |
 | `tools/style_na.py` | **합쇼체가 설 수 없는 줄**의 후보 — 판정은 사람이 한다 |
 | `tools/labels.py` | 사람의 눈가림 판정 — 표를 만들고 · 읽고 · 일치를 잰다 |
-| `tools/gate.py` | 회귀를 막는 문 · 기록판과 선을 **판에서** 박는다(손으로 안 고친다) |
+| `tools/gate.py` | 회귀를 막는 문 · 기록판과 선을 **판에서** 박는다(손으로 안 고친다) · **주 셋을 갈아끼운다** — `--move-set "<까닭>"`(DECISIONS §203) |
 
 **바깥을 본다**
 

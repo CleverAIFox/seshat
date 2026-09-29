@@ -228,7 +228,7 @@ def _블록을_고친다(표: str, arm: str, 새값: dict, path: pathlib.Path | 
     path.write_text("\n".join(줄) + "\n", encoding="utf-8")
 
 
-def _선을_박는다(run: str | None, arm: str, board: dict) -> int:
+def _선을_박는다(run: str | None, arm: str, board: dict, 옮김: str = "") -> int:
     """**선 줄을 이 판의 값으로 다시 박는다**(DECISIONS §171 · §169).
 
     ★ **선은 지킴이 아니다.** 기록은 「넘지 말아야 할 내 최고」 이고 선은 「넘어야 할 남의 값」 이다 —
@@ -254,10 +254,15 @@ def _선을_박는다(run: str | None, arm: str, board: dict) -> int:
               f"이번 판은 {head.get('set_sha256') or head.get('set') or '아무것도'} 를 든다\n"
               f"    **모르는 것은 같은 것이 아니다**(DECISIONS §173)", file=sys.stderr)
         return 1
-    if not 같나:
+    if not 같나 and not 옮김:
         print(f"  ✗ 셋이 다르다 — 선 {t.get('set_sha256') or t.get('set')} · "
-              f"이번 {head.get('set_sha256') or head.get('set')}", file=sys.stderr)
+              f"이번 {head.get('set_sha256') or head.get('set')}\n"
+              f"    주 셋을 옮기는 것이면 : --move-set \"<까닭>\" 을 같이 준다(DECISIONS §203)",
+              file=sys.stderr)
         return 1
+    if not 같나:
+        print(f"  ※ **셋을 갈아끼운다** — 선 {t.get('set_sha256') or t.get('set')} → "
+              f"{head.get('set_sha256') or head.get('set')} · 까닭 : {옮김.strip()}", file=sys.stderr)
     값 = {m: 재(head[m]) for m in ("term_off", "lit", "ui", "term_bad", "keep", "style")
           if isinstance(head.get(m), (int, float))}
     새값 = {**값, "run": pathlib.Path(run).stem, "metrics": head.get("metrics", ""),
@@ -274,6 +279,51 @@ def _선을_박는다(run: str | None, arm: str, board: dict) -> int:
     return 0
 
 
+기록되는지표 = ("term_off", "lit", "ui", "keep", "style", "josa", "term", "term_bad")
+
+
+def _셋을_옮긴다(run: str | None, arm: str | None, board: dict, 까닭: str) -> int:
+    """**주 셋을 이 판의 셋으로 옮긴다**(DECISIONS §203).
+
+    ★ `--update` 는 **오른 것만** 박고 셋이 다르면 막는다 — 옳다. 다른 글로 잰 두 수는 높낮이를
+      말할 수 없으니 「올랐다」 를 물을 수가 없다(§45). 그래서 셋을 옮기는 일은 **올림이 아니라
+      갈아끼움**이고, 다른 문으로 들어와야 한다.
+    ★ **까닭을 적게 한다**(`--accept` 와 같은 규율). 셋을 옮기는 것은 그 뒤의 모든 비교의 바닥을
+      바꾸는 일이라, 무엇이 그것을 허락했는지가 기록판 안에 남아야 한다.
+    ★ **`tol` 은 안 옮긴다** — 그것은 옛 셋에서 잰 값이다. 새 셋에서 다시 재기 전까지는 빌린 수다.
+    """
+    if not run:
+        print("  ✗ 어느 판으로 옮길지가 없다", file=sys.stderr)
+        return 1
+    if not 까닭.strip():
+        raise SystemExit("`--move-set` 에 까닭이 비었다 — 까닭 없는 갈아끼움은 기록을 지운 것이다")
+    head = head_of(run)
+    rec = 고른다(board, head, arm)
+    if rec is None:
+        print(f"  ✗ 기록판에 없는 팔 — {head.get('backend') or head.get('model')}", file=sys.stderr)
+        return 1
+    if compare.같은_셋인가(rec, head):
+        print(f"  ✗ 이미 같은 셋이다 — 옮길 것이 없다\n"
+              f"    값만 올리려면 : python3 tools/gate.py {run} --update", file=sys.stderr)
+        return 1
+    옛 = rec.get("set_sha256") or rec.get("set") or "모른다"
+    값 = {m: 재(head[m]) for m in 기록되는지표
+          if m in rec and isinstance(head.get(m), (int, float))}
+    새값 = {**값, "run": pathlib.Path(run).stem, "metrics": head.get("metrics", ""),
+            "set": head.get("set", ""), "onto_sha256": head.get("onto_sha256", ""),
+            "onto_score": head.get("onto_score", ""), "date": dt.date.today().isoformat(),
+            **({"set_sha256": head["set_sha256"]} if head.get("set_sha256") else {}),
+            **({"commit": head["commit"]} if head.get("commit") else {}),
+            "moved_from": 옛, "moved_why": 까닭.strip()}
+    _블록을_고친다("record", rec["arm"], 새값)
+    print(f"  셋을 옮겼다 — {rec['arm']}\n    {옛} → {head.get('set_sha256')} ({head.get('set')})\n    "
+          + " · ".join(f"{m} {v}" for m, v in 값.items()))
+    print(f"    까닭 : {까닭.strip()}")
+    print(f"  ※ **`tol` 은 옛 셋에서 잰 값이다** — 새 셋에서 `tools/noise.py` 로 다시 잰다\n"
+          f"  ※ 선 줄도 같이 옮긴다 — `--pin-target <팔> --move-set \"{까닭.strip()[:20]}…\"`")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("run", nargs="?")
@@ -285,10 +335,15 @@ def main(argv: list[str] | None = None) -> int:
                     help="떨어진 지표를 **사람이 받아들인다**. 까닭을 적어야 한다 — 문은 맞바꿈을 못 정한다")
     ap.add_argument("--pin-target", metavar="팔",
                     help="이 판으로 **선 줄**을 다시 박는다. 손으로 고치면 짐작으로 채우게 된다")
+    ap.add_argument("--move-set", metavar="까닭", dest="move_set", default="",
+                    help="**주 셋을 이 판의 셋으로 갈아끼운다**(DECISIONS §203). 올랐는지 안 묻는다 — "
+                         "다른 글로 잰 수라 높낮이를 못 묻는다. 까닭을 적어야 한다")
     a = ap.parse_args(argv)
     board = load()
     if a.pin_target:
-        return _선을_박는다(a.run, a.pin_target, board)
+        return _선을_박는다(a.run, a.pin_target, board, a.move_set)
+    if a.move_set:
+        return _셋을_옮긴다(a.run, a.arm, board, a.move_set)
     if a.show or not a.run:
         for r in board.get("record", []):
             print(f"  최고  {r['arm']:<40} {r.get('note', '')}")

@@ -601,3 +601,75 @@ def test_재채점이_셋의_자리도_적는다():
     t = (ROOT / "tools/rescore.py").read_text(encoding="utf-8")
     for k in ('keep["set"]', 'keep["onto_score"]', 'keep["set_stale"]'):
         assert k in t, f"재채점 머리줄에 {k} 가 없다"
+
+
+# ---------- 주 셋을 갈아끼운다(DECISIONS §203) ----------
+
+def _옮길판(tmp_path, arm, 이름, 셋해시, **값):
+    p = tmp_path / f"{이름}.jsonl"
+    p.write_text(json.dumps({"meta": True, "backend": arm, "set": "data/domain/새셋.jsonl",
+                             "set_sha256": 셋해시, "onto_sha256": "사전1", "onto_score": "채점1",
+                             "metrics": 자, "commit": "abc1234", **값}, ensure_ascii=False) + "\n",
+                 encoding="utf-8")
+    return str(p)
+
+
+def _빈판(tmp_path, monkeypatch):
+    sb = tmp_path / "sb.toml"
+    sb.write_text(re.sub(r'^(set_sha256|onto_sha256) = "[^"]*"', r'\1 = ""',
+                         (ROOT / "data/scoreboard.toml").read_text(encoding="utf-8"), flags=re.M),
+                  encoding="utf-8")
+    monkeypatch.setattr(G, "PATH", sb)
+    monkeypatch.setattr(G.catalog, "gate", lambda *a, **k: None)
+    return sb
+
+
+def test_셋이_다르면_update_가_옮기는_길을_모른다(tmp_path, monkeypatch, capsys):
+    """★ **막는 것은 옳고, 어떻게 옮기는지를 안 말하는 것이 빚이다**(DECISIONS §203)."""
+    sb = _빈판(tmp_path, monkeypatch)
+    arm = G.load(sb)["record"][0]["arm"]
+    G.main([_옮길판(tmp_path, arm, "H-999-a", "셋1", term_off=0.9, lit=0.9, keep=0.99, josa=1.0), "--update"])
+    나중 = _옮길판(tmp_path, arm, "H-999-b", "셋2", term_off=0.95, lit=0.9, keep=0.99, josa=1.0)
+    assert G.main([나중, "--update"]) == 1               # 셋이 다르니 막는다 — 옳다
+    assert "셋이 다르다" in capsys.readouterr().err
+
+
+def test_까닭을_주면_셋을_갈아끼운다(tmp_path, monkeypatch, capsys):
+    sb = _빈판(tmp_path, monkeypatch)
+    arm = G.load(sb)["record"][0]["arm"]
+    G.main([_옮길판(tmp_path, arm, "H-999-a", "셋1", term_off=0.9, lit=0.9, keep=0.99, josa=1.0), "--update"])
+    나중 = _옮길판(tmp_path, arm, "H-999-b", "셋2", term_off=0.88, lit=0.9, keep=0.99, josa=1.0)
+    assert G.main([나중, "--move-set", "H-078 채택 — 떼어둔 셋에서 순서가 유지됐다"]) == 0
+    rec = G.load(sb)["record"][0]
+    # ★ **떨어진 값도 그대로 박힌다** — 다른 글로 잰 수라 높낮이를 묻지 않는다
+    assert rec["term_off"] == 0.88 and rec["set_sha256"] == "셋2" and rec["run"] == "H-999-b"
+    assert rec["moved_from"] == "셋1" and "H-078" in rec["moved_why"]
+    assert "tol" in capsys.readouterr().out, "옛 셋에서 잰 허용치를 그대로 쓴다고 말 안 했다"
+
+
+def test_같은_셋이면_옮길_것이_없다고_한다(tmp_path, monkeypatch, capsys):
+    sb = _빈판(tmp_path, monkeypatch)
+    arm = G.load(sb)["record"][0]["arm"]
+    판 = _옮길판(tmp_path, arm, "H-999-a", "셋1", term_off=0.9, lit=0.9, keep=0.99, josa=1.0)
+    G.main([판, "--update"])
+    assert G.main([판, "--move-set", "까닭"]) == 1
+    assert "--update" in capsys.readouterr().err, "막기만 하고 무엇을 쳐야 하는지 안 말한다"
+
+
+def test_까닭이_비면_안_옮긴다(tmp_path, monkeypatch):
+    sb = _빈판(tmp_path, monkeypatch)
+    arm = G.load(sb)["record"][0]["arm"]
+    판 = _옮길판(tmp_path, arm, "H-999-b", "셋2", term_off=0.9, lit=0.9, keep=0.99, josa=1.0)
+    with pytest.raises(SystemExit):
+        G.main([판, "--move-set", "   "])
+
+
+def test_선도_같이_옮긴다(tmp_path, monkeypatch, capsys):
+    """선 줄은 셋이 다르면 안 박는다 — **주 셋을 옮기는 판에서만** 연다(§203)."""
+    sb = _빈판(tmp_path, monkeypatch)
+    선팔 = G.load(sb)["target"][0]["arm"]
+    판 = _옮길판(tmp_path, 선팔, "H-999-t", "셋2", term_off=0.88, lit=0.9, keep=1.0, style=0.98)
+    assert G.main([판, "--pin-target", 선팔]) == 1
+    assert "--move-set" in capsys.readouterr().err, "막으면서 넘는 길을 안 준다"
+    assert G.main([판, "--pin-target", 선팔, "--move-set", "H-078 채택"]) == 0
+    assert G.load(sb)["target"][0]["set_sha256"] == "셋2"

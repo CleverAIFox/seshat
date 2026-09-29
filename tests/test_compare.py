@@ -164,3 +164,22 @@ def test_채점칸이_빠지면_거짓_초록이_된다():
     실물 = {k for n in ontology.load() for k in n}
     빠진 = 실물 - set(ontology.채점칸) - 안읽는칸
     assert not 빠진, f"사전에 새 칸이 생겼다 — 점수를 바꾸는 칸이면 채점칸에 더한다: {sorted(빠진)}"
+
+
+def test_사전축이_고르는_이름은_둘_다_표에_있다():
+    """★ **고르는 자리와 답하는 자리가 갈리면 고르는 쪽이 먼저 는다**(DECISIONS §203).
+
+    2026-09-29 `AXIS["onto_score"]` 가 없어서, 둘 다 채점 지문을 들고 그것이 갈린 쌍에서
+    `갈림` 이 KeyError 로 터졌다. 도구가 **막는 대신 죽었다.**
+    """
+    from seshat import compare as C
+    for 가, 나 in (({"onto_score": "a"}, {"onto_score": "b"}), ({}, {})):
+        assert C.사전축(가, 나) in C.AXIS
+
+
+def test_채점칸이_갈리면_막지_않고_재채점을_이른다():
+    from seshat import compare as C
+    갈린 = C.갈림({"onto_score": "a", "onto_sha256": "x"},
+                 {"onto_score": "b", "onto_sha256": "y"}, ("onto_sha256",))
+    assert len(갈린) == 1
+    assert "rescore.py" in 갈린[0].글(), "막기만 하고 어떻게 견줄지를 안 말한다"
