@@ -55,3 +55,16 @@ def test_강제자가_없는_절은_대상이_아니다():
 def test_저장소의_도장이_유효하다():
     """★ **찍어 놓고 안 보면 도장은 장식이다**(§170 과 같은 병)."""
     assert DS.main([]) == 0
+
+
+def test_저장소에_없는_파일은_도장이_안_문다():
+    """★ **도장이 기계를 타면 도장이 아니다**(DECISIONS §212).
+
+    `data/domain/*.jsonl` 은 커밋하지 않는다 — 만드는 쪽에는 있고 받는 쪽에는 없다. 그것을 지문에
+    넣으면 같은 커밋에서 한쪽만 무효가 된다. 2026-09-29 §192 가 그렇게 떴다.
+    """
+    글 = ("## §9. 무엇\n\n**2026-09-29**\n\n### 배운 것\n\n말.\n\n"
+          "강제자 — `data/domain/d002.jsonl` · `tools/docseal.py::지문`\n")
+    파일 = DS.절들(글)[0]["파일"]
+    assert not any(f.startswith("data/domain/") for f in 파일), 파일
+    assert any(f.startswith("tools/docseal.py") for f in 파일)

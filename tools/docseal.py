@@ -109,6 +109,22 @@ def _낱말지문(글: str, 밀림: int = 0) -> str:
     return _짧게("\n".join(남은))
 
 
+_아는파일: list[frozenset[str]] = []
+
+
+def _깃이_아는_파일() -> frozenset[str]:
+    """git 이 든 파일만 도장의 대상이다(DECISIONS §212).
+
+    ★ **저장소에 없는 파일은 기계마다 다르다.** `data/domain/*.jsonl` 은 커밋하지 않는다 —
+      만드는 쪽에는 있고 받는 쪽에는 없으니, 그것을 지문에 넣으면 **도장이 기계를 탄다.**
+      2026-09-29 §192 가 이 기계에서 무효로 떴다 — `d002` 가 여기 있고 저기 없었다.
+    """
+    if not _아는파일:                      # 절마다 git 을 부르면 194 번이다
+        r = subprocess.run(["git", "ls-files"], capture_output=True, text=True, cwd=ROOT)
+        _아는파일.append(frozenset(r.stdout.splitlines()))
+    return _아는파일[0]
+
+
 def 절들(글: str | None = None) -> list[dict]:
     """(번호, 제목, 날짜, 본문, 지목한 자리들). **강제자 줄이 없는 절은 대상이 아니다.**"""
     글 = 글 if 글 is not None else DEC.read_text(encoding="utf-8")
@@ -119,10 +135,10 @@ def 절들(글: str | None = None) -> list[dict]:
         본문 = 글[s:끝]
         강제 = 본문[본문.rfind("강제자"):] if "강제자" in 본문 else ""
         파일 = []
+        아는 = _깃이_아는_파일()
         for 곳, 심볼 in 지목.findall(강제):      # `자리` 를 덮어쓰면 바깥 목록이 날아간다
-            p = ROOT / 곳
             짚은 = f"{곳}::{심볼}" if 심볼 else 곳
-            if p.is_file() and 짚은 not in 파일:
+            if (ROOT / 곳).is_file() and 곳 in 아는 and 짚은 not in 파일:
                 파일.append(짚은)
         날 = 날짜.search(본문)
         out.append({"번호": 번호, "제목": 제목, "날짜": 날.group(1) if 날 else "",
