@@ -53,7 +53,7 @@ bash tools/apply_patch.sh                # INBOX 의 안 붙은 seshat-*.patch �
 
 ---
 
-★ **「배운 것」 의 ★ 줄은 근거의 분모를 든다**(DECISIONS §167). 그 줄은 법칙처럼 읽히고, 반년 뒤에 읽는 사람은 근거를 안 찾는다. 셋 · 팔 · 분모를 안 적으면 **d001 600줄 · 4B 한 팔**에서 본 것이 일반화된 주장이 된다. **좁혀 적어야 다음 판이 그것을 잴 수 있다.**
+★ §0-1 **「배운 것」 의 ★ 줄은 근거의 분모를 든다**(DECISIONS §167). 그 줄은 법칙처럼 읽히고, 반년 뒤에 읽는 사람은 근거를 안 찾는다. 셋 · 팔 · 분모를 안 적으면 **d001 600줄 · 4B 한 팔**에서 본 것이 일반화된 주장이 된다. **좁혀 적어야 다음 판이 그것을 잴 수 있다.**
 
 ## 1. 무엇인가
 
@@ -108,10 +108,10 @@ uv run --group eval python -m seshat.evaluate --url https://<워커> --thoth \
   --thoth-token <토큰> --set data/eval/seed.jsonl --name nova-lite   # thoth 배포본(Nova Lite)
 ```
 
-★ **`--backend` 는 서버 없이 백엔드를 부른다.** 기준선은 서빙하지 않으므로 서버를 띄우지 않는다.
+★ §3-1 **`--backend` 는 서버 없이 백엔드를 부른다.** 기준선은 서빙하지 않으므로 서버를 띄우지 않는다.
 `aws-translate` 는 `BASELINE_ONLY` 이고 용어집을 싣지 않는다 — 있는 그대로가 기준선이다.
 
-★ **FLORES+ 의 정답은 평어체다.** 합쇼체를 강제한 출력은 어미마다 chrF 가 깎인다. 범용 비교는 문체를
+★ §3-2 **FLORES+ 의 정답은 평어체다.** 합쇼체를 강제한 출력은 어미마다 chrF 가 깎인다. 범용 비교는 문체를
 강제하지 않은 출력끼리 하고, 합쇼체는 `style` 로 따로 본다.
 
 | 지표 | 정답 필요 | 뜻 |
@@ -132,10 +132,10 @@ uv run --group eval python -m seshat.evaluate --url https://<워커> --thoth \
 | `post` | 아니다 | 재채점에 붙인 후처리 — `none` · `endings`(해요체 의문 → 합쇼체 · DECISIONS §31) |
 | `set_sha256` · `set_was` | 아니다 | 실제로 잰 셋의 해시. 재채점이 다른 셋을 대면 원래 것을 `set_was` 로 남긴다(DECISIONS §122) |
 
-★ **가설 없이 재지 않는다.** echo 가 아닌 백엔드 · 서버는 `--hypothesis H-NNN` 을 요구하고 그 가설은 대장에서
+★ §3-3 **가설 없이 재지 않는다.** echo 가 아닌 백엔드 · 서버는 `--hypothesis H-NNN` 을 요구하고 그 가설은 대장에서
 `실험` 상태여야 한다(DECISIONS §14). 배선만 보는 실행은 `--smoke` 다.
 
-★ **결과 파일 머리줄이 재현 조건을 든다** — `hypothesis` · `commit` · `dirty` · `set_sha256` · `chars` ·
+★ §3-4 **결과 파일 머리줄이 재현 조건을 든다** — `hypothesis` · `commit` · `dirty` · `set_sha256` · `chars` ·
 `backend` · `weights` · `decoding` · `cost_usd`(AWS Translate). 가설을 채택 · 기각할 때 이 파일이 근거다.
 
 | 백엔드 | 가중치 | 쓰임 |
@@ -150,7 +150,7 @@ uv run --group eval python -m seshat.evaluate --url https://<워커> --thoth \
 **다만 훅은 강제자가 아니라 빠른 되먹임이다**(§170) — 이 기계의 `core.hooksPath` 에 살아서 새로
 받은 저장소에도 남의 PR 에도 없다. **남을 막는 것은 CI 뿐**이고 그것이 초록인지는 `ci_status.py` 가 본다.
 
-★ **아래는 까닭이다. 어느 도구를 언제 쓰는지는 §14 하나가 든다**(DECISIONS §216).
+★ §3-5 **아래는 까닭이다. 어느 도구를 언제 쓰는지는 §14 하나가 든다**(DECISIONS §216).
 
 | 무엇이 안 보였나 | 그래서 무엇이 생겼나 |
 |---|---|
@@ -174,7 +174,7 @@ DECISIONS §92)에서 산문 문장만 꺼내고 **온톨로지가 든 줄만** 
 
 결과는 `runs/<이름>-<시각>.jsonl` 에 머리줄(지표)과 줄마다의 출력으로 남는다.
 
-★ `--thoth` 는 thoth 워커를 잰다. 요청에 `source.site = eval.seshat.local` 을 실어 워커가
+★ §3-6 `--thoth` 는 thoth 워커를 잰다. 요청에 `source.site = eval.seshat.local` 을 실어 워커가
 쌍으로 남기지 않게 한다(DECISIONS §3).
 
 | 평가셋 | 줄 | 정답 |
@@ -207,8 +207,8 @@ bash tools/verify.sh --only=pytest  # 부분 실행 — 마지막에 일부러 �
 | model_licenses · hypotheses · ontology · catalog | 대장 넷 | 돈다 |
 | lake | SSD 레이크 대장 · 가설 근거(§11) | **CI 밖** — SSD 는 이 기계에만 있다 |
 
-★ CI(`.github/workflows/ci.yml`)는 `bash tools/verify.sh` 한 줄이다. 목록을 늘어놓지 않는다(DECISIONS §20).
-★ 이 기계에서 `SESHAT_DATA` 가 비었거나 드라이브가 안 붙었으면 `lake` 가 실패한다 — 조용히 건너뛰지 않는다.
+★ §5-1 CI(`.github/workflows/ci.yml`)는 `bash tools/verify.sh` 한 줄이다. 목록을 늘어놓지 않는다(DECISIONS §20).
+★ §5-2 이 기계에서 `SESHAT_DATA` 가 비었거나 드라이브가 안 붙었으면 `lake` 가 실패한다 — 조용히 건너뛰지 않는다.
 
 ## 6. 라이선스 대장
 
@@ -223,10 +223,10 @@ bash tools/verify.sh --only=pytest  # 부분 실행 — 마지막에 일부러 �
 | `no` | 비상업. 비교 실험에서만 부른다 | 출력을 학습에 못 쓴다 |
 | `unknown` | 서빙에 쓰지 않는다 | 교사로 쓰지 않는다 — 모르면 못 쓴다 |
 
-★ **학생은 교사의 약관을 진다.** Gemma 약관은 distillation 으로 만든 모델을 Model Derivative 로 본다 —
+★ §6-1 **학생은 교사의 약관을 진다.** Gemma 약관은 distillation 으로 만든 모델을 Model Derivative 로 본다 —
   학생을 내놓을 때 약관 사본 · 고지 · 사용 제한을 함께 싣는다(DECISIONS §44).
 
-★ **쓸 수 없는 가중치가 따로 있다**(DECISIONS §9). `EXCLUDED` 는 사용 허락 지역이 이 기계가 있는 곳을
+★ §6-2 **쓸 수 없는 가중치가 따로 있다**(DECISIONS §9). `EXCLUDED` 는 사용 허락 지역이 이 기계가 있는 곳을
 빼는 라이선스다 — 비상업과 달리 비교 실험에서도 부르지 못하고, 대장에 올려도 실패다.
 
 | 제외 | 사유 |
@@ -251,7 +251,7 @@ bash tools/verify.sh --only=pytest  # 부분 실행 — 마지막에 일부러 �
 | R6 강화학습 · 보상 | thoth 검사기 + QE 보상 · 보상마다 반대 추 · 해킹 카나리아 | 보상 함수 · 해킹 사례 |
 | R7 평가 · EDA | FLORES+ · 도메인셋 · 오류 분류(MQM 류) · 구문 슬라이스 · 지표 편향 | 이길 대상의 숫자 · 판정 근거 |
 
-★ **AI 는 직관이고 검증은 EDA 다.** 직관은 공짜로 대장에 오르고, 실험에 들어갈 때 검증 방법과 비용
+★ §7-1 **AI 는 직관이고 검증은 EDA 다.** 직관은 공짜로 대장에 오르고, 실험에 들어갈 때 검증 방법과 비용
 상한이 문을 연다.
 
 ## 8. 인프라
@@ -266,7 +266,7 @@ bash tools/verify.sh --only=pytest  # 부분 실행 — 마지막에 일부러 �
 | 학습 | 없다 | ② 원격 T4 · 스팟 → ③ 학습용 데스크탑 |
 | 데이터 | 저장소의 `data/`(작은 정본 · 받는 도구) · SSD 레이크 `SESHAT_DATA`(raw · runs · cache — §11) | thoth 쌍(원문만) · 교사 공장 산출 · 온톨로지 2판 원천 |
 
-★ **HTTP 가 맞는 이유는 웹 도구라서가 아니다.** 브라우저는 thoth 워커만 부르고, seshat 을 부르는 것은
+★ §8-1 **HTTP 가 맞는 이유는 웹 도구라서가 아니다.** 브라우저는 thoth 워커만 부르고, seshat 을 부르는 것은
 워커다. 둘이 다른 곳(Lambda 와 모델 서버)에 살기 때문에 서버 대 서버 HTTP 가 가장 단순한 경계다. 자원
 설계(REST)가 아니라 함수 호출 두 개(RPC 풍 JSON)이고, 그것으로 충분하다.
 
@@ -299,11 +299,11 @@ masked, slots = terms.mask(onto, "Load records into Amazon S3 with AWS Glue.")  
 ko, missing = terms.unmask(model_output, slots)                                  # 조사를 끝소리로 고친다
 ```
 
-★ **긴 표기가 이긴다.** `Amazon Kinesis Data Streams` 가 `Kinesis Data Streams` 보다 먼저 잡힌다.
-★ **약어는 대소문자를 지킨다.** 영어 본문의 소문자 조각(`dms`)을 서비스로 읽지 않는다.
-★ **서술격은 건드리지 않는다.** `⟦T1⟧이다` 의 `이` 는 조사가 아니다 — 조사 뒤에 한글이 이어지면 고치지 않는다.
-★ **2판은 대조를 시작했다**(DECISIONS §34). `ko_ref` 를 든 개념 18/60 은 AWS 한국어 문서와 맞췄고 일곱은 1판이 틀렸다.
-★ **나머지는 아직 대조 전이다.** 개념의 `ko` 는 thoth 용어집(배포본에서 쓰는 중)과 이 저장소가 적은
+★ §9-1 **긴 표기가 이긴다.** `Amazon Kinesis Data Streams` 가 `Kinesis Data Streams` 보다 먼저 잡힌다.
+★ §9-2 **약어는 대소문자를 지킨다.** 영어 본문의 소문자 조각(`dms`)을 서비스로 읽지 않는다.
+★ §9-3 **서술격은 건드리지 않는다.** `⟦T1⟧이다` 의 `이` 는 조사가 아니다 — 조사 뒤에 한글이 이어지면 고치지 않는다.
+★ §9-4 **2판은 대조를 시작했다**(DECISIONS §34). `ko_ref` 를 든 개념 18/60 은 AWS 한국어 문서와 맞췄고 일곱은 1판이 틀렸다.
+★ §9-5 **나머지는 아직 대조 전이다.** 개념의 `ko` 는 thoth 용어집(배포본에서 쓰는 중)과 이 저장소가 적은
 값이다. 대조는 PLAN #22 에 남았다.
 
 ## 10. GPU 러너
@@ -326,10 +326,10 @@ mkdir -p ~/actions-runner && cd ~/actions-runner      # 저장소 밖 · 한 번
 | ollama 가 떠 있다 | `curl -s 127.0.0.1:11434/api/version` |
 | uv 가 있다 | 워크플로가 `setup-uv` 로도 깐다 |
 
-★ **손으로만 돈다.** Actions → GPU 평가 → Run workflow 에 가설 번호를 넣는다. 푸시마다 GPU 를 돌리지 않는다.
-★ **노트북이 꺼져 있으면 작업이 줄을 선다.** 켜고 `./run.sh` 를 띄우면 받아 간다.
-★ **비공개 저장소라서 안전하다.** 셀프 호스티드 러너는 공개 저장소에서 남의 PR 을 이 기계에서 돌린다.
-★ 러너 폴더(`~/actions-runner`)는 저장소 밖이다. 러너 토큰을 커밋하지 않는다.
+★ §10-1 **손으로만 돈다.** Actions → GPU 평가 → Run workflow 에 가설 번호를 넣는다. 푸시마다 GPU 를 돌리지 않는다.
+★ §10-2 **노트북이 꺼져 있으면 작업이 줄을 선다.** 켜고 `./run.sh` 를 띄우면 받아 간다.
+★ §10-3 **비공개 저장소라서 안전하다.** 셀프 호스티드 러너는 공개 저장소에서 남의 PR 을 이 기계에서 돌린다.
+★ §10-4 러너 폴더(`~/actions-runner`)는 저장소 밖이다. 러너 토큰을 커밋하지 않는다.
 
 ## 11. 데이터 관리
 
@@ -337,7 +337,7 @@ mkdir -p ~/actions-runner && cd ~/actions-runner      # 저장소 밖 · 한 번
 `/mnt/f/projects/thoth` 옆 `/mnt/f/projects/seshat`. 경로 정본은 `seshat/paths.py` 이고 **셸이 `.env` 를 이긴다.**
 심링크는 쓰지 않는다.
 
-★ **층 정책의 정본은 `data/catalog.toml` 의 `[layers]` 블록이다**(DECISIONS §114). 이 절은 그것을
+★ §11-1 **층 정책의 정본은 `data/catalog.toml` 의 `[layers]` 블록이다**(DECISIONS §114). 이 절은 그것을
 가리키기만 한다 — 표를 여기 두면 정본이 둘이 되고, 실제로 그래서 판정 파일 자리를 하루에 세 번 옮겼다.
 
     data/catalog.toml [layers]   정책. base · dirs · committed · regenerable · managed
@@ -350,7 +350,7 @@ mkdir -p ~/actions-runner && cd ~/actions-runner      # 저장소 밖 · 한 번
 uv run python tools/check_catalog.py --list     # 층과 출처를 표로
 ```
 
-★ **`.gitignore` 의 근거는 `regenerable` 이다**(파이어레인 MASTER §18-1a R2). 한 명령으로 다시 만들 수
+★ §11-2 **`.gitignore` 의 근거는 `regenerable` 이다**(파이어레인 MASTER §18-1a R2). 한 명령으로 다시 만들 수
 있어서 빼는 것이지 크거나 지저분해서가 아니다. **다시 못 만드는 것을 ignore 하면 그 파일은 사실상
 소실된다** — `작업대`(`runs/` · `labels/`)가 그 경계에 있고, 레이크가 `put` 으로 받아서 지킨다.
 
@@ -366,13 +366,13 @@ python3 tools/lake.py put runs /tmp/h001/*/*.jsonl runs/*.jsonl   # 결과를 �
 python3 tools/lake.py check                  # 해시 · 대장 밖 파일 · 가설 근거
 ```
 
-★ **결과 파일의 이름은 만드는 쪽이 유일하게 만든다**(DECISIONS §26). `evaluate` 는 `--name`, `rescore` 는 재채점한 팔의 이름을 넣는다. 작업대에서 덮이면 레이크가 볼 기회조차 없다.
-★ **넣기만 한다.** 같은 이름에 다른 내용이 오면 거절한다 — 가설의 근거가 조용히 다른 파일이 되면 판정이 거짓말을 한다.
-★ **GPU 러너가 바로 넣는다.** 러너가 이 기계라서 `gpu-eval.yml` 이 레이크에 쓴다. 러너는 `~/actions-runner/.env` 에서
+★ §11-3 **결과 파일의 이름은 만드는 쪽이 유일하게 만든다**(DECISIONS §26). `evaluate` 는 `--name`, `rescore` 는 재채점한 팔의 이름을 넣는다. 작업대에서 덮이면 레이크가 볼 기회조차 없다.
+★ §11-4 **넣기만 한다.** 같은 이름에 다른 내용이 오면 거절한다 — 가설의 근거가 조용히 다른 파일이 되면 판정이 거짓말을 한다.
+★ §11-5 **GPU 러너가 바로 넣는다.** 러너가 이 기계라서 `gpu-eval.yml` 이 레이크에 쓴다. 러너는 `~/actions-runner/.env` 에서
   `SESHAT_DATA` 를 받는다(적고 `./run.sh` 를 다시 띄운다). 아티팩트는 사본이다.
-★ **패치는 기준 나무를 들고 온다**(DECISIONS §30). `tools/make_patch.sh` 가 머리에 `Seshat-Base-Tree` 를 넣고,
+★ §11-6 **패치는 기준 나무를 들고 온다**(DECISIONS §30). `tools/make_patch.sh` 가 머리에 `Seshat-Base-Tree` 를 넣고,
   `apply_patch.sh` 가 지금 나무와 대조한다. 봇이 GitHub 에서 main 을 움직이면 여기서 잡힌다.
-★ **INBOX 는 브라우저 다운로드 폴더다**(`SESHAT_INBOX` = thoth 의 `WIN_DOWNLOADS`). 패치가 그리로 온다.
+★ §11-7 **INBOX 는 브라우저 다운로드 폴더다**(`SESHAT_INBOX` = thoth 의 `WIN_DOWNLOADS`). 패치가 그리로 온다.
   `tools/apply_patch.sh` 가 거기서 최신 `seshat-*.patch` 를 골라 CRLF 를 벗기고 `git am` 으로 붙인다. 이미 붙은
   패치(커밋 제목이 이력에 있다)는 아무것도 안 한다.
 ### 11-1. 카탈로그
@@ -387,10 +387,10 @@ python3 tools/lake.py check                  # 해시 · 대장 밖 파일 · �
 | `uses` | `eval` · `evidence` · `train` · `ontology` · `reference` · `serve`. **학습 로더는 `seshat.catalog.allowed(id, "train")` 을 묻는다** |
 | `how` | 얻는 도구 또는 `사람`. 도구 경로는 실재해야 한다 |
 
-★ **쓰임이 문이다.** 평가셋(FLORES+ · 탐침)은 `train` 이 없다 — 학습에 새면 이길 대상의 숫자가 거짓말을 한다.
+★ §11-8 **쓰임이 문이다.** 평가셋(FLORES+ · 탐침)은 `train` 이 없다 — 학습에 새면 이길 대상의 숫자가 거짓말을 한다.
   라이선스가 `미확인` 인 출처(AWS 문서 스냅숏)는 `train` 을 달 수 없다.
-★ 가중치의 라이선스는 `seshat/licenses.py` 가 정본이다(§6). 카탈로그는 자리만 든다.
-★ 파이어레인에서 옮기지 않은 것 — norm 층 · 봉인 · 획득 게이트. 원본이 작고 손으로 모으지 않는다.
+★ §11-9 가중치의 라이선스는 `seshat/licenses.py` 가 정본이다(§6). 카탈로그는 자리만 든다.
+★ §11-10 파이어레인에서 옮기지 않은 것 — norm 층 · 봉인 · 획득 게이트. 원본이 작고 손으로 모으지 않는다.
 
 ## 12. WSL 위생
 
@@ -409,7 +409,7 @@ thoth 의 sweep · doctor(`OLLAMA_KEEP_ALSO`)가 본다. 두 저장소가 같은
 | `/tmp/seshat-*` | seshat 도구의 임시 이름 | — |
 | 러너 `_diag` 로그 | 지우지 않는다. 14일 넘은 것을 나열만 한다 | — |
 
-★ 판정 규칙은 `tools/patch_subjects.py` 하나다. `apply_patch.sh`(붙었으면 안 한다)와 `sweep.py`(붙었으면 지운다)가
+★ §12-1 판정 규칙은 `tools/patch_subjects.py` 하나다. `apply_patch.sh`(붙었으면 안 한다)와 `sweep.py`(붙었으면 지운다)가
   같은 것을 쓴다. 레이크가 안 붙었으면 작업대 결과는 **못 잼**이다 — 0건이 아니다.
 
 ## 13. 서빙 예산 — 이것이 모델 크기를 정한다
@@ -434,10 +434,10 @@ thoth 의 sweep · doctor(`OLLAMA_KEEP_ALSO`)가 본다. 두 저장소가 같은
 | 속도 | CPU 한 코어 기준 **문장당 1초 이하** |
 | 품질 | 같은 탐침에서 `keep` · `style` 은 1.00 유지, `term` 은 4B 교사의 0.95배 이상 |
 
-★ **TranslateGemma 4B 는 교사지 서빙 대상이 아니다.** 4B 를 CPU 로 서빙하면 문장당 수 초~수십 초다. 집 GPU 로
+★ §13-1 **TranslateGemma 4B 는 교사지 서빙 대상이 아니다.** 4B 를 CPU 로 서빙하면 문장당 수 초~수십 초다. 집 GPU 로
   오프라인에서 최고 품질을 대량 생성하고(PLAN #18), 그것으로 작은 학생을 만들어 학생만 띄운다.
-★ **연말 장비는 서빙 장비가 아니라 공장이다.** 학생을 만들 때까지만 쓰고, 만든 뒤에는 Lambda 가 일한다.
-★ 가중치 보관은 공짜다(HuggingFace Hub 비공개 저장소). **상시 응답은 공짜가 없다** — 그래서 유휴 0 을 고른다.
+★ §13-2 **연말 장비는 서빙 장비가 아니라 공장이다.** 학생을 만들 때까지만 쓰고, 만든 뒤에는 Lambda 가 일한다.
+★ §13-3 가중치 보관은 공짜다(HuggingFace Hub 비공개 저장소). **상시 응답은 공짜가 없다** — 그래서 유휴 0 을 고른다.
 
 ## 14. 도구
 
@@ -468,6 +468,7 @@ thoth 의 sweep · doctor(`OLLAMA_KEEP_ALSO`)가 본다. 두 저장소가 같은
 
 | 도구 | 무엇 |
 |---|---|
+| `tools/check_rules.py` | **MASTER 의 ★ 규칙 번호**(`§11-3`) — 유일 · 오름차순 · 가리킨 번호가 실재하나(DECISIONS §230) |
 | `tools/check_docs.py` | 문서 ↔ 문서 — 문체 · 절 · PLAN 표 · 참조 · DECISIONS · **문서 지도** · **도구 목록**. `--fix-index` 가 DECISIONS 색인을 다시 쓴다 |
 | `tools/doc_fsck.py` | 문서 ↔ 실물 — 경로 · 테스트 · 아무도 안 부르는 도구 |
 | `tools/check_hypotheses.py` | 가설 대장 — 실험의 문 |
@@ -526,8 +527,8 @@ thoth 의 sweep · doctor(`OLLAMA_KEEP_ALSO`)가 본다. 두 저장소가 같은
 
 **합 35%**(2026-09-30). 곱해서 더한 값이다 — `0.20·0.80 + 0.20·0.85 + 0.20·0.05 + 0.25·0 + 0.15·0.10`.
 
-★ **38% 에서 내려왔다.** 일이 뒤로 간 것이 아니라 **①이 과장이었다는 것을 알았다** — 외부 판정자 넷이 「규칙 지표가 배포본 상대로 순위를 뒤집는다」 를 보여 줬다(§229). **내려간 수가 올라간 수보다 정직하다** — 진행률이 한 번도 안 내려가는 문서는 진행률이 아니다.
+★ §15-1 **38% 에서 내려왔다.** 일이 뒤로 간 것이 아니라 **①이 과장이었다는 것을 알았다** — 외부 판정자 넷이 「규칙 지표가 배포본 상대로 순위를 뒤집는다」 를 보여 줬다(§229). **내려간 수가 올라간 수보다 정직하다** — 진행률이 한 번도 안 내려가는 문서는 진행률이 아니다.
 
-★ **자체 가중치는 0% 다.** 지금 이기고 있는 것은 **남의 모델 + 이 저장소의 처치**이고, 그것이
+★ §15-2 **자체 가중치는 0% 다.** 지금 이기고 있는 것은 **남의 모델 + 이 저장소의 처치**이고, 그것이
   ② 의 85% 다. 그 둘을 한 수로 합치면 진행률이 거짓말을 한다.
-★ **③ 이 ④ 를 막고 ④ 가 나머지를 막는다.** 비중이 가장 큰 칸이 0 인 까닭은 시간이 아니라 순서다.
+★ §15-3 **③ 이 ④ 를 막고 ④ 가 나머지를 막는다.** 비중이 가장 큰 칸이 0 인 까닭은 시간이 아니라 순서다.

@@ -309,7 +309,10 @@ def check_refs(root: Path, fails: list) -> None:
                 if _foreign(line, m.start()):
                     continue
                 for x in SEC_NUM.findall(m.group(1)):
-                    if x not in master_secs:
+                    # seshat: `§11-3` 은 **절 11 의 규칙 3** 이고 절이 아니다(DECISIONS §230).
+                    #   thoth 의 MASTER 는 절 번호 자체가 `18-1a` 꼴이라 이 줄이 없다.
+                    #   규칙 번호가 실재하는지는 `tools/check_rules.py` 가 본다
+                    if x.split("-")[0] not in master_secs:
                         fails.append(f"{rel}:{n} 가 없는 MASTER §{x} 을 가리킨다")
             for m in REF_PLAN_ROW.finditer(line):
                 if _foreign(line, m.start()):

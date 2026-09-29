@@ -174,7 +174,9 @@ def _tree(tmp_path, plan=PLAN, master="# m\n\n## 1. a\n\n### 1-1. b\n", dec=None
     ("(DECISIONS §1)", False),
     ("(DECISIONS §1 · §2)", True),          # 사슬의 뒤쪽도 본다
     ("(MASTER §1-1)", False),
-    ("(MASTER §1-2)", True),
+    # seshat: `§1-2` 는 **절 1 의 규칙 2** 라 이쪽에서는 실재한다(DECISIONS §230).
+    #   thoth 의 MASTER 는 절 번호 자체가 `18-1a` 꼴이라 거기서는 없는 참조가 맞다
+    ("(MASTER §1-2)", False),
     ("PLAN #7", False),
     ("PLAN #8", True),
     ("PLAN §2", False),

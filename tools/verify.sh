@@ -41,6 +41,7 @@ else step 훅            bash tools/hookcheck.sh --check; fi
 step ruff               uv run ruff check .
 step pytest             uv run pytest -q
 step check_docs         uv run python tools/check_docs.py
+step check_rules        uv run python tools/check_rules.py
 step doc_fsck           uv run python tools/doc_fsck.py
 step model_licenses     uv run python tools/check_model_licenses.py
 step hypotheses         uv run python tools/check_hypotheses.py

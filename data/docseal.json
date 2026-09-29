@@ -2,7 +2,7 @@
  "1": {
   "날짜": "2026-09-22",
   "읽음": true,
-  "지문": "222321f4e17fd49e",
+  "지문": "f24d1d30541892ea",
   "파일": [
    "tools/check_docs.py",
    "tools/doc_fsck.py"
@@ -528,7 +528,7 @@
  "159": {
   "날짜": "2026-09-28",
   "읽음": false,
-  "지문": "c81b97b137a2a006",
+  "지문": "7d214d0d05c7b508",
   "파일": [
    "tools/check_docs.py",
    "tests/test_doc_enforcers.py"
@@ -556,7 +556,7 @@
  "161": {
   "날짜": "2026-09-28",
   "읽음": false,
-  "지문": "2945395b4cc54c43",
+  "지문": "379b61ee08b41a35",
   "파일": [
    "docs/now/related.md",
    "tools/check_docs.py"
@@ -581,7 +581,7 @@
  "164": {
   "날짜": "2026-09-28",
   "읽음": false,
-  "지문": "6a7252666e15cbcb",
+  "지문": "a5d0509eaf4b0c32",
   "파일": [
    "tools/verify.sh",
    "tests/test_workflows.py::test_셸의_변수_이름은_ASCII_다"
@@ -647,7 +647,7 @@
  "170": {
   "날짜": "2026-09-28",
   "읽음": false,
-  "지문": "7f47f2cb29218051",
+  "지문": "f4eb3aded90d0141",
   "파일": [
    "tools/ci_status.py",
    "tools/verify.sh",
@@ -754,7 +754,7 @@
  "180": {
   "날짜": "2026-09-28",
   "읽음": false,
-  "지문": "f187f557e601d42c",
+  "지문": "6848ebfa48cca14a",
   "파일": [
    "tools/bootstrap.py",
    "tests/test_bootstrap.py",
@@ -941,7 +941,7 @@
  "199": {
   "날짜": "2026-09-29",
   "읽음": false,
-  "지문": "104ba4d93ed00043",
+  "지문": "a81c07cffc5d0462",
   "파일": [
    "tools/check_docs.py::check_map",
    "tests/test_doc_enforcers.py::test_저장소의_지도와_목록이_통과한다"
@@ -1127,7 +1127,7 @@
  "217": {
   "날짜": "2026-09-29",
   "읽음": true,
-  "지문": "43ad371f06417b93",
+  "지문": "7c5930206cdaf6c7",
   "파일": [
    "tools/docseal.py",
    "docs/next/PLAN.md",
@@ -1253,7 +1253,7 @@
  "229": {
   "날짜": "2026-09-30",
   "읽음": false,
-  "지문": "ee82df950b5c2861",
+  "지문": "7bbb85d01171dead",
   "파일": [
    "docs/now/related.md",
    "docs/next/hypotheses.md"
@@ -1268,6 +1268,16 @@
    "tests/test_sweep.py::test_작업대_결과는_레이크에_같은_해시일_때만_지운다",
    "tests/test_sweep.py::test_붙음_겹침_안_붙음_판정_못함",
    "tests/test_sweep.py::test_제목_없는_옛_패치는_번호로_가른다"
+  ]
+ },
+ "230": {
+  "날짜": "2026-09-30",
+  "읽음": false,
+  "지문": "a75552b4cf8d89c8",
+  "파일": [
+   "tools/check_rules.py",
+   "tests/test_rules.py",
+   "docs/README.md"
   ]
  },
  "24": {
@@ -1394,7 +1404,7 @@
  "36": {
   "날짜": "2026-09-23",
   "읽음": false,
-  "지문": "3aa0c70b62a8323c",
+  "지문": "787a913c699a5606",
   "파일": [
    "tests/test_baselines.py::test_리전이_없으면_먼저_멈춘다",
    "tools/check_docs.py"
