@@ -187,7 +187,7 @@ bash tools/verify.sh --only=pytest  # 부분 실행 — 마지막에 일부러 �
 |---|---|---|
 | ruff · pytest | 코드 | 돈다 |
 | check_docs · doc_fsck | 문서 ↔ 문서 · 문서 ↔ 실물 | 돈다 |
-| ways | 막는 자리 ↔ 넘는 길(§210) | 돈다 |
+| ways · docseal | 막는 자리 ↔ 넘는 길(§210) · 절 ↔ 그 절이 짚은 코드(§211) | 돈다 |
 | model_licenses · hypotheses · ontology · catalog | 대장 넷 | 돈다 |
 | lake | SSD 레이크 대장 · 가설 근거(§11) | **CI 밖** — SSD 는 이 기계에만 있다 |
 
@@ -456,6 +456,7 @@ thoth 의 sweep · doctor(`OLLAMA_KEEP_ALSO`)가 본다. 두 저장소가 같은
 | `tools/doc_fsck.py` | 문서 ↔ 실물 — 경로 · 테스트 · 아무도 안 부르는 도구 |
 | `tools/check_hypotheses.py` | 가설 대장 — 실험의 문 |
 | `tools/check_ontology.py` | 온톨로지 — 표기 유일 · 부모 · 끝소리 |
+| `tools/docseal.py` | **절과 그 절이 짚은 코드의 정합 도장** — 찍은 뒤로 바뀌었으면 「다시 봐야 한다」(`audit` · `stamp --only N` · DECISIONS §211) |
 | `tools/check_ways.py` | **막는 자리마다 넘는 길이 있나** — 길 없는 자리가 **늘면** 막는다(`--list` 로 본다 · DECISIONS §210) |
 | `tools/check_catalog.py` | 데이터 카탈로그 — 칸 · 쓰임 · `data/` 의 카탈로그 밖 파일(§11) |
 | `tools/check_model_licenses.py` | 코드가 부르는 가중치가 대장에 있고 상업 가부가 적혀 있나 |

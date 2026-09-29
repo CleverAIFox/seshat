@@ -1,0 +1,1524 @@
+{
+ "1": {
+  "날짜": "2026-09-22",
+  "지문": "60c7dc86828f59b0",
+  "파일": [
+   "tools/check_docs.py",
+   "tools/doc_fsck.py"
+  ]
+ },
+ "10": {
+  "날짜": "2026-09-22",
+  "지문": "d0846d7254ba17cc",
+  "파일": [
+   "tools/check_docs.py::check_eof",
+   "tests/test_doc_enforcers.py::test_파일_끝은_줄바꿈_하나다"
+  ]
+ },
+ "100": {
+  "날짜": "2026-09-27",
+  "지문": "8ebc8e01d2dc4a16",
+  "파일": [
+   "tools/labels.py",
+   "tests/test_labels.py"
+  ]
+ },
+ "101": {
+  "날짜": "2026-09-27",
+  "지문": "43ad3d442aef3cc4",
+  "파일": [
+   "tests/test_labels.py::test_카파는_쏠린_판정을_벌준다"
+  ]
+ },
+ "102": {
+  "날짜": "2026-09-27",
+  "지문": "fb99d34806d51bda",
+  "파일": [
+   "seshat/licenses.py::can_teach",
+   "tools/check_model_licenses.py"
+  ]
+ },
+ "103": {
+  "날짜": "2026-09-27",
+  "지문": "b2b83c22e9d02ee5",
+  "파일": [
+   "tests/test_labels.py::test_판정은_작업대에_나고_커밋되지_않는다"
+  ]
+ },
+ "105": {
+  "날짜": "2026-09-27",
+  "지문": "85d513d6e7565238",
+  "파일": [
+   "tests/test_labels.py::test_지시문이_규칙_넷을_든다"
+  ]
+ },
+ "106": {
+  "날짜": "2026-09-27",
+  "지문": "62eab5139ebecb0d",
+  "파일": [
+   "tests/test_catalog.py::test_가중치가_카탈로그_밖에_있으면_짚는다"
+  ]
+ },
+ "108": {
+  "날짜": "2026-09-27",
+  "지문": "08a883da732a28df",
+  "파일": [
+   "tools/labels.py"
+  ]
+ },
+ "109": {
+  "날짜": "2026-09-27",
+  "지문": "a98a8089acffb079",
+  "파일": [
+   "tools/doctor.py"
+  ]
+ },
+ "11": {
+  "날짜": "2026-09-22",
+  "지문": "fc737036f73395d9",
+  "파일": [
+   "tests/test_baselines.py::test_AWS_Translate_는_있는_그대로_잰다",
+   "tests/test_baselines.py::test_기준선_백엔드는_서빙_목록에_없다",
+   "tests/test_baselines.py::test_FLORES_는_id_로_짝짓는다"
+  ]
+ },
+ "110": {
+  "날짜": "2026-09-27",
+  "지문": "f48c9c1c77a07972",
+  "파일": [
+   "tests/test_doctor.py"
+  ]
+ },
+ "111": {
+  "날짜": "2026-09-27",
+  "지문": "ee1c04cb21a6b2a8",
+  "파일": [
+   "tests/test_catalog.py::test_옮겼는데_기본_자리에_다시_받은_것을_짚는다",
+   "tools/lib/env.sh"
+  ]
+ },
+ "112": {
+  "날짜": "2026-09-27",
+  "지문": "6067ca2f2da4784b",
+  "파일": [
+   "tools/check_docs.py::check_plan",
+   "tools/doc_fsck.py"
+  ]
+ },
+ "113": {
+  "날짜": "2026-09-27",
+  "지문": "c9995092e31a84dc",
+  "파일": [
+   "tools/check_docs.py::check_plan",
+   "tools/doc_fsck.py"
+  ]
+ },
+ "114": {
+  "날짜": "2026-09-27",
+  "지문": "c952581a0b8e12ba",
+  "파일": [
+   "tests/test_catalog.py::test_층_선언이_실물과_맞는다"
+  ]
+ },
+ "115": {
+  "날짜": "2026-09-27",
+  "지문": "576c59c7e6694a80",
+  "파일": [
+   "tests/test_evaluate.py::test_서버_조건은_잔량을_빼고_싣는다",
+   "tests/test_labels.py::test_팔이_셋이어도_된다"
+  ]
+ },
+ "116": {
+  "날짜": "2026-09-27",
+  "지문": "f51bfcfe0c57aaf2",
+  "파일": [
+   "tests/test_labels.py::test_지시문이_규칙_넷을_든다"
+  ]
+ },
+ "118": {
+  "날짜": "2026-09-27",
+  "지문": "275048457077f851",
+  "파일": [
+   "docs/next/hypotheses.md"
+  ]
+ },
+ "119": {
+  "날짜": "2026-09-27",
+  "지문": "dd6d8709d862b4ce",
+  "파일": [
+   "tools/check_docs.py::check_plan",
+   "tools/doc_fsck.py"
+  ]
+ },
+ "12": {
+  "날짜": "2026-09-22",
+  "지문": "c55a8ad5c5e9f3d3",
+  "파일": [
+   "tools/check_hypotheses.py::check",
+   "tests/test_hypotheses.py::test_규칙마다_걸린다"
+  ]
+ },
+ "120": {
+  "날짜": "2026-09-27",
+  "지문": "e1f02ee78230c3dc",
+  "파일": [
+   "tests/test_catalog.py::test_feeds_는_비워_두지_않는다"
+  ]
+ },
+ "121": {
+  "날짜": "2026-09-27",
+  "지문": "ad4d5669824586ef",
+  "파일": [
+   "tests/test_catalog.py::test_문은_선언_밖을_막는다"
+  ]
+ },
+ "122": {
+  "날짜": "2026-09-27",
+  "지문": "fcec03abff43d0cf",
+  "파일": [
+   "tests/test_awsdocs.py::test_원문이_코드로_표시한_글자를_자리와_함께_들고_나온다",
+   "tests/test_evaluate.py::test_코드로_표시된_자리는_개념이_아니다",
+   "tests/test_ontology.py::test_식별자는_사전에_못_들어온다"
+  ]
+ },
+ "123": {
+  "날짜": "2026-09-27",
+  "지문": "9b3a0702d309c77b",
+  "파일": [
+   "tests/test_evaluate.py::test_자리를_틀리게_든_줄은_멈춘다",
+   "tests/test_awsdocs.py::test_표시가_문장_안_자리를_정확히_든다"
+  ]
+ },
+ "124": {
+  "날짜": "2026-09-27",
+  "지문": "5283badfd5b2f16a",
+  "파일": [
+   "tests/test_sweep.py::test_겹친_패치는_뒤에_밀린_것을_안_막는다"
+  ]
+ },
+ "125": {
+  "날짜": "2026-09-27",
+  "지문": "daea2bc34086b237",
+  "파일": [
+   "tests/test_grammar.py"
+  ]
+ },
+ "126": {
+  "날짜": "2026-09-27",
+  "지문": "0b696ba51f3946fa",
+  "파일": [
+   "tests/test_watch_papers.py",
+   "tests/test_workflows.py::test_예약_작업은_main_을_안_민다"
+  ]
+ },
+ "127": {
+  "날짜": "2026-09-27",
+  "지문": "c8c2947f0e838949",
+  "파일": [
+   "tests/test_grammar.py::test_판정_한_장에_팔이_여럿_든다"
+  ]
+ },
+ "128": {
+  "날짜": "2026-09-27",
+  "지문": "da5341e9cd01cc3a",
+  "파일": [
+   "tests/test_catalog.py::test_모든_출처의_디렉터리가_문을_지난다"
+  ]
+ },
+ "129": {
+  "날짜": "2026-09-27",
+  "지문": "dd07cde3b7ee82b1",
+  "파일": [
+   "docs/next/hypotheses.md"
+  ]
+ },
+ "13": {
+  "날짜": "2026-09-22",
+  "지문": "ea28807da9a54dcf",
+  "파일": [
+   "tools/check_ontology.py",
+   "tests/test_ontology.py::test_규칙마다_걸린다",
+   "tests/test_ontology.py::test_자리표시가_돌아온다"
+  ]
+ },
+ "130": {
+  "날짜": "2026-09-27",
+  "지문": "66aecd4832f9504a",
+  "파일": [
+   "tests/test_model_licenses.py::test_Bedrock_출력은_교사가_아니다",
+   "seshat/licenses.py"
+  ]
+ },
+ "131": {
+  "날짜": "2026-09-27",
+  "지문": "c81fe61761b8ab2a",
+  "파일": [
+   "tests/test_gate.py",
+   ".github/workflows/gpu-eval.yml"
+  ]
+ },
+ "132": {
+  "날짜": "2026-09-27",
+  "지문": "c9cbc4fead167686",
+  "파일": [
+   "tests/conftest.py::정본을_안_건드린다",
+   "tests/test_gate.py::test_처음부터_끝까지_한_번_돈다"
+  ]
+ },
+ "133": {
+  "날짜": "2026-09-27",
+  "지문": "5092d1e0454642da",
+  "파일": [
+   "tests/test_mbr.py",
+   "tests/test_gate.py::test_처음부터_끝까지_한_번_돈다"
+  ]
+ },
+ "134": {
+  "날짜": "2026-09-27",
+  "지문": "b99f2aaf5300e399",
+  "파일": [
+   "tests/test_glossary.py"
+  ]
+ },
+ "135": {
+  "날짜": "2026-09-28",
+  "지문": "23c20c4ea48f2bbf",
+  "파일": [
+   "tests/test_evaluate.py::test_판이_끊겨도_중간_결과가_남는다"
+  ]
+ },
+ "136": {
+  "날짜": "2026-09-28",
+  "지문": "e7b0460269957e68",
+  "파일": [
+   "tests/test_sweep.py::test_작업대_목록이_한_곳이다",
+   "tests/test_doctor.py::test_레이크를_못_물면_작업대를_못_잰다"
+  ]
+ },
+ "138": {
+  "날짜": "2026-09-28",
+  "지문": "15aeffc1d79ccc77",
+  "파일": [
+   "tests/test_catalog.py::test_가중치_자리는_서버에게_묻는다"
+  ]
+ },
+ "139": {
+  "날짜": "2026-09-28",
+  "지문": "7f6c1cc7dc229360",
+  "파일": [
+   "tests/test_gate.py::test_허용치는_잰_값이다"
+  ]
+ },
+ "14": {
+  "날짜": "2026-09-22",
+  "지문": "50296ff63e5ebc43",
+  "파일": [
+   "seshat/evaluate.py::door",
+   "tests/test_evaluate.py::test_가설_없이는_재지_않는다",
+   "tests/test_evaluate.py::test_머리줄이_재현_조건을_든다",
+   "tests/test_model_licenses.py::test_백엔드가_선언한_가중치도_대장과_대조한다"
+  ]
+ },
+ "140": {
+  "날짜": "2026-09-28",
+  "지문": "44195a2297bfa137",
+  "파일": [
+   "tests/test_glossary.py::test_울타리가_경계를_긋는다"
+  ]
+ },
+ "141": {
+  "날짜": "2026-09-28",
+  "지문": "e1b7c0fbd62fb131",
+  "파일": [
+   "tools/noise.py"
+  ]
+ },
+ "142": {
+  "날짜": "2026-09-28",
+  "지문": "72eed1c95a7ce6dd",
+  "파일": [
+   "tests/test_glossary.py::test_울타리가_경계를_긋는다"
+  ]
+ },
+ "143": {
+  "날짜": "2026-09-28",
+  "지문": "c3b871ea5310150a",
+  "파일": [
+   "tests/test_gate.py::test_승격하면_이름과_날짜도_바뀐다"
+  ]
+ },
+ "144": {
+  "날짜": "2026-09-28",
+  "지문": "b2686031ceb95857",
+  "파일": [
+   "tests/test_gate.py::test_자기가_세운_기록에_안_막힌다"
+  ]
+ },
+ "145": {
+  "날짜": "2026-09-28",
+  "지문": "88264d7c071ff480",
+  "파일": [
+   "tests/test_gate.py::test_자가_바뀌면_막는다",
+   "tests/test_rescore.py::test_자_판은_물려받지_않고_지금_것을_적는다",
+   "tests/test_evaluate.py"
+  ]
+ },
+ "146": {
+  "날짜": "2026-09-28",
+  "지문": "d8470e58201bf50a",
+  "파일": [
+   "tests/test_gate.py::test_자가_바뀌면_내려가도_그대로_박는다"
+  ]
+ },
+ "147": {
+  "날짜": "2026-09-28",
+  "지문": "21a77f29d2f1fae6",
+  "파일": [
+   "tests/test_gate.py::test_다른_자로_잰_선은_차를_안_찍는다"
+  ]
+ },
+ "148": {
+  "날짜": "2026-09-28",
+  "지문": "b376fae8230ef225",
+  "파일": [
+   "tests/test_gate.py::test_다른_자로_잰_선은_차를_안_찍는다"
+  ]
+ },
+ "149": {
+  "날짜": "2026-09-28",
+  "지문": "aeb2979fc01b22b9",
+  "파일": [
+   "tests/test_terms.py::test_자리표시_없는_글에도_조사를_맞춘다"
+  ]
+ },
+ "15": {
+  "날짜": "2026-09-22",
+  "지문": "352d3683f19cae8e",
+  "파일": [
+   "tools/check_hypotheses.py",
+   "tests/test_compare_runs.py",
+   "tests/test_workflows.py::test_Node_20_액션이_없다"
+  ]
+ },
+ "150": {
+  "날짜": "2026-09-28",
+  "지문": "227e213ab2df3cbd",
+  "파일": [
+   "tests/test_glossary.py::test_콘솔_라벨_갈래는_울타리_위에만_선다"
+  ]
+ },
+ "151": {
+  "날짜": "2026-09-28",
+  "지문": "36262df818d6b8e0",
+  "파일": [
+   "tests/test_terms.py::test_줄이_아는_자리를_뺀다"
+  ]
+ },
+ "152": {
+  "날짜": "2026-09-28",
+  "지문": "595439809f9076ef",
+  "파일": [
+   "tests/test_terms.py::test_여러_종류를_한_번에_뺀다"
+  ]
+ },
+ "153": {
+  "날짜": "2026-09-28",
+  "지문": "3eac5a5c19865631",
+  "파일": [
+   "docs/now/related.md"
+  ]
+ },
+ "154": {
+  "날짜": "2026-09-28",
+  "지문": "25dc3ff948fdd0b1",
+  "파일": [
+   "tests/test_terms.py::test_잃은_표시를_센다"
+  ]
+ },
+ "155": {
+  "날짜": "2026-09-28",
+  "지문": "5e57385e8da61b57",
+  "파일": [
+   "tests/test_gate.py::test_맞바꿈은_사람이_받는다"
+  ]
+ },
+ "156": {
+  "날짜": "2026-09-28",
+  "지문": "73efda8ab3fdc469",
+  "파일": [
+   "tests/test_gate.py::test_기계가_지킨_수와_모델이_지킨_수를_안_견준다"
+  ]
+ },
+ "157": {
+  "날짜": "2026-09-28",
+  "지문": "5cb7f9e4eddd21c6",
+  "파일": [
+   "tests/test_compare.py"
+  ]
+ },
+ "158": {
+  "날짜": "2026-09-28",
+  "지문": "5891dcfc9e453b92",
+  "파일": [
+   "tests/test_compare.py::test_조사를_손으로_또_적은_곳이_없다"
+  ]
+ },
+ "159": {
+  "날짜": "2026-09-28",
+  "지문": "45ca978468200cea",
+  "파일": [
+   "tools/check_docs.py",
+   "tests/test_doc_enforcers.py"
+  ]
+ },
+ "16": {
+  "날짜": "2026-09-22",
+  "지문": "83bf527ebfd24bc7",
+  "파일": [
+   "tests/test_ontology.py::test_모델이_바꾼_자리표시도_되돌린다",
+   "tests/test_ontology.py::test_대조_도구와_되돌리기가_같은_모양을_본다",
+   "tests/test_compare_runs.py::test_다시_채점한다"
+  ]
+ },
+ "160": {
+  "날짜": "2026-09-28",
+  "지문": "dfc88cc2ab0d8a72",
+  "파일": [
+   "tests/test_ontology.py::test_규칙_복수를_전부_받는다",
+   "tools/mine_terms.py"
+  ]
+ },
+ "161": {
+  "날짜": "2026-09-28",
+  "지문": "f25c792aef67e08e",
+  "파일": [
+   "docs/now/related.md",
+   "tools/check_docs.py"
+  ]
+ },
+ "162": {
+  "날짜": "2026-09-28",
+  "지문": "827b2c55b249f5f6",
+  "파일": [
+   "tests/test_gate.py::test_기록판이_낡은_것을_문이_스스로_안다"
+  ]
+ },
+ "163": {
+  "날짜": "2026-09-28",
+  "지문": "45ba3fee40232dc0",
+  "파일": [
+   "tests/test_compare.py::test_사본_세는_도구의_프로브가_살아_있다"
+  ]
+ },
+ "164": {
+  "날짜": "2026-09-28",
+  "지문": "6a7252666e15cbcb",
+  "파일": [
+   "tools/verify.sh",
+   "tests/test_workflows.py::test_셸의_변수_이름은_ASCII_다"
+  ]
+ },
+ "165": {
+  "날짜": "2026-09-28",
+  "지문": "2d586d2a7ef087aa",
+  "파일": [
+   "tests/test_gate.py::test_박는_판에서_자_바뀜은_안_막는다",
+   "seshat/ontology.py",
+   "tools/check_ontology.py"
+  ]
+ },
+ "166": {
+  "날짜": "2026-09-28",
+  "지문": "cbcdffbe3511de27",
+  "파일": [
+   "docs/now/related.md"
+  ]
+ },
+ "167": {
+  "날짜": "2026-09-28",
+  "지문": "7a4284aba27c5332",
+  "파일": [
+   "docs/now/related.md"
+  ]
+ },
+ "168": {
+  "날짜": "2026-09-28",
+  "지문": "61257e1da630dcd1",
+  "파일": [
+   "seshat/evaluate.py",
+   "tools/mine_terms.py",
+   "tools/check_ontology.py",
+   "data/ontology/mined.jsonl"
+  ]
+ },
+ "169": {
+  "날짜": "2026-09-28",
+  "지문": "11d75f01a60dde28",
+  "파일": [
+   "seshat/compare.py",
+   "tools/gate.py",
+   "tests/test_gate.py::test_분모가_갈리면_박으러_온_판을_지킴으로_막지_않는다",
+   "tests/test_gate.py::test_분모가_같으면_박으러_와도_떨어진_것을_막는다",
+   "tests/test_gate.py::test_check_와_올릴것이_같은_물음을_쓴다"
+  ]
+ },
+ "17": {
+  "날짜": "2026-09-22",
+  "지문": "07333658cd69c2b1",
+  "파일": [
+   "tools/check_hypotheses.py"
+  ]
+ },
+ "170": {
+  "날짜": "2026-09-28",
+  "지문": "fe480f618fda11dd",
+  "파일": [
+   "tools/ci_status.py",
+   "tools/verify.sh",
+   "tests/test_workflows.py::test_CI_에서_안_도는_단계는_까닭을_적는다",
+   "tests/test_workflows.py::test_verify_가_CI_판정을_본다"
+  ]
+ },
+ "171": {
+  "날짜": "2026-09-28",
+  "지문": "6ac8e7f56cded9c3",
+  "파일": [
+   "seshat/ontology.py",
+   "seshat/evaluate.py",
+   "seshat/compare.py",
+   "tools/gate.py",
+   "tools/dupcheck.py",
+   "tests/test_compare.py",
+   "tests/test_noise.py",
+   "tests/test_gate.py",
+   "tests/test_dupcheck.py"
+  ]
+ },
+ "172": {
+  "날짜": "2026-09-28",
+  "지문": "7c0d27277b7a33ba",
+  "파일": [
+   "tools/ci_status.py",
+   "tests/test_workflows.py::test_가장_최근_판을_직접_고른다",
+   "tests/test_workflows.py::test_아직_안_본_커밋을_초록으로_안_찍는다",
+   "tests/test_workflows.py::test_이_커밋의_판이_있으면_그것으로_판정한다",
+   "tests/test_mined.py"
+  ]
+ },
+ "173": {
+  "날짜": "2026-09-28",
+  "지문": "a5d5170b7172853e",
+  "파일": [
+   "seshat/compare.py::같은_셋인가",
+   "tools/rescore.py",
+   "tests/test_gate.py::test_선과_판이_견줄_이름이_없으면_안_박는다",
+   "tests/test_gate.py::test_해시가_양쪽에_있으면_해시로_묻는다",
+   "tests/test_gate.py::test_재채점이_셋의_자리도_적는다"
+  ]
+ },
+ "174": {
+  "날짜": "2026-09-28",
+  "지문": "381e587b6f33d448",
+  "파일": [
+   "seshat/evaluate.py",
+   "tests/test_evaluate.py::test_문이_막을_때_열린_가설을_같이_찍는다"
+  ]
+ },
+ "175": {
+  "날짜": "2026-09-28",
+  "지문": "f6f29e759ddb8d8f",
+  "파일": [
+   "tools/lake.py::찾는다",
+   "tools/rescore.py",
+   "tests/test_lake.py::test_레이크에서_찾는다",
+   "tests/test_lake.py::test_없는_판에_추적을_안_뱉는다"
+  ]
+ },
+ "176": {
+  "날짜": "2026-09-28",
+  "지문": "fd6c6a28ad0081c6",
+  "파일": [
+   "data/scoreboard.toml",
+   "docs/now/related.md"
+  ]
+ },
+ "177": {
+  "날짜": "2026-09-28",
+  "지문": "5824e388249fc6e6",
+  "파일": [
+   "tools/compare_runs.py::토막_길이",
+   "tests/test_compare_runs.py::test_토막_길이는_가린_뒤에_센다"
+  ]
+ },
+ "178": {
+  "날짜": "2026-09-28",
+  "지문": "5fef941bee7ad132",
+  "파일": [
+   "tools/compare_runs.py",
+   "docs/next/hypotheses.md"
+  ]
+ },
+ "18": {
+  "날짜": "2026-09-22",
+  "지문": "843d17d3ae61f54a",
+  "파일": [
+   "tools/doc_fsck.py::check_tools",
+   "tests/test_workflows.py"
+  ]
+ },
+ "180": {
+  "날짜": "2026-09-28",
+  "지문": "f2edaf1d3d241978",
+  "파일": [
+   "tools/bootstrap.py",
+   "tests/test_bootstrap.py",
+   "tools/verify.sh",
+   "docs/now/related.md"
+  ]
+ },
+ "181": {
+  "날짜": "2026-09-28",
+  "지문": "38bc5a41c68801d8",
+  "파일": [
+   "tools/bootstrap.py",
+   "docs/now/related.md"
+  ]
+ },
+ "182": {
+  "날짜": "2026-09-28",
+  "지문": "0cd9d06d08b8a3cb",
+  "파일": [
+   "seshat/backends.py",
+   "tools/bootstrap.py",
+   "tests/test_bootstrap.py",
+   "docs/now/related.md"
+  ]
+ },
+ "183": {
+  "날짜": "2026-09-28",
+  "지문": "7c92ee02f6bbff3f",
+  "파일": [
+   "tools/bootstrap.py"
+  ]
+ },
+ "184": {
+  "날짜": "2026-09-28",
+  "지문": "0eccf4a78987e759",
+  "파일": [
+   "docs/now/related.md",
+   "tools/bootstrap.py"
+  ]
+ },
+ "185": {
+  "날짜": "2026-09-28",
+  "지문": "a458c2f8849445cc",
+  "파일": [
+   "tools/bootstrap.py",
+   "docs/now/related.md"
+  ]
+ },
+ "186": {
+  "날짜": "2026-09-28",
+  "지문": "9c177c13160a244e",
+  "파일": [
+   "seshat/compare.py",
+   "seshat/backends.py",
+   "tests/test_compare.py::test_기록판에_보호를_손으로_안_적는다"
+  ]
+ },
+ "187": {
+  "날짜": "2026-09-28",
+  "지문": "b4713512dc0d4389",
+  "파일": [
+   "tools/check_docs.py::check_plan",
+   "docs/now/related.md"
+  ]
+ },
+ "188": {
+  "날짜": "2026-09-28",
+  "지문": "a9d2bb53300af9cf",
+  "파일": [
+   "tools/fetch_awsdocs.py",
+   "tests/test_eval_set.py::test_떼어둔_셋은_겹친_문장을_뺀다"
+  ]
+ },
+ "189": {
+  "날짜": "2026-09-28",
+  "지문": "46d8fb53605f98c8",
+  "파일": [
+   "tools/style_na.py",
+   "tests/test_style_na.py"
+  ]
+ },
+ "19": {
+  "날짜": "2026-09-22",
+  "지문": "34e9f8858c771705",
+  "파일": [
+   "tests/test_evaluate.py::test_개념이_번역에_남았는지_잰다",
+   "tests/test_compare_runs.py::test_구문별로_개념이_남았는지_본다",
+   "tests/test_compare_runs.py::test_합쇼체가_한쪽에서만_깨진_줄을_찾는다"
+  ]
+ },
+ "190": {
+  "날짜": "2026-09-28",
+  "지문": "241b12cb445ee431",
+  "파일": [
+   "seshat/evaluate.py::is_hapsyo",
+   "tests/test_evaluate.py::test_종결어미_뒤_꼬리를_벗긴다",
+   "tests/test_evaluate.py::test_고치면서_헐거워지지_않았다"
+  ]
+ },
+ "191": {
+  "날짜": "2026-09-28",
+  "지문": "f029f55f909f73e4",
+  "파일": [
+   "seshat/evaluate.py::is_hapsyo",
+   "tests/test_evaluate.py::test_고치기_전에_통과하던_줄은_계속_통과한다",
+   "tests/test_evaluate.py::test_종결어미_뒤_꼬리를_벗긴다"
+  ]
+ },
+ "192": {
+  "날짜": "2026-09-28",
+  "지문": "1ddcf4ef2503434f",
+  "파일": [
+   "docs/now/related.md",
+   "seshat/evaluate.py"
+  ]
+ },
+ "193": {
+  "날짜": "2026-09-28",
+  "지문": "531e80ca64bf0ddb",
+  "파일": [
+   "tools/make_patch.sh"
+  ]
+ },
+ "194": {
+  "날짜": "2026-09-28",
+  "지문": "13c8665acc188abb",
+  "파일": [
+   "seshat/evaluate.py::문체_밖",
+   "data/catalog.toml",
+   "tests/test_eval_set.py::test_합쇼체를_물을_수_없는_줄은_분모에서_뺀다"
+  ]
+ },
+ "195": {
+  "날짜": "2026-09-28",
+  "지문": "f56732b1a56a8fcc",
+  "파일": [
+   "tools/fetch_awsdocs.py",
+   "tests/test_eval_set.py::test_약어_마침표에서_문장을_안_자른다"
+  ]
+ },
+ "196": {
+  "날짜": "2026-09-29",
+  "지문": "fbcfc291458d39b7",
+  "파일": [
+   "seshat/backends.py::_ask",
+   "tests/test_backends.py::test_ollama_404_는_당기는_길을_알려준다"
+  ]
+ },
+ "197": {
+  "날짜": "2026-09-29",
+  "지문": "308d9ad5e706515f",
+  "파일": [
+   "seshat/evaluate.py::part_본다",
+   "tests/test_evaluate.py::test_멈출_때_얼마나_들어_있는지_말한다"
+  ]
+ },
+ "198": {
+  "날짜": "2026-09-29",
+  "지문": "c24274fc3375b9df",
+  "파일": [
+   "seshat/evaluate.py::main",
+   "tests/test_evaluate.py::test_끊길_때_남은_줄과_이을_길을_말한다"
+  ]
+ },
+ "199": {
+  "날짜": "2026-09-29",
+  "지문": "104ba4d93ed00043",
+  "파일": [
+   "tools/check_docs.py::check_map",
+   "tests/test_doc_enforcers.py::test_저장소의_지도와_목록이_통과한다"
+  ]
+ },
+ "2": {
+  "날짜": "2026-09-22",
+  "지문": "49e1e64b2f13f02c",
+  "파일": [
+   "tests/test_eval_set.py::test_머리줄이_출처와_라이선스를_적는다"
+  ]
+ },
+ "20": {
+  "날짜": "2026-09-22",
+  "지문": "36035256a276c5c5",
+  "파일": [
+   "tests/test_workflows.py::test_워크플로마다_권한을_적는다",
+   "tests/test_workflows.py::test_gitleaks_는_PR_을_읽을_수_있다",
+   "tests/test_workflows.py::test_CI_는_verify_를_부르기만_한다",
+   "tests/test_workflows.py::test_verify_가_검사기를_빠뜨리지_않는다"
+  ]
+ },
+ "201": {
+  "날짜": "2026-09-29",
+  "지문": "a64174062e3356a8",
+  "파일": [
+   "seshat/backends.py::들어가나",
+   "tests/test_backends.py::test_카드보다_큰_모델은_부르기_전에_막는다"
+  ]
+ },
+ "202": {
+  "날짜": "2026-09-29",
+  "지문": "d247c3e00f8276e2",
+  "파일": [
+   "tests/test_bootstrap.py::test_못_견주는_둘은_거절한다",
+   "seshat/compare.py"
+  ]
+ },
+ "203": {
+  "날짜": "2026-09-29",
+  "지문": "2ef683df8cc0a4da",
+  "파일": [
+   "tools/gate.py::_셋을_옮긴다",
+   "tests/test_gate.py::test_까닭을_주면_셋을_갈아끼운다"
+  ]
+ },
+ "204": {
+  "날짜": "2026-09-29",
+  "지문": "52ff758588ca193b",
+  "파일": [
+   "tests/test_compare.py::test_사전축이_고르는_이름은_둘_다_표에_있다"
+  ]
+ },
+ "205": {
+  "날짜": "2026-09-29",
+  "지문": "957ec002e4035e96",
+  "파일": [
+   "tools/apply_patch.sh",
+   "tests/test_sweep.py::test_자리가_안_맞는_패치가_뒤엣것을_안_막는다"
+  ]
+ },
+ "206": {
+  "날짜": "2026-09-29",
+  "지문": "1a1398f76f3cd500",
+  "파일": [
+   "seshat/backends.py::지키는_지표",
+   "tests/test_bootstrap.py::test_보호_표가_MARK_ARMS_를_만든다"
+  ]
+ },
+ "207": {
+  "날짜": "2026-09-29",
+  "지문": "8b6e3a319a0c127c",
+  "파일": [
+   "data/scoreboard.toml",
+   "tests/test_gate.py::test_까닭을_주면_셋을_갈아끼운다",
+   "docs/now/related.md"
+  ]
+ },
+ "208": {
+  "날짜": "2026-09-29",
+  "지문": "8f66a94cf198598d",
+  "파일": [
+   "tools/gate.py::_낡은_주석인가",
+   "tests/test_gate.py::test_옛_값을_가리키는_주석은_같이_지운다"
+  ]
+ },
+ "209": {
+  "날짜": "2026-09-29",
+  "지문": "3d7b2ba91bcf4df1",
+  "파일": [
+   "tools/gate.py::_선을_박는다",
+   "tests/test_gate.py::test_선을_박으면_셋_자리도_같이_박힌다",
+   "tests/test_mined.py::_점수셋"
+  ]
+ },
+ "21": {
+  "날짜": "2026-09-22",
+  "지문": "269be17abb58fb48",
+  "파일": [
+   "tests/test_lake.py::test_같은_이름에_다른_내용은_거절한다",
+   "tests/test_lake.py::test_가설_대장의_근거가_레이크에_없으면_실패한다",
+   "tests/test_lake.py::test_셸이_env_를_이긴다",
+   "tests/test_lake.py::test_붙지_않은_드라이브는_종료코드_2다"
+  ]
+ },
+ "210": {
+  "날짜": "2026-09-29",
+  "지문": "4136afaafe68b0bb",
+  "파일": [
+   "tools/check_ways.py",
+   "tests/test_ways.py::test_저장소가_장부와_맞는다"
+  ]
+ },
+ "211": {
+  "날짜": "2026-09-29",
+  "지문": "fd372fc7195d4027",
+  "파일": [
+   "tools/docseal.py::지문",
+   "tests/test_docseal.py::test_저장소의_도장이_유효하다"
+  ]
+ },
+ "22": {
+  "날짜": "2026-09-22",
+  "지문": "5d523a03d477b830",
+  "파일": [
+   "tools/check_catalog.py",
+   "tests/test_catalog.py::test_미확인_라이선스는_학습에_못_쓴다",
+   "tests/test_catalog.py::test_쓰임이_문이다",
+   "tests/test_lake.py::test_카탈로그에_없는_자리에는_못_넣는다"
+  ]
+ },
+ "23": {
+  "날짜": "2026-09-22",
+  "지문": "30fc29d71f6357c6",
+  "파일": [
+   "tests/test_sweep.py::test_빈_디렉터리만_지운다",
+   "tests/test_sweep.py::test_작업대_결과는_레이크에_같은_해시일_때만_지운다",
+   "tests/test_sweep.py::test_붙음_겹침_안_붙음_판정_못함",
+   "tests/test_sweep.py::test_제목_없는_옛_패치는_번호로_가른다"
+  ]
+ },
+ "24": {
+  "날짜": "2026-09-22",
+  "지문": "633506a23a8f377e",
+  "파일": [
+   "tests/test_ontology.py::test_백틱으로_싼_자리표시를_되돌린다",
+   "tests/test_compare_runs.py::test_개념이_없다고_센_자리를_줄로_보인다"
+  ]
+ },
+ "25": {
+  "날짜": "2026-09-22",
+  "지문": "8a4d93e73e440fdb",
+  "파일": [
+   "tests/test_evaluate.py::test_관측된_오역을_따로_센다",
+   "tests/test_evaluate.py::test_개념이_번역에_남았는지_잰다",
+   "tests/test_ontology.py::test_허용_표기와_오역_표기는_겹치지_않는다",
+   "tests/test_compare_runs.py::test_개념이_없다고_센_자리를_줄로_보인다"
+  ]
+ },
+ "26": {
+  "날짜": "2026-09-23",
+  "지문": "3799ec54e332e55c",
+  "파일": [
+   "tests/test_rescore.py::test_같은_초에_두_팔을_재채점해도_이름이_갈린다",
+   "tests/test_rescore.py::test_재채점의_재채점이_이름을_늘이지_않는다"
+  ]
+ },
+ "27": {
+  "날짜": "2026-09-23",
+  "지문": "fc0ffa0ba6fde390",
+  "파일": [
+   "tests/test_baselines.py",
+   "tools/check_model_licenses.py",
+   "tests/test_workflows.py"
+  ]
+ },
+ "28": {
+  "날짜": "2026-09-23",
+  "지문": "eadf5aee8f232bd2",
+  "파일": [
+   "tests/test_workflows.py::test_결과는_레이크보다_먼저_아티팩트로_간다"
+  ]
+ },
+ "29": {
+  "날짜": "2026-09-23",
+  "지문": "526d47da98521b78",
+  "파일": [
+   "tests/test_compare_runs.py::test_두_팔이_같은_줄에서_깨지면_둘_다로_센다",
+   "tests/test_compare_runs.py::test_합쇼체가_한쪽에서만_깨진_줄을_찾는다"
+  ]
+ },
+ "3": {
+  "날짜": "2026-09-22",
+  "지문": "73130f338b1c6718",
+  "파일": [
+   "tests/test_serve.py::test_thoth_적합성_검사를_통과한다",
+   "tests/test_evaluate.py::test_thoth_워커를_잴_때는_평가_출처를_싣는다"
+  ]
+ },
+ "30": {
+  "날짜": "2026-09-23",
+  "지문": "161bd50927021918",
+  "파일": [
+   "tests/test_sweep.py::test_상태를_명령줄로도_묻는다",
+   "tests/test_sweep.py::test_붙음_겹침_안_붙음_판정_못함"
+  ]
+ },
+ "31": {
+  "날짜": "2026-09-23",
+  "지문": "96c5c0c6e130420d",
+  "파일": [
+   "tests/test_endings.py::test_H_019_에서_깨진_모양을_고친다",
+   "tests/test_endings.py::test_받침이_맞을_때만_바꾼다",
+   "tests/test_rescore.py::test_후처리_이름이_결과_파일에_남는다"
+  ]
+ },
+ "32": {
+  "날짜": "2026-09-23",
+  "지문": "d18c8b77a4268b05",
+  "파일": [
+   "tests/test_evaluate.py::test_머리줄이_온톨로지_해시를_든다",
+   "tests/test_compare_runs.py::test_사전이_다르면_대조를_멈춘다"
+  ]
+ },
+ "33": {
+  "날짜": "2026-09-23",
+  "지문": "7176cbd4124c74ad",
+  "파일": [
+   "tests/test_baselines.py::test_끼울_후보는_자리표시와_종결_정규화를_함께_쓴다",
+   "tests/test_endings.py"
+  ]
+ },
+ "34": {
+  "날짜": "2026-09-23",
+  "지문": "53dfeac4bd82a5b8",
+  "파일": [
+   "tools/check_ontology.py",
+   "tests/test_ontology.py::test_공식_표기의_근거는_문서_자리다",
+   "tests/test_ontology.py::test_대조한_개념이_실제로_있다"
+  ]
+ },
+ "35": {
+  "날짜": "2026-09-23",
+  "지문": "4854dfb7327fccce",
+  "파일": [
+   "tests/test_evaluate.py::test_돈이_드는_백엔드는_견적을_먼저_낸다",
+   "tests/test_evaluate.py::test_상한을_넘으면_부르지_않는다"
+  ]
+ },
+ "36": {
+  "날짜": "2026-09-23",
+  "지문": "6ca04a246d7ccf70",
+  "파일": [
+   "tests/test_baselines.py::test_리전이_없으면_먼저_멈춘다",
+   "tools/check_docs.py"
+  ]
+ },
+ "37": {
+  "날짜": "2026-09-23",
+  "지문": "aba432fc2bec2060",
+  "파일": [
+   "docs/next/hypotheses.md",
+   "tools/check_hypotheses.py"
+  ]
+ },
+ "38": {
+  "날짜": "2026-09-23",
+  "지문": "ed365dc62058293d",
+  "파일": [
+   "docs/next/hypotheses.md",
+   "seshat/terms.py::mask"
+  ]
+ },
+ "39": {
+  "날짜": "2026-09-23",
+  "지문": "b963634e6519017a",
+  "파일": [
+   "tests/test_lake.py::test_패키지를_부르면_env_가_얹힌다"
+  ]
+ },
+ "4": {
+  "날짜": "2026-09-22",
+  "지문": "770a95a2c160f128",
+  "파일": [
+   "pyproject.toml"
+  ]
+ },
+ "40": {
+  "날짜": "2026-09-23",
+  "지문": "4136b2f88236c3c8",
+  "파일": [
+   "pyproject.toml"
+  ]
+ },
+ "41": {
+  "날짜": "2026-09-23",
+  "지문": "d94c26e35f94d061",
+  "파일": [
+   "tests/test_baselines.py",
+   "tools/check_model_licenses.py"
+  ]
+ },
+ "42": {
+  "날짜": "2026-09-23",
+  "지문": "a29b2b35f2cb4ebe",
+  "파일": [
+   "tests/test_ontology.py::test_괄호가_벗겨진_맨_자리표시와_붙은_조사를_되돌린다",
+   "tests/test_ontology.py::test_맨_자리표시는_낱말_속을_건드리지_않는다"
+  ]
+ },
+ "43": {
+  "날짜": "2026-09-23",
+  "지문": "1e733ce007f45833",
+  "파일": [
+   "docs/next/hypotheses.md",
+   "tools/check_hypotheses.py"
+  ]
+ },
+ "44": {
+  "날짜": "2026-09-23",
+  "지문": "56a1006ca1581b3d",
+  "파일": [
+   "tools/check_model_licenses.py",
+   "tests/test_model_licenses.py::test_교사_가부가_대장의_둘째_축이다",
+   "tests/test_model_licenses.py::test_상업_불가_모델은_서빙_후보가_아니다"
+  ]
+ },
+ "45": {
+  "날짜": "2026-09-23",
+  "지문": "e8e7ae1c98e6f179",
+  "파일": [
+   "tests/test_baselines.py::test_ollama_위에_서는_백엔드를_이름으로_짐작하지_않는다",
+   "tests/test_compare_runs.py::test_줄_수가_다르면_대조를_멈춘다"
+  ]
+ },
+ "46": {
+  "날짜": "2026-09-23",
+  "지문": "4a528047b4640706",
+  "파일": [
+   "tests/test_compare_runs.py::test_줄_수가_다르면_대조를_멈춘다",
+   "tools/check_model_licenses.py"
+  ]
+ },
+ "47": {
+  "날짜": "2026-09-23",
+  "지문": "1cb44145ab4964b0",
+  "파일": [
+   "tests/test_baselines.py::test_오디션_후보가_대장과_등록부에_함께_있다",
+   "tests/test_baselines.py::test_사고_모드_출력은_번역이_아니다",
+   "tools/check_model_licenses.py"
+  ]
+ },
+ "48": {
+  "날짜": "2026-09-23",
+  "지문": "ebaac3d992bba245",
+  "파일": [
+   "tests/test_baselines.py::test_범용_모델은_같은_배선을_쓴다",
+   "tests/test_baselines.py::test_채팅_배선은_체계_지시와_사고_끄기를_싣는다"
+  ]
+ },
+ "49": {
+  "날짜": "2026-09-23",
+  "지문": "2c3917ca5cb19788",
+  "파일": [
+   "tests/test_evaluate.py::test_번역인가를_묻는_지표가_있다"
+  ]
+ },
+ "50": {
+  "날짜": "2026-09-23",
+  "지문": "5390e0743a09b526",
+  "파일": [
+   "tests/test_evaluate.py::test_한국어를_인용하는_사고문에_속지_않는다",
+   "tests/test_baselines.py::test_오디션_후보가_대장과_등록부에_함께_있다",
+   "tests/test_evaluate.py"
+  ]
+ },
+ "51": {
+  "날짜": "2026-09-23",
+  "지문": "d2de61fef277bc5a",
+  "파일": [
+   "tests/test_baselines.py::test_ollama_가_꺼져_있으면_한_줄로_말한다"
+  ]
+ },
+ "52": {
+  "날짜": "2026-09-23",
+  "지문": "8307f98c3cc2ae4a",
+  "파일": [
+   "tests/test_evaluate.py::test_term_은_번역이_아닌_줄에서_점수를_주지_않는다"
+  ]
+ },
+ "53": {
+  "날짜": "2026-09-23",
+  "지문": "70a42e6e63ac0207",
+  "파일": [
+   "tests/test_show_misses.py"
+  ]
+ },
+ "54": {
+  "날짜": "2026-09-23",
+  "지문": "ba3be8346878430a",
+  "파일": [
+   "tests/test_endings.py"
+  ]
+ },
+ "56": {
+  "날짜": "2026-09-23",
+  "지문": "d0fb564a6326e664",
+  "파일": [
+   "tests/test_ontology.py::test_끝소리가_바뀌면_조사도_바뀐다"
+  ]
+ },
+ "57": {
+  "날짜": "2026-09-23",
+  "지문": "74761d2923a571db",
+  "파일": [
+   "tests/test_baselines.py::test_재현_조건은_배선에서_나온다"
+  ]
+ },
+ "59": {
+  "날짜": "2026-09-23",
+  "지문": "1dc687e41c7d0f04",
+  "파일": [
+   "tests/test_baselines.py::test_다시_물어도_안_되면_첫_답을_둔다"
+  ]
+ },
+ "6": {
+  "날짜": "2026-09-22",
+  "지문": "7bf2936ed149eebc",
+  "파일": [
+   "tools/check_model_licenses.py",
+   "tests/test_model_licenses.py"
+  ]
+ },
+ "60": {
+  "날짜": "2026-09-23",
+  "지문": "24d4dddc58be1eac",
+  "파일": [
+   "tests/test_baselines.py::test_다시_물어도_안_되면_첫_답을_둔다"
+  ]
+ },
+ "62": {
+  "날짜": "2026-09-23",
+  "지문": "495930a0e1dfa348",
+  "파일": [
+   "tests/test_evaluate.py::test_값을_모르는_백엔드는_공짜가_아니다"
+  ]
+ },
+ "63": {
+  "날짜": "2026-09-23",
+  "지문": "303a23ce71321566",
+  "파일": [
+   "tests/test_baselines.py::test_범용_팔은_문체를_강제하지_않는다"
+  ]
+ },
+ "64": {
+  "날짜": "2026-09-23",
+  "지문": "1839f557a792c0c8",
+  "파일": [
+   "tests/test_eval_set.py::test_flores_받는_도구가_env_를_얹는다"
+  ]
+ },
+ "65": {
+  "날짜": "2026-09-23",
+  "지문": "0a1473519550360f",
+  "파일": [
+   "tests/test_ontology.py::test_번역_대상_개념은_근거를_든다"
+  ]
+ },
+ "67": {
+  "날짜": "2026-09-23",
+  "지문": "9f12e89dee000ea0",
+  "파일": [
+   "tests/test_ontology.py::test_후처리가_고치는_개념과_지표가_세는_개념이_같다"
+  ]
+ },
+ "69": {
+  "날짜": "2026-09-25",
+  "지문": "62f7bdf9f143e1fb",
+  "파일": [
+   "tests/test_ontology.py::test_개념이_동사로_나타나도_찾는다",
+   "tests/test_ontology.py::test_섭취는_수집으로_돌아온다"
+  ]
+ },
+ "7": {
+  "날짜": "2026-09-22",
+  "지문": "0770c5f4f644be17",
+  "파일": [
+   "tools/check_docs.py::check_plan"
+  ]
+ },
+ "70": {
+  "날짜": "2026-09-25",
+  "지문": "b40d07333e02c821",
+  "파일": [
+   "tests/test_evaluate.py::test_분모를_결과가_든다"
+  ]
+ },
+ "71": {
+  "날짜": "2026-09-25",
+  "지문": "bdc0fdff2c0f0626",
+  "파일": [
+   "tests/test_eval_set.py::test_flores_는_형식을_가정하지_않는다"
+  ]
+ },
+ "72": {
+  "날짜": "2026-09-25",
+  "지문": "f849be77d0590920",
+  "파일": [
+   "tests/test_eval_set.py::test_없는_평가셋은_받는_법을_말한다"
+  ]
+ },
+ "73": {
+  "날짜": "2026-09-25",
+  "지문": "4140efa5e9625891",
+  "파일": [
+   "tests/test_lake.py::test_env_에_같은_열쇠가_둘이면_나중_줄이_이기고_말한다"
+  ]
+ },
+ "74": {
+  "날짜": "2026-09-25",
+  "지문": "773c136a2b85de39",
+  "파일": [
+   "tests/test_baselines.py::test_boto3_가_없으면_그룹을_말한다"
+  ]
+ },
+ "75": {
+  "날짜": "2026-09-25",
+  "지문": "642e1cae07272d64",
+  "파일": [
+   "tests/test_baselines.py::test_자격증명이_만료되면_들어가는_법을_말한다",
+   "tools/fetch_flores.py"
+  ]
+ },
+ "77": {
+  "날짜": "2026-09-25",
+  "지문": "c94f182e48a92008",
+  "파일": [
+   "tests/test_sweep.py::test_이미_붙은_패치는_기준_나무를_묻지_않는다"
+  ]
+ },
+ "78": {
+  "날짜": "2026-09-25",
+  "지문": "2e2c08ec5ea42872",
+  "파일": [
+   "tests/test_eval_set.py::test_없는_평가셋은_받는_법을_말한다"
+  ]
+ },
+ "79": {
+  "날짜": "2026-09-25",
+  "지문": "04cb6d86b6fd82a7",
+  "파일": [
+   "tests/test_model_licenses.py::test_12b_후보가_대장과_등록부에_함께_있다"
+  ]
+ },
+ "8": {
+  "날짜": "2026-09-22",
+  "지문": "83a8a573b39fc1b7",
+  "파일": [
+   ".github/workflows/ci.yml"
+  ]
+ },
+ "80": {
+  "날짜": "2026-09-25",
+  "지문": "ab37dd9428f24b7e",
+  "파일": [
+   "tests/test_evaluate.py::test_긴_판은_제_상태를_말한다"
+  ]
+ },
+ "81": {
+  "날짜": "2026-09-25",
+  "지문": "c201457369a84a4e",
+  "파일": [
+   "tests/test_evaluate.py::test_재현_조건은_판을_시작할_때_찍는다"
+  ]
+ },
+ "82": {
+  "날짜": "2026-09-25",
+  "지문": "215056c4dad5c6b3",
+  "파일": [
+   "tests/test_baselines.py::test_늦으면_막힌_줄을_말한다"
+  ]
+ },
+ "84": {
+  "날짜": "2026-09-26",
+  "지문": "e7a4d48a3bd8c6c1",
+  "파일": [
+   "tests/test_baselines.py"
+  ]
+ },
+ "85": {
+  "날짜": "2026-09-26",
+  "지문": "3002b7fbc0d5b31f",
+  "파일": [
+   "tests/test_term_diff.py"
+  ]
+ },
+ "86": {
+  "날짜": "2026-09-26",
+  "지문": "2378bd2dd8e16857",
+  "파일": [
+   "tests/test_ontology.py::test_흔한_말은_그_개념을_말하는_줄에서만_바뀐다"
+  ]
+ },
+ "88": {
+  "날짜": "2026-09-27",
+  "지문": "c851bdbe75a7bd47",
+  "파일": [
+   "tests/test_term_diff.py::test_갈린_자리가_적으면_잡음과_구별되지_않는다"
+  ]
+ },
+ "89": {
+  "날짜": "2026-09-27",
+  "지문": "82a5c67e6f3b9dbc",
+  "파일": [
+   "tests/test_baselines.py::test_잠깐_넘어진_것은_다시_묻는다",
+   "tests/test_baselines.py::test_시간_초과는_다시_묻지_않는다"
+  ]
+ },
+ "9": {
+  "날짜": "2026-09-22",
+  "지문": "b032ad77383d4ac8",
+  "파일": [
+   "tools/check_model_licenses.py::check",
+   "tests/test_model_licenses.py::test_쓸_수_없는_가중치는_비교에서도_걸린다"
+  ]
+ },
+ "91": {
+  "날짜": "2026-09-27",
+  "지문": "274a33cf0f4bbbc5",
+  "파일": [
+   "tests/test_evaluate.py::test_지킨_이름이_많은_줄을_떨어뜨리지_않는다"
+  ]
+ },
+ "92": {
+  "날짜": "2026-09-27",
+  "지문": "bd9e48c3022a427f",
+  "파일": [
+   "tests/test_awsdocs.py",
+   "tools/check_catalog.py"
+  ]
+ },
+ "93": {
+  "날짜": "2026-09-27",
+  "지문": "68d1dc5d38e5cb89",
+  "파일": [
+   "docs/next/hypotheses.md",
+   "tools/term_diff.py"
+  ]
+ },
+ "94": {
+  "날짜": "2026-09-27",
+  "지문": "51da5d289aa7d7c4",
+  "파일": [
+   "tools/check_ontology.py",
+   "tests/test_ontology.py"
+  ]
+ },
+ "95": {
+  "날짜": "2026-09-27",
+  "지문": "11b49053f0535ce1",
+  "파일": [
+   "docs/next/hypotheses.md"
+  ]
+ },
+ "96": {
+  "날짜": "2026-09-27",
+  "지문": "9bde19c39972be70",
+  "파일": [
+   "tools/make_patch.sh"
+  ]
+ },
+ "97": {
+  "날짜": "2026-09-27",
+  "지문": "3aa9facb00f2e2ef",
+  "파일": [
+   "tests/test_ontology.py::test_제품_이름이_개념으로_쪼개지지_않는다"
+  ]
+ },
+ "98": {
+  "날짜": "2026-09-27",
+  "지문": "26531c7a700b944e",
+  "파일": [
+   "tests/test_labels.py::test_채점표에_팔_이름이_없다"
+  ]
+ }
+}

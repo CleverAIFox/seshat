@@ -1,0 +1,230 @@
+"""문서 절과 **그 절이 강제자로 지목한 코드**에 정합 도장을 찍는다(DECISIONS §211).
+
+  python3 tools/docseal.py                 무효가 된 도장을 낸다(rc 1) ← 기본
+  python3 tools/docseal.py status          유효 · 무효 · 미날인이 몇인가
+  python3 tools/docseal.py audit           **날인 전 감사** — git 이 아는 「절 뒤에 바뀐 파일」
+  python3 tools/docseal.py stamp           지금 상태로 전부 찍는다
+  python3 tools/docseal.py stamp --only 209
+
+★ **파이어레인 `tools/docseal.py` 의 축을 옮긴 것이다**(파이어레인 DECISIONS §265). 거기가 적은
+  진단이 이 저장소에도 그대로 맞는다 — **문서↔코드 강제자가 전부 한 방향**이다. `check_docs` 와
+  `doc_fsck` 는 「문서가 가리킨 것이 **실재하는가**」 만 묻는다. **뜻이 낡은 것은 아무도 안 본다.**
+★ 2026-09-29 하루에 그 증거가 둘 나왔다. §169 가 `_블록을_고친다` 의 「주석 자리」 를 고쳤고 그 뒤
+  주석의 **뜻**이 거짓이 됐다(§208). §173 이 선 줄에 해시를 더했고 `set` 자리를 안 갈아 **선까지의
+  차가 조용히 사라졌다**(§209). 둘 다 강제자 파일이 **그 절이 적힌 뒤에 바뀌었다** — 그것 하나만
+  알았어도 사람이 다시 봤을 자리다.
+★ **뜻이 옳은지는 이 도구가 모른다.** 아는 것은 「확인한 뒤로 바뀌었는가」 하나다. 무효는
+  「틀렸다」 가 아니라 **「다시 봐야 한다」** 이고, 사람이 보고 `stamp` 로 다시 찍는다.
+★ **자주 무효가 되는 것과 쓸모없는 것은 다르다.** 자주 흔들리는 절이 있다는 사실 자체가 정보다.
+"""
+from __future__ import annotations
+
+import ast
+import hashlib
+import json
+import pathlib
+import re
+import subprocess
+import sys
+
+ROOT = pathlib.Path(__file__).resolve().parent.parent
+SEAL = ROOT / "data/docseal.json"
+DEC = ROOT / "docs/why/DECISIONS.md"
+절머리 = re.compile(r"^## §(\d+)\. (.+)$", re.M)
+날짜 = re.compile(r"\*\*(20\d\d-\d\d-\d\d)\*\*")
+# 강제자 줄이 백틱으로 지목한 자리. `tools/gate.py::_선을_박는다` 의 앞쪽만 본다
+지목 = re.compile(r"`([\w./-]+\.(?:py|sh|md|toml|jsonl|yml))(?:::([^`\s]+))?`")
+
+
+def _짧게(s: str) -> str:
+    return hashlib.sha256(s.encode("utf-8")).hexdigest()[:16]
+
+
+def _몸을_찾는다(나무: ast.AST, 이름: str):
+    """`파일::이름` 이 가리키는 함수 · 클래스. 없으면 None."""
+    끝 = 이름.split(".")[-1].split("::")[-1]
+    for n in ast.walk(나무):
+        if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)) and n.name == 끝:
+            return n
+    return None
+
+
+def 로직_지문(p: pathlib.Path, 이름: str = "") -> str:
+    """파일(또는 짚은 이름)의 **로직** 지문. 주석 · 독스트링을 뺀 **글자**로 잰다.
+
+    ★ 바이트로 재면 **주석 한 줄에 도장이 전부 찢어진다.** 이 저장소는 주석이 절반이고 그것을
+      고치는 것이 일과다 — 무효가 소음이 되면 안 읽힌다(파이어레인 `shardseal.logic_print`).
+    ★ **`ast.dump` 로는 안 잰다**(DECISIONS §211). 그 글은 파이썬 판마다 다르다 — 2026-09-29
+      `python3`(3.11)로 찍은 도장이 `uv run`(3.12)에서 전부 무효로 나왔다. **도장이 기계를 타면
+      그것은 도장이 아니다.** 낱말만 남겨 세면 판이 달라도 같다.
+    ★ 반대로 **`.md` · `.toml` 은 글자 그대로** 잰다 — 거기서는 글자가 곧 내용이다.
+    """
+    글 = p.read_text(encoding="utf-8")
+    if p.suffix != ".py":
+        return _짧게(글)
+    나무: ast.AST = ast.parse(글)
+    if 이름:
+        # ★ **강제자가 이름을 짚으면 그 몸만 잰다**(DECISIONS §211). 파일로 재면 `check_docs.py` 를
+        #   고칠 때마다 그 파일을 짚은 절 스무 개가 한꺼번에 무효가 된다
+        몸 = _몸을_찾는다(나무, 이름)
+        if 몸 is None:
+            return "없다"            # 짚은 이름이 사라졌다 — 그 자체가 다시 볼 까닭이다
+        조각 = ast.get_source_segment(글, 몸) or ""
+        return _낱말지문(조각, 몸.lineno - 1)
+    return _낱말지문(글, 0)
+
+
+def _독스트링_줄(나무: ast.AST) -> set[int]:
+    """독스트링이 차지한 줄 번호. **뜻이 아니라 설명이므로 지문에서 뺀다.**"""
+    줄: set[int] = set()
+    for n in ast.walk(나무):
+        몸 = getattr(n, "body", None)
+        if (isinstance(몸, list) and 몸 and isinstance(몸[0], ast.Expr)
+                and isinstance(getattr(몸[0], "value", None), ast.Constant)
+                and isinstance(몸[0].value.value, str)):
+            줄 |= set(range(몸[0].lineno, (몸[0].end_lineno or 몸[0].lineno) + 1))
+    return 줄
+
+
+def _낱말지문(글: str, 밀림: int = 0) -> str:
+    """주석과 독스트링을 뺀 **남은 글자**. 들여쓰기와 빈 줄은 안 센다.
+
+    ★ **낱말로 쪼개지 않는다**(DECISIONS §211). 2026-09-29, 토큰으로 세니 3.11 과 3.12 가 갈렸다 —
+      3.12 가 f-문자열을 여러 토큰으로 쪼갠다. 주석의 **자리**는 판을 안 타므로 그것만 지운다.
+    """
+    import io
+    import tokenize
+    try:
+        뺄줄 = _독스트링_줄(ast.parse(글))
+        주석 = [tok for tok in tokenize.generate_tokens(io.StringIO(글).readline)
+                if tok.type == tokenize.COMMENT]
+    except (SyntaxError, tokenize.TokenError, IndentationError):
+        return _짧게(글)                      # 조각이 홀로 못 서면 글자로 잰다
+    줄 = 글.splitlines()
+    for tok in reversed(주석):               # 뒤에서부터 지워야 앞의 자리가 안 밀린다
+        n = tok.start[0] - 1
+        if 0 <= n < len(줄):
+            줄[n] = 줄[n][:tok.start[1]]
+    남은 = [x.rstrip() for k, x in enumerate(줄, 1) if k not in 뺄줄 and x.strip()]
+    return _짧게("\n".join(남은))
+
+
+def 절들(글: str | None = None) -> list[dict]:
+    """(번호, 제목, 날짜, 본문, 지목한 자리들). **강제자 줄이 없는 절은 대상이 아니다.**"""
+    글 = 글 if 글 is not None else DEC.read_text(encoding="utf-8")
+    자리 = [(m.start(), m.group(1), m.group(2)) for m in 절머리.finditer(글)]
+    out = []
+    for i, (s, 번호, 제목) in enumerate(자리):
+        끝 = 자리[i + 1][0] if i + 1 < len(자리) else len(글)
+        본문 = 글[s:끝]
+        강제 = 본문[본문.rfind("강제자"):] if "강제자" in 본문 else ""
+        파일 = []
+        for 곳, 심볼 in 지목.findall(강제):      # `자리` 를 덮어쓰면 바깥 목록이 날아간다
+            p = ROOT / 곳
+            짚은 = f"{곳}::{심볼}" if 심볼 else 곳
+            if p.is_file() and 짚은 not in 파일:
+                파일.append(짚은)
+        날 = 날짜.search(본문)
+        out.append({"번호": 번호, "제목": 제목, "날짜": 날.group(1) if 날 else "",
+                    "본문": 본문, "파일": 파일})
+    return out
+
+
+def 지문(절: dict) -> str:
+    """절 본문 + 그 절이 지목한 파일들의 로직. **둘 중 하나만 바뀌어도 도장이 무효다.**"""
+    조각 = [_짧게(절["본문"])]
+    for f in 절["파일"]:
+        자리, _, 심볼 = f.partition("::")
+        조각.append(f"{f}\0{로직_지문(ROOT / 자리, 심볼)}")
+    return _짧게("\n".join(조각))
+
+
+def 도장들() -> dict:
+    if SEAL.is_file():
+        return json.loads(SEAL.read_text(encoding="utf-8"))
+    return {}
+
+
+def 가른다(찍힌: dict) -> tuple[list[dict], list[dict], list[dict]]:
+    """(유효, 무효, 미날인). **강제자가 파일을 안 짚는 절은 아예 대상이 아니다.**"""
+    유효, 무효, 미날인 = [], [], []
+    for 절 in 절들():
+        if not 절["파일"]:
+            continue
+        옛 = 찍힌.get(절["번호"])
+        if 옛 is None:
+            미날인.append(절)
+        elif 옛.get("지문") == 지문(절):
+            유효.append(절)
+        else:
+            무효.append(절)
+    return 유효, 무효, 미날인
+
+
+def 뒤에_바뀐_파일(절: dict) -> list[str]:
+    """**git 이 아는 감사** — 이 절이 적힌 날 뒤에 그 파일이 바뀌었나(DECISIONS §211).
+
+    ★ 도장을 처음 찍는 날에는 전부 「미날인」 이라 감사가 안 나온다. **소급 감사는 이력이 한다** —
+      절의 날짜와 파일의 마지막 손댄 날을 견준다. 완전하지 않다(같은 날 바뀐 것은 못 본다).
+    """
+    if not 절["날짜"]:
+        return []
+    out = []
+    for f in 절["파일"]:
+        자리, _, 심볼 = f.partition("::")
+        # ★ **이름을 짚었으면 그 몸의 이력만 본다**(`git log -L`). 파일 전체의 마지막 손댄 날로
+        #   재면 `check_docs.py` 를 짚은 절이 전부 걸려 **감사가 목록이 아니라 소음**이 된다
+        argv = (["git", "log", "-1", "--format=%cs", f"-L:{심볼}:{자리}", "--no-patch"] if 심볼
+                else ["git", "log", "-1", "--format=%cs", "--", 자리])
+        r = subprocess.run(argv, capture_output=True, text=True, cwd=ROOT)
+        마지막 = r.stdout.strip().splitlines()[0].strip() if r.stdout.strip() else ""
+        if 마지막[:10] > 절["날짜"] and len(마지막) >= 10:
+            out.append(f"{f}({마지막[:10]})")
+    return out
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = sys.argv[1:] if argv is None else argv
+    말 = args[0] if args and not args[0].startswith("-") else ""
+    찍힌 = 도장들()
+
+    if 말 == "audit":
+        의심 = [(절, 바뀐) for 절 in 절들() if 절["파일"] and (바뀐 := 뒤에_바뀐_파일(절))]
+        print(f"  절 {len([x for x in 절들() if x['파일']])} 중 **그 뒤에 강제자 파일이 바뀐 절 "
+              f"{len(의심)}** — 「틀렸다」 가 아니라 **「다시 봐야 한다」** 다")
+        for 절, 바뀐 in 의심:
+            print(f"    §{절['번호']} {절['제목'][:40]} ({절['날짜']})\n        {' · '.join(바뀐)}")
+        print("\n  ※ 하나씩 읽고, 지금도 참이면 `python3 tools/docseal.py stamp --only <번호>`")
+        return 0
+
+    if 말 == "stamp":
+        만 = args[args.index("--only") + 1] if "--only" in args else ""
+        n = 0
+        for 절 in 절들():
+            if not 절["파일"] or (만 and 절["번호"] != 만):
+                continue
+            찍힌[절["번호"]] = {"지문": 지문(절), "날짜": 절["날짜"], "파일": 절["파일"]}
+            n += 1
+        SEAL.parent.mkdir(parents=True, exist_ok=True)
+        SEAL.write_text(json.dumps(찍힌, ensure_ascii=False, indent=1, sort_keys=True) + "\n",
+                        encoding="utf-8")
+        print(f"  도장 {n} 개를 찍었다 — {SEAL.relative_to(ROOT)}")
+        return 0
+
+    유효, 무효, 미날인 = 가른다(찍힌)
+    if 말 == "status":
+        print(f"  유효 {len(유효)} · **무효 {len(무효)}** · 미날인 {len(미날인)}")
+        for 절 in 미날인[:10]:
+            print(f"    미날인 §{절['번호']} {절['제목'][:50]}")
+        return 0
+    for 절 in 무효:
+        print(f"    ✗ §{절['번호']} {절['제목'][:50]} — 찍은 뒤로 본문이나 강제자가 바뀌었다\n"
+              f"        {' · '.join(절['파일'])}\n"
+              f"        읽고 지금도 참이면 : python3 tools/docseal.py stamp --only {절['번호']}")
+    if 무효:
+        print(f"\n  **무효는 「틀렸다」 가 아니라 「다시 봐야 한다」 다**(DECISIONS §211). {len(무효)} 절")
+    return 1 if 무효 else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

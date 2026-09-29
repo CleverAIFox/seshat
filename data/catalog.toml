@@ -41,6 +41,14 @@ regenerable = false
 managed = false
 what = "사람이 손으로 고치는 작은 정본 — 온톨로지 · 평가셋 0판 · 기록판. diff 로 봐야 한다"
 
+[layers."도장"]
+base = "repo"
+dirs = ["data/docseal.json"]
+committed = true
+regenerable = true
+managed = false
+what = "문서 절 ↔ 그 절이 짚은 코드의 정합 도장(DECISIONS §211). `tools/docseal.py stamp` 가 쓴다 — 사람이 읽고 찍는다"
+
 [layers."셋"]
 base = "repo"
 dirs = ["data/bench", "data/probes", "data/domain"]
@@ -89,6 +97,15 @@ license = "자체 — 이름과 표기라는 사실의 목록"
 uses = ["ontology", "eval"]
 how = "사람"
 feeds = ["seshat/ontology.py — term · josa 지표", "seshat/terms.py — 용어 자리표시", "tools/make_probes.py", "tools/fetch_awsdocs.py — 수확 거르기"]
+
+[[source]]
+id = "docseal"
+where = "repo:data/docseal.json"
+origin = "**사람이 절을 다시 읽고 찍은 도장**(DECISIONS §211). 값이 아니라 「언제 확인했나」 를 든다"
+license = "자체 — 이 저장소의 확인 기록"
+uses = ["ontology"]
+how = "tools/docseal.py"
+feeds = ["tools/docseal.py — 무효가 된 절을 찾는다", "tools/verify.sh — docseal 단계"]
 
 [[source]]
 id = "style-na"
