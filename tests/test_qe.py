@@ -100,11 +100,11 @@ def test_줄을_판과_셋에서_모은다(tmp_path):
 
 def test_토크나이저가_죽으면_엉뚱한_것을_안_깔게_한다():
     """★ **깨진 도구의 마지막 줄이 가장 그럴듯한 오답이다**(DECISIONS §246).
-    화면은 `pip install tiktoken` 이라고 찍는데 **필요한 것은 `protobuf`** 다."""
+    화면은 `pip install tiktoken` 이라고 찍는데 **필요한 것은 `protobuf`** 다.
+    ★ 2026-10-01 `qe` 그룹을 뺐으므로(§254 · §257) **이 자를 돌리려면 손으로 들인다** —
+    그래도 그때의 안내는 남아 있어야 한다."""
     글 = (ROOT / "tools/qe.py").read_text(encoding="utf-8")
     assert "그 말을 따르지 않는다" in 글 and "protobuf" in 글
-    pyproject = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
-    assert "protobuf" in pyproject, "qe 그룹이 protobuf 를 안 들면 첫 실행이 죽는다"
 
 
 def test_무게를_받기_전에_탐침이_돈다():
@@ -124,11 +124,13 @@ def test_탐침의_어휘가_점수를_읽는_자리보다_크다():
     assert QE.탐침어휘 > 250089
 
 
-def test_qe_그룹이_잰_범위를_든다():
-    """★ **위아래를 재서 박았다**(§246). 4.40~4.53 은 같은 수를 내고 4.55 부터 죽는다."""
-    pyproject = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
-    assert "transformers>=4.40,<4.54" in pyproject
+def test_잰_범위가_도구에_남아_있다():
+    """★ **위아래를 재서 박았다**(§246). 4.40~4.53 은 같은 수를 내고 4.55 부터 죽는다.
+    ★ 2026-10-01 `qe` 그룹을 뺐다(§254 · §257) — **범위는 도구가 든다.** 손으로 들이는
+    사람이 그 범위를 알아야 하고, 탐침이 그 자리에서 다시 말한다."""
     assert QE.잰판 == "4.40 ~ 4.53"
+    글 = (ROOT / "tools/qe.py").read_text(encoding="utf-8")
+    assert "transformers>=4.40,<4.54" in 글, "손으로 들일 판을 머리말이 적는다"
 
 
 def test_탐침이_본판과_같은_자리에서_돈다():

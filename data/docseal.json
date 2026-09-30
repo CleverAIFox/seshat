@@ -581,7 +581,7 @@
  "164": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "a3f01d9e3ccc2d6e",
+  "지문": "35177605593ec0fa",
   "파일": [
    "tools/verify.sh",
    "tests/test_workflows.py::test_셸의_변수_이름은_ASCII_다"
@@ -647,7 +647,7 @@
  "170": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "99a81217db2536ce",
+  "지문": "a4f9c5eb10a4ef1a",
   "파일": [
    "tools/ci_status.py",
    "tools/verify.sh",
@@ -754,7 +754,7 @@
  "180": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "23b1e1a71b70cadc",
+  "지문": "3630282e00d759b4",
   "파일": [
    "tools/bootstrap.py",
    "tests/test_bootstrap.py",
@@ -1315,7 +1315,7 @@
  "234": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "b89314970f9e182e",
+  "지문": "6f8a61c87f55caf7",
   "파일": [
    "docs/why/DECISIONS.md",
    "docs/next/PLAN.md",
@@ -1325,7 +1325,7 @@
  "235": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "2cb9c42fe877fc95",
+  "지문": "700ca5d97177487d",
   "파일": [
    "tools/check_numbers.py",
    "tests/test_numbers.py",
@@ -1345,7 +1345,7 @@
  "237": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "38adaf9b0f33bb7a",
+  "지문": "2d864142a14b5a5d",
   "파일": [
    "tools/docgen.py",
    "tests/test_docgen.py",
@@ -1365,7 +1365,7 @@
  "239": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "4258a670fc2f55a7",
+  "지문": "35cb0f9c09ee1633",
   "파일": [
    "tools/check_scope.py",
    "tests/test_scope.py",
@@ -1384,7 +1384,7 @@
  "240": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "eac57f4badcaf95f",
+  "지문": "8ea1280fb037b4b8",
   "파일": [
    "tools/check_dead.py",
    "tests/test_dead.py",
@@ -1394,7 +1394,7 @@
  "241": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "8aed1faae8099fd1",
+  "지문": "461f17c97a4f4426",
   "파일": [
    "tools/check_numbers.py",
    "docs/why/DECISIONS.md"
@@ -1403,7 +1403,7 @@
  "242": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "4b53f2c23c3f45a0",
+  "지문": "83cdd73177aac7eb",
   "파일": [
    "tools/labels.py",
    "tests/test_labels.py",
@@ -1441,7 +1441,7 @@
  "246": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "035707daf3281949",
+  "지문": "fec1a92ed59bb0b7",
   "파일": [
    "tools/qe.py",
    "tests/test_qe.py",
@@ -1608,7 +1608,7 @@
  "4": {
   "날짜": "2026-09-22",
   "읽음": true,
-  "지문": "d0c5e64451099874",
+  "지문": "770a95a2c160f128",
   "파일": [
    "pyproject.toml"
   ]
@@ -1616,7 +1616,7 @@
  "40": {
   "날짜": "2026-09-23",
   "읽음": true,
-  "지문": "648448fb7c13f97d",
+  "지문": "4136b2f88236c3c8",
   "파일": [
    "pyproject.toml"
   ]

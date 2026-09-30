@@ -38,6 +38,7 @@ step() {  # step 이름 명령...
 
 if [ "${CI:-}" = "true" ]; then NAMES+=("훅"); MARKS+=("CI 밖 — CI 는 커밋을 안 한다")
 else step 훅            bash tools/hookcheck.sh --check; fi
+step lock               uv lock --check
 step ruff               uv run ruff check .
 step pytest             uv run pytest -q
 step check_docs         uv run python tools/check_docs.py

@@ -57,8 +57,11 @@ bash tools/verify.sh     # 점검 전부 — CI 도 이것만 부른다
 ```
 
 **무거운 것은 그룹이 든다**(DECISIONS §4). 관문은 기본 의존성 0 으로 돌고, 필요한 판에서만 받는다 —
-`--group eval`(chrF) · `--group qe`(신경망 자 · torch) · `--group aws` · `--group data`.
-**그룹은 한 번에 다 적는다** — `uv sync --group eval --group qe` (하나만 적으면 다른 쪽이 지워진다 · §246).
+`--group eval`(chrF) · `--group aws` · `--group data`. **그룹은 한 번에 다 적는다** —
+`uv sync --group eval --group aws` (하나만 적으면 다른 쪽이 지워진다 · §246).
+
+★ **`torch` · `transformers` 는 안 들인다**(DECISIONS §254 · §257). 신경망 QE 자를 들였다가
+**ollama 로 도는 LLM 판정이 더 나아서** 뺐고(H-086), 그것으로 고침 없는 취약점 넷이 사라졌다.
 
 **도구의 정본 목록은 `docs/now/MASTER.md` §14 하나다.** 여기에 다시 적지 않는다 —
 두 곳에 적었더니 한쪽에만 있는 도구가 열셋이 됐다(DECISIONS §199).

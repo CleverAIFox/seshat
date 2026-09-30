@@ -47,7 +47,7 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
     "seshat/catalog.py:237",
     "seshat/serve.py:102",
     "tests/test_mbr.py:9",
-    "tests/test_qe.py:147",
+    "tests/test_qe.py:149",
     "tools/check_dead.py:59",
     "tools/check_docs.py:294",
     "tools/dupcheck.py:133",
