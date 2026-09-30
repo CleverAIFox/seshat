@@ -72,6 +72,44 @@ def 커밋(d: pathlib.Path) -> str:
         return "모른다"
 
 
+# 무게 없이 세워 보는 탐침의 크기. `250089` 자리에서 점수를 읽으므로 어휘가 그보다 커야 한다
+탐침어휘 = 250100
+잰판 = "4.40 ~ 4.53"
+
+
+def _탐침(models, transformers) -> None:
+    """★ **무게를 받기 전에 앞으로 한 번 흘려 본다**(DECISIONS §246).
+
+    ★ 2026-09-30 이 탐침이 없어서 **가중치 5GB 를 받고 나서** 안 되는 것을 알았다. 그것도 두 번 —
+      `MT5Stack` 이 임베딩을 안 받는 자리에서 한 번, 교차어텐션 마스크가 한 칸 어긋나는 자리에서
+      한 번. **둘 다 무게가 필요 없는 고장**이다.
+    ★ **판 번호를 안 묻는다** — 작은 모형을 세워 **실제로 도는지**를 묻는다. 판으로 막으면
+      되살아나도 계속 막고, 다른 판에서 같은 자리가 또 죽어도 안 막는다.
+    ★ **수가 맞는지는 안 본다**(밖). 무작위 무게라 값에 뜻이 없다 — 보는 것은 **도는가** 하나다.
+      판마다 같은 수가 나오는지는 사람이 한 번 쟀다(4.40 ~ 4.53 이 소수 여섯 자리까지 같다).
+    """
+    import torch
+    cfg = transformers.MT5Config(vocab_size=탐침어휘, d_model=16, d_ff=32, d_kv=4, num_layers=2,
+                                 num_decoder_layers=2, num_heads=2, decoder_start_token_id=0)
+    try:
+        작은 = models.MT5ForRegression(cfg)
+        작은.eval()
+        with torch.no_grad():
+            작은(input_ids=torch.tensor([[5, 6, 7, 8, 9], [5, 6, 7, 0, 0]]),
+                attention_mask=torch.tensor([[1, 1, 1, 1, 1], [1, 1, 1, 0, 0]]))
+    except Exception as e:                        # noqa: BLE001
+        raise SystemExit(
+            f"MetricX 가 이 `transformers`({transformers.__version__})에서 안 돈다 — "
+            f"{type(e).__name__}: {e}\n"
+            f"    ★ **무게를 받기 전에 잡았다** — 작은 모형을 세워 앞으로 흘려 본 자리다\n"
+            f"    **베껴 고치지 않는다**(DECISIONS §5) — 조용히 다른 수를 내느니 안 도는 것이 낫다\n"
+            f"    원본이 도는 판은 재 봤다 : **{잰판}**\n"
+            f"    내린다 : uv sync --group eval --group qe   "
+            f"(`qe` 그룹이 그 범위를 든다)\n"
+            f"    지금 판 : uv run --group qe python -c "
+            f"'import transformers;print(transformers.__version__)'") from e
+
+
 def 모형을_든다(d: pathlib.Path, 모형: str, 토크나이저: str):
     """`MT5ForRegression` 과 토크나이저. **기운 자리를 함께 돌려준다.**"""
     sys.path.insert(0, str(d))
@@ -84,18 +122,6 @@ def 모형을_든다(d: pathlib.Path, 모형: str, 토크나이저: str):
     if not hasattr(m, "__HEAD_MASK_WARNING_MSG"):
         m.__HEAD_MASK_WARNING_MSG = "(seshat 이 채운 자리다 — transformers 5 에서 사라졌다)"
         기움.append("__HEAD_MASK_WARNING_MSG")
-    # ★ **판 번호를 묻지 않고 「그 자리가 사는지」 를 묻는다**(DECISIONS §246). `transformers` 5 가
-    #   `MT5Stack` 에서 `embed_tokens` 를 뺐는데 MetricX 원본은 그 자리로 임베딩을 넘긴다. 판으로 막으면
-    #   **되살아나도 계속 막고, 다른 판에서 같은 자리가 또 죽어도 안 막는다**
-    import inspect
-    if "embed_tokens" not in inspect.signature(m.MT5Stack.__init__).parameters:
-        raise SystemExit(
-            f"이 `transformers`({transformers.__version__})의 `MT5Stack` 이 `embed_tokens` 를 안 받는다\n"
-            "    MetricX 원본이 그 자리로 임베딩을 넘긴다 — **베껴 고치지 않는다**(DECISIONS §5).\n"
-            "    원본이 기대는 판으로 내린다 : uv sync --group eval --group qe\n"
-            "      (`pyproject.toml` 의 `qe` 그룹이 `transformers>=4.40,<5` 를 든다)\n"
-            "    지금 판을 본다 : uv run --group qe python -c "
-            "'import transformers;print(transformers.__version__)'")
     try:
         from metricx24 import models
     except Exception as e:                        # noqa: BLE001
@@ -105,6 +131,7 @@ def 모형을_든다(d: pathlib.Path, 모형: str, 토크나이저: str):
             "    `transformers` 판이 안 맞을 수 있다(원본은 4.30 에 맞춰져 있다)\n"
             "    판을 본다 : uv run --group qe python -c 'import transformers;print(transformers.__version__)'\n"
             "    내려서 다시 : uv pip install 'transformers<5'") from e
+    _탐침(models, transformers)
     try:
         tok = transformers.AutoTokenizer.from_pretrained(토크나이저, legacy=False, use_fast=True)
     except Exception as e:                        # noqa: BLE001
@@ -168,15 +195,35 @@ def 잰다(줄: list[dict], tok, mod, 장치: str, 길이: int, 묶음: int) -> 
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--run", action="append", default=[], required=True, metavar="팔=경로")
-    ap.add_argument("--out", required=True)
+    ap.add_argument("--run", action="append", default=[], metavar="팔=경로")
+    ap.add_argument("--out", default="")
     ap.add_argument("--metricx", default="")
     ap.add_argument("--model", default=기본모형)
     ap.add_argument("--tokenizer", default=기본토크나이저)
     ap.add_argument("--max-input-length", type=int, default=기본길이)
     ap.add_argument("--batch-size", type=int, default=8)
     ap.add_argument("--set", dest="setpath", default="")
+    ap.add_argument("--selftest", action="store_true",
+                    help="무게 없이 탐침만 돈다 — 이 `transformers` 에서 원본이 도는가")
     a = ap.parse_args(sys.argv[1:] if argv is None else argv)
+
+    if a.selftest:
+        d = 자리(a.metricx)
+        sys.path.insert(0, str(d))
+        import transformers
+        m = transformers.models.mt5.modeling_mt5
+        if not hasattr(m, "__HEAD_MASK_WARNING_MSG"):
+            m.__HEAD_MASK_WARNING_MSG = "(seshat 이 채운 자리다)"
+        from metricx24 import models
+        _탐침(models, transformers)
+        print(f"  탐침 산다 — MetricX 가 transformers {transformers.__version__} 에서 돈다 "
+              f"(잰 판 {잰판})")
+        return 0
+
+    if not a.run or not a.out:
+        raise SystemExit("`--run 팔=경로` 와 `--out` 이 있어야 잰다\n"
+                         "    이 판에서 원본이 도는지만 보려면 : python3 tools/qe.py --selftest\n"
+                         "    보기 : --run 4b=runs/H-080-retry2-….jsonl --out /tmp/metricx.jsonl")
 
     판: dict[str, pathlib.Path] = {}
     for spec in a.run:

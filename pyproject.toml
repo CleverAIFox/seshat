@@ -23,11 +23,12 @@ data = ["huggingface_hub>=0.24", "pyarrow>=15"]
 # ★ **`protobuf` 가 있어야 mT5 의 `spiece.model` 을 빠른 토크나이저로 바꾼다**(2026-09-30 ·
 #   DECISIONS §246). 없으면 transformers 5 가 **tiktoken 으로 넘어갔다가** 거기서도 죽는다 —
 #   화면에 뜨는 마지막 말이 `pip install tiktoken` 이라 **엉뚱한 것을 깔게 만든다**
-# ★ **`transformers` 5 는 안 된다**(2026-09-30 · DECISIONS §246). 5 에서 `MT5Stack` 이
-#   `embed_tokens` 를 안 받는다 — MetricX 원본이 그 자리로 임베딩을 넘긴다. **원본이 기대는
-#   조건까지 옮기는 것**이 옮기는 일이다(§20). 판을 올릴 때는 `qe.py` 의 **할 수 있나** 검사가
-#   먼저 말한다 — 판 번호가 아니라 **그 자리가 사는지**를 묻는다
-qe = ["torch>=2.4", "transformers>=4.40,<5", "sentencepiece>=0.2", "protobuf>=4"]
+# ★ **위아래를 재서 박았다**(2026-09-30 · DECISIONS §246). 무게 없이 작은 mT5 를 세워 앞으로
+#   흘려 보고 판마다 물었다 — **4.40 ~ 4.53 은 같은 수를 내고**(소수 여섯 자리까지),
+#   4.55 부터 죽는다(`is_updated`), 5 는 `MT5Stack` 이 `embed_tokens` 를 안 받아 아예 안 선다.
+#   **원본이 기대는 조건까지 옮기는 것**이 옮기는 일이다(§20).
+#   판을 올릴 때는 `qe.py` 의 **탐침**이 먼저 말한다 — 무게를 받기 전에 돈다
+qe = ["torch>=2.4", "transformers>=4.40,<4.54", "sentencepiece>=0.2", "protobuf>=4"]
 
 [tool.uv]
 default-groups = ["dev"]

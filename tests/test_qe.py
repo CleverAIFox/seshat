@@ -107,17 +107,25 @@ def test_토크나이저가_죽으면_엉뚱한_것을_안_깔게_한다():
     assert "protobuf" in pyproject, "qe 그룹이 protobuf 를 안 들면 첫 실행이 죽는다"
 
 
-def test_판_번호가_아니라_할_수_있나로_막는다():
-    """★ **판으로 막으면 되살아나도 계속 막고, 다른 판에서 같은 자리가 또 죽어도 안 막는다**
-    (DECISIONS §246). `transformers` 5 가 `MT5Stack` 에서 `embed_tokens` 를 뺐다."""
+def test_무게를_받기_전에_탐침이_돈다():
+    """★ **가중치 5GB 를 받고 나서 두 번 죽었다**(DECISIONS §246) — 둘 다 무게가 필요 없는 고장이다.
+    작은 모형을 세워 앞으로 흘려 보는 자리가 `from_pretrained` **앞**에 있어야 한다."""
     글 = (ROOT / "tools/qe.py").read_text(encoding="utf-8")
-    assert "inspect.signature(m.MT5Stack.__init__).parameters" in 글
-    assert "embed_tokens" in 글
-    # 판 자체를 조건으로 쓰지 않는다 — 조건은 자리의 생사다
+    앞 = 글.index("_탐침(models, transformers)")
+    뒤 = 글.index("MT5ForRegression.from_pretrained")
+    assert 앞 < 뒤, "탐침이 무게를 받은 뒤에 돌면 값이 없다"
+    # 판 자체를 조건으로 쓰지 않는다 — 조건은 **실제로 도는가** 다
     assert "transformers.__version__ <" not in 글 and "version_tuple" not in 글
+    assert "--selftest" in 글                      # 무게 없이 혼자 돌 수 있다
 
 
-def test_qe_그룹이_원본이_기대는_판을_든다():
-    """★ **원본이 기대는 조건까지 옮기는 것이 옮기는 일이다**(§20 · §246)."""
+def test_탐침의_어휘가_점수를_읽는_자리보다_크다():
+    """★ `MT5ForRegression` 은 `250089` 자리에서 점수를 읽는다 — 어휘가 작으면 **거기서 죽는다.**"""
+    assert QE.탐침어휘 > 250089
+
+
+def test_qe_그룹이_잰_범위를_든다():
+    """★ **위아래를 재서 박았다**(§246). 4.40~4.53 은 같은 수를 내고 4.55 부터 죽는다."""
     pyproject = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
-    assert "transformers>=4.40,<5" in pyproject
+    assert "transformers>=4.40,<4.54" in pyproject
+    assert QE.잰판 == "4.40 ~ 4.53"
