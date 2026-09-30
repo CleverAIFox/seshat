@@ -614,7 +614,7 @@ def test_자마다_못_매기는_줄이_달라도_안_죽는다(tmp_path, monkey
     좁은 = _자(tmp_path, "좁은", {k: float(n) for n, k in enumerate(판정) if n >= 4})
     L.corr("t", ["a"], {"넓은": 넓은, "좁은": 좁은}, "넓은", n=100)
     out = capsys.readouterr().out
-    assert "둘 다 매긴 쌍 8" in out, out
+    assert "쌍 8 에서 잰 것이다" in out, out
 
 
 def test_겹치는_쌍이_없으면_차를_못_잰다고_말한다(tmp_path, monkeypatch, capsys):
@@ -630,3 +630,25 @@ def test_겹치는_쌍이_없으면_차를_못_잰다고_말한다(tmp_path, mon
 def test_작을수록_좋은_지표는_부호를_뒤집어_낸다():
     """★ **안 뒤집으면 잘 맞는 자가 음수로 나오고** 「거꾸로 가리킨다」 와 구별되지 않는다."""
     assert "term_bad" in L.작을수록 and "term_off" not in L.작을수록
+
+
+def test_줄_수를_찍는다(tmp_path, monkeypatch, capsys):
+    """★ **재표집의 단위는 줄이다 — 쌍이 아니다**(DECISIONS §245). 한 줄의 팔 셋은 독립이 아니다."""
+    monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
+    판정 = {(f"x{i}", a): ("맞다" if i % 2 else "어긋난다")
+            for i in range(7) for a in ("4b", "12b", "nova")}
+    _판정지(tmp_path, "t", "a", 판정)
+    자 = _자(tmp_path, "자", {k: float(n) for n, k in enumerate(판정)})
+    L.corr("t", ["a"], {"자": 자}, "", n=100)
+    out = capsys.readouterr().out
+    assert "**줄 7** · 쌍 21" in out, out
+    assert "줄이 7 이다" in out and "정밀도를 말할 수 없다" in out
+
+
+def test_줄이_넉넉하면_경고가_안_붙는다(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
+    판정 = {(f"x{i}", "4b"): ("맞다" if i % 2 else "어긋난다") for i in range(L.얇다 + 5)}
+    _판정지(tmp_path, "t", "a", 판정)
+    자 = _자(tmp_path, "자", {k: float(n) for n, k in enumerate(판정)})
+    L.corr("t", ["a"], {"자": 자}, "", n=50)
+    assert "정밀도를 말할 수 없다" not in capsys.readouterr().out
