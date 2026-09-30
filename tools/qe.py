@@ -77,6 +77,12 @@ def 커밋(d: pathlib.Path) -> str:
 잰판 = "4.40 ~ 4.53"
 
 
+def 어디서_도나() -> str:
+    """★ **탐침과 본판이 같은 자리에서 돈다**(DECISIONS §248) — 한 곳에서 정한다."""
+    import torch
+    return "cuda" if torch.cuda.is_available() else "cpu"
+
+
 def _탐침(models, transformers) -> None:
     """★ **무게를 받기 전에 앞으로 한 번 흘려 본다**(DECISIONS §246).
 
@@ -91,17 +97,22 @@ def _탐침(models, transformers) -> None:
     import torch
     cfg = transformers.MT5Config(vocab_size=탐침어휘, d_model=16, d_ff=32, d_kv=4, num_layers=2,
                                  num_decoder_layers=2, num_heads=2, decoder_start_token_id=0)
+    장치 = 어디서_도나()
     try:
         작은 = models.MT5ForRegression(cfg)
         작은.eval()
+        # ★ **실제 판과 같은 자리로 옮긴다**(DECISIONS §248). 2026-09-30 이 줄이 없어서 탐침이
+        #   **거짓 빨강**을 냈다 — 모형은 CPU 에 있고 안쪽에서 난 자리표가 GPU 라 어긋났다.
+        #   **탐침이 실제 판과 다른 자리에서 돌면 잡는 것도 놓치는 것도 거짓이다**
+        작은.to(장치)
         with torch.no_grad():
-            작은(input_ids=torch.tensor([[5, 6, 7, 8, 9], [5, 6, 7, 0, 0]]),
-                attention_mask=torch.tensor([[1, 1, 1, 1, 1], [1, 1, 1, 0, 0]]))
+            작은(input_ids=torch.tensor([[5, 6, 7, 8, 9], [5, 6, 7, 0, 0]], device=장치),
+                attention_mask=torch.tensor([[1, 1, 1, 1, 1], [1, 1, 1, 0, 0]], device=장치))
     except Exception as e:                        # noqa: BLE001
         raise SystemExit(
             f"MetricX 가 이 `transformers`({transformers.__version__})에서 안 돈다 — "
             f"{type(e).__name__}: {e}\n"
-            f"    ★ **무게를 받기 전에 잡았다** — 작은 모형을 세워 앞으로 흘려 본 자리다\n"
+            f"    ★ **무게를 받기 전에 잡았다** — 작은 모형을 {장치} 에 세워 앞으로 흘려 본 자리다\n"
             f"    **베껴 고치지 않는다**(DECISIONS §5) — 조용히 다른 수를 내느니 안 도는 것이 낫다\n"
             f"    원본이 도는 판은 재 봤다 : **{잰판}**\n"
             f"    내린다 : uv sync --group eval --group qe   "
@@ -113,7 +124,6 @@ def _탐침(models, transformers) -> None:
 def 모형을_든다(d: pathlib.Path, 모형: str, 토크나이저: str):
     """`MT5ForRegression` 과 토크나이저. **기운 자리를 함께 돌려준다.**"""
     sys.path.insert(0, str(d))
-    import torch
     import transformers
     m = transformers.models.mt5.modeling_mt5
     기움 = []
@@ -146,7 +156,7 @@ def 모형을_든다(d: pathlib.Path, 모형: str, 토크나이저: str):
             "    그래도 안 되면 : uv pip install protobuf") from e
     mod = models.MT5ForRegression.from_pretrained(모형)
     mod.eval()
-    장치 = "cuda" if torch.cuda.is_available() else "cpu"
+    장치 = 어디서_도나()
     mod.to(장치)
     return tok, mod, 장치, 기움
 
@@ -216,8 +226,8 @@ def main(argv: list[str] | None = None) -> int:
             m.__HEAD_MASK_WARNING_MSG = "(seshat 이 채운 자리다)"
         from metricx24 import models
         _탐침(models, transformers)
-        print(f"  탐침 산다 — MetricX 가 transformers {transformers.__version__} 에서 돈다 "
-              f"(잰 판 {잰판})")
+        print(f"  탐침 산다 — MetricX 가 transformers {transformers.__version__} · "
+              f"{어디서_도나()} 에서 돈다 (잰 판 {잰판})")
         return 0
 
     if not a.run or not a.out:

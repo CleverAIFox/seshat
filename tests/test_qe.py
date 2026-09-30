@@ -129,3 +129,20 @@ def test_qe_그룹이_잰_범위를_든다():
     pyproject = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
     assert "transformers>=4.40,<4.54" in pyproject
     assert QE.잰판 == "4.40 ~ 4.53"
+
+
+def test_탐침이_본판과_같은_자리에서_돈다():
+    """★ **탐침이 실제 판과 다른 자리에서 돌면 잡는 것도 놓치는 것도 거짓이다**(DECISIONS §248).
+    2026-09-30 탐침이 CPU 에 모형을 세워 놓고 **거짓 빨강**을 냈다."""
+    글 = (ROOT / "tools/qe.py").read_text(encoding="utf-8")
+    assert 글.count("어디서_도나()") >= 3, "탐침 · 본판 · 화면이 같은 한 곳에서 자리를 묻는다"
+    assert "작은.to(장치)" in 글 and "device=장치" in 글
+    # 자리를 손으로 두 번 적지 않는다
+    assert '"cuda" if torch.cuda.is_available() else "cpu"' not in 글.split("def 어디서_도나")[1].split("def ")[1]
+
+
+def test_자리는_한_곳에서_정한다():
+    """★ torch 는 `qe` 그룹이라 관문에는 없다 — **없으면 건너뛴다**(DECISIONS §4)."""
+    import pytest
+    pytest.importorskip("torch")
+    assert QE.어디서_도나() in ("cuda", "cpu")
