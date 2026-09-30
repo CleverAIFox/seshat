@@ -96,3 +96,12 @@ def test_줄을_판과_셋에서_모은다(tmp_path):
     난것 = QE.줄을_모은다({"4b": 판})
     assert [x["id"] for x in 난것] == ["x0", "x1"]         # 판에 없는 줄은 안 든다
     assert 난것[0] == {"id": "x0", "arm": "4b", "src": "S0", "out": "O0"}
+
+
+def test_토크나이저가_죽으면_엉뚱한_것을_안_깔게_한다():
+    """★ **깨진 도구의 마지막 줄이 가장 그럴듯한 오답이다**(DECISIONS §246).
+    화면은 `pip install tiktoken` 이라고 찍는데 **필요한 것은 `protobuf`** 다."""
+    글 = (ROOT / "tools/qe.py").read_text(encoding="utf-8")
+    assert "그 말을 따르지 않는다" in 글 and "protobuf" in 글
+    pyproject = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    assert "protobuf" in pyproject, "qe 그룹이 protobuf 를 안 들면 첫 실행이 죽는다"

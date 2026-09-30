@@ -93,7 +93,18 @@ def 모형을_든다(d: pathlib.Path, 모형: str, 토크나이저: str):
             "    `transformers` 판이 안 맞을 수 있다(원본은 4.30 에 맞춰져 있다)\n"
             "    판을 본다 : uv run --group qe python -c 'import transformers;print(transformers.__version__)'\n"
             "    내려서 다시 : uv pip install 'transformers<5'") from e
-    tok = transformers.AutoTokenizer.from_pretrained(토크나이저, legacy=False, use_fast=True)
+    try:
+        tok = transformers.AutoTokenizer.from_pretrained(토크나이저, legacy=False, use_fast=True)
+    except Exception as e:                        # noqa: BLE001
+        # ★ **마지막 말이 길을 잘못 든다**(DECISIONS §246). `spiece.model` 을 빠른 토크나이저로
+        #   바꾸려면 `protobuf` 가 있어야 하는데, 없으면 transformers 5 가 **tiktoken 으로 넘어갔다가**
+        #   거기서 죽는다 — 화면의 마지막 줄이 `pip install tiktoken` 이라 **엉뚱한 것을 깔게 된다**
+        raise SystemExit(
+            f"토크나이저를 못 들였다 — {type(e).__name__}: {e}\n"
+            "    ★ 화면이 `tiktoken` 을 깔라고 했으면 **그 말을 따르지 않는다** — 필요한 것은\n"
+            "      `protobuf` 다(`spiece.model` → 빠른 토크나이저 변환).\n"
+            "    깐다 : uv sync --group eval --group qe   ← `qe` 그룹이 든다\n"
+            "    그래도 안 되면 : uv pip install protobuf") from e
     mod = models.MT5ForRegression.from_pretrained(모형)
     mod.eval()
     장치 = "cuda" if torch.cuda.is_available() else "cpu"

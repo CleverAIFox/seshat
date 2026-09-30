@@ -20,7 +20,10 @@ data = ["huggingface_hub>=0.24", "pyarrow>=15"]
 # ★ **신경망 자(QE) — 실험 기계에서만 받는다**(DECISIONS §242 · PLAN #3). CI 도 `verify.sh` 도
 #   이 그룹 없이 돈다 — **관문이 torch 를 기다리면 사람이 관문을 끈다.** `tools/labels.py corr` 는
 #   점수 **파일**을 먹으므로 자를 돌리는 일과 자를 재는 일이 갈려 있다
-qe = ["torch>=2.4", "transformers>=4.44", "sentencepiece>=0.2"]
+# ★ **`protobuf` 가 있어야 mT5 의 `spiece.model` 을 빠른 토크나이저로 바꾼다**(2026-09-30 ·
+#   DECISIONS §246). 없으면 transformers 5 가 **tiktoken 으로 넘어갔다가** 거기서도 죽는다 —
+#   화면에 뜨는 마지막 말이 `pip install tiktoken` 이라 **엉뚱한 것을 깔게 만든다**
+qe = ["torch>=2.4", "transformers>=4.44", "sentencepiece>=0.2", "protobuf>=4"]
 
 [tool.uv]
 default-groups = ["dev"]
