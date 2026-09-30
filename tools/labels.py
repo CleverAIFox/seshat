@@ -398,6 +398,206 @@ def gap(name: str, arm: str, vs: str, judges: list[str], n: int = 10000, seed: i
     return 0
 
 
+def _순위(xs: list[float]) -> list[float]:
+    """**같은 값은 평균 순위를 나눠 갖는다.** 사람 점수는 판정자 넷이라 값이 다섯 개뿐이고
+    (0 · ¼ · ½ · ¾ · 1) **동점이 대부분**이다 — 순위를 그냥 매기면 들어온 차례가 상관이 된다."""
+    차례 = sorted(range(len(xs)), key=lambda i: xs[i])
+    r = [0.0] * len(xs)
+    i = 0
+    while i < len(차례):
+        j = i
+        while j + 1 < len(차례) and xs[차례[j + 1]] == xs[차례[i]]:
+            j += 1
+        평균 = (i + j) / 2 + 1
+        for k in range(i, j + 1):
+            r[차례[k]] = 평균
+        i = j + 1
+    return r
+
+
+def 스피어만(xs: list[float], ys: list[float]) -> float | None:
+    """순위끼리의 피어슨. **한쪽이 전부 같은 값이면 None** — 상관이 정의되지 않는다."""
+    if len(xs) < 3:
+        return None
+    a, b = _순위(xs), _순위(ys)
+    ma, mb = sum(a) / len(a), sum(b) / len(b)
+    위 = sum((x - ma) * (y - mb) for x, y in zip(a, b))
+    아래 = (sum((x - ma) ** 2 for x in a) * sum((y - mb) ** 2 for y in b)) ** 0.5
+    return None if 아래 == 0 else 위 / 아래
+
+
+def 자점수(경로: pathlib.Path) -> dict[tuple[str, str], float]:
+    """자가 매긴 줄별 점수. 한 줄에 `{"id": …, "arm": …, "score": …}` 다.
+
+    ★ **자는 무엇이든 된다** — 신경망 QE · 규칙 지표 · LLM 판정. 이 도구는 **꼴만 본다.**
+    ★ **점수는 클수록 좋은 쪽으로 맞춰서 낸다.** MetricX 는 [0,25] 의 **오류 점수**라 작을수록
+      좋다 — 내는 쪽이 뒤집어서 적는다. 여기서 안 뒤집는 까닭은, ρ 가 음수인 것이
+      **방향을 잘못 적은 것**일 수도 **자가 거꾸로 가리키는 것**일 수도 있고(§229 가 뒤엣것이다)
+      **둘을 도구가 못 가르기 때문**이다. 가르는 것은 사람이다.
+    """
+    got: dict[tuple[str, str], float] = {}
+    for n, 줄 in enumerate(경로.read_text(encoding="utf-8").splitlines(), 1):
+        if not 줄.strip():
+            continue
+        r = json.loads(줄)
+        if r.get("meta"):
+            continue
+        for k in ("id", "arm", "score"):
+            if k not in r:
+                raise SystemExit(f"{_짧게(경로)}:{n} 에 `{k}` 가 없다 — 한 줄은 "
+                                 '{"id": …, "arm": …, "score": …} 다\n'
+                                 f"    머리줄이면 `meta` 를 달아 둔다\n"
+                                 f"    그 줄을 본다 : sed -n '{n}p' {_짧게(경로)}\n"
+                                 f"    규칙 지표라면 도구가 낸다 : python3 tools/labels.py rule "
+                                 f"--run <팔>=<판.jsonl> --out {_짧게(경로)}")
+        got[(r["id"], r["arm"])] = float(r["score"])
+    if not got:
+        raise SystemExit(f"{_짧게(경로)} 에 점수가 한 줄도 없다\n"
+                         f"    파일을 본다 : head -3 {_짧게(경로)}\n"
+                         f"    규칙 지표라면 도구가 낸다 : python3 tools/labels.py rule "
+                         f"--run <팔>=<판.jsonl> --out {_짧게(경로)}")
+    return got
+
+
+def 사람점수(got: dict[str, dict[tuple[str, str], str]]) -> dict[tuple[str, str], float]:
+    """(줄, 팔) → 판정자들의 「맞다」 평균. **참값이다** — 자를 여기에 댄다."""
+    js = list(got)
+    본것 = set.intersection(*(set(got[j]) for j in js))
+    return {k: sum(got[j][k] == "맞다" for j in js) / len(js) for k in 본것}
+
+
+def 상관(사람: dict[tuple[str, str], float], 자: dict[tuple[str, str], float],
+        키: list[tuple[str, str]], n: int, seed: int,
+        기준: dict[tuple[str, str], float] | None = None) -> dict | None:
+    """ρ 와 95% 구간. `기준` 을 주면 **같은 재표집에서** ρ 의 차도 낸다.
+
+    ★ **뽑는 것은 줄이다** — 한 줄의 팔들을 같이 뽑는다. 팔을 따로 뽑으면 줄 난이도가
+      잡음으로 들어온다(`bootstrap.잰다` 와 같은 규율 · DECISIONS §180).
+    ★ **차를 같은 재표집에서 내는 것이 요점이다.** 따로 내면 두 구간이 겹치는지만 알 뿐,
+      **한쪽이 더 낫다**를 못 말한다.
+    """
+    줄들 = sorted({i for i, _ in 키})
+    자리 = {i: [k for k in 키 if k[0] == i] for i in 줄들}
+
+    def 재다(뽑힌: list[str]) -> tuple[float | None, float | None]:
+        ks = [k for i in 뽑힌 for k in 자리[i]]
+        h = [사람[k] for k in ks]
+        a = 스피어만(h, [자[k] for k in ks])
+        b = 스피어만(h, [기준[k] for k in ks]) if 기준 else None
+        return a, b
+
+    관측, 관측기준 = 재다(줄들)
+    if 관측 is None:
+        return None
+    rnd = random.Random(seed)
+    ρ들, 차들 = [], []
+    for _ in range(n):
+        뽑힌 = [줄들[rnd.randrange(len(줄들))] for _ in 줄들]
+        a, b = 재다(뽑힌)
+        if a is None:
+            continue
+        ρ들.append(a)
+        if b is not None:
+            차들.append(a - b)
+    if not ρ들:
+        return None
+
+    def 구간(xs: list[float]) -> tuple[float, float, float]:
+        xs = sorted(xs)
+        작다 = sum(1 for x in xs if x <= 0) / len(xs)
+        크다 = sum(1 for x in xs if x >= 0) / len(xs)
+        return (xs[int(0.025 * len(xs))], xs[min(int(0.975 * len(xs)), len(xs) - 1)],
+                min(1.0, 2 * min(작다, 크다)))
+
+    아래, 위, p = 구간(ρ들)
+    난것 = {"ρ": 관측, "아래": 아래, "위": 위, "p": p, "판": len(ρ들), "쌍": len(키)}
+    if 차들 and 관측기준 is not None:
+        ㄷ아래, ㄷ위, ㄷp = 구간(차들)
+        난것 |= {"기준ρ": 관측기준, "차": 관측 - 관측기준, "차아래": ㄷ아래, "차위": ㄷ위, "차p": ㄷp}
+    return 난것
+
+
+def 규칙점수(run: pathlib.Path, arm: str, metric: str, setpath: str = "") -> list[dict]:
+    """규칙 지표의 **줄별** 점수 — `corr` 이 먹는 꼴로. 채점기를 그대로 부른다(§163).
+
+    ★ **분모가 0 인 줄은 안 낸다.** 그 줄에서 이 지표는 **값이 없는 것**이지 0 이 아니다 —
+      0 으로 적으면 「용어가 없는 줄」 이 「용어를 다 틀린 줄」 과 같은 자리에 선다.
+      그래서 `term_off` 는 **모든 줄을 못 매긴다** — `corr` 이 몇 쌍을 빼먹었는지 찍는다.
+    """
+    bs = _도구("bootstrap")
+    머리, got = bs.read(str(run))
+    rows = evaluate.load(setpath or 머리.get("set") or "")
+    rows = [r for r in rows if r["id"] in got]
+    outs = [got[r["id"]].get("out", "") for r in rows]
+    줄 = bs.줄별(rows, outs)
+    if metric not in 줄:
+        raise SystemExit(f"지표 '{metric}' 을 줄별로 못 낸다 — 있는 것 : {' · '.join(줄)}\n"
+                         f"    이름을 고친다 : --metric {sorted(줄)[0]}")
+    난것 = []
+    for r, (분자, 분모) in zip(rows, 줄[metric]):
+        if 분모:
+            난것.append({"id": r["id"], "arm": arm, "score": 분자 / 분모})
+    return 난것
+
+
+def corr(name: str, judges: list[str], 자들: dict[str, pathlib.Path], 기준이름: str,
+         n: int = 10000, seed: int = 7) -> int:
+    """**자가 사람과 같은 순서로 줄을 세우는가**(H-084 · DECISIONS §242).
+
+    ★ 재는 것은 **순서**다. 크기가 아니다 — QE 의 3.2 와 사람의 0.75 는 단위가 다르다.
+    ★ **`--기준` 과의 차가 판정이다.** 「상관이 있다」 는 낮은 문턱이고, 물음은
+      **「지금 쓰는 자보다 나은가」** 다(§229 에서 `term_off` 가 거꾸로 가리켰다).
+    """
+    got = 판정들(name, judges)
+    사람 = 사람점수(got)
+    if 기준이름 and 기준이름 not in 자들:
+        raise SystemExit(f"--기준 '{기준이름}' 이 --자 에 없다 — 있는 것 : {' · '.join(자들) or '없다'}\n"
+                         f"    이름을 맞춘다 : --자 {기준이름}=<점수.jsonl> 를 같이 준다\n"
+                         f"    기준 없이 ρ 만 보려면 : --기준 를 뺀다")
+    점수 = {이름: 자점수(p) for 이름, p in 자들.items()}
+    기준 = 점수.get(기준이름)
+
+    print(f"  {name} · 판정자 {len(judges)} · 사람이 본 (줄,팔) {len(사람)}")
+    판정자를_찍는다(name, judges)
+    for 이름, 자 in 점수.items():
+        키 = sorted(set(사람) & set(자))
+        if len(키) < 3:
+            print(f"  {이름:14} **못 잰다** — 사람과 겹치는 (줄,팔) 이 {len(키)} 이다")
+            continue
+        빠진 = len(사람) - len(키)
+        r = 상관(사람, 자, 키, n, seed, 기준 if (기준 and 이름 != 기준이름) else None)
+        if r is None:
+            print(f"  {이름:14} **못 잰다** — 점수가 전부 같은 값이거나 재표집이 비었다")
+            continue
+        꼬리 = f"  (사람이 본 것 중 {빠진} 쌍을 이 자가 안 매겼다)" if 빠진 else ""
+        표시 = f"{이름}{' ← 기준' if 이름 == 기준이름 else ''}"
+        print(f"  {표시:20} ρ {r['ρ']:+.4f}  [{r['아래']:+.4f}, {r['위']:+.4f}]  p={r['p']:.3f}"
+              f"  · 쌍 {r['쌍']}{꼬리}")
+        if "차" in r:
+            품나 = r["차아래"] <= 0 <= r["차위"]
+            print(f"  {'':20} 차(− {기준이름}) {r['차']:+.4f}  [{r['차아래']:+.4f}, {r['차위']:+.4f}]"
+                  f"  p={r['차p']:.3f}  {'**못 가른다**' if 품나 else '**갈린다**'}")
+            # ★ **하나를 빼도 부호가 남나**(H-081 ③ 과 같은 조건). 이 구간은 **줄만** 재표집하므로
+            #   판정자 사이의 퍼짐을 안 본다 — §118 이 그 퍼짐을 실측했다
+            if len(judges) > 2 and not 품나:
+                뒤집힘 = []
+                for j in judges:
+                    남 = 사람점수({k: v for k, v in got.items() if k != j})
+                    ㅋ = sorted(set(남) & set(자) & set(기준))
+                    a = 스피어만([남[k] for k in ㅋ], [자[k] for k in ㅋ])
+                    b = 스피어만([남[k] for k in ㅋ], [기준[k] for k in ㅋ])
+                    if a is None or b is None or ((a - b) > 0) != (r["차"] > 0):
+                        뒤집힘.append(j)
+                print(f"  {'':20} 하나를 빼면 — " +
+                      ("부호가 다 남는다" if not 뒤집힘 else
+                       f"**{' · '.join(뒤집힘)} 없이는 뒤집힌다 — 그 판정자 없이는 말할 수 없다**"))
+    print("  ※ 점수는 **클수록 좋은 쪽**으로 맞춰서 낸 것이어야 한다. ρ 가 음수면 둘 중 하나다 — "
+          "**방향을 뒤집어 적었거나**, **자가 거꾸로 가리키거나**(§229). 도구는 못 가른다")
+    print("  ※ 참값은 **사람 판정**이다(H-046 · H-081). 자가 사람을 이기는 일은 없다 — "
+          "자는 사람을 **대신 돌릴 수 있는가**만 묻는다")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -426,12 +626,41 @@ def main(argv: list[str] | None = None) -> int:
     d.add_argument("--vs", required=True, help="기준 팔. 차는 arm − vs 다")
     d.add_argument("--n", type=int, default=10000, help="재표집 판 수")
     d.add_argument("--seed", type=int, default=7)
+    c = sub.add_parser("corr")
+    c.add_argument("--name", required=True)
+    c.add_argument("--judges", required=True, help="쉼표로 하나 이상 — 이들의 평균이 참값이다")
+    c.add_argument("--자", action="append", default=[], metavar="이름=경로",
+                   help="잴 자. 여러 번 쓴다 — 줄마다 {\"id\",\"arm\",\"score\"} 인 jsonl")
+    c.add_argument("--기준", default="", help="견줄 자의 이름. 지금 쓰는 자를 넣는다(term_off)")
+    c.add_argument("--n", type=int, default=10000, help="재표집 판 수")
+    c.add_argument("--seed", type=int, default=7)
+    u = sub.add_parser("rule")
+    u.add_argument("--run", action="append", default=[], required=True, metavar="팔=경로",
+                   help="규칙 지표를 자로 쓰려고 줄별 점수를 낸다. 팔마다 한 번")
+    u.add_argument("--metric", default="term_off")
+    u.add_argument("--set", dest="setpath", default="", help="비우면 판의 머리줄이 든 셋")
+    u.add_argument("--out", default="", help="비우면 화면으로")
     a = ap.parse_args(argv)
+
+    if a.cmd == "rule":
+        난것 = []
+        for spec in a.run:
+            if "=" not in spec:
+                raise SystemExit(f"--run 은 팔=경로 다 — {spec}")
+            k, _, v = spec.partition("=")
+            난것 += 규칙점수(pathlib.Path(v.strip()), k.strip(), a.metric, a.setpath)
+        글 = "\n".join(json.dumps(x, ensure_ascii=False) for x in 난것) + "\n"
+        if a.out:
+            pathlib.Path(a.out).write_text(글, encoding="utf-8")
+            print(f"  {a.out}  {len(난것)}줄 ({a.metric})")
+        else:
+            print(글, end="")
+        return 0
 
     if a.cmd == "prompt":
         print(PROMPT)
         return 0
-    if a.cmd in ("agree", "gap"):
+    if a.cmd in ("agree", "gap", "corr"):
         js = [x.strip() for x in a.judges.split(",") if x.strip()]
         if len(js) != len(set(js)):
             raise SystemExit(f"--judges 에 같은 이름이 두 번 있다 — {a.judges}\n"
@@ -440,7 +669,22 @@ def main(argv: list[str] | None = None) -> int:
         if len(js) < 적어도:
             raise SystemExit(f"--judges 는 {적어도} 이상이다 — 보기: gpt,gemini,pplx\n"
                              f"    누가 있나 : ls {_짧게(out_dir())}/{a.name}.*.jsonl")
-        return agree(a.name, js) if a.cmd == "agree" else gap(a.name, a.arm, a.vs, js, a.n, a.seed)
+        if a.cmd == "agree":
+            return agree(a.name, js)
+        if a.cmd == "gap":
+            return gap(a.name, a.arm, a.vs, js, a.n, a.seed)
+        자들: dict[str, pathlib.Path] = {}
+        for spec in a.자:
+            if "=" not in spec:
+                raise SystemExit(f"--자 는 이름=경로 다 — {spec}\n"
+                                 f"    보기 : --자 term_off=/tmp/term_off.jsonl --자 metricx=/tmp/metricx.jsonl")
+            k, _, v = spec.partition("=")
+            자들[k.strip()] = pathlib.Path(v.strip())
+        if not 자들:
+            raise SystemExit("--자 이름=경로 를 하나 이상 준다\n"
+                             "    지금 쓰는 자를 같이 넣고 --기준 으로 지목한다 — "
+                             "**「상관이 있다」 가 아니라 「지금 것보다 나은가」 가 물음이다**")
+        return corr(a.name, js, 자들, a.기준.strip(), a.n, a.seed)
     if a.cmd == "read":
         # ★ **무엇이 판정했는지 없이는 판정을 안 받는다**(DECISIONS §227). 이름은 자리이고 모델이
         #   자다 — 무료 등급은 뒤의 모델을 말없이 바꾸므로 이름만 남으면 **다음 달에 같은 자가 아니다**

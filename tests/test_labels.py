@@ -429,3 +429,114 @@ def test_모자라면_도구가_소리친다(tmp_path, monkeypatch, capsys):
     assert f"{len(key) - 1}줄 / 열쇠 {len(key)}" in out.out
     assert "열쇠 6 중 1 이 안 왔다" in out.err and key[0]["tag"] in out.err
     assert "labels.py read" in out.err            # 넘는 길을 든다(DECISIONS §210)
+
+
+# ── corr — 자가 사람과 같은 순서로 줄을 세우는가(H-084 · DECISIONS §242) ──────────────
+
+def _판정지(tmp, name, judge, 판정: dict[tuple[str, str], str]):
+    rows = [{"meta": True, "model": f"{judge} 모형"}]
+    rows += [{"tag": f"t{k}", "id": i, "arm": a, "verdict": v} for k, ((i, a), v) in enumerate(판정.items())]
+    (tmp / f"{name}.{judge}.jsonl").write_text(
+        "\n".join(json.dumps(r, ensure_ascii=False) for r in rows) + "\n", encoding="utf-8")
+
+
+def _자(tmp, 이름, 점수: dict[tuple[str, str], float]):
+    p = tmp / f"{이름}.jsonl"
+    p.write_text("\n".join(json.dumps({"id": i, "arm": a, "score": s}, ensure_ascii=False)
+                           for (i, a), s in 점수.items()) + "\n", encoding="utf-8")
+    return p
+
+
+def test_동점은_평균_순위를_나눈다():
+    """★ 사람 점수는 판정자 넷이라 값이 다섯뿐이다 — **동점이 대부분**이고, 그냥 매기면
+    들어온 차례가 상관이 된다."""
+    assert L._순위([1.0, 1.0, 2.0]) == [1.5, 1.5, 3.0]
+    assert L._순위([3.0, 1.0, 2.0]) == [3.0, 1.0, 2.0]
+
+
+def test_스피어만은_순서만_본다():
+    """★ 단위가 달라도 순서가 같으면 1 이다 — QE 의 3.2 와 사람의 0.75 는 단위가 다르다."""
+    assert L.스피어만([1, 2, 3, 4], [10, 20, 30, 40]) == 1.0
+    assert L.스피어만([1, 2, 3, 4], [4, 3, 2, 1]) == -1.0
+    assert L.스피어만([1, 1, 1, 1], [1, 2, 3, 4]) is None       # 한쪽이 상수면 정의되지 않는다
+    assert L.스피어만([1, 2], [1, 2]) is None                   # 셋 미만은 안 잰다
+
+
+def test_사람_점수는_판정자_평균이다(tmp_path, monkeypatch):
+    monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
+    _판정지(tmp_path, "t", "a", {("x1", "4b"): "맞다", ("x2", "4b"): "어긋난다"})
+    _판정지(tmp_path, "t", "b", {("x1", "4b"): "맞다", ("x2", "4b"): "맞다"})
+    사람 = L.사람점수(L.판정들("t", ["a", "b"]))
+    assert 사람 == {("x1", "4b"): 1.0, ("x2", "4b"): 0.5}
+
+
+def test_사람과_같은_순서면_상관이_1_이다(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
+    판정 = {(f"x{i}", "4b"): ("맞다" if i % 2 else "어긋난다") for i in range(10)}
+    _판정지(tmp_path, "t", "a", 판정)
+    좋은 = _자(tmp_path, "좋은", {k: (1.0 if v == "맞다" else 0.0) for k, v in 판정.items()})
+    L.corr("t", ["a"], {"좋은": 좋은}, "", n=200)
+    out = capsys.readouterr().out
+    assert "ρ +1.0000" in out
+
+
+def test_거꾸로_가리키는_자는_음수로_나온다(tmp_path, monkeypatch, capsys):
+    """★ **2026-09-30 `term_off` 가 그랬다** — 배포본 대비 부호가 사람과 반대였다(DECISIONS §229)."""
+    monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
+    판정 = {(f"x{i}", "4b"): ("맞다" if i % 2 else "어긋난다") for i in range(10)}
+    _판정지(tmp_path, "t", "a", 판정)
+    거꾸로 = _자(tmp_path, "거꾸로", {k: (0.0 if v == "맞다" else 1.0) for k, v in 판정.items()})
+    L.corr("t", ["a"], {"거꾸로": 거꾸로}, "", n=200)
+    assert "ρ -1.0000" in capsys.readouterr().out
+
+
+def test_기준과의_차를_같은_재표집에서_낸다(tmp_path, monkeypatch, capsys):
+    """★ **따로 내면 두 구간이 겹치는지만 안다** — 「한쪽이 낫다」 는 짝지어야 나온다."""
+    monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
+    판정 = {(f"x{i}", "4b"): ("맞다" if i % 2 else "어긋난다") for i in range(20)}
+    _판정지(tmp_path, "t", "a", 판정)
+    좋은 = _자(tmp_path, "좋은", {k: (1.0 if v == "맞다" else 0.0) for k, v in 판정.items()})
+    나쁜 = _자(tmp_path, "나쁜", {k: 0.5 + 0.01 * n for n, k in enumerate(판정)})
+    L.corr("t", ["a"], {"나쁜": 나쁜, "좋은": 좋은}, "나쁜", n=200)
+    out = capsys.readouterr().out
+    assert "← 기준" in out and "차(− 나쁜)" in out
+
+
+def test_기준_이름이_틀리면_멈춘다(tmp_path, monkeypatch):
+    monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
+    _판정지(tmp_path, "t", "a", {(f"x{i}", "4b"): "맞다" for i in range(5)})
+    자 = _자(tmp_path, "하나", {(f"x{i}", "4b"): float(i) for i in range(5)})
+    try:
+        L.corr("t", ["a"], {"하나": 자}, "없는자")
+    except SystemExit as e:
+        assert "--자 에 없다" in str(e)
+    else:
+        raise AssertionError("안 멈췄다")
+
+
+def test_자가_안_매긴_쌍을_찍는다(tmp_path, monkeypatch, capsys):
+    """★ **`term_off` 는 모든 줄을 못 매긴다** — 용어가 없는 줄에는 값이 없다. 그것이 보여야 한다."""
+    monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
+    판정 = {(f"x{i}", "4b"): ("맞다" if i % 2 else "어긋난다") for i in range(10)}
+    _판정지(tmp_path, "t", "a", 판정)
+    일부 = _자(tmp_path, "일부", {k: float(n) for n, k in enumerate(판정) if n < 6})
+    L.corr("t", ["a"], {"일부": 일부}, "", n=100)
+    assert "4 쌍을 이 자가 안 매겼다" in capsys.readouterr().out
+
+
+def test_칸이_빠진_점수_파일은_멈춘다(tmp_path, monkeypatch):
+    monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
+    p = tmp_path / "나쁜꼴.jsonl"
+    p.write_text(json.dumps({"id": "x1", "score": 1.0}) + "\n", encoding="utf-8")
+    try:
+        L.자점수(p)
+    except SystemExit as e:
+        assert "`arm` 가 없다" in str(e)
+    else:
+        raise AssertionError("안 멈췄다")
+
+
+def test_규칙_점수는_분모가_0_인_줄을_안_낸다():
+    """★ **값이 없는 것과 0 은 다르다** — 용어가 없는 줄을 0 으로 적으면 「다 틀린 줄」 과 같아진다."""
+    글 = (ROOT / "tools/labels.py").read_text(encoding="utf-8")
+    assert "if 분모:" in 글 and "안 낸다" in 글

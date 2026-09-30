@@ -40,6 +40,30 @@ LEDGER: dict[str, tuple[str, str, str, str]] = {
     #   `aws.amazon.com/service-terms` 한 장이 너무 커서 도구가 20절쯤에서 끊고, 컨테이너의 curl 은
     #   프록시가 막는다. 확인된 것은 **AWS 쪽**이 고객 입출력으로 자사 모델을 학습하지 않는다는 것뿐이고,
     #   **고객이 출력으로 학습해도 되는가**는 그 문서에 없다. **모르면 못 쓴다**(§6 · §44).
+    # ── 자(QE 지표)의 가중치 ─────────────────────────────────────────────────────────
+    # ★ **자도 가중치다.** 서빙에 안 올리고 교사도 아니지만, 그 점수가 **증류셋을 거른다**(#18) —
+    #   학생은 이 자가 고른 줄로 배운다. 그러므로 **교사 가부를 묻는 것이 맞다**(DECISIONS §242).
+    # ★ Apache-2.0 · 문 없음. mT5 기반이고 참조 있는 쪽과 **참조 없는 쪽(QE)을 한 모델이 한다** —
+    #   `d002` 에는 정답이 없으므로 이 저장소가 쓸 수 있는 것은 QE 쪽뿐이다.
+    #   ⚠ **영→한으로 맞춰진 자가 아니다** — WMT'15–22 의 DA · MQM 으로 미세조정했고 논문이 든
+    #   평가는 en-de · en-es · ja-zh 다. **그래서 H-084 가 사람 라벨에 대고 잰다**(2026-09-30)
+    "google/metricx-24-hybrid-large-v2p6": ("Apache-2.0", "yes", "yes",
+                                            "huggingface.co/google/metricx-24-hybrid-large-v2p6 · "
+                                            "github.com/google-research/metricx · 2026-09-30"),
+    # ★ Apache-2.0 인 **참조 없는 COMET 은 이것 하나다**(Unbabel/COMET LICENSE.models.md).
+    #   2020 년 자라 낡았지만 **조건이 없다** — 문턱을 재는 데 값이 있다
+    "Unbabel/wmt20-comet-qe-da": ("Apache-2.0", "yes", "yes",
+                                  "github.com/Unbabel/COMET/blob/master/LICENSE.models.md · 2026-09-30"),
+    # ★ **CC-BY-NC-SA 다 — 비상업.** 성능은 이쪽이 낫다고 알려져 있지만 **서빙할 모델의 학습
+    #   데이터를 이 자로 고르는 것은 상업 이용**이다. 비교 실험에서 수를 보는 것과 다르다
+    #   (EXAONE 은 약관이 「출력으로 다른 모델을 개선하지 말라」 를 명시하고, 이쪽은 NC 가 그 일을
+    #   한다). **교사 가부 `no` 다** — 증류셋을 이 자로 못 거른다
+    "Unbabel/wmt22-cometkiwi-da": ("CC-BY-NC-SA 4.0", "no", "no",
+                                   "github.com/Unbabel/COMET/blob/master/LICENSE.models.md · 2026-09-30"),
+    "Unbabel/wmt23-cometkiwi-da-xl": ("CC-BY-NC-SA 4.0", "no", "no",
+                                      "github.com/Unbabel/COMET/blob/master/LICENSE.models.md · 2026-09-30"),
+    "Unbabel/XCOMET-XL": ("CC-BY-NC-SA 4.0", "no", "no",
+                          "github.com/Unbabel/COMET/blob/master/LICENSE.models.md · 2026-09-30"),
     "amazon.nova-lite-v1:0": ("AWS Service Terms §50(미독) · Bedrock", "yes", "unknown",
                               "aws.amazon.com/bedrock/amazon-models/privacy (AWS 쪽 학습만 답한다) · "
                               "§50 원문 미독 · 2026-09-27"),

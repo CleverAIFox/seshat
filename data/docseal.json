@@ -20,7 +20,7 @@
  "100": {
   "날짜": "2026-09-27",
   "읽음": true,
-  "지문": "22c39b49d1ba4719",
+  "지문": "812e5e18c37e9251",
   "파일": [
    "tools/labels.py",
    "tests/test_labels.py"
@@ -70,7 +70,7 @@
  "108": {
   "날짜": "2026-09-27",
   "읽음": true,
-  "지문": "146067a175db9cfc",
+  "지문": "5ec0702d11f0edc2",
   "파일": [
    "tools/labels.py"
   ]
@@ -275,8 +275,8 @@
  },
  "130": {
   "날짜": "2026-09-27",
-  "읽음": false,
-  "지문": "66aecd4832f9504a",
+  "읽음": true,
+  "지문": "0e414d27eab3c28f",
   "파일": [
    "tests/test_model_licenses.py::test_Bedrock_출력은_교사가_아니다",
    "seshat/licenses.py"
@@ -1116,8 +1116,8 @@
  },
  "216": {
   "날짜": "2026-09-29",
-  "읽음": false,
-  "지문": "e7d3f7b1c6d00072",
+  "읽음": true,
+  "지문": "2b2030c560c34380",
   "파일": [
    "docs/next/hypotheses.md",
    "tools/show_misses.py::짧은_줄",
@@ -1222,7 +1222,7 @@
  "226": {
   "날짜": "2026-09-29",
   "읽음": true,
-  "지문": "c7c17d9e96007292",
+  "지문": "3214878c2836af4c",
   "파일": [
    "tools/check_hypotheses.py",
    "tests/test_hypotheses.py::test_문턱_위는_선과_자를_둘_다_요구한다",
@@ -1232,8 +1232,8 @@
  },
  "227": {
   "날짜": "2026-09-29",
-  "읽음": false,
-  "지문": "853434b21c218b52",
+  "읽음": true,
+  "지문": "bafc978e9d2eb627",
   "파일": [
    "tools/labels.py",
    "tests/test_labels.py::test_모델을_안_적으면_판정을_안_받는다"
@@ -1241,8 +1241,8 @@
  },
  "228": {
   "날짜": "2026-09-30",
-  "읽음": false,
-  "지문": "02d3dba8580c362d",
+  "읽음": true,
+  "지문": "5a6d6f65c4458df7",
   "파일": [
    "tools/labels.py",
    "tests/test_labels.py::test_머리줄이_없는_답은_첫_줄을_안_먹는다",
@@ -1315,7 +1315,7 @@
  "234": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "1cf8656f16dbe5ee",
+  "지문": "ae120fd64651a534",
   "파일": [
    "docs/why/DECISIONS.md",
    "docs/next/PLAN.md",
@@ -1394,10 +1394,21 @@
  "241": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "13bff892d0c40ffc",
+  "지문": "3d9639b59498abf3",
   "파일": [
    "tools/check_numbers.py",
    "docs/why/DECISIONS.md"
+  ]
+ },
+ "242": {
+  "날짜": "2026-09-30",
+  "읽음": true,
+  "지문": "4c006471d59949fb",
+  "파일": [
+   "tools/labels.py",
+   "tests/test_labels.py",
+   "seshat/licenses.py",
+   "pyproject.toml"
   ]
  },
  "25": {
@@ -1550,15 +1561,15 @@
  "4": {
   "날짜": "2026-09-22",
   "읽음": true,
-  "지문": "770a95a2c160f128",
+  "지문": "315533d3f9e50477",
   "파일": [
    "pyproject.toml"
   ]
  },
  "40": {
   "날짜": "2026-09-23",
-  "읽음": false,
-  "지문": "4136b2f88236c3c8",
+  "읽음": true,
+  "지문": "51cd1ceb4b11560b",
   "파일": [
    "pyproject.toml"
   ]
