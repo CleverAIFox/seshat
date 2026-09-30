@@ -1,5 +1,13 @@
 r"""**신경망 QE 자로 판의 줄마다 점수를 낸다** — MetricX-24(H-084 · DECISIONS §246).
 
+★ **2026-10-01 이 저장소는 이 자를 안 쓴다**(DECISIONS §254). H-086 에서 **ollama 로 도는
+  LLM 판정(`tools/gemba.py`)이 이겼다** — ρ 0.5326 대 0.3086 · 차 +0.2240 [+0.0832, +0.3749]
+  p=0.001. 그래서 `qe` 의존성 그룹을 **뺐다** — `transformers` 4.x 에 고침 없는 취약점 넷이
+  살고 있었고(§251), 그것을 없애는 유일한 길이 **안 쓰는 것**이었다.
+★ **파일은 남긴다.** §249 의 수가 이 도구로 났고 그 절들이 이 파일을 강제자로 짚는다 —
+  지우면 **적어 둔 것을 다시 볼 자리가 사라진다.** 돌리려면 `transformers>=4.40,<4.54` 와
+  `torch` 를 **손으로** 들인다. **그 판에는 취약점 넷이 따라온다** — 알고 들인다.
+
   python3 tools/qe.py --run 4b=runs/….jsonl --run 12b=runs/….jsonl --out /tmp/metricx.jsonl
   python3 tools/qe.py --run … --out … --metricx ~/projects/metricx   # 자리를 손으로
 
