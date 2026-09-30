@@ -105,3 +105,19 @@ def test_토크나이저가_죽으면_엉뚱한_것을_안_깔게_한다():
     assert "그 말을 따르지 않는다" in 글 and "protobuf" in 글
     pyproject = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
     assert "protobuf" in pyproject, "qe 그룹이 protobuf 를 안 들면 첫 실행이 죽는다"
+
+
+def test_판_번호가_아니라_할_수_있나로_막는다():
+    """★ **판으로 막으면 되살아나도 계속 막고, 다른 판에서 같은 자리가 또 죽어도 안 막는다**
+    (DECISIONS §246). `transformers` 5 가 `MT5Stack` 에서 `embed_tokens` 를 뺐다."""
+    글 = (ROOT / "tools/qe.py").read_text(encoding="utf-8")
+    assert "inspect.signature(m.MT5Stack.__init__).parameters" in 글
+    assert "embed_tokens" in 글
+    # 판 자체를 조건으로 쓰지 않는다 — 조건은 자리의 생사다
+    assert "transformers.__version__ <" not in 글 and "version_tuple" not in 글
+
+
+def test_qe_그룹이_원본이_기대는_판을_든다():
+    """★ **원본이 기대는 조건까지 옮기는 것이 옮기는 일이다**(§20 · §246)."""
+    pyproject = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    assert "transformers>=4.40,<5" in pyproject

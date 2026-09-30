@@ -84,6 +84,18 @@ def 모형을_든다(d: pathlib.Path, 모형: str, 토크나이저: str):
     if not hasattr(m, "__HEAD_MASK_WARNING_MSG"):
         m.__HEAD_MASK_WARNING_MSG = "(seshat 이 채운 자리다 — transformers 5 에서 사라졌다)"
         기움.append("__HEAD_MASK_WARNING_MSG")
+    # ★ **판 번호를 묻지 않고 「그 자리가 사는지」 를 묻는다**(DECISIONS §246). `transformers` 5 가
+    #   `MT5Stack` 에서 `embed_tokens` 를 뺐는데 MetricX 원본은 그 자리로 임베딩을 넘긴다. 판으로 막으면
+    #   **되살아나도 계속 막고, 다른 판에서 같은 자리가 또 죽어도 안 막는다**
+    import inspect
+    if "embed_tokens" not in inspect.signature(m.MT5Stack.__init__).parameters:
+        raise SystemExit(
+            f"이 `transformers`({transformers.__version__})의 `MT5Stack` 이 `embed_tokens` 를 안 받는다\n"
+            "    MetricX 원본이 그 자리로 임베딩을 넘긴다 — **베껴 고치지 않는다**(DECISIONS §5).\n"
+            "    원본이 기대는 판으로 내린다 : uv sync --group eval --group qe\n"
+            "      (`pyproject.toml` 의 `qe` 그룹이 `transformers>=4.40,<5` 를 든다)\n"
+            "    지금 판을 본다 : uv run --group qe python -c "
+            "'import transformers;print(transformers.__version__)'")
     try:
         from metricx24 import models
     except Exception as e:                        # noqa: BLE001
