@@ -479,7 +479,7 @@
  },
  "153": {
   "날짜": "2026-09-28",
-  "읽음": false,
+  "읽음": true,
   "지문": "3badccc8426b9b0d",
   "파일": [
    "docs/now/related.md"
@@ -555,7 +555,7 @@
  },
  "161": {
   "날짜": "2026-09-28",
-  "읽음": false,
+  "읽음": true,
   "지문": "f09ae4db27dfcb6c",
   "파일": [
    "docs/now/related.md",
@@ -599,7 +599,7 @@
  },
  "166": {
   "날짜": "2026-09-28",
-  "읽음": false,
+  "읽음": true,
   "지문": "8817b787db3e2f14",
   "파일": [
    "docs/now/related.md"
@@ -607,7 +607,7 @@
  },
  "167": {
   "날짜": "2026-09-28",
-  "읽음": false,
+  "읽음": true,
   "지문": "b742e838a15b8a6d",
   "파일": [
    "docs/now/related.md"
@@ -764,7 +764,7 @@
  },
  "181": {
   "날짜": "2026-09-28",
-  "읽음": false,
+  "읽음": true,
   "지문": "8e17354e51788874",
   "파일": [
    "tools/bootstrap.py",
@@ -793,7 +793,7 @@
  "184": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "3ee34482ccdca492",
+  "지문": "449a4f57aa4c2d68",
   "파일": [
    "docs/now/related.md",
    "tools/bootstrap.py"
@@ -801,7 +801,7 @@
  },
  "185": {
   "날짜": "2026-09-28",
-  "읽음": false,
+  "읽음": true,
   "지문": "cfdcfc0d4d14f324",
   "파일": [
    "tools/bootstrap.py",
@@ -1127,7 +1127,7 @@
  "217": {
   "날짜": "2026-09-29",
   "읽음": true,
-  "지문": "adbbd0774c6614cb",
+  "지문": "76cf7a46e5eb13d5",
   "파일": [
    "tools/docseal.py",
    "docs/next/PLAN.md",
@@ -1305,11 +1305,21 @@
  "233": {
   "날짜": "2026-09-30",
   "읽음": false,
-  "지문": "6bd571f85d321759",
+  "지문": "c1ab1f1c3f2e99f0",
   "파일": [
    "tools/check_crashes.py",
    "tests/test_crashes.py::test_저장소가_장부와_맞는다",
    "tools/check_ways.py"
+  ]
+ },
+ "234": {
+  "날짜": "2026-09-30",
+  "읽음": false,
+  "지문": "5baadab143e6525a",
+  "파일": [
+   "docs/why/DECISIONS.md",
+   "docs/next/PLAN.md",
+   "tools/docseal.py"
   ]
  },
  "24": {
