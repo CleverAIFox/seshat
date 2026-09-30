@@ -696,6 +696,13 @@ def main(argv=None) -> int:
             "onto_sha256": onto_sha256()}
     이미: dict[str, str] = {}
     왔던: str | None = None
+    # ★ **줄이 0 이면 막을 것이 없다**(DECISIONS §231). 2026-09-30 ollama 가 꺼진 채로 판을 부르니
+    #   머리줄만 든 조각이 남았고, 그 껍데기가 다음 판을 막으면서 **0 줄을 「이어서 돌린다」** 고
+    #   권했다. 시작도 못 한 판은 이을 것도 지울 것도 아니다 — **치우고 처음부터 돈다.**
+    if part.exists() and part_본다(part)[1] == 0:
+        part.unlink()
+        print(f"  빈 조각을 치웠다 — {part.name} (0 줄 · 시작도 못 한 판이다)",
+              file=sys.stderr, flush=True)
     if part.exists():
         머리, 센 = part_본다(part)
         왔던 = 머리.get("commit")

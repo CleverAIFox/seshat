@@ -404,7 +404,7 @@
  "145": {
   "날짜": "2026-09-28",
   "읽음": false,
-  "지문": "9aa02b0af1e8fc57",
+  "지문": "fa9a4a74f3a9d17c",
   "파일": [
    "tests/test_gate.py::test_자가_바뀌면_막는다",
    "tests/test_rescore.py::test_자_판은_물려받지_않고_지금_것을_적는다",
@@ -480,7 +480,7 @@
  "153": {
   "날짜": "2026-09-28",
   "읽음": false,
-  "지문": "c6b1c12f3a9e6d2b",
+  "지문": "3badccc8426b9b0d",
   "파일": [
    "docs/now/related.md"
   ]
@@ -556,7 +556,7 @@
  "161": {
   "날짜": "2026-09-28",
   "읽음": false,
-  "지문": "379b61ee08b41a35",
+  "지문": "f09ae4db27dfcb6c",
   "파일": [
    "docs/now/related.md",
    "tools/check_docs.py"
@@ -600,7 +600,7 @@
  "166": {
   "날짜": "2026-09-28",
   "읽음": false,
-  "지문": "bd85581904c912e1",
+  "지문": "8817b787db3e2f14",
   "파일": [
    "docs/now/related.md"
   ]
@@ -608,7 +608,7 @@
  "167": {
   "날짜": "2026-09-28",
   "읽음": false,
-  "지문": "e8fc5d38eccfb43f",
+  "지문": "b742e838a15b8a6d",
   "파일": [
    "docs/now/related.md"
   ]
@@ -616,7 +616,7 @@
  "168": {
   "날짜": "2026-09-28",
   "읽음": false,
-  "지문": "55c8c3b656942aa4",
+  "지문": "0257a7d502e2403e",
   "파일": [
    "seshat/evaluate.py",
    "tools/mine_terms.py",
@@ -658,7 +658,7 @@
  "171": {
   "날짜": "2026-09-28",
   "읽음": false,
-  "지문": "b0edec76c707eee5",
+  "지문": "9b2a534170719227",
   "파일": [
    "seshat/ontology.py",
    "seshat/evaluate.py",
@@ -698,7 +698,7 @@
  "174": {
   "날짜": "2026-09-28",
   "읽음": false,
-  "지문": "57b604d8ea243f0c",
+  "지문": "a493c74888aa6096",
   "파일": [
    "seshat/evaluate.py",
    "tests/test_evaluate.py::test_문이_막을_때_열린_가설을_같이_찍는다"
@@ -718,7 +718,7 @@
  "176": {
   "날짜": "2026-09-28",
   "읽음": false,
-  "지문": "3fed2787b1d27898",
+  "지문": "5d0d59c53d287670",
   "파일": [
    "data/scoreboard.toml",
    "docs/now/related.md"
@@ -754,7 +754,7 @@
  "180": {
   "날짜": "2026-09-28",
   "읽음": false,
-  "지문": "6848ebfa48cca14a",
+  "지문": "951d796034688d23",
   "파일": [
    "tools/bootstrap.py",
    "tests/test_bootstrap.py",
@@ -765,7 +765,7 @@
  "181": {
   "날짜": "2026-09-28",
   "읽음": false,
-  "지문": "3d9653845b1f4947",
+  "지문": "d69571d13d4bd587",
   "파일": [
    "tools/bootstrap.py",
    "docs/now/related.md"
@@ -774,7 +774,7 @@
  "182": {
   "날짜": "2026-09-28",
   "읽음": false,
-  "지문": "d1e6dda4cf2b6403",
+  "지문": "daea984c2873c8f4",
   "파일": [
    "seshat/backends.py",
    "tools/bootstrap.py",
@@ -793,7 +793,7 @@
  "184": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "273cce271d17a573",
+  "지문": "efd3a89b1151a38f",
   "파일": [
    "docs/now/related.md",
    "tools/bootstrap.py"
@@ -802,7 +802,7 @@
  "185": {
   "날짜": "2026-09-28",
   "읽음": false,
-  "지문": "ca5829333e32a350",
+  "지문": "390d54d5045e4f56",
   "파일": [
    "tools/bootstrap.py",
    "docs/now/related.md"
@@ -821,7 +821,7 @@
  "187": {
   "날짜": "2026-09-28",
   "읽음": false,
-  "지문": "5835c562c4eb52d1",
+  "지문": "58b8ef8b49506f55",
   "파일": [
    "tools/check_docs.py::check_plan",
    "docs/now/related.md"
@@ -878,7 +878,7 @@
  "192": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "213775c771de1fc8",
+  "지문": "3a03bcb629b7a63e",
   "파일": [
    "docs/now/related.md",
    "seshat/evaluate.py"
@@ -932,7 +932,7 @@
  "198": {
   "날짜": "2026-09-29",
   "읽음": false,
-  "지문": "c24274fc3375b9df",
+  "지문": "7fb28c931aefe948",
   "파일": [
    "seshat/evaluate.py::main",
    "tests/test_evaluate.py::test_끊길_때_남은_줄과_이을_길을_말한다"
@@ -1022,7 +1022,7 @@
  "207": {
   "날짜": "2026-09-29",
   "읽음": false,
-  "지문": "1ea2d6d6c9d8f59a",
+  "지문": "7690a73c20a78940",
   "파일": [
    "data/scoreboard.toml",
    "tests/test_gate.py::test_까닭을_주면_셋을_갈아끼운다",
@@ -1127,7 +1127,7 @@
  "217": {
   "날짜": "2026-09-29",
   "읽음": true,
-  "지문": "7c5930206cdaf6c7",
+  "지문": "13081f812c6b5099",
   "파일": [
    "tools/docseal.py",
    "docs/next/PLAN.md",
@@ -1213,7 +1213,7 @@
  "225": {
   "날짜": "2026-09-29",
   "읽음": true,
-  "지문": "3fbe281ed5cfd931",
+  "지문": "252e247d254704cc",
   "파일": [
    "docs/now/related.md",
    "docs/next/hypotheses.md"
@@ -1253,7 +1253,7 @@
  "229": {
   "날짜": "2026-09-30",
   "읽음": false,
-  "지문": "7bbb85d01171dead",
+  "지문": "5ed9466d0cc1117b",
   "파일": [
    "docs/now/related.md",
    "docs/next/hypotheses.md"
@@ -1273,11 +1273,22 @@
  "230": {
   "날짜": "2026-09-30",
   "읽음": false,
-  "지문": "a75552b4cf8d89c8",
+  "지문": "eb2ff0ef702dbf53",
   "파일": [
    "tools/check_rules.py",
    "tests/test_rules.py",
    "docs/README.md"
+  ]
+ },
+ "231": {
+  "날짜": "2026-09-30",
+  "읽음": false,
+  "지문": "e00b8a70c07ed0e5",
+  "파일": [
+   "docs/now/related.md",
+   "docs/next/hypotheses.md",
+   "seshat/evaluate.py",
+   "tests/test_evaluate.py::test_빈_조각은_막지_않고_치운다"
   ]
  },
  "24": {
@@ -1537,7 +1548,7 @@
  "50": {
   "날짜": "2026-09-23",
   "읽음": false,
-  "지문": "314882bbfa80acd5",
+  "지문": "5ebf0b4c2554b448",
   "파일": [
    "tests/test_evaluate.py::test_한국어를_인용하는_사고문에_속지_않는다",
    "tests/test_baselines.py::test_오디션_후보가_대장과_등록부에_함께_있다",

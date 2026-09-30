@@ -485,9 +485,10 @@ def test_조건이_다르면_안_잇는다(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     셋 = _셋(tmp_path)
     (tmp_path / "runs").mkdir()
-    ev.part_path("t").write_text(json.dumps({"meta": True, "backend": "딴백엔드", "url": "",
-                                             "set_sha256": "딴셋", "onto_sha256": "딴사전"},
-                                            ensure_ascii=False) + "\n", encoding="utf-8")
+    ev.part_path("t").write_text("\n".join([
+        json.dumps({"meta": True, "backend": "딴백엔드", "url": "",
+                    "set_sha256": "딴셋", "onto_sha256": "딴사전"}, ensure_ascii=False),
+        json.dumps({"id": "r0", "out": "딴 자로 잰 줄"}, ensure_ascii=False)]) + "\n", encoding="utf-8")
     with pytest.raises(SystemExit, match="다른 조건에서 만들어졌다"):
         ev.main(["--backend", "echo", "--set", 셋, "--name", "t", "--resume"])
 
@@ -635,3 +636,33 @@ def test_고치면서_헐거워지지_않았다():
     assert not ev.is_hapsyo("This is not translated at all.")
     assert not ev.is_hapsyo("버킷을 만든다.")            # 평어체는 여전히 실패
     assert ev.is_hapsyo("S3 버킷")                        # 문장부호 없는 명사구는 판정 밖
+
+
+def test_빈_조각은_막지_않고_치운다(tmp_path, monkeypatch):
+    """★ **줄이 0 이면 막을 것이 없다**(DECISIONS §231).
+
+    2026-09-30 ollama 가 꺼진 채로 판을 부르니 머리줄만 든 조각이 남았고, 그 껍데기가 다음 판을
+    막으면서 **「이미 0/600 줄 · 이어서 돌린다」** 고 권했다. **시작도 못 한 판은 이을 것이 없다.**
+    """
+    monkeypatch.chdir(tmp_path)
+    셋 = _셋(tmp_path)
+    (tmp_path / "runs").mkdir()
+    조건 = {"backend": "echo", "url": "", "set_sha256": ev.set_sha256(셋), "onto_sha256": ev.onto_sha256()}
+    ev.part_path("t").write_text(json.dumps({"meta": True, **조건}, ensure_ascii=False) + "\n",
+                                 encoding="utf-8")
+    assert ev.main(["--backend", "echo", "--set", 셋, "--name", "t"]) == 0   # --resume 없이 돈다
+    assert not ev.part_path("t").exists()
+    줄 = [json.loads(x) for x in next((tmp_path / "runs").glob("t-*.jsonl"))
+          .read_text(encoding="utf-8").splitlines() if x.strip()]
+    assert 줄[0].get("resumed") in (None, 0), "빈 조각을 이어받은 것으로 셌다"
+
+
+def test_줄이_있는_조각은_그대로_막는다(tmp_path, monkeypatch):
+    """★ 빈 것만 치운다 — 한 줄이라도 있으면 **사람이 고른다**(§197)."""
+    monkeypatch.chdir(tmp_path)
+    셋 = _셋(tmp_path)
+    (tmp_path / "runs").mkdir()
+    _중간을_둔다(셋, 줄수=1)
+    with pytest.raises(SystemExit, match="중간 결과가 남아 있다"):
+        ev.main(["--backend", "echo", "--set", 셋, "--name", "t"])
+    assert ev.part_path("t").exists(), "막으면서 지웠다"
