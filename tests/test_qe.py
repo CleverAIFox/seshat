@@ -146,3 +146,11 @@ def test_자리는_한_곳에서_정한다():
     import pytest
     pytest.importorskip("torch")
     assert QE.어디서_도나() in ("cuda", "cpu")
+
+
+def test_가중치의_커밋이_박혀_있다():
+    """★ **이름만 적으면 그 이름이 가리키는 것이 바뀌어도 모른다**(DECISIONS §251 · §252).
+    2026-10-01 캐시에 스냅샷이 둘이었고 **어느 것으로 잰 수인지 몰랐다.**"""
+    assert len(QE.기본판본) == 40 and all(c in "0123456789abcdef" for c in QE.기본판본)
+    글 = (ROOT / "tools/qe.py").read_text(encoding="utf-8")
+    assert '"revision": a.revision' in 글, "무엇으로 쟀는지 판 머리줄이 들어야 한다"

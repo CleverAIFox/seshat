@@ -37,10 +37,11 @@ from seshat import evaluate, paths  # noqa: E402
 기본모형 = "google/metricx-24-hybrid-large-v2p6"
 기본토크나이저 = "google/mt5-xl"
 기본길이 = 1536
-# ★ **가중치의 커밋.** 비우면 `main` 을 받는다 — 그러면 **오늘 받은 것과 내일 받는 것이
-#   다를 수 있고 아무도 모른다**(DECISIONS §251). 받아 놓은 자리에서 읽어 채운다 :
-#   ls ~/.cache/huggingface/hub/models--google--metricx-24-hybrid-large-v2p6/snapshots/
-기본판본 = ""
+# ★ **가중치의 커밋을 박는다**(DECISIONS §251 · §252). 비우면 `main` 을 받고, 그러면 **오늘 받은
+#   것과 내일 받는 것이 달라도 아무도 모른다.** 2026-10-01 H-084 를 돌린 판이 이것이다 —
+#   `refs/main` 이 가리키는 곳이고 `config.json` 을 든 유일한 스냅샷이다.
+#   올릴 때는 **판을 갈고 다시 재서** 같은 수가 나오는지 본다(§96 과 같은 규율).
+기본판본 = "51e875ba5c525c81627cfd135ee10f43c87dce00"
 
 
 def _도구(이름: str):
