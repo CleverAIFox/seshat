@@ -2,6 +2,10 @@
 
   python3 tools/check_catalog.py         위반이면 1
   python3 tools/check_catalog.py --list  출처와 쓰임을 표로
+
+★ **밖 — 선언이 참인지는 못 본다.** 카탈로그가 「이 출처는 학습에 안 쓴다」 고 적으면 그 말이
+  **적혀 있는지**만 본다. 실제로 안 썼는지는 레이크와 판이 안다(`tools/lake.py`).
+★ **`data/` 밖은 안 본다.** 레이크(SSD)의 파일은 `lake check` 의 몫이고, 여기는 저장소 안만 본다.
 """
 from __future__ import annotations
 
@@ -13,7 +17,22 @@ sys.path.insert(0, str(ROOT))
 from seshat import catalog  # noqa: E402
 
 
+def _canary() -> None:
+    """★ **판별식이 죽으면 실패 0 이 초록으로 보인다** — 합성으로 물어 둔다."""
+    나쁜 = [{"id": "x", "where": "어디도아니다", "uses": ["없는쓰임"], "license": "?"}]
+    난것 = catalog.validate(나쁜)
+    for 말, 왜 in (("where", "where 의 꼴을 안 본다"), ("모르는 쓰임", "쓰임 어휘를 안 본다"),
+                  ("비었다", "빈 칸을 안 본다")):
+        if not any(말 in f for f in 난것):
+            print(f"    ★ 카나리아가 죽었다 — {왜} · {난것}")
+            sys.exit(2)
+    if catalog.USES & {"없는쓰임"}:
+        print("    ★ 카나리아가 죽었다 — 쓰임 어휘가 아무거나 받는다")
+        sys.exit(2)
+
+
 def main(argv: list[str]) -> int:
+    _canary()
     entries = catalog.load()
     if "--list" in argv:
         for n, d in catalog.layers().items():

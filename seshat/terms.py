@@ -95,11 +95,6 @@ def _after_of(letter: str) -> re.Pattern:
     return re.compile(_forms(letter) + _JOSA_TAIL)
 
 
-@functools.lru_cache(maxsize=8)
-def _residue_of(letter: str) -> re.Pattern:
-    return re.compile(_forms(letter))
-
-
 BASE, JONG, _RIEUL = 0xAC00, 28, 8
 _PARTICLE = _JOSA_TAIL        # 같은 것이다 — 이름만 남긴다(DECISIONS §158)
 

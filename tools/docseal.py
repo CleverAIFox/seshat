@@ -237,8 +237,28 @@ def 뒤에_바뀐_파일(절: dict) -> list[str]:
     return out
 
 
+def _canary() -> None:
+    """★ **지문이 못 가르면 낡은 절이 전부 유효로 보인다** — 무효 0 이 「깨끗하다」 인지 묻는다."""
+    본 = "def f():\n    return 1\n"
+    주석만 = "def f():\n    # 설명을 고쳤다\n    return 1\n"
+    뜻바꿈 = "def f():\n    return 2\n"
+    if _낱말지문(본) != _낱말지문(주석만):
+        print("    ★ 카나리아가 죽었다 — 주석만 고쳤는데 지문이 갈렸다(무효가 소음이 된다)")
+        sys.exit(2)
+    if _낱말지문(본) == _낱말지문(뜻바꿈):
+        print("    ★ 카나리아가 죽었다 — 뜻이 바뀌었는데 지문이 같다(도장이 안 가른다)")
+        sys.exit(2)
+    if _몸을_찾는다(ast.parse(본), "없는이름") is not None:
+        print("    ★ 카나리아가 죽었다 — 사라진 이름을 찾았다고 한다")
+        sys.exit(2)
+    if not 지목.findall("`tools/gate.py::_선을_박는다` 를 본다"):
+        print("    ★ 카나리아가 죽었다 — 강제자 줄에서 지목을 못 뽑는다(절이 통째로 미지목이 된다)")
+        sys.exit(2)
+
+
 def main(argv: list[str] | None = None) -> int:
     args = sys.argv[1:] if argv is None else argv
+    _canary()
     말 = args[0] if args and not args[0].startswith("-") else ""
     찍힌 = 도장들()
 

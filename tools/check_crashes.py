@@ -53,8 +53,22 @@ def 견준다(지금: list[str], 장부: frozenset[str]) -> list[str]:
             for f in sorted(set(지금) - 장부)]
 
 
+def _canary() -> None:
+    """★ **판별식이 죽으면 맨몸이 0 으로 보인다** — 0 이 「다 갚았다」 인지 「못 셌다」 인지 묻는다."""
+    맨몸 = 'if __name__ == "__main__":\n    sys.exit(main())\n'
+    싼것 = ('if __name__ == "__main__":\n    try:\n        sys.exit(main())\n'
+            '    except Exception:\n        sys.exit(2)\n')
+    없음 = "def main():\n    return 0\n"
+    for 글, 참, 왜 in ((맨몸, True, "맨몸을 싼 것으로 셌다"), (싼것, False, "싼 것을 맨몸으로 셌다"),
+                     (없음, False, "`__main__` 이 없는 파일을 도구로 셌다")):
+        if 맨몸인가(글) is not 참:
+            print(f"    ★ 카나리아가 죽었다 — {왜}")
+            sys.exit(2)
+
+
 def main(argv: list[str] | None = None) -> int:
     args = sys.argv[1:] if argv is None else argv
+    _canary()
     지금 = 맨몸들()
     if "--list" in args:
         print(f"  맨몸으로 죽는 도구 {len(지금)}")

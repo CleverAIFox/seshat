@@ -317,11 +317,9 @@ def literal(rows: list[dict], outs: list[str]) -> dict[str, float | int | None]:
 
 
 # ★ **조사 목록은 `seshat/terms.py` 의 `JOSA` 하나뿐이다**(DECISIONS §158). 여기 손으로 적었을 때
-#   네 곳이 됐고, 한 곳만 고치면 조용히 갈린다. **부를 때 불러온다** — 이 파일은 패키지 없이도
-#   돌아야 한다(`tools/compare_runs.py` 가 그렇게 쓴다)
-def _josa_re():
-    from . import terms
-    return terms.josa_머리()
+#   네 곳이 됐고, 한 곳만 고치면 조용히 갈린다. `josa()` 가 **부를 때 불러온다** — 이 파일은
+#   패키지 없이도 돌아야 한다(`tools/compare_runs.py` 가 그렇게 쓴다).
+#   여기 있던 `_josa_re()` 창구는 **아무도 안 거쳤다** — 지웠다(DECISIONS §240)
 
 
 def josa(rows: list[dict], outs: list[str]) -> float | None:

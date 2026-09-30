@@ -580,8 +580,8 @@
  },
  "164": {
   "날짜": "2026-09-28",
-  "읽음": false,
-  "지문": "419666b272794bcc",
+  "읽음": true,
+  "지문": "495f0047edda6808",
   "파일": [
    "tools/verify.sh",
    "tests/test_workflows.py::test_셸의_변수_이름은_ASCII_다"
@@ -615,8 +615,8 @@
  },
  "168": {
   "날짜": "2026-09-28",
-  "읽음": false,
-  "지문": "24dd54d48009f667",
+  "읽음": true,
+  "지문": "0140974d3ab2e2b5",
   "파일": [
    "seshat/evaluate.py",
    "tools/mine_terms.py",
@@ -646,8 +646,8 @@
  },
  "170": {
   "날짜": "2026-09-28",
-  "읽음": false,
-  "지문": "b0bc9ba10291930c",
+  "읽음": true,
+  "지문": "7be4da4a17fe11f7",
   "파일": [
    "tools/ci_status.py",
    "tools/verify.sh",
@@ -657,8 +657,8 @@
  },
  "171": {
   "날짜": "2026-09-28",
-  "읽음": false,
-  "지문": "4be0d379bd2d84fe",
+  "읽음": true,
+  "지문": "1955e41aeb40925a",
   "파일": [
    "seshat/ontology.py",
    "seshat/evaluate.py",
@@ -697,8 +697,8 @@
  },
  "174": {
   "날짜": "2026-09-28",
-  "읽음": false,
-  "지문": "5fc259f1fb4ea492",
+  "읽음": true,
+  "지문": "db38d4a6d5edd672",
   "파일": [
    "seshat/evaluate.py",
    "tests/test_evaluate.py::test_문이_막을_때_열린_가설을_같이_찍는다"
@@ -753,8 +753,8 @@
  },
  "180": {
   "날짜": "2026-09-28",
-  "읽음": false,
-  "지문": "16bcefb651c356d1",
+  "읽음": true,
+  "지문": "42dbbbc903b01c61",
   "파일": [
    "tools/bootstrap.py",
    "tests/test_bootstrap.py",
@@ -878,7 +878,7 @@
  "192": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "fd1656a1529b0120",
+  "지문": "962d60d9976a5b19",
   "파일": [
    "docs/now/related.md",
    "seshat/evaluate.py"
@@ -1127,7 +1127,7 @@
  "217": {
   "날짜": "2026-09-29",
   "읽음": true,
-  "지문": "7bf417d7e01b5ee1",
+  "지문": "c3b1e3a89ce993ac",
   "파일": [
    "tools/docseal.py",
    "docs/next/PLAN.md",
@@ -1156,8 +1156,8 @@
  },
  "22": {
   "날짜": "2026-09-22",
-  "읽음": false,
-  "지문": "676c8e39eb4af452",
+  "읽음": true,
+  "지문": "dbf073c7abd6cc4d",
   "파일": [
    "tools/check_catalog.py",
    "tests/test_catalog.py::test_미확인_라이선스는_학습에_못_쓴다",
@@ -1282,8 +1282,8 @@
  },
  "231": {
   "날짜": "2026-09-30",
-  "읽음": false,
-  "지문": "b049fbbf5223e787",
+  "읽음": true,
+  "지문": "0bde1a7e79562564",
   "파일": [
    "docs/now/related.md",
    "docs/next/hypotheses.md",
@@ -1293,8 +1293,8 @@
  },
  "232": {
   "날짜": "2026-09-30",
-  "읽음": false,
-  "지문": "a5d82bd6ebe5120b",
+  "읽음": true,
+  "지문": "93d3ebab9d6308a2",
   "파일": [
    "tools/check_crashes.py",
    "tests/test_crashes.py",
@@ -1304,8 +1304,8 @@
  },
  "233": {
   "날짜": "2026-09-30",
-  "읽음": false,
-  "지문": "c1ab1f1c3f2e99f0",
+  "읽음": true,
+  "지문": "77bfe9ab8fceb3e4",
   "파일": [
    "tools/check_crashes.py",
    "tests/test_crashes.py::test_저장소가_장부와_맞는다",
@@ -1314,8 +1314,8 @@
  },
  "234": {
   "날짜": "2026-09-30",
-  "읽음": false,
-  "지문": "18293cd334559018",
+  "읽음": true,
+  "지문": "5f3e0dd6acd3d9d5",
   "파일": [
    "docs/why/DECISIONS.md",
    "docs/next/PLAN.md",
@@ -1324,8 +1324,8 @@
  },
  "235": {
   "날짜": "2026-09-30",
-  "읽음": false,
-  "지문": "7215e1bd6f2605e6",
+  "읽음": true,
+  "지문": "0027970b45807749",
   "파일": [
    "tools/check_numbers.py",
    "tests/test_numbers.py",
@@ -1344,8 +1344,8 @@
  },
  "237": {
   "날짜": "2026-09-30",
-  "읽음": false,
-  "지문": "e0187cdbb6b48374",
+  "읽음": true,
+  "지문": "f79797a6be9f19f4",
   "파일": [
    "tools/docgen.py",
    "tests/test_docgen.py",
@@ -1355,11 +1355,19 @@
  },
  "238": {
   "날짜": "2026-09-30",
-  "읽음": false,
-  "지문": "ebf503b1380412a8",
+  "읽음": true,
+  "지문": "86779bf208718f58",
   "파일": [
    "tools/docgen.py",
    "tests/test_docgen.py::test_커밋이_흔드는_수는_축이_아니다"
+  ]
+ },
+ "239": {
+  "날짜": "2026-09-30",
+  "읽음": true,
+  "지문": "883e93d4da2381c5",
+  "파일": [
+   "tools/verify.sh"
   ]
  },
  "24": {
@@ -1369,6 +1377,14 @@
   "파일": [
    "tests/test_ontology.py::test_백틱으로_싼_자리표시를_되돌린다",
    "tests/test_compare_runs.py::test_개념이_없다고_센_자리를_줄로_보인다"
+  ]
+ },
+ "240": {
+  "날짜": "2026-09-30",
+  "읽음": true,
+  "지문": "b4b04ec273230b22",
+  "파일": [
+   "tools/verify.sh"
   ]
  },
  "25": {
@@ -1921,8 +1937,8 @@
  },
  "92": {
   "날짜": "2026-09-27",
-  "읽음": false,
-  "지문": "f2e7adf3eb2329d0",
+  "읽음": true,
+  "지문": "732a254726b6cf40",
   "파일": [
    "tests/test_awsdocs.py",
    "tools/check_catalog.py"

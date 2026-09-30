@@ -2,6 +2,10 @@
 
   python3 tools/check_ontology.py          검사한다. 위반 1 · 고장 2
   python3 tools/check_ontology.py --list   종류별 수를 찍는다
+
+★ **밖 — 사전이 옳은지는 안 본다.** 꼴과 겹침과 빈칸을 본다. **한국어 표기가 맞는지**는 사람이
+  대조하고(§34 · §65), **사전이 넓은지**는 `term` 의 분모 문제라 PLAN #22 가 든다.
+★ **누수는 안 본다.** 이 사전을 캔 줄이 평가셋에 있는지는 `onto_leak` 이 판마다 센다(§168).
 """
 from __future__ import annotations
 
