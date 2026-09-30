@@ -141,4 +141,15 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    # ★ 위반(1)과 도구 고장(2)을 다른 코드로 끝낸다(DECISIONS §21 · §232). 같은 코드면
+    #   **도구가 깨진 것을 검사가 실패한 것으로 읽는다**
+    try:
+        sys.exit(main())
+    except SystemExit:
+        raise
+    except Exception:
+        import traceback
+        traceback.print_exc()
+        print("    ✗ 도구가 깨졌다 — 위 역추적이 자리를 든다\n"
+              "      고치고 다시 돌린다 : bash tools/verify.sh", file=sys.stderr)
+        sys.exit(2)

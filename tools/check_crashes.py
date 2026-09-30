@@ -10,8 +10,9 @@
   없었다. **`check_ways` 는 그 자리를 초록으로 봤다** — 세는 자리가 아니기 때문이다.
 ★ **벽도 없고 길도 없는 자리**를 이 도구가 본다. `__main__` 블록이 `main()` 을 싸서, 뜻밖의 예외를
   **말과 종료 코드 2**(고장 · MASTER §0)로 바꾸는가.
-★ **고치는 대신 「늘지 못하게」 한다.** 스물다섯을 한 판에 다 고치는 것은 판을 위험하게 만든다 —
-  새로 생기는 것을 막는 것은 오늘 할 수 있다(`check_ways` 와 같은 판단 · DECISIONS §210).
+★ **2026-09-30 스물일곱을 한 판에 다 갚았다**(DECISIONS §233). 싸는 일은 자리마다 같은 일곱 줄이라
+  라쳇으로 미룰 까닭이 없었다 — `check_ways` 가 서른을 한 판에 갚은 것과 같다(§213). **장부는 비었고
+  이제 절대 규칙이다.**
 ★ **완전하지 않다.** `main()` 안에서 스스로 싸는 도구는 맨몸으로 보인다 — **거짓 양성이 남고,
   그것이 이 도구의 값을 안 깎는다.** 숫자가 안 늘기만 하면 된다.
 """
@@ -24,18 +25,9 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 문 = re.compile(r'^if __name__ == ["\']__main__["\']:', re.M)
 
-# ★ **2026-09-30 의 맨몸.** 여기 있는 것은 「아직 안 갚은 빚」 이고, 여기 **없는** 것이
-#   맨몸이면 실패다. 하나 고칠 때마다 `--update` 로 줄인다. **늘리지 않는다.**
-장부: frozenset[str] = frozenset({
-    "seshat/evaluate.py", "seshat/serve.py",
-    "tools/bootstrap.py", "tools/check_catalog.py", "tools/check_ways.py", "tools/ci_status.py",
-    "tools/compare_runs.py", "tools/docseal.py", "tools/doctor.py", "tools/dupcheck.py",
-    "tools/fetch_awsdocs.py", "tools/fetch_flores.py", "tools/gate.py", "tools/labels.py",
-    "tools/make_probes.py", "tools/mine_terms.py", "tools/noise.py",
-    "tools/patch_subjects.py", "tools/plan_closed.py", "tools/rescore.py", "tools/show_misses.py",
-    "tools/slice.py", "tools/style_na.py", "tools/sweep.py", "tools/term_diff.py",
-    "tools/watch_papers.py",
-})
+# ★ **장부가 비었다**(2026-09-30 · DECISIONS §233). 스물일곱을 한 판에 다 갚았으므로 라쳇은 이제
+#   **절대 규칙**이다 — 맨몸으로 죽는 도구는 하나도 못 들어온다. 다시 채우지 않는다.
+장부: frozenset[str] = frozenset()
 
 
 def 맨몸인가(글: str) -> bool:

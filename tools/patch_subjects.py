@@ -65,9 +65,38 @@ def state(patch: Path, repo: Path) -> str:
     return "판정 못함"
 
 
+def main(argv: list[str]) -> int:
+    """★ **셸이 부르는 도구다** — `apply_patch.sh` 와 `sweep.py` 가 이 출력을 읽는다(MASTER §12-1).
+
+    인자가 없으면 **무엇을 달라는지 말한다.** 예전에는 `sys.argv[1]` 이 그대로 터졌다.
+    """
+    if not argv:
+        print("무엇을 볼 것인가\n"
+              "    제목을 뽑는다 : python3 tools/patch_subjects.py <패치>\n"
+              "    붙었나 본다   : python3 tools/patch_subjects.py --state <패치>", file=sys.stderr)
+        return 2
+    if argv[0] == "--state":                     # apply_patch 가 밀린 패치를 고를 때 쓴다
+        if len(argv) < 2:
+            print("--state 는 패치를 받는다 : python3 tools/patch_subjects.py --state <패치>",
+                  file=sys.stderr)
+            return 2
+        print(state(Path(argv[1]), Path.cwd()))
+        return 0
+    for s in subjects(Path(argv[0])):
+        print(s)
+    return 0
+
+
 if __name__ == "__main__":
-    if sys.argv[1] == "--state":                 # apply_patch 가 밀린 패치를 고를 때 쓴다
-        print(state(Path(sys.argv[2]), Path.cwd()))
-    else:
-        for s in subjects(Path(sys.argv[1])):
-            print(s)
+    # ★ 위반(1)과 도구 고장(2)을 다른 코드로 끝낸다(DECISIONS §21 · §232). 같은 코드면
+    #   **도구가 깨진 것을 검사가 실패한 것으로 읽는다**
+    try:
+        sys.exit(main(sys.argv[1:]))
+    except SystemExit:
+        raise
+    except Exception:
+        import traceback
+        traceback.print_exc()
+        print("    ✗ 도구가 깨졌다 — 위 역추적이 자리를 든다\n"
+              "      고치고 다시 돌린다 : bash tools/verify.sh", file=sys.stderr)
+        sys.exit(2)
