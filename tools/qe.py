@@ -37,6 +37,10 @@ from seshat import evaluate, paths  # noqa: E402
 기본모형 = "google/metricx-24-hybrid-large-v2p6"
 기본토크나이저 = "google/mt5-xl"
 기본길이 = 1536
+# ★ **가중치의 커밋.** 비우면 `main` 을 받는다 — 그러면 **오늘 받은 것과 내일 받는 것이
+#   다를 수 있고 아무도 모른다**(DECISIONS §251). 받아 놓은 자리에서 읽어 채운다 :
+#   ls ~/.cache/huggingface/hub/models--google--metricx-24-hybrid-large-v2p6/snapshots/
+기본판본 = ""
 
 
 def _도구(이름: str):
@@ -121,7 +125,7 @@ def _탐침(models, transformers) -> None:
             f"'import transformers;print(transformers.__version__)'") from e
 
 
-def 모형을_든다(d: pathlib.Path, 모형: str, 토크나이저: str):
+def 모형을_든다(d: pathlib.Path, 모형: str, 토크나이저: str, 판본: str = ""):
     """`MT5ForRegression` 과 토크나이저. **기운 자리를 함께 돌려준다.**"""
     sys.path.insert(0, str(d))
     import transformers
@@ -154,7 +158,11 @@ def 모형을_든다(d: pathlib.Path, 모형: str, 토크나이저: str):
             "      `protobuf` 다(`spiece.model` → 빠른 토크나이저 변환).\n"
             "    깐다 : uv sync --group eval --group qe   ← `qe` 그룹이 든다\n"
             "    그래도 안 되면 : uv pip install protobuf") from e
-    mod = models.MT5ForRegression.from_pretrained(모형)
+    # ★ **판이 아니라 「무엇을 받는가」 를 못 박는다**(DECISIONS §251). 오늘 뜬 취약점 넷은
+    #   **믿지 못할 가중치 · 설정 · 템플릿**이 들어올 때의 이야기다. 이름만 적으면 그 이름이
+    #   가리키는 것이 내일 바뀌어도 모른다 — **커밋을 적으면 바뀌면 안 받는다**
+    mod = (models.MT5ForRegression.from_pretrained(모형, revision=판본)
+           if 판본 else models.MT5ForRegression.from_pretrained(모형))
     mod.eval()
     장치 = 어디서_도나()
     mod.to(장치)
@@ -210,6 +218,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--metricx", default="")
     ap.add_argument("--model", default=기본모형)
     ap.add_argument("--tokenizer", default=기본토크나이저)
+    ap.add_argument("--revision", default=기본판본,
+                    help="가중치의 커밋. **이름만 적으면 그 이름이 가리키는 것이 바뀌어도 모른다**")
     ap.add_argument("--max-input-length", type=int, default=기본길이)
     ap.add_argument("--batch-size", type=int, default=8)
     ap.add_argument("--set", dest="setpath", default="")
@@ -246,14 +256,14 @@ def main(argv: list[str] | None = None) -> int:
     d = 자리(a.metricx)
     줄 = 줄을_모은다(판, a.setpath)
     print(f"  {len(줄)}줄 · 팔 {len(판)} · {a.model}", file=sys.stderr)
-    tok, mod, 장치, 기움 = 모형을_든다(d, a.model, a.tokenizer)
+    tok, mod, 장치, 기움 = 모형을_든다(d, a.model, a.tokenizer, a.revision)
     print(f"  {장치}" + (f" · 기운 자리 {' · '.join(기움)}" if 기움 else ""), file=sys.stderr)
     점수 = 잰다(줄, tok, mod, 장치, a.max_input_length, a.batch_size)
 
     # ★ **머리줄이 조건을 든다**(DECISIONS §57). 자가 바뀌면 수가 바뀐다 — 모형 · 토크나이저 ·
     #   MetricX 커밋 · 기운 자리 · 길이 · 장치. **`corr` 은 `meta` 줄을 건너뛴다**
     머리 = {"meta": True, "자": "metricx24-qe", "model": a.model, "tokenizer": a.tokenizer,
-            "metricx_commit": 커밋(d), "max_input_length": a.max_input_length,
+            "metricx_commit": 커밋(d), "revision": a.revision or "(안 박았다)", "max_input_length": a.max_input_length,
             "device": 장치, "기운자리": 기움, "뒤집었다": True,
             "note": "score = -raw — MetricX 는 오류 점수라 작을수록 좋다(DECISIONS §246)"}
     글 = [json.dumps(머리, ensure_ascii=False)]
