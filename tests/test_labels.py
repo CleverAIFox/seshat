@@ -696,3 +696,43 @@ def test_빼고_나서_줄이_모자라면_멈춘다(tmp_path, monkeypatch):
         assert "뿐인데 10 을 달라고 했다" in str(e)
     else:
         raise AssertionError("안 멈췄다")
+
+
+def test_이미_쓴_이름에는_안_만든다(tmp_path, monkeypatch):
+    """★ **있는 표를 말없이 덮지 않는다**(DECISIONS §256). 2026-10-01 판정 180 건이 딸린
+    열쇠를 덮었다 — 열쇠가 바뀌면 그 판정들은 **다른 줄을 가리킨다.**"""
+    monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
+    (tmp_path / "t.key.jsonl").write_text(json.dumps({"meta": True}) + "\n", encoding="utf-8")
+    try:
+        L._이름이_비었나("t")
+    except SystemExit as e:
+        assert "이미 쓴 이름이다" in str(e) and "--name tb" in str(e)
+        assert "다른 줄을 가리킨다" in str(e)
+    else:
+        raise AssertionError("안 멈췄다")
+
+
+def test_판정_파일만_있어도_막는다(tmp_path, monkeypatch):
+    """★ 열쇠를 지우고 다시 만들어도 **판정 파일이 남아 있으면 그 이름은 쓰인 이름이다.**"""
+    monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
+    (tmp_path / "t.gpt.jsonl").write_text(json.dumps({"meta": True}) + "\n", encoding="utf-8")
+    assert L.쓰인_이름인가("t") == ["t.gpt.jsonl"]
+    try:
+        L._이름이_비었나("t")
+    except SystemExit as e:
+        assert "t.gpt.jsonl" in str(e), "무엇이 걸렸는지를 이름으로 든다"
+    else:
+        raise AssertionError("안 멈췄다")
+
+
+def test_새_이름은_그냥_지나간다(tmp_path, monkeypatch):
+    monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
+    assert L._이름이_비었나("새것") is None
+    assert L.쓰인_이름인가("새것") == []
+
+
+def test_덮는다를_주면_지나간다(tmp_path, monkeypatch):
+    """★ 막되 **넘는 길을 준다**(DECISIONS §210) — 다만 기본은 막는 쪽이다."""
+    monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
+    (tmp_path / "t.key.jsonl").write_text(json.dumps({"meta": True}) + "\n", encoding="utf-8")
+    assert L._이름이_비었나("t", 덮는다=True) is None

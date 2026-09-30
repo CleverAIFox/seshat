@@ -94,6 +94,31 @@ def tag(name: str, rid: str, arm: str) -> str:
     return hashlib.sha256(f"{name}|{rid}|{arm}".encode()).hexdigest()[:8]
 
 
+def 쓰인_이름인가(name: str) -> list[str]:
+    """그 이름으로 이미 만든 것들. 열쇠와 판정 파일을 **둘 다** 본다."""
+    d = out_dir()
+    return sorted(p.name for p in d.glob(f"{name}.*.jsonl"))
+
+
+def _이름이_비었나(name: str, 덮는다: bool = False) -> None:
+    """★ **있는 표를 말없이 덮지 않는다**(DECISIONS §256).
+
+    2026-10-01 새 표를 `--name` 없이 만들었더니 이름이 `d002-60` 으로 같아져 **판정 180 건이
+    딸린 열쇠를 덮었다.** 열쇠가 바뀌면 그 판정들은 **다른 줄을 가리킨다** — 수가 조용히 거짓이
+    된다. 레이크에 원본이 있어 되살렸지만, **되살릴 곳이 없었으면 판정 180 건이 죽는다.**
+    """
+    있는것 = 쓰인_이름인가(name)
+    if not 있는것 or 덮는다:
+        return
+    raise SystemExit(
+        f"`{name}` 은 이미 쓴 이름이다 — {len(있는것)} 개가 있다\n"
+        f"    {' · '.join(있는것)}\n"
+        f"    ★ **덮으면 그 판정들이 다른 줄을 가리킨다** — 수가 조용히 거짓이 된다\n"
+        f"    다른 이름으로 만든다 : --name {name}b   (또는 c · d …)\n"
+        f"    옛 표를 정말 버리려면 : 먼저 레이크에 넣고"
+        f"(`python3 tools/lake.py put raw --into labels labels/{name}.*.jsonl`) 손으로 지운다")
+
+
 def 이미_본_줄(표들: list[str]) -> set[str]:
     """지난 표가 이미 물어본 줄 id. **떼어두기의 자다**(DECISIONS §216 · §249).
 
@@ -693,6 +718,8 @@ def main(argv: list[str] | None = None) -> int:
     m.add_argument("--name", default="")
     m.add_argument("--n", type=int, default=60)
     m.add_argument("--seed", type=int, default=31)
+    m.add_argument("--덮는다", action="store_true",
+                   help="이미 쓴 이름에 다시 만든다 — **판정이 다른 줄을 가리키게 된다**(§256)")
     m.add_argument("--빼고", action="append", default=[], metavar="표",
                    help="그 표가 이미 물어본 줄을 뺀다 — **떼어두기**(DECISIONS §216 · §249)")
     r = sub.add_parser("read")
@@ -809,6 +836,7 @@ def main(argv: list[str] | None = None) -> int:
     if len(arms) < 2:
         raise SystemExit("팔이 둘 이상이어야 한다 — --a/--b 또는 --arm 이름=경로 를 두 번 이상")
     name = a.name or f"{pathlib.Path(a.setpath).stem}-{a.n}"
+    _이름이_비었나(name, a.덮는다)
     sheet, key, 판 = make(arms, evaluate.load(a.setpath), name, a.n, a.seed, a.빼고)
     # ★ **머리줄이 어느 판에서 난 표인지 든다**(DECISIONS §243). 이것이 없으면 판정을 판에 못 잇는다
     머리 = {"meta": True, "name": name, "seed": a.seed, "판": 판}
