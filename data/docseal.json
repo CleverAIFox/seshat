@@ -1315,7 +1315,7 @@
  "234": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "742b08c4b40a40de",
+  "지문": "f55160246581b734",
   "파일": [
    "docs/why/DECISIONS.md",
    "docs/next/PLAN.md",
@@ -1394,7 +1394,7 @@
  "241": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "17a19cfc5a1c977a",
+  "지문": "bbdac41df9c16f0d",
   "파일": [
    "tools/check_numbers.py",
    "docs/why/DECISIONS.md"

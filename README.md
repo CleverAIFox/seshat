@@ -3,7 +3,11 @@
 [thoth](https://github.com/CleverAIFox/thoth) 에 끼울 **영한 번역 모델**을 만드는 저장소. **비공개다.**
 
 thoth 는 영어 자격증 문제 화면에 한글 번역을 겹쳐 보여주는 크롬 확장과 워커다.
-지금은 Bedrock Nova Lite 가 번역하고, 이 저장소의 모델이 그 자리를 넘겨받는다.
+지금은 Bedrock Nova Lite 가 번역하고, 이 저장소의 모델이 **그 자리를 넘겨받는 것이 목표다.**
+
+★ **2026-09-30 기준 아직 못 넘겼다.** 용어 표기(`term_off`)에서는 배포본을 확실히 넘지만
+(+0.0739 · p<0.001), **밖의 판정자 넷이 본 「뜻이 맞다」 에서는 −0.1833 으로 진다**
+(DECISIONS §229). 자세한 것은 [`docs/now/related.md`](docs/now/related.md) §3.
 이름은 토트(문자의 신)의 짝인 **세샤트** — 기록과 문자, 도서관의 여신에서 왔다.
 
 ## 방향
@@ -28,7 +32,7 @@ thoth 는 영어 자격증 문제 화면에 한글 번역을 겹쳐 보여주는
 | | |
 |---|---|
 | 로컬 GPU | GTX 1660 Ti · VRAM 6GB · Turing — fp16 은 되고 bf16 · FlashAttention 2 는 안 된다 |
-| 로컬에서 하는 것 | 평가 · 추론 확인 · 1B 급 QLoRA · 모델 병합(CPU) |
+| 로컬에서 하는 것 | 평가 · 추론 확인 · **신경망 QE 자**(mT5 1.2B · `qe` 그룹) · 1B 급 QLoRA · 모델 병합(CPU) |
 | 학습 | Kaggle · Colab 의 무료 T4, 부족하면 EC2 스팟(AWS 크레딧). 연말에 학습용 데스크탑(PLAN #21) |
 
 ## thoth 와의 계약
@@ -51,6 +55,10 @@ cp .env.example .env     # SESHAT_DATA(SSD 레이크) · SESHAT_INBOX(다운로�
 uv sync
 bash tools/verify.sh     # 점검 전부 — CI 도 이것만 부른다
 ```
+
+**무거운 것은 그룹이 든다**(DECISIONS §4). 관문은 기본 의존성 0 으로 돌고, 필요한 판에서만 받는다 —
+`--group eval`(chrF) · `--group qe`(신경망 자 · torch) · `--group aws` · `--group data`.
+**그룹은 한 번에 다 적는다** — `uv sync --group eval --group qe` (하나만 적으면 다른 쪽이 지워진다 · §246).
 
 **도구의 정본 목록은 `docs/now/MASTER.md` §14 하나다.** 여기에 다시 적지 않는다 —
 두 곳에 적었더니 한쪽에만 있는 도구가 열셋이 됐다(DECISIONS §199).
