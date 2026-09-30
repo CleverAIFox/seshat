@@ -508,6 +508,7 @@ thoth 의 sweep · doctor(`OLLAMA_KEEP_ALSO`)가 본다. 두 저장소가 같은
 | `tools/slice.py` | 결과를 **문법 축으로 갈라** 다시 센다 |
 | `tools/show_misses.py` | 숫자 뒤의 줄을 본다 — 어느 줄이 어떻게 틀렸나 |
 | `tools/style_na.py` | **합쇼체가 설 수 없는 줄**의 후보 — 판정은 사람이 한다 |
+| `tools/gemba.py` | **transformers 없이 도는 자** — ollama 로 로컬 LLM(`qwen3:8b` · 팔들과 집안이 다르다)에게 0~100 을 묻는다. `--표` 로 사람이 본 자리만 잰다. 이기면 `qe.py` 의 의존성이 통째로 빠진다(DECISIONS §251 · §253 · H-086) |
 | `tools/qe.py` | **신경망 QE 자로 줄마다 점수를 낸다**(MetricX-24 · Apache-2.0). 오류 점수를 **뒤집어** 내고 조건을 머리줄에 싣는다. 규칙 지표 여덟에 자가 없어서 들였다(DECISIONS §245 · §246) |
 | `tools/labels.py` | 눈가림 판정 — 표를 만들고 · 읽고 · 쌍마다 일치를 재고 · **팔 사이 격차에 구간을 붙인다**(`gap`) · **자가 사람과 같은 순서로 줄을 세우는지 잰다**(`corr` · H-084) · 규칙 지표를 자로 내놓는다(`rule`) |
 | `tools/gate.py` | 회귀를 막는 문 · 기록판과 선을 **판에서** 박는다(손으로 안 고친다) · **주 셋을 갈아끼운다**(`--move-set`) · **팔을 갈아끼운다**(`--swap-arm`) — 둘 다 까닭을 적는다(DECISIONS §203 · §220) |
