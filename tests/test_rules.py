@@ -57,7 +57,12 @@ def test_실제_MASTER_가_통과한다():
 
 
 def test_카나리아가_산다():
-    CR._canary()
+    """★ **카나리아를 `pass` 로 바꿔도 통과하면 그 시험이 죽은 것이다**(DECISIONS §255).
+    도는 것과 **판별식을 들고 있는 것**을 함께 본다."""
+    import inspect
+    assert CR._canary() is None            # 살아 있으면 조용히 돌아온다
+    글 = inspect.getsource(CR._canary)
+    assert "sys.exit(2)" in 글, "카나리아가 죽었을 때 **고장(2)으로 끝내야 한다**"
 
 
 def test_번호_없는_규칙이_걸린다():

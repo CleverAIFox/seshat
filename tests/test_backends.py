@@ -56,7 +56,7 @@ def test_카드보다_큰_모델은_부르기_전에_막는다(monkeypatch):
     b = _씻는다(monkeypatch)
     _태그(monkeypatch, 7.6)
     with pytest.raises(SystemExit) as e:
-        b.들어가나("큰놈:12b")
+        assert b.들어가나("큰놈:12b") is None    # **안 막는다** — 막으면 SystemExit 다
     말 = str(e.value)
     assert "안 들어간다" in 말 and "7.6GB" in 말 and "6.0GB" in 말
     assert "OLLAMA_URL" in 말 and "SESHAT_LOCAL_OK" in 말, "막기만 하고 넘는 길이 없다"
@@ -65,7 +65,7 @@ def test_카드보다_큰_모델은_부르기_전에_막는다(monkeypatch):
 def test_카드에_들어가면_조용하다(monkeypatch):
     b = _씻는다(monkeypatch)
     _태그(monkeypatch, 3.3)
-    b.들어가나("큰놈:12b")
+    assert b.들어가나("큰놈:12b") is None    # **안 막는다** — 막으면 SystemExit 다
 
 
 def test_빌린_장비면_이_기계의_카드를_안_본다(monkeypatch):
@@ -73,14 +73,14 @@ def test_빌린_장비면_이_기계의_카드를_안_본다(monkeypatch):
     b = _씻는다(monkeypatch)
     monkeypatch.setenv("OLLAMA_URL", "https://x.trycloudflare.com")
     _태그(monkeypatch, 7.6)
-    b.들어가나("큰놈:12b")
+    assert b.들어가나("큰놈:12b") is None    # **안 막는다** — 막으면 SystemExit 다
 
 
 def test_알면서_돌리려면_길이_있다(monkeypatch):
     b = _씻는다(monkeypatch)
     monkeypatch.setenv("SESHAT_LOCAL_OK", "1")
     _태그(monkeypatch, 7.6)
-    b.들어가나("큰놈:12b")
+    assert b.들어가나("큰놈:12b") is None    # **안 막는다** — 막으면 SystemExit 다
 
 
 def test_못_물으면_안_막는다(monkeypatch):
@@ -91,7 +91,7 @@ def test_못_물으면_안_막는다(monkeypatch):
     def 터진다(*a, **k):
         raise OSError("연결 거부")
     monkeypatch.setattr(urllib.request, "urlopen", 터진다)
-    b.들어가나("큰놈:12b")
+    assert b.들어가나("큰놈:12b") is None    # **안 막는다** — 막으면 SystemExit 다
 
 
 # ---------- 이름을 박아 다시 묻는다(H-080 · DECISIONS §218) ----------
