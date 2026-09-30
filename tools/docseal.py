@@ -180,6 +180,19 @@ def 지문(절: dict) -> str:
     return _짧게("\n".join(조각))
 
 
+def 다시_봐야_할_절(찍힌: dict | None = None) -> list[tuple[dict, list[str]]]:
+    """**찍은 뒤에 강제자 파일이 바뀐 절**(DECISIONS §211 · PLAN #47 의 수).
+
+    ★ **읽은 절은 뺀다**(§217). 무더기 도장은 안 빼 준다 — 그래야 이 수가 진도다.
+    ★ **판별식을 두 벌 두지 않는다**(DECISIONS §237). `audit` 이 찍는 수와 `tools/docgen.py` 가
+      문서에 채우는 수가 **같은 함수**에서 나와야 한다 — 두 벌이면 언젠가 갈린다.
+    """
+    찍힌 = 도장들() if 찍힌 is None else 찍힌
+    return [(절, 바뀐) for 절 in 절들()
+            if 절["파일"] and not 찍힌.get(절["번호"], {}).get("읽음")
+            and (바뀐 := 뒤에_바뀐_파일(절))]
+
+
 def 도장들() -> dict:
     if SEAL.is_file():
         return json.loads(SEAL.read_text(encoding="utf-8"))
@@ -230,10 +243,7 @@ def main(argv: list[str] | None = None) -> int:
     찍힌 = 도장들()
 
     if 말 == "audit":
-        # ★ **읽은 절은 뺀다**(DECISIONS §217). 무더기 도장은 안 빼 준다 — 그래야 이 수가 진도다
-        의심 = [(절, 바뀐) for 절 in 절들()
-                if 절["파일"] and not 찍힌.get(절["번호"], {}).get("읽음")
-                and (바뀐 := 뒤에_바뀐_파일(절))]
+        의심 = 다시_봐야_할_절(찍힌)
         읽은 = sum(1 for v in 찍힌.values() if v.get("읽음"))
         print(f"  절 {len([x for x in 절들() if x['파일']])} 중 **그 뒤에 강제자 파일이 바뀐 절 "
               f"{len(의심)}** — 「틀렸다」 가 아니라 **「다시 봐야 한다」** 다 (읽고 찍은 절 {읽은})")
