@@ -105,3 +105,34 @@ def test_PLAN_도_부른_행만_문다():
     assert 앞
     assert DS._대장_조각("docs/next/PLAN.md", 본문, 대장.replace("| 43 | 🟡 |", "| 43 | 📄 |")) == 앞
     assert DS._대장_조각("docs/next/PLAN.md", 본문, 대장.replace("| 47 | 🟡 |", "| 47 | 📄 |")) != 앞
+
+
+def test_아직_안_담긴_파일도_저장소의_파일이다(tmp_path, monkeypatch):
+    """★ **찍자마자 무효가 됐다**(DECISIONS §247). `git add` 전에 찍으면 그 파일이 지문 밖이고,
+    `add` 하면 안으로 들어와 지문이 바뀐다 — **지문이 내용이 아니라 git 의 형편을 탄다.**"""
+    import subprocess
+    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
+    (tmp_path / ".gitignore").write_text("무시/\n", encoding="utf-8")
+    (tmp_path / "담김.py").write_text("x = 1\n", encoding="utf-8")
+    subprocess.run(["git", "add", ".gitignore", "담김.py"], cwd=tmp_path, check=True)
+    (tmp_path / "새것.py").write_text("y = 2\n", encoding="utf-8")        # 안 담겼다
+    (tmp_path / "무시").mkdir()
+    (tmp_path / "무시/데이터.jsonl").write_text("{}\n", encoding="utf-8")  # 무시 목록이다
+
+    monkeypatch.setattr(DS, "ROOT", tmp_path)
+    monkeypatch.setattr(DS, "_아는파일", [])
+    아는 = DS._깃이_아는_파일()
+    assert "담김.py" in 아는
+    assert "새것.py" in 아는, "안 담긴 파일이 빠지면 새 도구를 적은 절이 찍자마자 무효가 된다"
+    assert "무시/데이터.jsonl" not in 아는, "무시 목록은 기계마다 다르다(DECISIONS §212)"
+
+
+def test_한글_이름도_그대로_온다(tmp_path, monkeypatch):
+    """★ **git 은 한글 이름을 따옴표 씌워 내놓는다** — 그러면 이름이 안 맞아 **조용히 지문 밖**이
+    된다(DECISIONS §247). 이 저장소는 판 이름에 한글을 쓴다(`H-083-대조-a`)."""
+    import subprocess
+    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
+    (tmp_path / "대조판.jsonl").write_text("{}\n", encoding="utf-8")
+    monkeypatch.setattr(DS, "ROOT", tmp_path)
+    monkeypatch.setattr(DS, "_아는파일", [])
+    assert "대조판.jsonl" in DS._깃이_아는_파일()

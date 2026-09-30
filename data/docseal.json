@@ -1079,8 +1079,8 @@
  },
  "212": {
   "날짜": "2026-09-29",
-  "읽음": false,
-  "지문": "bfb14f195638fd24",
+  "읽음": true,
+  "지문": "68348ae1cf9ae565",
   "파일": [
    "tools/docseal.py::_깃이_아는_파일",
    "tests/test_docseal.py::test_저장소에_없는_파일은_도장이_안_문다"
@@ -1127,7 +1127,7 @@
  "217": {
   "날짜": "2026-09-29",
   "읽음": true,
-  "지문": "3741a75290acac54",
+  "지문": "e60b90a67c3dd885",
   "파일": [
    "tools/docseal.py",
    "docs/next/PLAN.md",
@@ -1315,7 +1315,7 @@
  "234": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "da2dbbf3acb59a9a",
+  "지문": "109670281f0bfa05",
   "파일": [
    "docs/why/DECISIONS.md",
    "docs/next/PLAN.md",
@@ -1394,7 +1394,7 @@
  "241": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "b30585bfb67a56fb",
+  "지문": "9c9a3ce56a46e3d9",
   "파일": [
    "tools/check_numbers.py",
    "docs/why/DECISIONS.md"
@@ -1441,10 +1441,21 @@
  "246": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "6d35073d94de65eb",
+  "지문": "f65ef8f0f605b3ff",
   "파일": [
+   "tools/qe.py",
+   "tests/test_qe.py",
    "seshat/licenses.py",
    "pyproject.toml"
+  ]
+ },
+ "247": {
+  "날짜": "2026-09-30",
+  "읽음": true,
+  "지문": "dba532841c09c3b7",
+  "파일": [
+   "tools/docseal.py::_깃이_아는_파일",
+   "tests/test_docseal.py::test_아직_안_담긴_파일도_저장소의_파일이다"
   ]
  },
  "25": {

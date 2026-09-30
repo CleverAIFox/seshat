@@ -118,10 +118,19 @@ def _깃이_아는_파일() -> frozenset[str]:
     ★ **저장소에 없는 파일은 기계마다 다르다.** `data/domain/*.jsonl` 은 커밋하지 않는다 —
       만드는 쪽에는 있고 받는 쪽에는 없으니, 그것을 지문에 넣으면 **도장이 기계를 탄다.**
       2026-09-29 §192 가 이 기계에서 무효로 떴다 — `d002` 가 여기 있고 저기 없었다.
+    ★ **묻는 것은 「git 이 이미 아는가」 가 아니라 「이 저장소의 파일인가」 다**(DECISIONS §247).
+      `--others --exclude-standard` 로 **아직 안 담긴 파일도 센다** — 무시 목록에 든 것만 뺀다.
+      2026-09-30 그러지 않아서 **새 도구를 적은 절이 찍자마자 무효**가 됐다. `git add` 전에 찍으면
+      그 파일이 지문 밖이고, `add` 하면 안으로 들어와 지문이 바뀐다 — **지문이 내용이 아니라
+      git 의 형편을 탔다**(§238 과 같은 병).
     """
     if not _아는파일:                      # 절마다 git 을 부르면 194 번이다
-        r = subprocess.run(["git", "ls-files"], capture_output=True, text=True, cwd=ROOT)
-        _아는파일.append(frozenset(r.stdout.splitlines()))
+        # ★ **`-z` 다**(DECISIONS §247). git 은 한글 이름을 기본으로 `"\353\213\264…"` 로 따옴표
+        #   씌워 내놓는다 — 그러면 그 파일은 **이름이 안 맞아 조용히 지문 밖**이 된다. 이 저장소는
+        #   판 이름에 한글을 쓴다(`H-083-대조-a`). NUL 로 끊으면 이름이 그대로 온다
+        r = subprocess.run(["git", "ls-files", "-z", "--cached", "--others", "--exclude-standard"],
+                           capture_output=True, text=True, cwd=ROOT)
+        _아는파일.append(frozenset(x for x in r.stdout.split("\0") if x))
     return _아는파일[0]
 
 
