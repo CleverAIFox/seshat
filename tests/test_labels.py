@@ -652,3 +652,47 @@ def test_줄이_넉넉하면_경고가_안_붙는다(tmp_path, monkeypatch, caps
     자 = _자(tmp_path, "자", {k: float(n) for n, k in enumerate(판정)})
     L.corr("t", ["a"], {"자": 자}, "", n=50)
     assert "정밀도를 말할 수 없다" not in capsys.readouterr().out
+
+
+def test_지난_표가_본_줄을_뺀다(tmp_path, monkeypatch, capsys):
+    """★ **같은 줄로 또 만들면 재표집 단위가 안 늘어난다**(DECISIONS §216 · §249)."""
+    monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
+    a, b = _run(tmp_path, "4b"), _run(tmp_path, "12b")
+    _, key, 판 = L.make({"4b": a, "12b": b}, ROWS, "첫판", 5, 31)
+    머리 = {"meta": True, "name": "첫판", "seed": 31, "판": 판}
+    (tmp_path / "첫판.key.jsonl").write_text(
+        "\n".join(json.dumps(x, ensure_ascii=False) for x in [머리] + key) + "\n", encoding="utf-8")
+    첫줄 = {r["id"] for r in key}
+    assert len(첫줄) == 5
+
+    _, key2, _ = L.make({"4b": a, "12b": b}, ROWS, "둘째", 5, 31, 빼고=["첫판"])
+    둘째줄 = {r["id"] for r in key2}
+    assert len(둘째줄) == 5
+    assert not (첫줄 & 둘째줄), "지난 표가 본 줄이 또 뽑혔다 — 떼어두기가 아니다"
+    assert "본 줄 5 을 뺐다" in capsys.readouterr().out
+
+
+def test_뺄_표가_없으면_말을_한다(tmp_path, monkeypatch):
+    monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
+    try:
+        L.이미_본_줄(["없는표"])
+    except SystemExit as e:
+        assert "뺄 표의 열쇠가 없다" in str(e) and "ls " in str(e)
+    else:
+        raise AssertionError("안 멈췄다")
+
+
+def test_빼고_나서_줄이_모자라면_멈춘다(tmp_path, monkeypatch):
+    """★ **모자란 채로 뽑지 않는다** — 떼어두기가 셋을 다 먹으면 그 셋으로는 못 한다."""
+    monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
+    a, b = _run(tmp_path, "4b"), _run(tmp_path, "12b")
+    _, key, 판 = L.make({"4b": a, "12b": b}, ROWS, "첫판", 18, 31)
+    머리 = {"meta": True, "name": "첫판", "seed": 31, "판": 판}
+    (tmp_path / "첫판.key.jsonl").write_text(
+        "\n".join(json.dumps(x, ensure_ascii=False) for x in [머리] + key) + "\n", encoding="utf-8")
+    try:
+        L.make({"4b": a, "12b": b}, ROWS, "둘째", 10, 31, 빼고=["첫판"])
+    except SystemExit as e:
+        assert "뿐인데 10 을 달라고 했다" in str(e)
+    else:
+        raise AssertionError("안 멈췄다")

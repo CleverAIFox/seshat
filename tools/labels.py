@@ -94,8 +94,29 @@ def tag(name: str, rid: str, arm: str) -> str:
     return hashlib.sha256(f"{name}|{rid}|{arm}".encode()).hexdigest()[:8]
 
 
+def 이미_본_줄(표들: list[str]) -> set[str]:
+    """지난 표가 이미 물어본 줄 id. **떼어두기의 자다**(DECISIONS §216 · §249).
+
+    ★ 자를 검증하는 표를 **같은 줄로** 또 만들면 재표집 단위(줄)가 안 늘어난다 — 구간이 안 좁아지고,
+      §216 대로 **그 줄들에서의 자**를 재게 된다. 새 표는 **본 적 없는 줄**로 만든다.
+    """
+    본것: set[str] = set()
+    for 표 in 표들:
+        kp = out_dir() / f"{표}.key.jsonl"
+        if not kp.exists():
+            raise SystemExit(f"뺄 표의 열쇠가 없다 — {_짧게(kp)}\n"
+                             f"    있는 표를 본다 : ls {_짧게(out_dir())}/*.key.jsonl")
+        for 줄 in kp.read_text(encoding="utf-8").splitlines():
+            if not 줄.strip():
+                continue
+            r = json.loads(줄)
+            if not r.get("meta"):
+                본것.add(r["id"])
+    return 본것
+
+
 def make(arms: dict[str, pathlib.Path], rows: list[dict], name: str, n: int,
-         seed: int) -> tuple[str, list[dict], dict[str, dict]]:
+         seed: int, 빼고: list[str] | None = None) -> tuple[str, list[dict], dict[str, dict]]:
     """★ **팔이 둘일 이유가 없다**(DECISIONS §115). 기준선을 같은 표에 얹으면 세 수가 한 자에서 나온다 —
     따로 재고 나중에 견주면 표본도 판정자도 달라져 있다."""
     got, shas, 판 = {}, {}, {}
@@ -115,7 +136,11 @@ def make(arms: dict[str, pathlib.Path], rows: list[dict], name: str, n: int,
     common = set(src)
     for o in got.values():
         common &= set(o)
-    both = sorted(common)
+    뺀것 = 이미_본_줄(빼고 or [])
+    both = sorted(common - 뺀것)
+    if 뺀것:
+        print(f"  지난 표 {len(빼고)} 가 본 줄 {len(뺀것)} 을 뺐다 — 남은 후보 {len(both)}"
+              f" (DECISIONS §216 : 떼어둔 데서 대 보기 전에는 자가 아니다)")
     if len(both) < n:
         raise SystemExit(f"팔 {len(arms)} 에 다 있는 줄이 {len(both)} 뿐인데 {n} 을 달라고 했다\n"
                          f"    줄여서 뽑는다 : --n {len(both)}\n"
@@ -668,6 +693,8 @@ def main(argv: list[str] | None = None) -> int:
     m.add_argument("--name", default="")
     m.add_argument("--n", type=int, default=60)
     m.add_argument("--seed", type=int, default=31)
+    m.add_argument("--빼고", action="append", default=[], metavar="표",
+                   help="그 표가 이미 물어본 줄을 뺀다 — **떼어두기**(DECISIONS §216 · §249)")
     r = sub.add_parser("read")
     r.add_argument("--name", required=True)
     r.add_argument("--sheet", default="")
@@ -782,7 +809,7 @@ def main(argv: list[str] | None = None) -> int:
     if len(arms) < 2:
         raise SystemExit("팔이 둘 이상이어야 한다 — --a/--b 또는 --arm 이름=경로 를 두 번 이상")
     name = a.name or f"{pathlib.Path(a.setpath).stem}-{a.n}"
-    sheet, key, 판 = make(arms, evaluate.load(a.setpath), name, a.n, a.seed)
+    sheet, key, 판 = make(arms, evaluate.load(a.setpath), name, a.n, a.seed, a.빼고)
     # ★ **머리줄이 어느 판에서 난 표인지 든다**(DECISIONS §243). 이것이 없으면 판정을 판에 못 잇는다
     머리 = {"meta": True, "name": name, "seed": a.seed, "판": 판}
     (out_dir() / f"{name}.key.jsonl").write_text(
