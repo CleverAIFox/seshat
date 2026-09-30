@@ -20,7 +20,7 @@
  "100": {
   "날짜": "2026-09-27",
   "읽음": true,
-  "지문": "812e5e18c37e9251",
+  "지문": "efa8172144e3c0d8",
   "파일": [
    "tools/labels.py",
    "tests/test_labels.py"
@@ -70,7 +70,7 @@
  "108": {
   "날짜": "2026-09-27",
   "읽음": true,
-  "지문": "5ec0702d11f0edc2",
+  "지문": "6850645b646b6ed5",
   "파일": [
    "tools/labels.py"
   ]
@@ -138,8 +138,8 @@
  },
  "115": {
   "날짜": "2026-09-27",
-  "읽음": false,
-  "지문": "576c59c7e6694a80",
+  "읽음": true,
+  "지문": "76417feb92c098f7",
   "파일": [
    "tests/test_evaluate.py::test_서버_조건은_잔량을_빼고_싣는다",
    "tests/test_labels.py::test_팔이_셋이어도_된다"
@@ -1222,7 +1222,7 @@
  "226": {
   "날짜": "2026-09-29",
   "읽음": true,
-  "지문": "3214878c2836af4c",
+  "지문": "27c683e7a5ad361f",
   "파일": [
    "tools/check_hypotheses.py",
    "tests/test_hypotheses.py::test_문턱_위는_선과_자를_둘_다_요구한다",
@@ -1233,7 +1233,7 @@
  "227": {
   "날짜": "2026-09-29",
   "읽음": true,
-  "지문": "bafc978e9d2eb627",
+  "지문": "96dcf76050f14cd6",
   "파일": [
    "tools/labels.py",
    "tests/test_labels.py::test_모델을_안_적으면_판정을_안_받는다"
@@ -1242,7 +1242,7 @@
  "228": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "5a6d6f65c4458df7",
+  "지문": "b984be1abb439e43",
   "파일": [
    "tools/labels.py",
    "tests/test_labels.py::test_머리줄이_없는_답은_첫_줄을_안_먹는다",
@@ -1315,7 +1315,7 @@
  "234": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "ae120fd64651a534",
+  "지문": "d7e1a85f78401b20",
   "파일": [
    "docs/why/DECISIONS.md",
    "docs/next/PLAN.md",
@@ -1394,7 +1394,7 @@
  "241": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "3d9639b59498abf3",
+  "지문": "d282b904c9c697ed",
   "파일": [
    "tools/check_numbers.py",
    "docs/why/DECISIONS.md"
@@ -1403,12 +1403,21 @@
  "242": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "4c006471d59949fb",
+  "지문": "9b7b9b34b312987c",
   "파일": [
    "tools/labels.py",
    "tests/test_labels.py",
    "seshat/licenses.py",
    "pyproject.toml"
+  ]
+ },
+ "243": {
+  "날짜": "2026-09-30",
+  "읽음": true,
+  "지문": "241c07e4b6c0f1b0",
+  "파일": [
+   "tools/labels.py",
+   "tests/test_labels.py"
   ]
  },
  "25": {
@@ -2012,8 +2021,8 @@
  },
  "98": {
   "날짜": "2026-09-27",
-  "읽음": false,
-  "지문": "26531c7a700b944e",
+  "읽음": true,
+  "지문": "635fa4c79a4948f9",
   "파일": [
    "tests/test_labels.py::test_채점표에_팔_이름이_없다"
   ]

@@ -94,13 +94,18 @@ def tag(name: str, rid: str, arm: str) -> str:
     return hashlib.sha256(f"{name}|{rid}|{arm}".encode()).hexdigest()[:8]
 
 
-def make(arms: dict[str, pathlib.Path], rows: list[dict], name: str, n: int, seed: int) -> tuple[str, list[dict]]:
+def make(arms: dict[str, pathlib.Path], rows: list[dict], name: str, n: int,
+         seed: int) -> tuple[str, list[dict], dict[str, dict]]:
     """★ **팔이 둘일 이유가 없다**(DECISIONS §115). 기준선을 같은 표에 얹으면 세 수가 한 자에서 나온다 —
     따로 재고 나중에 견주면 표본도 판정자도 달라져 있다."""
-    got, shas = {}, {}
+    got, shas, 판 = {}, {}, {}
     for arm, path in arms.items():
         h, o = read_run(path)
         got[arm], shas[arm] = o, h.get("set_sha256")
+        # ★ **어느 판에서 난 표인지 적는다**(DECISIONS §243). 2026-09-30 이것이 없어서 판정
+        #   360 판을 들고도 **그 줄을 만든 판을 못 찾았다** — 라벨은 레이크에 이름으로만 살고
+        #   `key.jsonl` 은 태그·줄·팔만 들었다. **판정과 판을 못 이으면 자를 못 검증한다**
+        판[arm] = {"run": str(path), "set_sha256": h.get("set_sha256"), "backend": h.get("backend")}
     if len(set(shas.values())) != 1:
         raise SystemExit("팔들이 다른 셋이다 — " + " · ".join(f"{a} {s}" for a, s in sorted(shas.items()))
                          + "\n    같은 셋으로 잰 판을 고른다 : ls -t runs/*.jsonl | head\n"
@@ -125,7 +130,7 @@ def make(arms: dict[str, pathlib.Path], rows: list[dict], name: str, n: int, see
             key.append({"tag": t, "id": rid, "arm": arm})
     rng.shuffle(sheet)                            # ★ 같은 줄의 팔들이 나란히 서지 않게
     lines = ["\t".join(HEAD)] + ["\t".join([t, s.replace("\t", " "), o.replace("\t", " "), ""]) for t, s, o in sheet]
-    return "\n".join(lines) + "\n", key
+    return "\n".join(lines) + "\n", key, 판
 
 
 PROMPT = """아래 표는 영어 기술 문서를 한국어로 옮긴 결과입니다. 각 줄을 셋 중 하나로 판정해 주세요.
@@ -198,7 +203,8 @@ def read(name: str, sheet: pathlib.Path, judge: str = "claude", model: str = "")
     kp = out_dir() / f"{name}.key.jsonl"
     if not kp.exists():
         raise SystemExit(f"열쇠가 없다 — {_짧게(kp)}. `make` 가 채점표와 함께 낸다 (seed 가 같으면 같은 표다)")
-    key = {r["tag"]: r for r in (json.loads(x) for x in kp.read_text(encoding="utf-8").splitlines() if x.strip())}
+    key = {r["tag"]: r for r in (json.loads(x) for x in kp.read_text(encoding="utf-8").splitlines() if x.strip())
+           if not r.get("meta")}
     got, blank = [], 0
     # ★ **머리줄이 있는지를 열쇠에게 묻는다**(DECISIONS §228). 예전에는 첫 줄을 **무조건** 버렸는데,
     #   판정자가 돌려주는 답에는 머리줄이 없어서 **진짜 판정 한 줄이 조용히 먹혔다.** 2026-09-30
@@ -435,6 +441,9 @@ def 자점수(경로: pathlib.Path) -> dict[tuple[str, str], float]:
       **방향을 잘못 적은 것**일 수도 **자가 거꾸로 가리키는 것**일 수도 있고(§229 가 뒤엣것이다)
       **둘을 도구가 못 가르기 때문**이다. 가르는 것은 사람이다.
     """
+    _있나(경로, "점수 파일", "    규칙 지표라면 도구가 낸다 : python3 tools/labels.py rule "
+          f"--name <표> --metric term_off --out {경로}\n"
+          "    신경망 자라면 그 자를 먼저 돌린다 — `corr` 은 **점수 파일**만 먹는다(DECISIONS §242)")
     got: dict[tuple[str, str], float] = {}
     for n, 줄 in enumerate(경로.read_text(encoding="utf-8").splitlines(), 1):
         if not 줄.strip():
@@ -517,6 +526,26 @@ def 상관(사람: dict[tuple[str, str], float], 자: dict[tuple[str, str], floa
     return 난것
 
 
+def 어느판인가(name: str) -> dict[str, dict]:
+    """표를 만든 판 — `make` 가 열쇠의 머리줄에 적는다(DECISIONS §243).
+
+    ★ **옛 표에는 없다.** 그때는 안 적었으므로 빈 것을 돌려준다 — 부르는 쪽이 길을 든다.
+      **없는 것을 「판이 없다」 로 읽으면 안 된다** — 「안 적혔다」 다.
+    """
+    kp = out_dir() / f"{name}.key.jsonl"
+    if not kp.exists():
+        return {}
+    첫 = json.loads(kp.read_text(encoding="utf-8").splitlines()[0])
+    return 첫.get("판", {}) if 첫.get("meta") else {}
+
+
+def _있나(p: pathlib.Path, 무엇: str, 길: str) -> None:
+    """★ **벽도 없고 길도 없는 자리를 안 만든다**(DECISIONS §232 · §243). 없는 파일에 역추적을
+    내면 도구가 깨진 것과 파일이 없는 것을 사람이 못 가른다."""
+    if not p.exists():
+        raise SystemExit(f"{무엇}이 없다 — {p}\n{길}")
+
+
 def 규칙점수(run: pathlib.Path, arm: str, metric: str, setpath: str = "") -> list[dict]:
     """규칙 지표의 **줄별** 점수 — `corr` 이 먹는 꼴로. 채점기를 그대로 부른다(§163).
 
@@ -524,6 +553,8 @@ def 규칙점수(run: pathlib.Path, arm: str, metric: str, setpath: str = "") ->
       0 으로 적으면 「용어가 없는 줄」 이 「용어를 다 틀린 줄」 과 같은 자리에 선다.
       그래서 `term_off` 는 **모든 줄을 못 매긴다** — `corr` 이 몇 쌍을 빼먹었는지 찍는다.
     """
+    _있나(run, f"판(`{arm}`)", "    어느 판인지 본다 : ls -t runs/*.jsonl | head\n"
+          "    표가 판을 들고 있으면 : python3 tools/labels.py rule --name <표> --metric " + metric)
     bs = _도구("bootstrap")
     머리, got = bs.read(str(run))
     rows = evaluate.load(setpath or 머리.get("set") or "")
@@ -635,20 +666,35 @@ def main(argv: list[str] | None = None) -> int:
     c.add_argument("--n", type=int, default=10000, help="재표집 판 수")
     c.add_argument("--seed", type=int, default=7)
     u = sub.add_parser("rule")
-    u.add_argument("--run", action="append", default=[], required=True, metavar="팔=경로",
-                   help="규칙 지표를 자로 쓰려고 줄별 점수를 낸다. 팔마다 한 번")
+    u.add_argument("--name", default="", help="표 이름 — **판을 열쇠에서 찾는다**(DECISIONS §243)")
+    u.add_argument("--run", action="append", default=[], metavar="팔=경로",
+                   help="판을 손으로 준다. 옛 표는 판이 안 적혀 있어 이쪽을 쓴다")
     u.add_argument("--metric", default="term_off")
     u.add_argument("--set", dest="setpath", default="", help="비우면 판의 머리줄이 든 셋")
     u.add_argument("--out", default="", help="비우면 화면으로")
     a = ap.parse_args(argv)
 
     if a.cmd == "rule":
-        난것 = []
+        판: dict[str, pathlib.Path] = {}
+        if a.name:
+            # ★ **표가 제 판을 들고 있으면 손으로 안 적는다**(DECISIONS §243)
+            for arm, d in 어느판인가(a.name).items():
+                판[arm] = pathlib.Path(d["run"])
         for spec in a.run:
             if "=" not in spec:
-                raise SystemExit(f"--run 은 팔=경로 다 — {spec}")
+                raise SystemExit(f"--run 은 팔=경로 다 — {spec}\n"
+                                 "    보기 : --run 4b=runs/H-080-retry2-20260929-201747.jsonl")
             k, _, v = spec.partition("=")
-            난것 += 규칙점수(pathlib.Path(v.strip()), k.strip(), a.metric, a.setpath)
+            판[k.strip()] = pathlib.Path(v.strip())      # 손으로 준 것이 이긴다
+        if not 판:
+            raise SystemExit(
+                f"어느 판에서 낼지 모른다 — 표 '{a.name or '(이름 없음)'}' 의 열쇠에 판이 안 적혀 있다\n"
+                "    **2026-09-30 이전 표는 판을 안 적었다**(DECISIONS §243) — 손으로 준다\n"
+                "    판을 고른다 : ls -t runs/*.jsonl | head\n"
+                "    보기 : --run 4b=runs/H-080-retry2-….jsonl --run 12b=runs/….jsonl")
+        난것 = []
+        for arm, path in sorted(판.items()):
+            난것 += 규칙점수(path, arm, a.metric, a.setpath)
         글 = "\n".join(json.dumps(x, ensure_ascii=False) for x in 난것) + "\n"
         if a.out:
             pathlib.Path(a.out).write_text(글, encoding="utf-8")
@@ -709,8 +755,11 @@ def main(argv: list[str] | None = None) -> int:
     if len(arms) < 2:
         raise SystemExit("팔이 둘 이상이어야 한다 — --a/--b 또는 --arm 이름=경로 를 두 번 이상")
     name = a.name or f"{pathlib.Path(a.setpath).stem}-{a.n}"
-    sheet, key = make(arms, evaluate.load(a.setpath), name, a.n, a.seed)
-    (out_dir() / f"{name}.key.jsonl").write_text("\n".join(json.dumps(x, ensure_ascii=False) for x in key) + "\n", encoding="utf-8")
+    sheet, key, 판 = make(arms, evaluate.load(a.setpath), name, a.n, a.seed)
+    # ★ **머리줄이 어느 판에서 난 표인지 든다**(DECISIONS §243). 이것이 없으면 판정을 판에 못 잇는다
+    머리 = {"meta": True, "name": name, "seed": a.seed, "판": 판}
+    (out_dir() / f"{name}.key.jsonl").write_text(
+        "\n".join(json.dumps(x, ensure_ascii=False) for x in [머리] + key) + "\n", encoding="utf-8")
     out = pathlib.Path(f"/tmp/labels-{name}.tsv")
     out.write_text(sheet, encoding="utf-8")
     print(f"  {out}  {len(key)}줄 (눈가림 · 어느 팔인지 안 적혀 있다)")

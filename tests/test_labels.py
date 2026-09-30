@@ -21,7 +21,7 @@ def _run(tmp, arm, sha="same"):
 
 
 def test_채점표에_팔_이름이_없다(tmp_path):
-    sheet, key = L.make({"a": _run(tmp_path, "4b"), "b": _run(tmp_path, "12b")}, ROWS, "t", 5, 31)
+    sheet, key, _판 = L.make({"a": _run(tmp_path, "4b"), "b": _run(tmp_path, "12b")}, ROWS, "t", 5, 31)
     assert "4b" not in sheet and "12b" not in sheet
     cols = [ln.split("\t") for ln in sheet.splitlines()[1:]]
     assert all(len(c) == 4 for c in cols)                      # 표 · 원문 · 번역 · 판정. 팔 칸이 없다
@@ -30,7 +30,7 @@ def test_채점표에_팔_이름이_없다(tmp_path):
 
 
 def test_두_팔이_나란히_서지_않는다(tmp_path):
-    sheet, key = L.make({"a": _run(tmp_path, "4b"), "b": _run(tmp_path, "12b")}, ROWS, "t", 10, 31)
+    sheet, key, _판 = L.make({"a": _run(tmp_path, "4b"), "b": _run(tmp_path, "12b")}, ROWS, "t", 10, 31)
     order = [ln.split("\t")[0] for ln in sheet.splitlines()[1:]]
     by_tag = {r["tag"]: r["id"] for r in key}
     붙은쌍 = sum(by_tag[x] == by_tag[y] for x, y in zip(order, order[1:]))
@@ -66,7 +66,7 @@ def test_줄_id_가_없으면_거절한다(tmp_path):
 
 def test_채점표를_읽어_팔마다_비율을_낸다(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
-    sheet, key = L.make({"a": _run(tmp_path, "4b"), "b": _run(tmp_path, "12b")}, ROWS, "t", 5, 31)
+    sheet, key, _판 = L.make({"a": _run(tmp_path, "4b"), "b": _run(tmp_path, "12b")}, ROWS, "t", 5, 31)
     (tmp_path / "t.key.jsonl").write_text("\n".join(json.dumps(x, ensure_ascii=False) for x in key) + "\n", encoding="utf-8")
     arm_of = {r["tag"]: r["arm"] for r in key}
     filled = [sheet.splitlines()[0]]
@@ -84,7 +84,7 @@ def test_채점표를_읽어_팔마다_비율을_낸다(tmp_path, monkeypatch, c
 
 def test_모르는_판정은_거절한다(tmp_path, monkeypatch):
     monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
-    sheet, key = L.make({"a": _run(tmp_path, "4b"), "b": _run(tmp_path, "12b")}, ROWS, "t", 2, 31)
+    sheet, key, _판 = L.make({"a": _run(tmp_path, "4b"), "b": _run(tmp_path, "12b")}, ROWS, "t", 2, 31)
     (tmp_path / "t.key.jsonl").write_text("\n".join(json.dumps(x, ensure_ascii=False) for x in key) + "\n", encoding="utf-8")
     s = tmp_path / "sheet.tsv"
     s.write_text(sheet.splitlines()[0] + "\n" + sheet.splitlines()[1] + "좋음\n", encoding="utf-8")
@@ -200,7 +200,7 @@ def test_make_가_판정_순서를_찍는다(tmp_path, monkeypatch, capsys):
 def test_팔이_셋이어도_된다(tmp_path):
     """기준선을 같은 표에 얹는다 — 따로 재면 표본도 판정자도 달라진다(DECISIONS §115)."""
     arms = {n: _run(tmp_path, n) for n in ("4b", "12b", "nova")}
-    sheet, key = L.make(arms, ROWS, "t", 5, 31)
+    sheet, key, _판 = L.make(arms, ROWS, "t", 5, 31)
     assert len(key) == 15 and {r["arm"] for r in key} == {"4b", "12b", "nova"}
     assert len(sheet.splitlines()) == 16          # 머리줄 + 15
     for n in ("4b", "12b", "nova"):
@@ -540,3 +540,65 @@ def test_규칙_점수는_분모가_0_인_줄을_안_낸다():
     """★ **값이 없는 것과 0 은 다르다** — 용어가 없는 줄을 0 으로 적으면 「다 틀린 줄」 과 같아진다."""
     글 = (ROOT / "tools/labels.py").read_text(encoding="utf-8")
     assert "if 분모:" in 글 and "안 낸다" in 글
+
+
+# ── 표가 제 판을 든다(DECISIONS §243) ──────────────────────────────────────────────
+
+def test_표가_어느_판에서_났는지_든다(tmp_path):
+    """★ **2026-09-30 판정 360 판을 들고도 그 줄을 만든 판을 못 찾았다** — 열쇠가 태그·줄·팔만 들었다."""
+    a, b = _run(tmp_path, "4b"), _run(tmp_path, "12b")
+    _, _, 판 = L.make({"4b": a, "12b": b}, ROWS, "t", 5, 31)
+    assert set(판) == {"4b", "12b"}
+    assert 판["4b"]["run"] == str(a) and 판["4b"]["set_sha256"] == "same"
+
+
+def test_판은_열쇠의_머리줄에_산다(tmp_path, monkeypatch):
+    monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
+    a, b = _run(tmp_path, "4b"), _run(tmp_path, "12b")
+    _, key, 판 = L.make({"4b": a, "12b": b}, ROWS, "t", 5, 31)
+    머리 = {"meta": True, "name": "t", "seed": 31, "판": 판}
+    (tmp_path / "t.key.jsonl").write_text(
+        "\n".join(json.dumps(x, ensure_ascii=False) for x in [머리] + key) + "\n", encoding="utf-8")
+    assert L.어느판인가("t")["12b"]["run"] == str(b)
+
+
+def test_판이_안_적힌_옛_표는_빈_것을_준다(tmp_path, monkeypatch):
+    """★ **「안 적혔다」 를 「판이 없다」 로 읽으면 안 된다** — 부르는 쪽이 길을 든다."""
+    monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
+    (tmp_path / "옛.key.jsonl").write_text(
+        json.dumps({"tag": "x", "id": "x001", "arm": "a"}, ensure_ascii=False) + "\n", encoding="utf-8")
+    assert L.어느판인가("옛") == {}
+    assert L.어느판인가("아예없음") == {}
+
+
+def test_머리줄이_있어도_read_가_안_먹는다(tmp_path, monkeypatch, capsys):
+    """★ 열쇠에 머리줄이 생겼다 — **판정 한 줄이 조용히 먹히면 안 된다**(DECISIONS §228)."""
+    monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
+    sheet, key, 판 = L.make({"a": _run(tmp_path, "4b"), "b": _run(tmp_path, "12b")}, ROWS, "t", 5, 31)
+    머리 = {"meta": True, "name": "t", "seed": 31, "판": 판}
+    (tmp_path / "t.key.jsonl").write_text(
+        "\n".join(json.dumps(x, ensure_ascii=False) for x in [머리] + key) + "\n", encoding="utf-8")
+    줄 = sheet.splitlines()
+    매긴 = [줄[0]] + [ln + "맞다" for ln in 줄[1:]]
+    (tmp_path / "s.tsv").write_text("\n".join(매긴) + "\n", encoding="utf-8")
+    L.read("t", tmp_path / "s.tsv", "j", "모형")
+    assert "10줄 / 열쇠 10" in capsys.readouterr().out
+
+
+def test_없는_점수_파일은_역추적이_아니라_말을_한다(tmp_path):
+    """★ **벽도 없고 길도 없는 자리를 안 만든다**(DECISIONS §232). 2026-09-30 이 자리가 역추적을 냈다."""
+    try:
+        L.자점수(tmp_path / "없다.jsonl")
+    except SystemExit as e:
+        assert "점수 파일이 없다" in str(e) and "labels.py rule" in str(e)
+    else:
+        raise AssertionError("안 멈췄다")
+
+
+def test_없는_판은_역추적이_아니라_말을_한다(tmp_path):
+    try:
+        L.규칙점수(tmp_path / "없다.jsonl", "4b", "term_off")
+    except SystemExit as e:
+        assert "판(`4b`)이 없다" in str(e) and "ls -t runs" in str(e)
+    else:
+        raise AssertionError("안 멈췄다")
