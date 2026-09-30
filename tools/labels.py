@@ -526,6 +526,11 @@ def 상관(사람: dict[tuple[str, str], float], 자: dict[tuple[str, str], floa
     return 난것
 
 
+# ★ **작을수록 좋은 지표.** `corr` 은 「클수록 좋다」 를 전제하므로 **여기서 부호를 뒤집는다** —
+#   안 뒤집으면 잘 맞는 자가 음수로 나오고, 그것이 「거꾸로 가리킨다」 와 구별되지 않는다(§242)
+작을수록 = frozenset({"term_bad"})
+
+
 def 어느판인가(name: str) -> dict[str, dict]:
     """표를 만든 판 — `make` 가 열쇠의 머리줄에 적는다(DECISIONS §243).
 
@@ -567,7 +572,8 @@ def 규칙점수(run: pathlib.Path, arm: str, metric: str, setpath: str = "") ->
     난것 = []
     for r, (분자, 분모) in zip(rows, 줄[metric]):
         if 분모:
-            난것.append({"id": r["id"], "arm": arm, "score": 분자 / 분모})
+            값 = 분자 / 분모
+            난것.append({"id": r["id"], "arm": arm, "score": -값 if metric in 작을수록 else 값})
     return 난것
 
 
@@ -596,7 +602,10 @@ def corr(name: str, judges: list[str], 자들: dict[str, pathlib.Path], 기준�
             print(f"  {이름:14} **못 잰다** — 사람과 겹치는 (줄,팔) 이 {len(키)} 이다")
             continue
         빠진 = len(사람) - len(키)
-        r = 상관(사람, 자, 키, n, seed, 기준 if (기준 and 이름 != 기준이름) else None)
+        # ★ **혼자 서는 ρ 와 견주는 ρ 는 다른 쌍에서 난다**(DECISIONS §244). 자마다 못 매기는 줄이
+        #   다르므로(`lit` 258 · `term_off` 1,398) **차는 둘 다 매긴 쌍에서만** 난다. 한 자의 쌍으로
+        #   다른 자를 부르면 없는 줄을 찾다가 죽는다 — 2026-09-30 실제로 죽었다
+        r = 상관(사람, 자, 키, n, seed)
         if r is None:
             print(f"  {이름:14} **못 잰다** — 점수가 전부 같은 값이거나 재표집이 비었다")
             continue
@@ -604,10 +613,17 @@ def corr(name: str, judges: list[str], 자들: dict[str, pathlib.Path], 기준�
         표시 = f"{이름}{' ← 기준' if 이름 == 기준이름 else ''}"
         print(f"  {표시:20} ρ {r['ρ']:+.4f}  [{r['아래']:+.4f}, {r['위']:+.4f}]  p={r['p']:.3f}"
               f"  · 쌍 {r['쌍']}{꼬리}")
-        if "차" in r:
-            품나 = r["차아래"] <= 0 <= r["차위"]
-            print(f"  {'':20} 차(− {기준이름}) {r['차']:+.4f}  [{r['차아래']:+.4f}, {r['차위']:+.4f}]"
-                  f"  p={r['차p']:.3f}  {'**못 가른다**' if 품나 else '**갈린다**'}")
+        if 기준 and 이름 != 기준이름:
+            공통 = sorted(set(키) & set(기준))
+            ㄷ = 상관(사람, 자, 공통, n, seed, 기준) if len(공통) >= 3 else None
+            if ㄷ is None or "차" not in ㄷ:
+                print(f"  {'':20} 차(− {기준이름}) **못 잰다** — 둘 다 매긴 쌍이 {len(공통)} 이다")
+                continue
+            품나 = ㄷ["차아래"] <= 0 <= ㄷ["차위"]
+            print(f"  {'':20} 차(− {기준이름}) {ㄷ['차']:+.4f}  [{ㄷ['차아래']:+.4f}, {ㄷ['차위']:+.4f}]"
+                  f"  p={ㄷ['차p']:.3f}  {'**못 가른다**' if 품나 else '**갈린다**'}"
+                  f"  · **둘 다 매긴 쌍 {len(공통)}** 에서 잰 것이다")
+            r = ㄷ
             # ★ **하나를 빼도 부호가 남나**(H-081 ③ 과 같은 조건). 이 구간은 **줄만** 재표집하므로
             #   판정자 사이의 퍼짐을 안 본다 — §118 이 그 퍼짐을 실측했다
             if len(judges) > 2 and not 품나:

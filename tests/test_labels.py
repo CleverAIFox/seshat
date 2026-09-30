@@ -602,3 +602,31 @@ def test_없는_판은_역추적이_아니라_말을_한다(tmp_path):
         assert "판(`4b`)이 없다" in str(e) and "ls -t runs" in str(e)
     else:
         raise AssertionError("안 멈췄다")
+
+
+def test_자마다_못_매기는_줄이_달라도_안_죽는다(tmp_path, monkeypatch, capsys):
+    """★ **2026-09-30 여기서 죽었다** — `lit` 의 쌍으로 `term_off` 를 찾다가 KeyError 였다.
+    혼자 서는 ρ 와 견주는 ρ 는 **다른 쌍에서 난다**(DECISIONS §244)."""
+    monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
+    판정 = {(f"x{i}", "4b"): ("맞다" if i % 2 else "어긋난다") for i in range(12)}
+    _판정지(tmp_path, "t", "a", 판정)
+    넓은 = _자(tmp_path, "넓은", {k: float(n) for n, k in enumerate(판정)})
+    좁은 = _자(tmp_path, "좁은", {k: float(n) for n, k in enumerate(판정) if n >= 4})
+    L.corr("t", ["a"], {"넓은": 넓은, "좁은": 좁은}, "넓은", n=100)
+    out = capsys.readouterr().out
+    assert "둘 다 매긴 쌍 8" in out, out
+
+
+def test_겹치는_쌍이_없으면_차를_못_잰다고_말한다(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
+    판정 = {(f"x{i}", "4b"): ("맞다" if i % 2 else "어긋난다") for i in range(10)}
+    _판정지(tmp_path, "t", "a", 판정)
+    앞 = _자(tmp_path, "앞", {k: float(n) for n, k in enumerate(판정) if n < 5})
+    뒤 = _자(tmp_path, "뒤", {k: float(n) for n, k in enumerate(판정) if n >= 5})
+    L.corr("t", ["a"], {"앞": 앞, "뒤": 뒤}, "앞", n=50)
+    assert "둘 다 매긴 쌍이 0 이다" in capsys.readouterr().out
+
+
+def test_작을수록_좋은_지표는_부호를_뒤집어_낸다():
+    """★ **안 뒤집으면 잘 맞는 자가 음수로 나오고** 「거꾸로 가리킨다」 와 구별되지 않는다."""
+    assert "term_bad" in L.작을수록 and "term_off" not in L.작을수록
