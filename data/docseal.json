@@ -581,7 +581,7 @@
  "164": {
   "날짜": "2026-09-28",
   "읽음": false,
-  "지문": "a5d0509eaf4b0c32",
+  "지문": "40cc11076cf542d1",
   "파일": [
    "tools/verify.sh",
    "tests/test_workflows.py::test_셸의_변수_이름은_ASCII_다"
@@ -647,7 +647,7 @@
  "170": {
   "날짜": "2026-09-28",
   "읽음": false,
-  "지문": "f4eb3aded90d0141",
+  "지문": "e24d754c626cc1cc",
   "파일": [
    "tools/ci_status.py",
    "tools/verify.sh",
@@ -754,7 +754,7 @@
  "180": {
   "날짜": "2026-09-28",
   "읽음": false,
-  "지문": "951d796034688d23",
+  "지문": "e9f13cb2e006fb25",
   "파일": [
    "tools/bootstrap.py",
    "tests/test_bootstrap.py",
@@ -1283,12 +1283,23 @@
  "231": {
   "날짜": "2026-09-30",
   "읽음": false,
-  "지문": "e00b8a70c07ed0e5",
+  "지문": "4d84fd8252a2b0c0",
   "파일": [
    "docs/now/related.md",
    "docs/next/hypotheses.md",
    "seshat/evaluate.py",
    "tests/test_evaluate.py::test_빈_조각은_막지_않고_치운다"
+  ]
+ },
+ "232": {
+  "날짜": "2026-09-30",
+  "읽음": false,
+  "지문": "24d84c35497932d7",
+  "파일": [
+   "tools/check_crashes.py",
+   "tests/test_crashes.py",
+   "tools/lake.py::sha256",
+   "tests/test_lake.py::test_못_읽으면_역추적이_아니라_말을_한다"
   ]
  },
  "24": {

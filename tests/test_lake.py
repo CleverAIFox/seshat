@@ -158,3 +158,34 @@ def test_없는_판에_추적을_안_뱉는다(tmp_path):
         _rs().rescore(str(tmp_path / "runs/H-050-nova-d001-20260927-181909.jsonl"), "x")
     말 = str(e.value)
     assert "레이크" in 말 and "lake.py ls" in 말 and "H-050-nova-d001" in 말
+
+
+def test_못_읽으면_역추적이_아니라_말을_한다(tmp_path, monkeypatch, capsys):
+    """★ **벽도 없고 길도 없는 자리**(DECISIONS §232 · §231 의 셋째 얼굴).
+
+    2026-09-30 윈도우 업데이트가 메모리를 먹은 채로 `verify` 를 돌렸더니 `sha256` 이 `OSError` 를
+    그대로 올려 역추적 여섯 줄을 뱉었다. `check_ways` 는 `SystemExit` · `print("✗")` 만 보므로
+    **이런 자리는 세지도 않는다.**
+    """
+    p = tmp_path / "x.jsonl"
+    p.write_text("{}\n", encoding="utf-8")
+
+    def 못읽게(_self, *a, **k):
+        raise OSError(12, "Cannot allocate memory")
+    monkeypatch.setattr(pathlib.Path, "open", 못읽게)
+    try:
+        lake.sha256(p)
+    except lake.못읽음 as e:
+        assert "errno 12" in str(e) and p.name in str(e)
+    else:
+        raise AssertionError("OSError 를 그대로 올렸다")
+
+
+def test_못_읽은_것은_고장이라_2_로_끝난다(tmp_path, monkeypatch, capsys):
+    """★ **위반은 1 이고 고장은 2 다**(§21). 1 을 내면 「레이크가 깨졌다」 로 읽힌다."""
+    monkeypatch.setattr(lake.paths, "require_lake", lambda: tmp_path)
+    monkeypatch.setattr(lake, "check", lambda *a, **k: (_ for _ in ()).throw(lake.못읽음("x — 메모리")))
+    assert lake.main(["check"]) == 2
+    err = capsys.readouterr().err
+    assert "레이크를 못 읽었다" in err
+    assert "ollama stop" in err and "못 보는 것은 통과가 아니다" in err

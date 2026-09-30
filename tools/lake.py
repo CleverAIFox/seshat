@@ -36,11 +36,25 @@ HEADER = "sha256\tpath\tbytes\tadded\torigin"
 EVIDENCE = re.compile(r"\bruns/([\w.-]+\.jsonl)\b")
 
 
+class 못읽음(Exception):
+    """레이크의 파일을 **읽지 못했다** — 「내용이 다르다」 와 다른 일이다(DECISIONS §232)."""
+
+
 def sha256(p: Path) -> str:
+    """★ **읽다 실패하면 역추적이 아니라 말을 한다**(DECISIONS §232).
+
+    2026-09-30 윈도우 업데이트가 메모리를 먹은 채로 `verify` 를 돌렸더니 이 자리가 `OSError` 를
+    그대로 올려 **역추적 여섯 줄**을 뱉었다. 「무엇이 잘못인가」 도 「무엇을 하면 되는가」 도 없었다.
+    `check_ways` 는 `SystemExit` 과 `print("✗")` 자리만 보므로 **이런 자리는 아예 안 본다** —
+    **벽도 없고 길도 없는 자리**다(§231 의 셋째 얼굴).
+    """
     h = hashlib.sha256()
-    with p.open("rb") as f:
-        for chunk in iter(lambda: f.read(1 << 20), b""):
-            h.update(chunk)
+    try:
+        with p.open("rb") as f:
+            for chunk in iter(lambda: f.read(1 << 20), b""):
+                h.update(chunk)
+    except OSError as e:
+        raise 못읽음(f"{p} — {e.strerror or e}(errno {e.errno})") from e
     return h.hexdigest()
 
 
@@ -187,15 +201,25 @@ def main(argv: list[str] | None = None) -> int:
             return 2
         return init(d)
     lake = paths.require_lake()
-    if a.cmd == "put":
-        return put(lake, a.tier, a.files, into=a.into)
-    if a.cmd == "ls":
-        got = 찾는다(lake, a.무늬, a.tier)
-        for x in got:
-            print(f"  {x}")
-        print(f"  {len(got)}건 — {lake / a.tier}")
-        return 0 if got else 1
-    fails = check(lake)
+    try:
+        if a.cmd == "put":
+            return put(lake, a.tier, a.files, into=a.into)
+        if a.cmd == "ls":
+            got = 찾는다(lake, a.무늬, a.tier)
+            for x in got:
+                print(f"  {x}")
+            print(f"  {len(got)}건 — {lake / a.tier}")
+            return 0 if got else 1
+        fails = check(lake)
+    except 못읽음 as e:
+        # ★ **못 읽은 것은 「틀렸다」 가 아니라 「못 봤다」 다**(DECISIONS §232). 여기서 1 을 내면
+        #   「레이크가 깨졌다」 로 읽힌다 — **위반은 1 이고 고장은 2 다**(§21). `put` 도 같이 싼다:
+        #   넣다가 못 읽으면 그것도 「같은 이름에 다른 내용」 이 아니라 **못 본 것**이다
+        print(f"  ✗ 레이크를 못 읽었다 — {e}\n"
+              f"    메모리가 모자라면(errno 12) 물고 있는 것을 내린다 : ollama stop <모델> · free -h\n"
+              f"    드라이브가 흔들리면 다시 붙었는지 본다 : ls {lake}\n"
+              f"    **못 보는 것은 통과가 아니다** — 고치고 다시 돌린다", file=sys.stderr)
+        return 2
     for f in fails:
         print(f"  {f}")
     print(f"  레이크 {lake} · 대장 {len(manifest(lake))}건 · 실패 {len(fails)}")
@@ -203,4 +227,13 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    # ★ 위반(1)과 도구 고장(2)을 다른 코드로 끝낸다(DECISIONS §21 · §232). 같은 코드면
+    #   **검사가 깨진 것을 레이크가 깨진 것으로 읽는다**
+    try:
+        sys.exit(main())
+    except SystemExit:
+        raise
+    except Exception:
+        import traceback
+        traceback.print_exc()
+        sys.exit(2)

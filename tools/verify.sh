@@ -47,6 +47,7 @@ step model_licenses     uv run python tools/check_model_licenses.py
 step hypotheses         uv run python tools/check_hypotheses.py
 step ontology           uv run python tools/check_ontology.py
 step ways               uv run python tools/check_ways.py
+step crashes            uv run python tools/check_crashes.py
 step docseal            uv run python tools/docseal.py
 step bootstrap          uv run python tools/bootstrap.py --selftest
 step catalog            uv run python tools/check_catalog.py
