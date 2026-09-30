@@ -2,11 +2,12 @@
 
 ★ 모델을 안 부른다. 고르는 규칙만 본다 — 후보를 손으로 준다.
 """
+# ★ **건너뛰지 않는다**(DECISIONS §258). 관문은 `uv sync --group eval` 을 늘 하므로
+#   여기서 건너뛰면 그룹이 빠진 날 **이 파일 전체가 조용히 0 건**이 된다 — 없으면 시끄럽게 죽는다
 import pytest
+import sacrebleu  # noqa: F401
 
 from seshat import backends, mbr
-
-pytest.importorskip("sacrebleu", reason="chrF 가 효용이다 — uv sync --group eval")
 
 
 def setup_function():

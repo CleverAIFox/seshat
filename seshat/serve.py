@@ -100,7 +100,7 @@ def main(argv=None) -> int:
     try:
         srv.serve_forever()
     except KeyboardInterrupt:
-        pass
+        print("  멈춘다", file=sys.stderr)
     return 0
 
 

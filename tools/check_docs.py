@@ -291,7 +291,9 @@ def check_refs(root: Path, fails: list) -> None:
             continue
         try:
             text = p.read_text(encoding="utf-8")
-        except (OSError, UnicodeDecodeError):
+        except (OSError, UnicodeDecodeError) as e:
+            # ★ **건너뛰되 말을 한다**(DECISIONS §258). # seshat:
+            print(f"    ※ {p} 를 못 읽었다 — {e}. **이 파일은 안 봤다**", file=sys.stderr)
             continue
         # ★ **다른 저장소에서 복사해 온 파일은 그 저장소의 참조를 든다.** 머리 세 줄에
         #   `사본이다` 를 적은 파일은 보지 않는다 — 고치면 사본이 원본과 갈린다.

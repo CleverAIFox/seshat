@@ -24,9 +24,15 @@ def _나무(tmp_path: pathlib.Path, 시험: str = "", 도구: str = "") -> pathl
 
 
 def test_저장소가_장부와_맞는다():
-    """★ **라쳇이다** — 자리마다 판단이 다르므로 한 판에 다 못 갚는다(DECISIONS §233 · §255)."""
+    """★ **장부가 비었다 — 이제 절대 규칙이다**(DECISIONS §258).
+
+    세운 판(§255)에서는 열둘이 있었고 「자리마다 판단이 다르다」 고 적었는데 **다 갚아 보니
+    판단이 같았다** — 훑개도 건너뛴 수를 세어 사유에 실을 수 있었다. §233 의 규칙대로,
+    판단이 같으면 라쳇을 미루는 것이 곧 빚이다.
+    """
+    assert DC.장부 == frozenset()
     난것 = {a for a, _ in DC.죽은검사()}
-    assert 난것 <= DC.장부, f"늘었다 — {sorted(난것 - DC.장부)}"
+    assert 난것 == set(), f"늘었다 — {sorted(난것)}"
 
 
 def test_카나리아가_산다():
@@ -91,4 +97,13 @@ def test_죽은_이름과_다른_물음이다():
     다른 = importlib.util.spec_from_file_location("cd2", ROOT / "tools/check_dead.py")
     CD = importlib.util.module_from_spec(다른)
     다른.loader.exec_module(CD)
-    assert CD.죽은이름() == [] and DC.죽은검사() != [], "둘이 같은 답을 내면 하나가 군더더기다"
+    assert CD.죽은이름() == [] and DC.죽은검사() == []          # 저장소는 양쪽 다 0 이다(§258)
+    # ★ **0 이 같다고 같은 물음이 아니다** — 한쪽만 잡는 나무를 지어서 가른다. 저장소가 둘 다 0 이
+    #   된 뒤로(§258) 실물로는 못 가른다
+    import tempfile
+    with tempfile.TemporaryDirectory() as d:
+        t = _나무(pathlib.Path(d), 도구="def f():\n    try:\n        f()\n    except OSError:\n        pass\n")
+        (t / "tests/test_x.py").write_text("from tools.x import f\n\n\ndef test_산다():\n    assert f\n",
+                                           encoding="utf-8")
+        assert CD.죽은이름(t) == [], CD.죽은이름(t)              # 이름은 다 불린다
+        assert [a for a, _ in DC.죽은검사(t)] == ["tools/x.py:4"], DC.죽은검사(t)   # 검사는 죽어 있다

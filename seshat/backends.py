@@ -143,8 +143,10 @@ def 카드_GB() -> float:
                            capture_output=True, text=True, timeout=10)
         if r.returncode == 0 and r.stdout.strip():
             return float(r.stdout.split("\n")[0].strip()) / 1024
-    except (OSError, ValueError, subprocess.SubprocessError):
-        pass
+    except (OSError, ValueError, subprocess.SubprocessError) as e:
+        # ★ **못 물으면 말을 한다**(DECISIONS §258). 조용히 기본값을 쓰면 **이 기계의 카드가
+        #   6GB 라고 믿고 판을 막는다** — 빌린 T4 에서 그것이 §84 의 길을 막았다
+        print(f"    ※ 카드 크기를 못 물었다 — {e}. 기본값 {_VRAM_기본}GB 를 쓴다", file=_sys.stderr)
     return _VRAM_기본
 
 

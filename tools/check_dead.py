@@ -56,7 +56,10 @@ def 죽은이름(root: pathlib.Path | None = None) -> list[str]:
     for p, 글 in sorted(_글들(root, 정의터).items()):
         try:
             나무 = ast.parse(글)
-        except SyntaxError:
+        except SyntaxError as e:
+            # ★ **건너뛰되 말을 한다**(DECISIONS §255 · §258). 이 저장소의 제 파일이 안 읽히는 것은
+            #   **비정상**이고, 조용히 넘기면 **안 본 파일이 깨끗한 파일로 보인다**
+            print(f"    ※ {p} 를 못 읽었다 — {e}. **이 파일은 안 봤다**", file=sys.stderr)
             continue
         for n in 나무.body:                      # ★ 최상위만 본다 — 안쪽 함수는 몸통이 쓰임이다
             if not isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):

@@ -62,7 +62,9 @@ def 훑는다(디렉토리: tuple[str, ...], least: int) -> dict[str, list[str]]
         for f in sorted((ROOT / d).rglob("*.py")):
             try:
                 나무 = ast.parse(f.read_text(encoding="utf-8"))
-            except SyntaxError:
+            except SyntaxError as e:
+                # ★ **건너뛰되 말을 한다**(DECISIONS §258) — 안 본 파일이 깨끗해 보이면 안 된다
+                print(f"    ※ {f} 를 못 읽었다 — {e}. **이 파일은 안 봤다**", file=sys.stderr)
                 continue
             for n in ast.walk(나무):
                 if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)):
@@ -84,7 +86,9 @@ def 글자_사본(디렉토리: tuple[str, ...], 길이: int) -> dict[str, list[
         for f in sorted((ROOT / d).rglob("*.py")):
             try:
                 나무 = ast.parse(f.read_text(encoding="utf-8"))
-            except SyntaxError:
+            except SyntaxError as e:
+                # ★ **건너뛰되 말을 한다**(DECISIONS §258) — 안 본 파일이 깨끗해 보이면 안 된다
+                print(f"    ※ {f} 를 못 읽었다 — {e}. **이 파일은 안 봤다**", file=sys.stderr)
                 continue
             독들 = {ast.get_docstring(x, clean=False) for x in ast.walk(나무)
                    if isinstance(x, (ast.Module, ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))}
@@ -130,7 +134,9 @@ def 부름_갈림(디렉토리: tuple[str, ...], 최대꼴: int = 8) -> dict[str
         for f in sorted((ROOT / d).rglob("*.py")):
             try:
                 나무 = ast.parse(f.read_text(encoding="utf-8"))
-            except SyntaxError:
+            except SyntaxError as e:
+                # ★ **건너뛰되 말을 한다**(DECISIONS §258) — 안 본 파일이 깨끗해 보이면 안 된다
+                print(f"    ※ {f} 를 못 읽었다 — {e}. **이 파일은 안 봤다**", file=sys.stderr)
                 continue
             for n in ast.walk(나무):
                 if not isinstance(n, ast.Call) or not n.args:

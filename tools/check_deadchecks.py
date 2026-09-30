@@ -23,8 +23,9 @@ r"""**검사가 죽어 있지 않은가** — 죽은 이름이 아니라 **죽�
 ★ **밖 — 「무엇을 검사하는지」 는 안 본다.** `assert` 가 있으면 산 것으로 센다. **약한 단언**
   (`assert x is not None` 하나로 끝나는 것)은 이 자의 밖이고 사람이 읽는다.
 ★ **밖 — 시험 밖의 죽은 검사는 안 본다.** 늘 참인 조건 · 안 닿는 분기는 못 잡는다.
-★ **라쳇이다.** 자리마다 판단이 다르다 — `except: continue` 가 **옳은 자리**가 있다(못 읽는 파일을
-  건너뛰는 훑개). 그래서 **한 판에 다 못 갚고**, §233 의 규칙대로 **라쳇이 값을 한다.**
+★ **라쳇이 아니라 절대 규칙이다**(§258). 세운 판에서는 열둘이 있었고 「자리마다 판단이 다르다」 고
+  적었는데, **다 갚아 보니 판단이 같았다** — `except: continue` 가 옳은 자리에서도 **한 줄은 찍을 수
+  있었다.** 훑개는 건너뛴 수를 세어 사유에 싣고, 저장소 제 파일이 안 읽히면 시끄럽게 운다.
 """
 from __future__ import annotations
 
@@ -38,23 +39,10 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 시험곳 = "tests/"
 단언하는말 = {"raises", "warns", "fail", "approx"}
 
-# ★ **장부**(2026-10-01 · DECISIONS §255). 지금 있는 자리를 적어 두고 **늘면 막는다.**
-#   자리마다 판단이 달라 한 판에 다 못 갚는다 — 갚을 때마다 `--update` 로 줄인다.
-#   **늘리지 않는다.**
-장부: frozenset[str] = frozenset({
-    "seshat/backends.py:146",
-    "seshat/catalog.py:231",
-    "seshat/catalog.py:237",
-    "seshat/serve.py:102",
-    "tests/test_mbr.py:9",
-    "tests/test_qe.py:149",
-    "tools/check_dead.py:59",
-    "tools/check_docs.py:294",
-    "tools/dupcheck.py:133",
-    "tools/dupcheck.py:65",
-    "tools/dupcheck.py:87",
-    "tools/sweep.py:88",
-})
+# ★ **장부가 비었다**(2026-10-01 · DECISIONS §258). 세운 그 다음 판에서 열둘을 다 갚았으므로
+#   라쳇은 이제 **절대 규칙**이다 — 죽은 검사는 하나도 못 들어온다. §233 의 규칙대로, 자리마다
+#   판단이 갈릴 때만 라쳇이 값을 하고 **판단이 같아지면 미루는 것이 곧 빚이다.** 다시 채우지 않는다
+장부: frozenset[str] = frozenset()
 
 
 def _글들(root: pathlib.Path) -> dict[pathlib.Path, str]:

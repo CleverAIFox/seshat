@@ -2,7 +2,7 @@
  "1": {
   "날짜": "2026-09-22",
   "읽음": true,
-  "지문": "f24d1d30541892ea",
+  "지문": "57cb4e7af5b26a67",
   "파일": [
    "tools/check_docs.py",
    "tools/doc_fsck.py"
@@ -302,8 +302,8 @@
  },
  "133": {
   "날짜": "2026-09-27",
-  "읽음": false,
-  "지문": "5092d1e0454642da",
+  "읽음": true,
+  "지문": "a4394e02951705e3",
   "파일": [
    "tests/test_mbr.py",
    "tests/test_gate.py::test_처음부터_끝까지_한_번_돈다"
@@ -528,7 +528,7 @@
  "159": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "176fab5f48cb9861",
+  "지문": "0889ec3ac44191b1",
   "파일": [
    "tools/check_docs.py",
    "tests/test_doc_enforcers.py"
@@ -556,7 +556,7 @@
  "161": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "0edc0e8bc2934445",
+  "지문": "4bd829e1b7c49a65",
   "파일": [
    "docs/now/related.md",
    "tools/check_docs.py"
@@ -658,7 +658,7 @@
  "171": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "1955e41aeb40925a",
+  "지문": "13fc12b98120c1bf",
   "파일": [
    "seshat/ontology.py",
    "seshat/evaluate.py",
@@ -774,7 +774,7 @@
  "182": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "3ef4ab01e1af8a47",
+  "지문": "2a2a941d7d21d7cb",
   "파일": [
    "seshat/backends.py",
    "tools/bootstrap.py",
@@ -810,8 +810,8 @@
  },
  "186": {
   "날짜": "2026-09-28",
-  "읽음": false,
-  "지문": "e32cec2b95820773",
+  "읽음": true,
+  "지문": "efeabd6e33aa17e3",
   "파일": [
    "seshat/compare.py",
    "seshat/backends.py",
@@ -1315,7 +1315,7 @@
  "234": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "6f8a61c87f55caf7",
+  "지문": "3fe46c9423617525",
   "파일": [
    "docs/why/DECISIONS.md",
    "docs/next/PLAN.md",
@@ -1384,7 +1384,7 @@
  "240": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "8ea1280fb037b4b8",
+  "지문": "b99ad788f6b05be4",
   "파일": [
    "tools/check_dead.py",
    "tests/test_dead.py",
@@ -1394,7 +1394,7 @@
  "241": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "461f17c97a4f4426",
+  "지문": "796f2596a4b30b57",
   "파일": [
    "tools/check_numbers.py",
    "docs/why/DECISIONS.md"
@@ -1441,7 +1441,7 @@
  "246": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "fec1a92ed59bb0b7",
+  "지문": "7cca5c4dca35656a",
   "파일": [
    "tools/qe.py",
    "tests/test_qe.py",
@@ -1572,8 +1572,8 @@
  },
  "36": {
   "날짜": "2026-09-23",
-  "읽음": false,
-  "지문": "787a913c699a5606",
+  "읽음": true,
+  "지문": "e3f841677894c195",
   "파일": [
    "tests/test_baselines.py::test_리전이_없으면_먼저_멈춘다",
    "tools/check_docs.py"

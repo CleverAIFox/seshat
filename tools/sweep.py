@@ -81,12 +81,15 @@ def prune_empty(d: Path) -> list[Path]:
       근거 없이 같이 지웠다. 지우는 근거가 있는 것은 파일 하나하나고, 디렉터리는 비었다는 사실뿐이다.
     """
     gone = []
+    남김 = 0
     for x in sorted((p for p in d.rglob("*") if p.is_dir()), key=lambda p: len(p.parts), reverse=True) + [d]:
         try:
             x.rmdir()
             gone.append(x)
         except OSError:
-            pass
+            남김 += 1          # ★ 안 빈 디렉터리는 정상이다 — **세기만 한다**(§258)
+    if 남김:
+        print(f"    ※ 안 빈 디렉터리 {남김} 은 그대로 뒀다", file=sys.stderr)
     return gone
 
 

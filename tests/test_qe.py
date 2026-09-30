@@ -143,11 +143,10 @@ def test_탐침이_본판과_같은_자리에서_돈다():
     assert '"cuda" if torch.cuda.is_available() else "cpu"' not in 글.split("def 어디서_도나")[1].split("def ")[1]
 
 
-def test_자리는_한_곳에서_정한다():
-    """★ torch 는 `qe` 그룹이라 관문에는 없다 — **없으면 건너뛴다**(DECISIONS §4)."""
-    import pytest
-    pytest.importorskip("torch")
-    assert QE.어디서_도나() in ("cuda", "cpu")
+# ★ **지운 시험** — `어디서_도나()` 를 실제로 불러 보던 자리다. torch 를 영영 안 들이기로 한
+#   뒤로(§254 · `tests/test_deps.py`) 이 시험은 **어느 기계에서도 안 돈다.** 안 도는 시험을
+#   남겨 두면 목록에서는 시험이 하나 더 있는 것처럼 보인다(DECISIONS §258).
+#   글자로 보는 `test_자리를_한_곳에서_묻는다` 가 같은 규칙을 대신 지킨다
 
 
 def test_가중치의_커밋이_박혀_있다():

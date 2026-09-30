@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import fnmatch
+import sys
 import tomllib
 from pathlib import Path
 
@@ -220,6 +221,7 @@ def ollama_models_dir() -> tuple[str, str]:
       「못 물었다」 와 「서버가 그렇다고 했다」 를 같은 문장으로 내지 않는다(§110 과 같은 규율).
     """
     import os
+    못읽음 = 0
     try:
         for d in Path("/proc").iterdir():
             if not d.name.isdigit():
@@ -229,14 +231,17 @@ def ollama_models_dir() -> tuple[str, str]:
                     continue
                 env = (d / "environ").read_bytes().decode("utf-8", "replace")
             except OSError:
+                못읽음 += 1          # ★ 죽은 프로세스는 흔하다 — **세어서 사유에 싣는다**(§258)
                 continue
             for kv in env.split("\0"):
                 if kv.startswith("OLLAMA_MODELS="):
                     return kv.split("=", 1)[1].strip(), f"서버(pid {d.name})"
             return "", f"서버(pid {d.name}) — 안 정했다"
-    except OSError:
-        pass
-    return os.environ.get("OLLAMA_MODELS", "").strip(), "셸 — 서버에 못 물었다"
+    except OSError as e:
+        # ★ **건너뛰되 말을 한다**(DECISIONS §258). `/proc` 을 못 훑은 것과 서버가 없는 것은 다르다
+        print(f"    ※ /proc 을 못 훑었다 — {e}", file=sys.stderr)
+    꼬리 = f" (못 읽은 프로세스 {못읽음})" if 못읽음 else ""
+    return os.environ.get("OLLAMA_MODELS", "").strip(), f"셸 — 서버에 못 물었다{꼬리}"
 
 
 def weights_outside(entries: list[dict], root: Path = ROOT,
