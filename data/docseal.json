@@ -581,7 +581,7 @@
  "164": {
   "날짜": "2026-09-28",
   "읽음": false,
-  "지문": "40cc11076cf542d1",
+  "지문": "5a7cccc9dd060a0a",
   "파일": [
    "tools/verify.sh",
    "tests/test_workflows.py::test_셸의_변수_이름은_ASCII_다"
@@ -647,7 +647,7 @@
  "170": {
   "날짜": "2026-09-28",
   "읽음": false,
-  "지문": "7486f472022b102a",
+  "지문": "35336c3e73f6e6ce",
   "파일": [
    "tools/ci_status.py",
    "tools/verify.sh",
@@ -754,7 +754,7 @@
  "180": {
   "날짜": "2026-09-28",
   "읽음": false,
-  "지문": "b5d0a69ef4e7482e",
+  "지문": "ff63d42122acac15",
   "파일": [
    "tools/bootstrap.py",
    "tests/test_bootstrap.py",
@@ -1315,11 +1315,21 @@
  "234": {
   "날짜": "2026-09-30",
   "읽음": false,
-  "지문": "5baadab143e6525a",
+  "지문": "117f4a575dca37a0",
   "파일": [
    "docs/why/DECISIONS.md",
    "docs/next/PLAN.md",
    "tools/docseal.py"
+  ]
+ },
+ "235": {
+  "날짜": "2026-09-30",
+  "읽음": false,
+  "지문": "b6cbbf59d1472386",
+  "파일": [
+   "tools/check_numbers.py",
+   "tests/test_numbers.py",
+   "tools/verify.sh"
   ]
  },
  "24": {
