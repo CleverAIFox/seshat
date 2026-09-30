@@ -1127,7 +1127,7 @@
  "217": {
   "날짜": "2026-09-29",
   "읽음": true,
-  "지문": "edcbffe41f0864bc",
+  "지문": "7bf417d7e01b5ee1",
   "파일": [
    "tools/docseal.py",
    "docs/next/PLAN.md",
@@ -1315,7 +1315,7 @@
  "234": {
   "날짜": "2026-09-30",
   "읽음": false,
-  "지문": "9d38ddfb2637bd8d",
+  "지문": "18293cd334559018",
   "파일": [
    "docs/why/DECISIONS.md",
    "docs/next/PLAN.md",
@@ -1345,12 +1345,21 @@
  "237": {
   "날짜": "2026-09-30",
   "읽음": false,
-  "지문": "76d115a34ecbe959",
+  "지문": "e0187cdbb6b48374",
   "파일": [
    "tools/docgen.py",
    "tests/test_docgen.py",
    "tools/docseal.py::다시_봐야_할_절",
    "tools/verify.sh"
+  ]
+ },
+ "238": {
+  "날짜": "2026-09-30",
+  "읽음": false,
+  "지문": "ebf503b1380412a8",
+  "파일": [
+   "tools/docgen.py",
+   "tests/test_docgen.py::test_커밋이_흔드는_수는_축이_아니다"
   ]
  },
  "24": {

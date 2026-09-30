@@ -72,9 +72,7 @@ def test_표가_사라지면_멈춘다(tmp_path, monkeypatch):
 def test_앵커가_없으면_멈춘다(tmp_path, monkeypatch):
     """★ **못 찾은 초록은 「깨끗하다」 가 아니라 「안 봤다」 다.**"""
     monkeypatch.setattr(DG, "ROOT", tmp_path)
-    monkeypatch.setitem(DG.축, "다시봐야할절", (lambda: 97, "docs/next/PLAN.md",
-                                            DG.축["다시봐야할절"][2]))
-    _놓는다(tmp_path, plan="그 수를 안 드는 행이다\n")
+    _놓는다(tmp_path, master=표.replace("**합 35%**", "합이 안 적힌 절이다"))
     with pytest.raises(SystemExit, match="0 곳 잡혔다"):
         DG.견준다()
 
@@ -82,18 +80,13 @@ def test_앵커가_없으면_멈춘다(tmp_path, monkeypatch):
 def test_앵커가_둘이면_멈춘다(tmp_path, monkeypatch):
     """★ **정본이 둘이면 한쪽만 고쳐진다** — 2026-09-30 PLAN 47행이 그 「둘」 이었다."""
     monkeypatch.setattr(DG, "ROOT", tmp_path)
-    monkeypatch.setitem(DG.축, "다시봐야할절", (lambda: 97, "docs/next/PLAN.md",
-                                            DG.축["다시봐야할절"][2]))
-    두번 = "절 **97** 개가 「찍은 뒤에 바뀐 코드」 를 짚는다\n" * 2
-    _놓는다(tmp_path, plan=두번)
+    _놓는다(tmp_path, master=표 + "\n다시 적으면 **합 35%** 다\n")
     with pytest.raises(SystemExit, match="2 곳 잡혔다"):
         DG.견준다()
 
 
 def test_틀린_수가_걸리고_fix_가_고친다(tmp_path, monkeypatch):
     monkeypatch.setattr(DG, "ROOT", tmp_path)
-    monkeypatch.setitem(DG.축, "다시봐야할절", (lambda: 97, "docs/next/PLAN.md",
-                                            DG.축["다시봐야할절"][2]))
     _놓는다(tmp_path, master=표.replace("**합 35%**", "**합 99%**"))
     안맞 = DG.견준다()
     assert ("진행률", 99, 35) in 안맞, 안맞
@@ -102,7 +95,13 @@ def test_틀린_수가_걸리고_fix_가_고친다(tmp_path, monkeypatch):
     assert "**합 35%**" in (tmp_path / "docs/now/MASTER.md").read_text(encoding="utf-8")
 
 
-def test_감사_수는_docseal_과_같은_함수에서_나온다():
-    """★ **판별식을 두 벌 두지 않는다**(DECISIONS §237). 두 벌이면 언젠가 갈린다."""
-    ds = DG._도구("docseal")
-    assert DG.다시봐야할절() == len(ds.다시_봐야_할_절())
+def test_커밋이_흔드는_수는_축이_아니다():
+    """★ **채워 넣을 수 있는 수는 커밋이 안 흔드는 수다**(DECISIONS §238).
+
+    `docseal audit` 의 수를 축으로 세웠다가 물렸다 — 그 수를 적는 커밋이 파일을 건드리면서
+    수를 바꾸므로 **고정점이 한 커밋 안에 없다.**
+    """
+    assert "다시봐야할절" not in DG.축
+    plan = (ROOT / "docs/next/PLAN.md").read_text(encoding="utf-8")
+    assert "개가 「찍은 뒤에 바뀐 코드」" not in plan, "PLAN 이 그 수를 다시 들었다"
+    assert "docseal.py audit" in plan, "그 수를 어디서 보는지가 빠졌다"
