@@ -265,7 +265,7 @@
  },
  "13": {
   "날짜": "2026-09-22",
-  "읽음": false,
+  "읽음": true,
   "지문": "ea28807da9a54dcf",
   "파일": [
    "tools/check_ontology.py",
@@ -744,7 +744,7 @@
  },
  "18": {
   "날짜": "2026-09-22",
-  "읽음": false,
+  "읽음": true,
   "지문": "843d17d3ae61f54a",
   "파일": [
    "tools/doc_fsck.py::check_tools",
@@ -847,7 +847,7 @@
  },
  "19": {
   "날짜": "2026-09-22",
-  "읽음": false,
+  "읽음": true,
   "지문": "34e9f8858c771705",
   "파일": [
    "tests/test_evaluate.py::test_개념이_번역에_남았는지_잰다",
@@ -1315,7 +1315,7 @@
  "234": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "5f3e0dd6acd3d9d5",
+  "지문": "1cf8656f16dbe5ee",
   "파일": [
    "docs/why/DECISIONS.md",
    "docs/next/PLAN.md",
@@ -1365,8 +1365,10 @@
  "239": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "883e93d4da2381c5",
+  "지문": "e3e760d65bd56cb2",
   "파일": [
+   "tools/check_scope.py",
+   "tests/test_scope.py",
    "tools/verify.sh"
   ]
  },
@@ -1382,9 +1384,20 @@
  "240": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "b4b04ec273230b22",
+  "지문": "181e1b4b795e3c21",
   "파일": [
+   "tools/check_dead.py",
+   "tests/test_dead.py",
    "tools/verify.sh"
+  ]
+ },
+ "241": {
+  "날짜": "2026-09-30",
+  "읽음": true,
+  "지문": "13bff892d0c40ffc",
+  "파일": [
+   "tools/check_numbers.py",
+   "docs/why/DECISIONS.md"
   ]
  },
  "25": {
@@ -1700,7 +1713,7 @@
  },
  "6": {
   "날짜": "2026-09-22",
-  "읽음": false,
+  "읽음": true,
   "지문": "7bf2936ed149eebc",
   "파일": [
    "tools/check_model_licenses.py",
@@ -1847,7 +1860,7 @@
  },
  "8": {
   "날짜": "2026-09-22",
-  "읽음": false,
+  "읽음": true,
   "지문": "159402b667065a33",
   "파일": [
    ".github/workflows/ci.yml"
@@ -1920,7 +1933,7 @@
  },
  "9": {
   "날짜": "2026-09-22",
-  "읽음": false,
+  "읽음": true,
   "지문": "b032ad77383d4ac8",
   "파일": [
    "tools/check_model_licenses.py::check",
