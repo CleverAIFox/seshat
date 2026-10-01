@@ -26,6 +26,12 @@
 ★ **선을 그으면서 재는 자를 안 적으면 그 선은 못 긋는다**(DECISIONS §226). H-081 이 「95% 구간」 을
   미리 그어 놓고 `tools/labels.py` 를 적었는데 **그 도구는 구간을 낼 줄 몰랐다** — 돌리기 직전에야
   드러났다. 도구 이름을 적게 하면 「그 도구가 이걸 할 수 있나」 를 **선을 그을 때** 묻게 된다.
+★ **「실험」 인데 DECISIONS 가 강제자로 든 가설은 **끝난 가설**이다**(2026-10-01 · §268).
+  그 절의 주장이 그 가설에 **기대고 있다**는 뜻이고, 기대려면 쟀어야 한다. 2026-10-01 감사에서
+  H-084 가 그 자리였다 — §244 · §245 가 강제자로 들었는데 상태는 「실험」 이고 결과칸이 **비어
+  있었다.** §225 의 「쟀고 졌는데 모른다라고 적어 두었다」 가 대장에서 되풀이됐다.
+★ **밖 — 「실험」 이 그냥 묵는 것은 안 본다.** 돌리는 중인 가설은 결과칸이 비는 것이 맞다.
+  **DECISIONS 가 그것에 기댈 때**만 묻는다 — 기대면 쟀고, 쟀으면 적는다.
 ★ **소급하지 않는다.** H-076 까지는 이 규약 전의 줄이고 마흔넷이 미리 긋는 선 없이 닫혔다 —
   하루에 다 고치는 것은 거짓말이다(`tools/check_ways.py` 와 같은 라쳇). **H-077 부터 절대 규칙**이다.
 """
@@ -49,6 +55,22 @@ EVIDENCE = re.compile(r"(runs/\S+|DECISIONS §\d+)")
 자표 = re.compile(r"tools/[a-z_]+\.py")
 
 
+강제자꼴 = re.compile(r"\bH-(\d+)\b")
+
+
+def 강제자로_든_가설(글: str) -> set[str]:
+    """DECISIONS 의 「강제자」 줄이 든 `H-NNN`(2026-10-01 · §268).
+
+    ★ **기대는 것과 언급하는 것은 다르다.** 본문은 돌리는 중인 가설도 든다 — 「H-085 를 돌리려고」.
+      **강제자 줄**은 「이 절의 주장을 이것이 막는다」 이고, 막으려면 **이미 수가 있어야 한다.**
+    """
+    난것: set[str] = set()
+    for 줄 in 글.splitlines():
+        if "강제자" in 줄:
+            난것 |= {f"H-{m.group(1)}" for m in 강제자꼴.finditer(줄)}
+    return 난것
+
+
 def rows(text: str) -> list[tuple[int, str, list[str]]]:
     out = []
     for n, line in enumerate(text.splitlines(), 1):
@@ -58,7 +80,8 @@ def rows(text: str) -> list[tuple[int, str, list[str]]]:
     return out
 
 
-def check(text: str) -> list[str]:
+def check(text: str, 대장: str = "") -> list[str]:
+    기댄것 = 강제자로_든_가설(대장) if 대장 else set()
     fails, prev, seen = [], 0, set()
     rs = rows(text)
     if not rs:
@@ -97,23 +120,32 @@ def check(text: str) -> list[str]:
             fails.append(f"{where} 비용 상한 '{cap}' 가 형식 밖이다")
         if state in {"채택", "기각"} and not EVIDENCE.search(evidence):
             fails.append(f"{where} {state} 의 근거가 없다 — runs/… 또는 DECISIONS §N")
+        if state == "실험" and h in 기댄것 and not evidence:
+            fails.append(f"{where} **DECISIONS 가 강제자로 드는데 결과칸이 비었다** — 기대려면 "
+                         f"쟀어야 하고, 쟀으면 적는다. **채택 · 기각으로 닫는다**(DECISIONS §268). "
+                         f"어느 절이 드는지 : grep -n '강제자.*{h}' docs/why/DECISIONS.md")
     return fails
 
 
 def _canary() -> None:
     probe = ("| H-001 | 채택 | R1 | a | b | $1 | runs/x.jsonl |\n| H-001 | 기각 | R9 | a | | 많이 | |\n"
-             f"| H-{선_부터:03d} | 실험 | R1 | a | 돌린다 | 0 | |\n")
-    got = check(probe)
+             f"| H-{선_부터:03d} | 실험 | R1 | a | 돌린다 | 0 | |\n"
+             "| H-900 | 실험 | R1 | a | 미리 그은 선 · tools/x.py | 0 | |\n")
+    got = check(probe, 대장="강제자 — `tools/x.py` · H-900")
     want = ["겹친다", "R1–R7 밖", "검증 방법 없이", "형식 밖", "근거가 없다",
-            "미리 긋는 선이 없다", "선을 잴 도구가 없다"]
-    if not all(any(w in f for f in got) for w in want) or len(rows(probe)) != 3:
+            "미리 긋는 선이 없다", "선을 잴 도구가 없다",
+            "강제자로 드는데 결과칸이 비었다"]
+    if not all(any(w in f for f in got) for w in want) or len(rows(probe)) != 4:
         print(f"    ★ 카나리아가 죽었다 — {got}")
         sys.exit(2)
 
 
 def main() -> int:
     _canary()
-    fails = check(LEDGER.read_text(encoding="utf-8")) if LEDGER.exists() else ["docs/next/hypotheses.md 가 없다"]
+    대장 = ROOT / "docs/why/DECISIONS.md"
+    fails = (check(LEDGER.read_text(encoding="utf-8"),
+                   대장.read_text(encoding="utf-8") if 대장.exists() else "")
+             if LEDGER.exists() else ["docs/next/hypotheses.md 가 없다"])
     for f in fails:
         print(f"    {f}")
     return 1 if fails else 0

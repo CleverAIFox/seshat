@@ -173,7 +173,7 @@
  "12": {
   "날짜": "2026-09-22",
   "읽음": true,
-  "지문": "2fede8efa2c9ab57",
+  "지문": "37863ab4c0ebe2ad",
   "파일": [
    "tools/check_hypotheses.py::check",
    "tests/test_hypotheses.py::test_규칙마다_걸린다"
@@ -446,7 +446,7 @@
  "15": {
   "날짜": "2026-09-22",
   "읽음": true,
-  "지문": "5a6cb64128ac703c",
+  "지문": "080481f369744404",
   "파일": [
    "tools/check_hypotheses.py",
    "tests/test_compare_runs.py",
@@ -639,7 +639,7 @@
  "17": {
   "날짜": "2026-09-22",
   "읽음": true,
-  "지문": "20622348a1e07086",
+  "지문": "6c945c1380d6b4be",
   "파일": [
    "tools/check_hypotheses.py"
   ]
@@ -1222,7 +1222,7 @@
  "226": {
   "날짜": "2026-09-29",
   "읽음": true,
-  "지문": "ea4ee17a8b7aea21",
+  "지문": "8772734af53e06a6",
   "파일": [
    "tools/check_hypotheses.py",
    "tests/test_hypotheses.py::test_문턱_위는_선과_자를_둘_다_요구한다",
@@ -1315,7 +1315,7 @@
  "234": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "7605d28a9606e1c3",
+  "지문": "5692714cb54f5e07",
   "파일": [
    "docs/why/DECISIONS.md",
    "docs/next/PLAN.md",
@@ -1394,7 +1394,7 @@
  "241": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "53601384c1e0a8cb",
+  "지문": "1c49fa16cc9a6241",
   "파일": [
    "tools/check_numbers.py",
    "docs/why/DECISIONS.md"
@@ -1582,7 +1582,7 @@
  "37": {
   "날짜": "2026-09-23",
   "읽음": true,
-  "지문": "201d91bc685bc1cf",
+  "지문": "7701d3bdfaac2eee",
   "파일": [
    "docs/next/hypotheses.md",
    "tools/check_hypotheses.py"
@@ -1642,7 +1642,7 @@
  "43": {
   "날짜": "2026-09-23",
   "읽음": true,
-  "지문": "1865905b0daffb18",
+  "지문": "59e9d03c12a84119",
   "파일": [
    "docs/next/hypotheses.md",
    "tools/check_hypotheses.py"
