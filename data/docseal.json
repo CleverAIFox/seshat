@@ -480,7 +480,7 @@
  "153": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "bcd86c5f5e7d6580",
+  "지문": "bcc524e56b3a8858",
   "파일": [
    "docs/now/related.md"
   ]
@@ -556,7 +556,7 @@
  "161": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "4bd829e1b7c49a65",
+  "지문": "f143b7004150ba12",
   "파일": [
    "docs/now/related.md",
    "tools/check_docs.py"
@@ -600,7 +600,7 @@
  "166": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "d5efe3b26d463263",
+  "지문": "fd557a473aae6c79",
   "파일": [
    "docs/now/related.md"
   ]
@@ -608,7 +608,7 @@
  "167": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "97bc79dd6a852f4d",
+  "지문": "4d3deb176b2f76ec",
   "파일": [
    "docs/now/related.md"
   ]
@@ -718,7 +718,7 @@
  "176": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "8f2b84a944fae8d3",
+  "지문": "827a038ff5106069",
   "파일": [
    "data/scoreboard.toml",
    "docs/now/related.md"
@@ -754,7 +754,7 @@
  "180": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "3630282e00d759b4",
+  "지문": "149eb85a4e614836",
   "파일": [
    "tools/bootstrap.py",
    "tests/test_bootstrap.py",
@@ -765,7 +765,7 @@
  "181": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "af8e7c7c5f7a4efa",
+  "지문": "1791214bf8c1ae05",
   "파일": [
    "tools/bootstrap.py",
    "docs/now/related.md"
@@ -774,7 +774,7 @@
  "182": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "2a2a941d7d21d7cb",
+  "지문": "b37d328a856b9542",
   "파일": [
    "seshat/backends.py",
    "tools/bootstrap.py",
@@ -793,7 +793,7 @@
  "184": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "ba886b063a971548",
+  "지문": "8f6ba26872b004a5",
   "파일": [
    "docs/now/related.md",
    "tools/bootstrap.py"
@@ -802,7 +802,7 @@
  "185": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "a328831b9670007d",
+  "지문": "0be5efdfc05ddc69",
   "파일": [
    "tools/bootstrap.py",
    "docs/now/related.md"
@@ -821,7 +821,7 @@
  "187": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "ea3ebeddff267e3c",
+  "지문": "d1f1a9c571e54a58",
   "파일": [
    "tools/check_docs.py::check_plan",
    "docs/now/related.md"
@@ -878,7 +878,7 @@
  "192": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "ce61be4189b6bed5",
+  "지문": "daeabc3adac75f94",
   "파일": [
    "docs/now/related.md",
    "seshat/evaluate.py"
@@ -1022,7 +1022,7 @@
  "207": {
   "날짜": "2026-09-29",
   "읽음": true,
-  "지문": "62ddc6feed72eef1",
+  "지문": "a113f31e913e6d4a",
   "파일": [
    "data/scoreboard.toml",
    "tests/test_gate.py::test_까닭을_주면_셋을_갈아끼운다",
@@ -1117,7 +1117,7 @@
  "216": {
   "날짜": "2026-09-29",
   "읽음": true,
-  "지문": "2b2030c560c34380",
+  "지문": "6df4a3a688716a20",
   "파일": [
    "docs/next/hypotheses.md",
    "tools/show_misses.py::짧은_줄",
@@ -1127,7 +1127,7 @@
  "217": {
   "날짜": "2026-09-29",
   "읽음": true,
-  "지문": "e60b90a67c3dd885",
+  "지문": "ca5c489299c67dea",
   "파일": [
    "tools/docseal.py",
    "docs/next/PLAN.md",
@@ -1213,7 +1213,7 @@
  "225": {
   "날짜": "2026-09-29",
   "읽음": true,
-  "지문": "3c178d274017c3ac",
+  "지문": "6113951aed807f59",
   "파일": [
    "docs/now/related.md",
    "docs/next/hypotheses.md"
@@ -1253,7 +1253,7 @@
  "229": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "1540ca92b4093172",
+  "지문": "2de7f79fa1b0fe28",
   "파일": [
    "docs/now/related.md",
    "docs/next/hypotheses.md"
@@ -1273,7 +1273,7 @@
  "230": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "18d9718b72edbfcd",
+  "지문": "2328573c188cc6ac",
   "파일": [
    "tools/check_rules.py",
    "tests/test_rules.py",
@@ -1283,7 +1283,7 @@
  "231": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "29b46b027c131b9c",
+  "지문": "6cdcc58290456750",
   "파일": [
    "docs/now/related.md",
    "docs/next/hypotheses.md",
@@ -1315,7 +1315,7 @@
  "234": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "4e95da56bb9f00ec",
+  "지문": "ceb12089f7772aa6",
   "파일": [
    "docs/why/DECISIONS.md",
    "docs/next/PLAN.md",
@@ -1335,7 +1335,7 @@
  "236": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "d2e481fe5acb84ea",
+  "지문": "b563517167db1261",
   "파일": [
    "data/scoreboard.toml",
    "docs/now/related.md",
@@ -1394,7 +1394,7 @@
  "241": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "d669f1a22af597b7",
+  "지문": "2134b9182754e82a",
   "파일": [
    "tools/check_numbers.py",
    "docs/why/DECISIONS.md"
