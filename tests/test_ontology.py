@@ -1,4 +1,5 @@
 """온톨로지와 용어 자리표시(DECISIONS §13 · H-001)."""
+import pathlib
 import pytest
 
 from seshat import ontology, terms
@@ -102,7 +103,6 @@ def test_대조_도구가_되돌리기의_모양을_그대로_쓴다():
     거짓이었고, 시험이 그 거짓을 **열흘 동안 지켜 줬다.**
     """
     import importlib.util
-    import pathlib
     root = pathlib.Path(__file__).resolve().parents[1]
     spec = importlib.util.spec_from_file_location("cr", root / "tools/compare_runs.py")
     cr = importlib.util.module_from_spec(spec)
@@ -336,3 +336,54 @@ def test_모음_뒤_y_는_그대로다():
     for 글 in ("key", "day", "array"):
         assert not re.search(r"[^aeiouAEIOU]y$", 글), f"{글} 은 자음+y 가 아니다"
     assert re.search(r"[^aeiouAEIOU]y$", "policy")
+
+
+# ── 어긋난 괄호 짝(DECISIONS §265) ────────────────────────────────────────────
+
+_슬롯 = {"T1": {"text": "AWS Identity and Access Management", "coda": "none", "id": "svc.iam"},
+         "T2": {"text": "IAM", "coda": "closed", "id": "svc.iam.short"}}
+
+
+@pytest.mark.parametrize("꼴", [
+    "⟦T1⟧ (⟦T2⟧) 역할", "⟧T1⟧ (⟧T2⟧) 역할", "⟦T1⟦ (⟦T2⟦) 역할", "⟧T1⟦ (⟧T2⟦) 역할",
+])
+def test_괄호_짝이_어긋나도_되돌린다(꼴):
+    """★ **반쪽만 받으면 쓰레기가 남는다**(DECISIONS §265).
+
+    2026-09-29 `H-078-12b` 가 `⟧T1⟧` 을 돌려줬고, 맨 모양 갈래가 **안쪽 `T1` 만 집어**
+    이름을 되돌리면서 **괄호를 남겼다** — `⟧AWS Identity and Access Management⟧`.
+    `keep` · `lit` · `RESIDUE` 가 셋 다 초록이었다(§263).
+    """
+    ko, missing = terms.unmask(꼴, _슬롯)
+    assert missing == [], missing
+    assert "AWS Identity and Access Management" in ko and "IAM" in ko
+    assert not terms.맨괄호.search(ko), ko
+
+
+def test_모양을_더해도_되돌리기가_안_깨진다():
+    """★ **그룹 번호를 손으로 적으면 모양을 더할 때 조용히 죽는다**(DECISIONS §265).
+
+    2026-10-01 `_forms` 에 모양 하나를 더하자 `m.group(1)…(5)` 가 밀려 **맨 모양이 안 잡혔고**
+    시험 하나도 안 빨개졌다 — 그 모양을 보는 시험이 없었기 때문이다. 이 시험이 그 자리다.
+    """
+    import re
+    pat = terms._after_of("T")
+    assert pat.groups >= 7, "모양 여섯 + 조사 하나"
+    # ★ 손으로 적은 번호가 돌아왔는지 **코드에서** 본다(머리말은 그 번호를 이야기로 든다)
+    import ast
+    import inspect
+    몸 = ast.parse(inspect.getsource(terms.unmask).lstrip())
+    for n in ast.walk(몸):
+        if isinstance(n, ast.Expr) and isinstance(n.value, ast.Constant):
+            n.value.value = ""                       # 머리말을 비운다
+    코드 = ast.unparse(몸)
+    assert "groups" in 코드, "모양 수를 정규식에게 물어야 한다"
+    for i in range(2, 9):
+        assert f"group({i})" not in 코드, f"모양 번호 {i} 를 손으로 적었다 — 모양을 더하면 밀린다"
+    # ★ 모든 모양이 **조사까지** 산다
+    for 꼴 in ("⟦T1⟧을", "⟧T1⟧을", "[T1]을", "【T1】을", "`T1`을", "T1을"):
+        ko, missing = terms.unmask(꼴, _슬롯)
+        assert missing == ["T2"], (꼴, missing)
+        assert ko.startswith("AWS Identity and Access Management"), (꼴, ko)
+        assert not terms.맨괄호.search(ko), (꼴, ko)
+        assert re.search(r"(를|을)$", ko), (꼴, ko)

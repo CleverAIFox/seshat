@@ -537,7 +537,7 @@
  "16": {
   "날짜": "2026-09-22",
   "읽음": true,
-  "지문": "685f01e524b89cb8",
+  "지문": "4e3ff2f16fd413f2",
   "파일": [
    "tests/test_ontology.py::test_모델이_바꾼_자리표시도_되돌린다",
    "tests/test_ontology.py::test_대조_도구가_되돌리기의_모양을_그대로_쓴다",
@@ -1315,7 +1315,7 @@
  "234": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "e5e4646596fb54f5",
+  "지문": "d3d3719b10962955",
   "파일": [
    "docs/why/DECISIONS.md",
    "docs/next/PLAN.md",
@@ -1394,7 +1394,7 @@
  "241": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "70984c7eec33926f",
+  "지문": "ee4ac58c2aae7707",
   "파일": [
    "tools/check_numbers.py",
    "docs/why/DECISIONS.md"
@@ -2027,7 +2027,7 @@
  "94": {
   "날짜": "2026-09-27",
   "읽음": true,
-  "지문": "33fb3c5d7c1f6c08",
+  "지문": "427392a36d4f5486",
   "파일": [
    "tools/check_ontology.py",
    "tests/test_ontology.py"

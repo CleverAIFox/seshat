@@ -66,7 +66,13 @@ def _forms(letter: str = "T") -> str:
     둘이 같으므로 **정규식도 하나여야 한다** — 따로 쓰면 한쪽만 고쳐지고, 오늘 그 병을 셋 봤다.
     """
     L = re.escape(letter)
-    return (rf"(?:⟦{L}(\d+)⟧|\\?\[{L}(\d+)\\?\]|【{L}(\d+)】|`{L}(\d+)`"
+    # ★ **어긋난 괄호 짝이 맨 모양보다 먼저다**(2026-10-01 · DECISIONS §265). 모델이 여는 괄호를
+    #   닫는 괄호로 적으면(`⟧T1⟧`) 맨 모양 갈래가 **안쪽의 `T1` 만 집어** 이름을 되돌리고
+    #   **괄호를 남긴다** — `⟧AWS Identity and Access Management⟧` 가 그렇게 났다. 짝이 어긋난
+    #   것까지 한 모양으로 먹으면 쓰레기가 안 남는다. **느슨하게 받는 것이 §42 의 뜻이었고,
+    #   반쪽만 받는 것은 그 뜻이 아니었다.**
+    괄호 = f"[{OPEN}{CLOSE}]"
+    return (rf"(?:⟦{L}(\d+)⟧|{괄호}{L}(\d+){괄호}|\\?\[{L}(\d+)\\?\]|【{L}(\d+)】|`{L}(\d+)`"
             rf"|(?<![A-Za-z0-9]){L}(\d+)(?![0-9]))")
 
 
@@ -238,15 +244,30 @@ def hide_all(text: str, groups: list[tuple[list, str]]) -> tuple[str, dict[str, 
 
 
 def unmask(ko: str, slots: dict[str, dict], letter: str = "T") -> tuple[str, list[str]]:
+    """자리표시를 이름으로 되돌린다. (되돌린 글, 못 찾은 열쇠).
+
+    ★ **그룹 번호를 손으로 안 적는다**(2026-10-01 · DECISIONS §265). 종전에는
+      `m.group(1) or … or m.group(5)` 과 `m.group(6)`(조사)을 **손으로 적어** 두었고, `_forms` 에
+      모양 하나를 더하자 **번호가 밀려 맨 모양이 조용히 죽었다.** 「목록은 한 곳뿐이다」(§158)를
+      정규식에만 적용하고 **그 정규식을 읽는 쪽에는 안 적용했다.**
+    ★ **마지막 그룹이 조사이고 앞의 것들이 모양이다** — `_forms` 가 그렇게 짜여 있고, 그 사실
+      하나만 여기 적는다. 모양을 더해도 이 코드는 안 바뀐다.
+    """
     seen = set()
+    pat = _after_of(letter)
+    조사칸 = pat.groups                     # 맨 끝이 조사다
 
     def put(m: re.Match) -> str:
-        key = f"{letter}{m.group(1) or m.group(2) or m.group(3) or m.group(4) or m.group(5)}"
+        번호 = next((g for g in m.groups()[:조사칸 - 1] if g), None)
+        if 번호 is None:
+            return m.group(0)
+        key = f"{letter}{번호}"
         slot = slots.get(key)
         if slot is None:
             return m.group(0)
         seen.add(key)
-        return slot["text"] + (particle(slot["coda"], m.group(6)) if m.group(6) else "")
+        조사 = m.group(조사칸)
+        return slot["text"] + (particle(slot["coda"], 조사) if 조사 else "")
 
-    out = _after_of(letter).sub(put, ko)
+    out = pat.sub(put, ko)
     return out, sorted(set(slots) - seen)
