@@ -276,7 +276,7 @@
  "130": {
   "날짜": "2026-09-27",
   "읽음": true,
-  "지문": "0e414d27eab3c28f",
+  "지문": "63f767a37d855002",
   "파일": [
    "tests/test_model_licenses.py::test_Bedrock_출력은_교사가_아니다",
    "seshat/licenses.py"
@@ -754,7 +754,7 @@
  "180": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "e4b93ac38dbf788f",
+  "지문": "84eab3c5ae99cf1c",
   "파일": [
    "tools/bootstrap.py",
    "tests/test_bootstrap.py",
@@ -765,7 +765,7 @@
  "181": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "1791214bf8c1ae05",
+  "지문": "53235a11e1dcb993",
   "파일": [
    "tools/bootstrap.py",
    "docs/now/related.md"
@@ -774,7 +774,7 @@
  "182": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "b37d328a856b9542",
+  "지문": "3af393eb721de88c",
   "파일": [
    "seshat/backends.py",
    "tools/bootstrap.py",
@@ -784,8 +784,8 @@
  },
  "183": {
   "날짜": "2026-09-28",
-  "읽음": false,
-  "지문": "bf01af53d81b33f9",
+  "읽음": true,
+  "지문": "04f1ab1350495f9b",
   "파일": [
    "tools/bootstrap.py"
   ]
@@ -793,7 +793,7 @@
  "184": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "8f6ba26872b004a5",
+  "지문": "7014fa0644678293",
   "파일": [
    "docs/now/related.md",
    "tools/bootstrap.py"
@@ -802,7 +802,7 @@
  "185": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "0be5efdfc05ddc69",
+  "지문": "2e560ce2a6d43293",
   "파일": [
    "tools/bootstrap.py",
    "docs/now/related.md"
@@ -1315,7 +1315,7 @@
  "234": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "5692714cb54f5e07",
+  "지문": "ecd23f1c77ddfd68",
   "파일": [
    "docs/why/DECISIONS.md",
    "docs/next/PLAN.md",
@@ -1394,7 +1394,7 @@
  "241": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "1c49fa16cc9a6241",
+  "지문": "608bd6b10cd15384",
   "파일": [
    "tools/check_numbers.py",
    "docs/why/DECISIONS.md"
@@ -1403,7 +1403,7 @@
  "242": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "7477815b71be8d2d",
+  "지문": "7b176cc0ffb52425",
   "파일": [
    "tools/labels.py",
    "tests/test_labels.py",
@@ -1441,7 +1441,7 @@
  "246": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "7cca5c4dca35656a",
+  "지문": "e2b742af9465312a",
   "파일": [
    "tools/qe.py",
    "tests/test_qe.py",

@@ -64,9 +64,28 @@ LEDGER: dict[str, tuple[str, str, str, str]] = {
                                       "github.com/Unbabel/COMET/blob/master/LICENSE.models.md · 2026-09-30"),
     "Unbabel/XCOMET-XL": ("CC-BY-NC-SA 4.0", "no", "no",
                           "github.com/Unbabel/COMET/blob/master/LICENSE.models.md · 2026-09-30"),
+    # ★ **2026-10-01 교사에서 뺀다 — `unknown` 은 그대로다**(DECISIONS §269). §50 을 다섯 경로로
+    #   찾았고 전부 20~21절에서 끊겼다(본문 · 이전판 · 책임AI정책 · Bedrock FAQ · re:Post KB).
+    #   이름으로 나온 것은 §50.10(Nova 출력 IP 면책) · §50.3(개인정보)뿐이고 **고객이 출력으로
+    #   학습해도 되는가**는 어디에도 없다. **그리고 더 센 것이 있다** — AWS 자신의 증류 기능에서
+    #   `nova-lite` 는 **학생 전용**이다(교사는 Nova Pro · Premier, 학생은 Bedrock 모델이어야 한다).
+    #   **벤더가 제 제품에서 허락하지 않는 쓰임을 약관 미독 상태로 밀지 않는다**(§6).
     "amazon.nova-lite-v1:0": ("AWS Service Terms §50(미독) · Bedrock", "yes", "unknown",
                               "aws.amazon.com/bedrock/amazon-models/privacy (AWS 쪽 학습만 답한다) · "
-                              "§50 원문 미독 · 2026-09-27"),
+                              "§50 원문 미독(5경로 실패) · docs.aws.amazon.com/bedrock/…/"
+                              "prequisites-model-distillation(nova-lite 는 학생 전용) · 2026-10-01"),
+    # ★ **#18 의 교사 후보**(DECISIONS §269 · PLAN #18 의 길 ②). Apache-2.0 이라 **학생이 약관을
+    #   상속하지 않는다** — Gemma 교사(길 ①)와 갈리는 유일한 점이다(§44).
+    # ★ **`qwen` 집안이 아니다.** 판정자가 `qwen3:8b` 이라 Qwen 교사는 **제 출력을 제가 거른다**(§133).
+    #   그래서 대장의 Apache 교사 중 학생보다 큰 `Qwen3-8B` 를 못 쓴다 — 이것이 그 자리를 메운다.
+    # ★ 모델 카드가 **한국어를 이름으로 든다** — 「dozens of languages, including … Japanese, Korean …」.
+    #   같이 본 둘은 뺐다 : `microsoft/phi-4`(MIT 인데 카드가 **「not intended to support multilingual
+    #   use」**) · `mistralai/Mistral-Nemo-Instruct-2407`(Apache 인데 **한국어가 목록에 없다**).
+    # ⚠ **이 기계에 안 들어간다** — Q4_K_M 14GB · GTX 1660 Ti 6GB. 빌린 GPU 가 있어야 한다(§84 · §201).
+    "mistralai/Mistral-Small-3.2-24B-Instruct-2506": ("Apache-2.0", "yes", "yes",
+                                                     "huggingface.co/mistralai/Mistral-Small-3.2-24B-"
+                                                     "Instruct-2506 · ollama.com/library/mistral-small:24b · "
+                                                     "2026-10-01"),
 }
 
 VALID_COMMERCIAL = {"yes", "no", "unknown"}

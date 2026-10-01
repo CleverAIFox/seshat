@@ -140,3 +140,55 @@ def test_보호_표가_MARK_ARMS_를_만든다():
     # 모르는 팔이 섞이면 **지킬 수 있는 것을 전부** 못 견주는 것으로 친다
     assert compare.가린_지표({"arm": None}, {"arm": "aws-translate"}) == set(backends.지킬수있는것)
     assert compare.가린_지표({"arm": "aws-translate"}, {"arm": "aws-translate"}) == set()
+
+
+# ── 밖에서 잰 자를 지표로 받는다(DECISIONS §269) ──────────────────────────────
+
+def _점수파일(tmp_path, 줄들):
+    import json
+    p = tmp_path / "s.jsonl"
+    p.write_text("\n".join(json.dumps(x, ensure_ascii=False) for x in 줄들), encoding="utf-8")
+    return str(p)
+
+
+def test_밖에서_잰_점수가_평균으로_들어간다(tmp_path):
+    """★ **줄마다 (점수, 1)** 이면 `비율` 이 그대로 평균을 낸다 — 규칙 지표와 같은 재표집이다."""
+    f = _점수파일(tmp_path, [{"id": "a", "arm": "4b", "score": 60}, {"id": "a", "arm": "12b", "score": 80},
+                           {"id": "b", "arm": "4b", "score": 50}, {"id": "b", "arm": "12b", "score": 90}])
+    (가, 나), 뺀 = bs.밖에서_잰_것(f, "4b", "12b", ["a", "b"])
+    assert 뺀 == 0
+    assert bs.비율(가, range(2)) == 55.0
+    assert bs.비율(나, range(2)) == 85.0
+
+
+def test_한쪽에만_있는_줄은_양쪽에서_뺀다(tmp_path):
+    """★ **짝을 깨지 않는다**(DECISIONS §269).
+
+    한쪽만 빼면 짝지은 재표집이 아니고, 0 으로 채우면 **「모른다」 가 「최악이다」 가 된다**
+    — `gemba` 자신이 못 읽은 답에 쓰는 규율과 같다(§244).
+    """
+    f = _점수파일(tmp_path, [{"id": "a", "arm": "4b", "score": 60}, {"id": "a", "arm": "12b", "score": 80},
+                           {"id": "b", "arm": "4b", "score": 50}])          # b 의 12b 가 없다
+    (가, 나), 뺀 = bs.밖에서_잰_것(f, "4b", "12b", ["a", "b"])
+    assert 뺀 == 1
+    assert len(가) == len(나) == 1, "짝이 깨졌다"
+    assert bs.비율(가, range(1)) == 60.0
+
+
+def test_없는_팔이면_멈추고_있는_팔을_찍는다(tmp_path, capsys):
+    """★ **짐작으로 고르지 않는다** — 이름이 안 맞으면 조용히 빈 표를 내지 않는다(§258)."""
+    f = _점수파일(tmp_path, [{"id": "a", "arm": "4b", "score": 60}])
+    got, 뺀 = bs.밖에서_잰_것(f, "4b", "12b", ["a"])
+    assert got is None and 뺀 == 0
+    err = capsys.readouterr().err
+    assert "`12b` 이 없다" in err and "있는 팔 : 4b" in err
+
+
+def test_밖지표에도_같은_판정이_붙는다(tmp_path):
+    """★ **구간이 0 을 품으면 「차이를 말할 수 없다」** — 밖에서 온 자라고 선이 느슨해지지 않는다."""
+    f = _점수파일(tmp_path, [{"id": i, "arm": a, "score": s} for i, a, s in
+                           [("a", "x", 70), ("a", "y", 71), ("b", "x", 50), ("b", "y", 49),
+                            ("c", "x", 60), ("c", "y", 61), ("d", "x", 80), ("d", "y", 79)]])
+    (가, 나), _ = bs.밖에서_잰_것(f, "x", "y", ["a", "b", "c", "d"])
+    got = bs.잰다(가, 나, n=2000, seed=7)
+    assert got["아래"] <= 0 <= got["위"], got

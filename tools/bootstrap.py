@@ -35,6 +35,10 @@ from seshat import backends, compare, evaluate  # noqa: E402
 
 # 줄마다 (분자, 분모)를 낼 수 있는 지표. `_n` 이 결과에 실리거나 분모를 줄에서 셀 수 있어야 한다
 지표 = ("term_off", "term", "term_bad", "lit", "ui", "keep", "style", "hangul")
+# ★ **밖에서 들어오는 자**(2026-10-01 · DECISIONS §269). `tools/gemba.py` 가 내는 점수는 판 파일
+#   안에 없다 — 따로 돈 자의 산물이다. `--점수` 로 받아 **줄마다 (점수, 1)** 로 넣으면 `비율` 이
+#   그대로 평균을 낸다. 규칙 지표와 **같은 짝지은 재표집**을 쓴다
+밖지표 = "gemba"
 # ★ **낮을수록 좋은 지표가 있다**(DECISIONS §182). 2026-09-28 이 도구가 `term_bad` 를
 #   0.0061 대 0.0010 으로 재고 **「A 가 낫다」** 고 찍었다 — 오역이 적은 쪽이 진 것으로 나왔다.
 #   부호를 도구가 모르면 **논문에 반대로 적힌다.**
@@ -137,6 +141,44 @@ def read(path: str) -> tuple[dict, dict[str, dict]]:
     return head, {x["id"]: x for x in lines if not x.get("meta")}
 
 
+def 밖에서_잰_것(경로: str, 가팔: str | None, 나팔: str | None, 같은줄: list[str]):
+    """`gemba` 가 낸 점수를 **줄마다 (점수, 1)** 로 바꾼다. (두 표, 뺀 줄 수) 또는 (None, 0).
+
+    ★ **짝을 깨지 않는다**(DECISIONS §269). 한쪽에만 점수가 있는 줄은 **양쪽에서 같이 뺀다** —
+      한쪽만 빼면 짝지은 재표집이 아니고, 0 으로 채우면 **「모른다」 가 「최악이다」 가 된다**
+      (`gemba` 자신의 규율과 같다 · §244).
+    ★ **팔 이름으로 고른다.** 점수 파일은 (줄, 팔) 로 적혀 있고 판 머리줄이 팔 이름을 든다 —
+      이름이 안 맞으면 **멈추고 어떤 팔이 있는지 찍는다**(짐작으로 고르지 않는다).
+    ★ **밖 — 그 점수가 옳은지는 안 본다.** 이 자가 묻는 것은 「차이가 잡음인가」 뿐이고,
+      자가 사람과 같은 순서로 세우는가는 `tools/labels.py corr` 이 묻는다(H-085 · §262).
+    """
+    점수: dict[tuple[str, str], float] = {}
+    팔들: set[str] = set()
+    for 줄 in Path(경로).read_text(encoding="utf-8").splitlines():
+        if not 줄.strip():
+            continue
+        d = json.loads(줄)
+        if "score" not in d or "arm" not in d:
+            continue
+        점수[(d["id"], d["arm"])] = float(d["score"])
+        팔들.add(d["arm"])
+    for 이름, 팔 in (("A", 가팔), ("B", 나팔)):
+        if 팔 not in 팔들:
+            print(f"  ✗ 점수 파일에 {이름} 의 팔 `{팔}` 이 없다\n"
+                  f"    있는 팔 : {' · '.join(sorted(팔들)) or '없다'}\n"
+                  f"    `tools/gemba.py --run <팔>=<판>` 으로 이름을 맞춘다", file=sys.stderr)
+            return None, 0
+    가, 나, 뺀 = [], [], 0
+    for i in 같은줄:
+        x, y = 점수.get((i, 가팔)), 점수.get((i, 나팔))
+        if x is None or y is None:
+            뺀 += 1
+            continue
+        가.append((x, 1.0))
+        나.append((y, 1.0))
+    return (가, 나), 뺀
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("a", nargs="?")
@@ -145,6 +187,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--metric", default="", help="비우면 잴 수 있는 것을 전부")
     ap.add_argument("--n", type=int, default=1000, help="재표집 횟수")
     ap.add_argument("--seed", type=int, default=7)
+    ap.add_argument("--점수", dest="점수", default="",
+                    help="`tools/gemba.py --out` 이 낸 파일 — 밖에서 잰 자를 지표로 더한다(§269)")
     ap.add_argument("--selftest", action="store_true")
     a = ap.parse_args(argv)
     if a.selftest:
@@ -186,7 +230,17 @@ def main(argv: list[str] | None = None) -> int:
     가표 = 줄별(rows, [가줄[i]["out"] for i in 같은줄])
     나표 = 줄별(rows, [나줄[i]["out"] for i in 같은줄])
 
-    볼것 = [a.metric] if a.metric else list(지표)
+    if a.점수:
+        밖, 못찾음 = 밖에서_잰_것(a.점수, 가팔, 나팔, 같은줄)
+        if 밖 is None:
+            return 1
+        가표[밖지표], 나표[밖지표] = 밖
+        if 못찾음:
+            # ★ **빠진 줄을 조용히 안 넘긴다**(§258). 점수가 없는 줄은 **양쪽에서 같이 뺀다** —
+            #   한쪽만 빼면 짝이 깨지고, 0 으로 채우면 「모른다」 가 「최악이다」 가 된다
+            print(f"  ※ **점수가 없어 뺀 줄 {못찾음}** — 양쪽에서 같이 뺐다(§269)", file=sys.stderr)
+
+    볼것 = [a.metric] if a.metric else [*지표, *([밖지표] if a.점수 else [])]
     print(f"\n  {'지표':<10}{'A':>9}{'B':>9}{'차':>10}{'95% 구간':>22}{'p':>8}   판정")
     for m in 볼것:
         got = 잰다(가표[m], 나표[m], n=a.n, seed=a.seed)
