@@ -57,6 +57,15 @@ regenerable = true
 managed = false
 what = "평가셋 — 받거나(fetch_flores · fetch_awsdocs) 만든다(make_probes). 도구를 커밋하고 산출물은 안 한다"
 
+[layers."학습원문"]
+base = "repo"
+dirs = ["data/train"]
+committed = false
+regenerable = true
+managed = false
+what = """증류의 **영어 원문** — 받는다(fetch_k8s). **평가셋 층과 가른다**: 섞이면 학습에 평가셋이
+들어가고 숫자가 거짓말한다(DECISIONS §276). 출처는 `train` 이 허락된 것만 — 카탈로그가 그 문이다."""
+
 [layers."작업대"]
 base = "repo"
 dirs = ["runs", "labels"]
@@ -193,6 +202,19 @@ uses = ["eval", "ontology"]
 how = "tools/fetch_awsdocs.py"
 feeds = ["tools/fetch_awsdocs.py"]
 note = "cache 층이라 해시 대장 밖이다 — 다시 받을 수 있다. train 을 안 단다(동일 조건이 학습 산출물에 미치는지 안 읽었다)"
+
+[[source]]
+id = "k8s-docs"
+where = "repo:data/train/*.jsonl"
+origin = "kubernetes/website · content/en/docs · main 가지의 영어 마크다운"
+license = "CC BY 4.0"
+uses = ["train"]
+how = "tools/fetch_k8s.py"
+feeds = ["tools/fetch_k8s.py"]
+note = """**동일조건(SA)이 없다** — 뿌릴 때 표시만 하면 된다(DECISIONS §276). AWS 안내서(CC BY-SA)와
+갈리는 유일한 점이고, 학생을 내놓을 생각이 있으면 그것이 결정적이다. 그리고 **평가셋과 코퍼스가
+아예 달라 오염이 없다** — `d001` · `d002` 는 AWS 안내서 14권에서 467 문서를 떠 왔다.
+커밋하지 않는다 — 표시가 붙는 자료라 받는 도구만 커밋하고 데이터는 `data/train/` 에 둔다."""
 
 [[source]]
 id = "awsdocs-domain"

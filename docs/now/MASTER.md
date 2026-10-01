@@ -494,6 +494,7 @@ thoth 의 sweep · doctor(`OLLAMA_KEEP_ALSO`)가 본다. 두 저장소가 같은
 | 도구 | 무엇 |
 |---|---|
 | `tools/fetch_awsdocs.py` | AWS 공식 문서(CC BY-SA)에서 도메인 셋을 만든다 — 정답 없이 · `--exclude` 로 떼어둔다 |
+| `tools/fetch_k8s.py` | **증류용 영어 원문을 뽑는다** — `kubernetes/website` 의 영어 문서(**CC BY 4.0 · 동일조건 없음**)에서 문장을 떠 온다. AWS 안내서(CC BY-SA)와 갈리는 점이 그것이고, **평가셋과 코퍼스가 달라 오염이 없다**. 마크다운 읽기는 `fetch_awsdocs` 의 것을 부른다(DECISIONS §276) |
 | `tools/fetch_flores.py` | FLORES+ 영→한을 셋 모양으로 받는다 |
 | `tools/make_probes.py` | 문형 탐침 — 템플릿 × 온톨로지 어휘로 통제된 문장을 만든다 |
 | `tools/mine_terms.py` | 셋에 자주 나오는데 **사전이 모르는** 말을 캔다 — 점수를 내는 셋은 거절한다 |

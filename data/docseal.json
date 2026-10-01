@@ -894,8 +894,8 @@
  },
  "194": {
   "날짜": "2026-09-28",
-  "읽음": false,
-  "지문": "13c8665acc188abb",
+  "읽음": true,
+  "지문": "f4182d5932f7cbbf",
   "파일": [
    "seshat/evaluate.py::문체_밖",
    "data/catalog.toml",
@@ -1315,7 +1315,7 @@
  "234": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "5095f508e2201877",
+  "지문": "11bf1f841be7eeb0",
   "파일": [
    "docs/why/DECISIONS.md",
    "docs/next/PLAN.md",
@@ -1394,7 +1394,7 @@
  "241": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "a349457b7cfc800b",
+  "지문": "39154269040a520f",
   "파일": [
    "tools/check_numbers.py",
    "docs/why/DECISIONS.md"
