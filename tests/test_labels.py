@@ -808,3 +808,42 @@ def test_손으로_준_것이_열쇠를_이긴다(tmp_path, monkeypatch):
     a = argparse.Namespace(arm=[], setpath="/딴/셋.jsonl", n=0, seed=None, 빼고=[])
     _arms, setpath, n, seed, _빼고 = L._되살리는_재료(머리, a)
     assert setpath == "/딴/셋.jsonl" and n == 5 and seed == 31
+
+
+# ── 판은 한 곳에서 고른다(DECISIONS §260) ─────────────────────────────────────
+
+def test_열쇠가_판을_들면_손으로_안_적는다(tmp_path, monkeypatch):
+    _열쇠를_놓는다(tmp_path, monkeypatch)
+    판 = L.판을_고른다("t", [])
+    assert set(판) == {"a", "b"} and 판["a"].name == "4b.jsonl", 판
+
+
+def test_손으로_준_것이_이기되_조용히_안_이긴다(tmp_path, monkeypatch, capsys):
+    """★ **판정은 열쇠가 적은 판의 출력에 내려졌다** — 다른 판에 대면 사람이 안 본 줄이 된다."""
+    _열쇠를_놓는다(tmp_path, monkeypatch)
+    판 = L.판을_고른다("t", ["a=/딴/판.jsonl"])
+    assert 판["a"] == pathlib.Path("/딴/판.jsonl")           # 손이 이긴다
+    말 = capsys.readouterr().err
+    assert "열쇠가 적은 판과 다르다" in 말 and "/딴/판.jsonl" in 말, 말
+
+
+def test_같은_경로면_아무_말_안_한다(tmp_path, monkeypatch, capsys):
+    """★ **거짓 양성 하나가 검사를 끈다**(§213) — 같은 것을 다시 적은 것은 어긋남이 아니다."""
+    arms, _, _ = _열쇠를_놓는다(tmp_path, monkeypatch)
+    L.판을_고른다("t", [f"a={arms['a']}"])
+    assert capsys.readouterr().err == ""
+
+
+def test_표가_없으면_손이_전부다(tmp_path, monkeypatch):
+    monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
+    assert L.판을_고른다("", ["a=/x.jsonl"]) == {"a": pathlib.Path("/x.jsonl")}
+    assert L.판을_고른다("", []) == {}
+
+
+def test_두_도구가_같은_자리에서_고른다():
+    """★ **§243 이 `rule` 만 고쳤다** — 같은 물음을 묻는 도구가 둘인데 한쪽만 고쳤다(§260)."""
+    for f in ("tools/labels.py", "tools/gemba.py"):
+        글 = (ROOT / f).read_text(encoding="utf-8")
+        assert "판을_고른다" in 글, f
+    g = (ROOT / "tools/gemba.py").read_text(encoding="utf-8")
+    assert "어느판인가" not in g, "gemba 가 제 길로 또 읽으면 두 곳이 된다(§163)"

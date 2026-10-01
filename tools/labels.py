@@ -662,6 +662,35 @@ def _되살리는_재료(머리: dict, a) -> tuple[dict[str, pathlib.Path], str,
     return arms, setpath, int(n), int(seed), list(빼고)
 
 
+def 판을_고른다(name: str, 손: list[str]) -> dict[str, pathlib.Path]:
+    """열쇠가 아는 판에 손으로 준 것을 얹는다. **다르면 말한다**(DECISIONS §260).
+
+    ★ **손으로 준 것이 이기되 조용히 이기지 않는다.** 판정은 **열쇠가 적은 판의 출력**에
+      내려졌다 — 다른 판에 그 판정을 대면 **사람이 안 본 줄을 사람이 봤다고 치는 것**이고,
+      수는 멀쩡해 보인다(§182 의 「p 값이 붙은 거짓말」 과 같은 자리).
+    ★ **한 곳에서 고른다**(§163). `rule` 과 `gemba` 가 같은 물음을 물었는데 §243 은 `rule` 만
+      고쳤다 — 그래서 `gemba` 는 열쇠가 판을 들고 있는데도 손으로 받고 있었다(§260).
+    """
+    열쇠 = {arm: pathlib.Path(d["run"]) for arm, d in 어느판인가(name).items()} if name else {}
+    판 = dict(열쇠)
+    for spec in 손:
+        if "=" not in spec:
+            raise SystemExit(f"--run 은 팔=경로 다 — {spec}\n"
+                             "    보기 : --run 4b=runs/H-080-retry2-20260929-201747.jsonl")
+        k, _, v = spec.partition("=")
+        판[k.strip()] = pathlib.Path(v.strip())
+    다른 = [(a, 열쇠[a], 판[a]) for a in sorted(열쇠) if 판[a] != 열쇠[a]]
+    if 다른:
+        print("  ※ **손으로 준 판이 열쇠가 적은 판과 다르다** — 손 쪽을 쓴다(DECISIONS §260)",
+              file=sys.stderr)
+        for a, k, h in 다른:
+            print(f"    {a} : 열쇠 {k} · 손 {h}", file=sys.stderr)
+        print("    ★ 판정은 **열쇠가 적은 판의 출력**에 내려졌다. 다른 판에 그 판정을 대면\n"
+              "      **사람이 안 본 줄을 사람이 봤다고 치는 것**이고 수는 멀쩡해 보인다",
+              file=sys.stderr)
+    return 판
+
+
 def _있나(p: pathlib.Path, 무엇: str, 길: str) -> None:
     """★ **벽도 없고 길도 없는 자리를 안 만든다**(DECISIONS §232 · §243). 없는 파일에 역추적을
     내면 도구가 깨진 것과 파일이 없는 것을 사람이 못 가른다."""
@@ -825,17 +854,9 @@ def main(argv: list[str] | None = None) -> int:
     a = ap.parse_args(argv)
 
     if a.cmd == "rule":
-        판: dict[str, pathlib.Path] = {}
-        if a.name:
-            # ★ **표가 제 판을 들고 있으면 손으로 안 적는다**(DECISIONS §243)
-            for arm, d in 어느판인가(a.name).items():
-                판[arm] = pathlib.Path(d["run"])
-        for spec in a.run:
-            if "=" not in spec:
-                raise SystemExit(f"--run 은 팔=경로 다 — {spec}\n"
-                                 "    보기 : --run 4b=runs/H-080-retry2-20260929-201747.jsonl")
-            k, _, v = spec.partition("=")
-            판[k.strip()] = pathlib.Path(v.strip())      # 손으로 준 것이 이긴다
+        # ★ **표가 제 판을 들고 있으면 손으로 안 적는다**(DECISIONS §243). 둘 다 있고 다르면
+        #   **말한다** — 고르는 자리는 한 곳이다(§260)
+        판 = 판을_고른다(a.name, a.run)
         if not 판:
             raise SystemExit(
                 f"어느 판에서 낼지 모른다 — 표 '{a.name or '(이름 없음)'}' 의 열쇠에 판이 안 적혀 있다\n"

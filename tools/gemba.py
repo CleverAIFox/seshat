@@ -1,7 +1,7 @@
 r"""**transformers 없이 도는 자** — 로컬 LLM 에게 품질을 묻는다(GEMBA 꼴 · H-086 · DECISIONS §253).
 
-  python3 tools/gemba.py --run 4b=runs/….jsonl --run 12b=… --표 d002-60 --out /tmp/gemba.jsonl
-  python3 tools/gemba.py --run … --out …                # 표를 안 주면 판의 모든 줄을 잰다
+  python3 tools/gemba.py --표 d002-60 --out /tmp/gemba.jsonl      # **판은 표의 열쇠가 든다**
+  python3 tools/gemba.py --run 4b=runs/….jsonl --out …            # 표를 안 주면 판을 손으로 준다
 
 ★ **왜 만드나.** `tools/qe.py`(MetricX)는 `transformers` 4.x 를 끌고 오고, 그 줄에는 **고침이 없는
   취약점 넷**이 산다(DECISIONS §251 — Trainer 는 5.0.0rc3 · `save_pretrained` 는 5.10.0 에서 고쳐졌고
@@ -14,6 +14,9 @@ r"""**transformers 없이 도는 자** — 로컬 LLM 에게 품질을 묻는다
   하나씩만 둔다.
 ★ **못 읽은 답은 버리지 않고 센다.** 0~100 이 아닌 답이 오면 **그 줄을 안 내고 몇이었는지 찍는다** —
   0 으로 적으면 「모른다」 가 「최악이다」 가 된다(`labels.py rule` 의 분모 0 과 같은 규율 · §244).
+★ **판은 표의 열쇠가 든다**(DECISIONS §243 · §260). `--run` 은 표가 없거나 열쇠가 안 적은
+  옛 표일 때만 쓴다. 둘 다 주면 **손 쪽을 쓰되 다르다고 말한다** — 판정은 열쇠가 적은 판의
+  출력에 내려졌고, 다른 판에 대면 **사람이 안 본 줄을 사람이 봤다고 치는 것**이다.
 ★ **밖 — 이 자가 옳은지는 이 도구가 모른다.** 내는 것은 수이고, **사람과 같은 순서로 줄을 세우는가**는
   `tools/labels.py corr` 이 묻는다(H-086). ⚠ **판정자가 하나다** — H-081 은 넷을 썼다(§101). 그래서
   이 수는 **참값이 아니라 자 후보**로만 쓴다.
@@ -116,17 +119,18 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--set", dest="setpath", default="")
     a = ap.parse_args(sys.argv[1:] if argv is None else argv)
 
-    if not a.run or not a.out:
-        raise SystemExit("`--run 팔=경로` 와 `--out` 이 있어야 잰다\n"
-                         "    보기 : --run 4b=runs/H-080-retry2-….jsonl --표 d002-60 "
-                         "--out /tmp/gemba.jsonl")
-    판: dict[str, pathlib.Path] = {}
-    for spec in a.run:
-        if "=" not in spec:
-            raise SystemExit(f"--run 은 팔=경로 다 — {spec}\n"
-                             "    보기 : --run 4b=runs/H-080-retry2-20260929-201747.jsonl")
-        k, _, v = spec.partition("=")
-        판[k.strip()] = pathlib.Path(v.strip())
+    if not a.out:
+        raise SystemExit("`--out` 이 있어야 잰다 — 어디에 쓸지 모른다\n"
+                         "    보기 : --표 d002-60 --out /tmp/gemba.jsonl")
+    # ★ **표가 제 판을 들고 있으면 손으로 안 적는다**(DECISIONS §243 · §260). §243 이 `rule` 만
+    #   고쳤고 이쪽은 손으로 받고 있었다 — 고르는 자리를 한 곳으로 모았다
+    판 = _도구("labels").판을_고른다(a.표, a.run)
+    if not 판:
+        raise SystemExit(
+            f"어느 판을 잴지 모른다 — 표 '{a.표 or '(안 줬다)'}' 의 열쇠에 판이 안 적혀 있다\n"
+            "    **2026-09-30 이전 표는 판을 안 적었다**(DECISIONS §243) — 손으로 준다\n"
+            "    판을 고른다 : ls -t runs/*.jsonl | head\n"
+            "    보기 : --run 4b=runs/H-080-retry2-….jsonl --run 12b=runs/….jsonl")
 
     backends.들어가나(a.model)              # 카드에 안 들어가면 넘는 길을 든다(§84 · §196)
     줄 = 물을_줄(판, a.표, a.setpath)
