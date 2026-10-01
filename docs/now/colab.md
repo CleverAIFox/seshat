@@ -21,15 +21,22 @@
 런타임 유형을 **T4 GPU** 로 바꾼 뒤:
 
 ```python
+!apt-get -qq install -y zstd
 !curl -fsSL https://ollama.com/install.sh | sh
 !nohup ollama serve > /tmp/ollama.log 2>&1 &
 import time; time.sleep(5)
 !ollama pull gemma3:12b
+!curl -s http://localhost:11434/api/tags | head -c 120
 !wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -O /usr/local/bin/cloudflared && chmod +x /usr/local/bin/cloudflared
 !nohup cloudflared tunnel --url http://localhost:11434 > /tmp/tunnel.log 2>&1 &
 import time; time.sleep(12)
 !grep -o 'https://[a-z0-9-]*\.trycloudflare\.com' /tmp/tunnel.log | head -1
 ```
+
+★ **`zstd` 를 먼저 깐다**(2026-10-01). 안 깔면 설치본이 **「This version requires zstd for extraction」**
+  로 죽고, 그 뒤 `ollama` 는 `command not found` 가 된다. **그런데 터널은 그대로 열린다** —
+  **주소가 떴다고 뒤에 모델이 있는 것이 아니다.**
+★ **`api/tags` 가 `gemma3:12b` 를 보여야 다음으로 간다.** 이 한 줄이 「터널은 섰는데 빈 집」 을 막는다.
 
 마지막 줄이 찍는 **주소가 `OLLAMA_URL`** 이다.
 
@@ -37,11 +44,17 @@ import time; time.sleep(12)
 
 ```bash
 cd ~/projects/seshat
-export OLLAMA_URL=https://<위에서 받은 주소>
+export OLLAMA_URL=https://받은-주소.trycloudflare.com      # ← 꺾쇠 없이 **실제 주소**를 넣는다
 uv run python -m seshat.evaluate \
   --backend gemma3-12b+ph+retry+endings+terms \
-  --set data/train/k001.jsonl --name H-088-teacher-k001 --resume
+  --set data/train/k001.jsonl --name H-088-teacher-k001 \
+  --hypothesis H-088 --resume
 ```
+
+★ **`--hypothesis` 가 없으면 안 잰다**(DECISIONS §12). 그리고 그 가설은 **「실험」 상태여야** 한다 —
+  「제안」 이면 문이 막고 **지금 실험 상태인 것들을 찍어 준다**(§174).
+★ **꺾쇠(`<…>`)를 쓰지 않는다.** 2026-10-01 안내에 `<위 주소>` 라고 적었다가 사람이 그대로 붙여넣어
+  `bash: syntax error` 가 났다. **붙여넣을 글에는 붙여넣으면 안 되는 글자를 안 쓴다.**
 
 ★ **`--resume` 을 항상 쓴다.** 터널이 끊기거나 Colab 이 자면 **그때까지가 남는다.**
   다시 돌릴 때 같은 `--name` 이면 이어서 간다.
