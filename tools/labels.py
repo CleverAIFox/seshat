@@ -46,6 +46,7 @@ import itertools
 import json
 import pathlib
 import random
+import re
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
@@ -226,10 +227,27 @@ PROMPT = """아래 표는 영어 기술 문서를 한국어로 옮긴 결과입�
   줄마다 `태그<탭>판정` 한 줄씩, 표에 나온 순서 그대로, **표에 있는 줄 수만큼**.
   설명·머리말·번호를 붙이지 마세요. 판정은 위 셋 중 하나의 글자 그대로만.
 
+0. **매기기 전에 표의 첫 줄 태그와 마지막 줄 태그를 그대로 적어 주세요.** 그 둘이 안 맞으면
+   판정을 쓰지 못합니다 — 표가 안 열렸거나 끊긴 것입니다.
+   **표가 끝까지 보이지 않으면 판정하지 말고 몇 줄까지 보이는지 먼저 말해 주세요.** 나눠서
+   드립니다. 일부만 매긴 답도, 표에 없는 태그가 섞인 답도 **쓰지 못하고 버립니다.**
+
 보기
   8d6722bc\t맞다
   3476df3d\t아니다
 """
+
+
+def 줄수를_박는다(n: int) -> str:
+    """지시문 끝에 붙는 줄 — **몇 줄인지를 판정자가 세지 않게 한다**(DECISIONS §261).
+
+    ★ 2026-10-01 한 판정자가 180줄 표를 **110줄로 세고** 그만큼만 매기려 했다. 지시문은
+      「표에 있는 줄 수만큼」 이라고만 적어 **세는 일을 판정자에게 맡기고 있었다.** 모자란 답은
+      `read` 가 잡지만(§228) 그때는 이미 **그 판정자를 버려야 한다** — 앞선 판정을 본 뒤에
+      다시 매기면 §108 이 막는다. **버리는 것보다 안 틀리게 하는 것이 싸다.**
+    """
+    return (f"이 표는 **{n}줄**입니다. **{n}줄**을 돌려주십시오 — 그보다 적으면 쓰지 못합니다.\n"
+            f"마지막 줄까지 보이는지 먼저 확인하십시오.")
 
 
 def cohen_kappa(x: list[str], y: list[str]) -> float:
@@ -242,9 +260,29 @@ def cohen_kappa(x: list[str], y: list[str]) -> float:
     return 1.0 if pe == 1 else (po - pe) / (1 - pe)
 
 
+두칸 = re.compile(r"^\s*([0-9a-f]{6,12})[ \t]+(\S+)\s*$")
+
+
+def 한줄을_읽는다(ln: str) -> tuple[str, str]:
+    """(태그, 판정). **탭이든 공백이든 읽는다**(DECISIONS §261).
+
+    ★ 2026-10-01 한 판정자가 `태그<공백>판정` 으로 돌려줬고, 탭으로만 가르던 이 도구는
+      **180줄을 전부 「빈 칸」 으로 셌다.** 「안 매겼다」 와 「딴 글자로 갈라 적었다」 는 다른데
+      같은 얼굴이었다 — 지시문이 탭을 말해도 **돌려주는 쪽이 지킨다는 보장이 없다.**
+    ★ **네 칸짜리(사람이 채운 표)가 먼저다.** 원문·번역 칸에 공백이 들었으므로 공백으로
+      가르는 길은 **두 칸처럼 보일 때만** 쓴다.
+    """
+    cols = ln.split("\t")
+    if len(cols) >= 4:
+        return cols[0].strip(), cols[3].strip()
+    if len(cols) == 2:
+        return cols[0].strip(), cols[1].strip()
+    m = 두칸.match(ln)
+    return (m.group(1), m.group(2)) if m else (cols[0].strip(), "")
+
+
 def verdict_of(cols: list[str]) -> str:
-    """채점표의 판정 칸. 네 칸짜리 표(사람이 채운 것)와 두 칸짜리(태그 · 판정)를 둘 다 받는다 —
-    다른 판정자는 표 전체를 돌려주지 않고 판정만 돌려준다."""
+    """채점표의 판정 칸 — 칸이 이미 갈린 뒤. **가르는 일은 `한줄을_읽는다` 가 한다**(§261)."""
     if len(cols) >= 4:
         return cols[3].strip()
     return cols[1].strip() if len(cols) == 2 else ""
@@ -265,13 +303,18 @@ def read(name: str, sheet: pathlib.Path, judge: str = "claude", model: str = "")
     #   판정자가 돌려주는 답에는 머리줄이 없어서 **진짜 판정 한 줄이 조용히 먹혔다.** 2026-09-30
     #   네 판정자가 전부 179/180 으로 들어왔고 `gap` 의 줄이 60 에서 59 로 줄었다
     줄 = sheet.read_text(encoding="utf-8").splitlines()
-    if 줄 and 줄[0].split("\t")[0].strip() not in key:
-        줄 = 줄[1:]                      # 열쇠가 모르는 첫 줄만 머리줄이다
+    # ★ **머리줄은 「열쇠가 모르는 줄」 이 아니라 「판정이 안 든 줄」 이다**(DECISIONS §261).
+    #   §228 이 「열쇠가 모르는 첫 줄만 버린다」 로 고쳤는데, **답 전체가 딴 표일 때 첫 판정을
+    #   먹는다** — 그러면 「43줄이 전부 딴 표다」 가 「42줄이 딴 표다」 로 보인다
+    if 줄:
+        첫태그, 첫판정 = 한줄을_읽는다(줄[0])
+        if 첫태그 not in key and 첫판정 not in VERDICTS:
+            줄 = 줄[1:]
+    모르는표 = []
     for ln in 줄:
         if not ln.strip():
             continue
-        cols = ln.split("\t")
-        t, verdict = cols[0].strip(), verdict_of(cols)
+        t, verdict = 한줄을_읽는다(ln)    # ★ 탭이든 공백이든 읽는다(DECISIONS §261)
         if t in ("표", "tag"):
             continue
         if not verdict:
@@ -282,10 +325,23 @@ def read(name: str, sheet: pathlib.Path, judge: str = "claude", model: str = "")
                              f"    그 줄을 고친다 : {sheet}\n"
                              f"    지시문을 다시 본다 : python3 tools/labels.py prompt")
         if t not in key:
-            raise SystemExit(f"{t}: 열쇠에 없는 표 — 채점표를 바꿔 썼나\n"
-                             f"    열쇠가 아는 표 : {' · '.join(sorted(key)[:5])} …\n"
-                             f"    표를 다시 만든다 : python3 tools/labels.py make --set <셋> --a <A> --b <B>")
+            # ★ **세어서 한 번에 말한다**(DECISIONS §261). 하나에 죽으면 「오타 하나」 와
+            #   **「딴 표를 매겼다」** 가 같은 화면을 낸다 — 2026-10-01 한 판정자가 43줄을
+            #   냈는데 **43개가 전부 이 표에 없는 태그**였다
+            모르는표.append(t)
+            continue
         got.append({**key[t], "verdict": verdict})
+    if 모르는표:
+        전부 = not got
+        raise SystemExit(
+            f"열쇠에 없는 표가 {len(모르는표)} — 매긴 줄 {len(got)}\n"
+            f"    모르는 표 : {' · '.join(모르는표[:8])}{' …' if len(모르는표) > 8 else ''}\n"
+            f"    열쇠가 아는 표 : {' · '.join(sorted(key)[:5])} …\n"
+            + ("    ★ **하나도 안 맞는다 — 이 판정은 다른 표의 것이거나 지어낸 것이다.**\n"
+               "      판정자가 표를 못 받았을 수 있다. 첫 줄 태그를 되읽어 보게 하고 다시 받는다\n"
+               if 전부 else
+               "    ★ 몇 줄만 어긋난다 — 그 줄을 고치고 다시 읽는다\n")
+            + f"    표를 되살린다 : python3 tools/labels.py sheet --name {name}")
     if blank:
         print(f"  ※ 아직 안 매긴 줄 {blank}", file=sys.stderr)
     if not got:
@@ -818,7 +874,8 @@ def main(argv: list[str] | None = None) -> int:
     r.add_argument("--sheet", default="")
     r.add_argument("--judge", default="claude", help="판정자의 이름 — 자리다")
     r.add_argument("--model", default="", help="무엇이 판정했나 — 모델과 판. 이쪽이 자다")
-    sub.add_parser("prompt")
+    pr = sub.add_parser("prompt")
+    pr.add_argument("--name", default="", help="그 표의 **줄 수를 지시문에 박는다**(DECISIONS §261)")
     s = sub.add_parser("sheet")
     s.add_argument("--name", required=True)
     s.add_argument("--set", dest="setpath", default="", help="비우면 열쇠의 머리줄이 든 셋")
@@ -889,12 +946,18 @@ def main(argv: list[str] | None = None) -> int:
         out = pathlib.Path(f"/tmp/labels-{a.name}.tsv")
         out.write_text(sheet, encoding="utf-8")
         print(f"  {out}  {len(있던)}줄 — **열쇠와 한 줄씩 대 봤고 똑같다**(DECISIONS §259)")
-        print("  지시문 : python3 tools/labels.py prompt > /tmp/judge.txt")
+        print(f"  지시문 : python3 tools/labels.py prompt --name {a.name} > /tmp/judge.txt")
         print(f"  다 매기면 : python3 tools/labels.py read --name {a.name} --judge <판정자> --model <무엇>")
         return 0
 
     if a.cmd == "prompt":
         print(PROMPT)
+        if a.name:
+            _, 줄 = 열쇠를_읽는다(a.name)
+            print(줄수를_박는다(len(줄)))
+        else:
+            print("※ `--name <표>` 를 주면 **몇 줄인지가 지시문에 박힌다**(DECISIONS §261).\n"
+                  "  안 박으면 판정자가 제 눈으로 세고, 잘린 표를 다 본 줄 안다", file=sys.stderr)
         return 0
     if a.cmd in ("agree", "gap", "corr"):
         js = [x.strip() for x in a.judges.split(",") if x.strip()]
@@ -961,6 +1024,8 @@ def main(argv: list[str] | None = None) -> int:
     print("  ★ 판정자는 한 번에 하나씩이다 — 앞선 판정을 보여 주지 않는다(DECISIONS §108).")
     print("    표를 한 판정자에게 주고 답을 받은 뒤에 다음 판정자에게 준다. 몇이든 같다 —")
     print("    답끼리는 `agree` 가 붙일 때 처음 만난다")
+    print(f"  지시문   : python3 tools/labels.py prompt --name {name} > /tmp/judge.txt"
+          f"   ← **줄 수가 박힌다**(§261)")
     print(f"  다 매기면 : python3 tools/labels.py read --name {name} --judge <판정자>")
     print(f"  팔을 가른다 : python3 tools/labels.py gap --name {name} --judges <쉼표> --arm <팔> --vs <기준>")
     print("  그 뒤     : python3 tools/lake.py put raw --into labels labels/*.jsonl")

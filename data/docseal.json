@@ -20,7 +20,7 @@
  "100": {
   "날짜": "2026-09-27",
   "읽음": true,
-  "지문": "3ba5613baa0d5ba9",
+  "지문": "bd7cee545265bbf2",
   "파일": [
    "tools/labels.py",
    "tests/test_labels.py"
@@ -70,7 +70,7 @@
  "108": {
   "날짜": "2026-09-27",
   "읽음": true,
-  "지문": "73b6b5163628299d",
+  "지문": "41b71d43bff6c87d",
   "파일": [
    "tools/labels.py"
   ]
@@ -1222,7 +1222,7 @@
  "226": {
   "날짜": "2026-09-29",
   "읽음": true,
-  "지문": "6d414a9e3769b7f3",
+  "지문": "e90d27ab04b1ae4e",
   "파일": [
    "tools/check_hypotheses.py",
    "tests/test_hypotheses.py::test_문턱_위는_선과_자를_둘_다_요구한다",
@@ -1233,7 +1233,7 @@
  "227": {
   "날짜": "2026-09-29",
   "읽음": true,
-  "지문": "a8867a39aa5dc0c8",
+  "지문": "05967da9492e46d4",
   "파일": [
    "tools/labels.py",
    "tests/test_labels.py::test_모델을_안_적으면_판정을_안_받는다"
@@ -1242,7 +1242,7 @@
  "228": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "5767411df10417e8",
+  "지문": "313c22d6bea9dd7f",
   "파일": [
    "tools/labels.py",
    "tests/test_labels.py::test_머리줄이_없는_답은_첫_줄을_안_먹는다",
@@ -1315,7 +1315,7 @@
  "234": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "7ced89bfa0e66a19",
+  "지문": "4e95da56bb9f00ec",
   "파일": [
    "docs/why/DECISIONS.md",
    "docs/next/PLAN.md",
@@ -1394,7 +1394,7 @@
  "241": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "2756471434061d72",
+  "지문": "d669f1a22af597b7",
   "파일": [
    "tools/check_numbers.py",
    "docs/why/DECISIONS.md"
@@ -1403,7 +1403,7 @@
  "242": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "3e0614c726766811",
+  "지문": "31384156d20c9176",
   "파일": [
    "tools/labels.py",
    "tests/test_labels.py",
@@ -1414,7 +1414,7 @@
  "243": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "5fd16ffb57c692bb",
+  "지문": "66614e17e5b670fe",
   "파일": [
    "tools/labels.py",
    "tests/test_labels.py"
@@ -1423,7 +1423,7 @@
  "244": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "36e28959544cca54",
+  "지문": "c5ef7b204b25ccc1",
   "파일": [
    "tools/labels.py",
    "tests/test_labels.py::test_자마다_못_매기는_줄이_달라도_안_죽는다"
@@ -1432,7 +1432,7 @@
  "245": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "c59b1f34efb1bbba",
+  "지문": "fffa6eec79d6f6c5",
   "파일": [
    "tools/labels.py",
    "tests/test_labels.py::test_줄_수를_찍는다"

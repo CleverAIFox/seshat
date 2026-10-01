@@ -847,3 +847,65 @@ def test_두_도구가_같은_자리에서_고른다():
         assert "판을_고른다" in 글, f
     g = (ROOT / "tools/gemba.py").read_text(encoding="utf-8")
     assert "어느판인가" not in g, "gemba 가 제 길로 또 읽으면 두 곳이 된다(§163)"
+
+
+# ── 줄 수를 지시문에 박는다(DECISIONS §261) ───────────────────────────────────
+
+def test_줄수가_지시문에_박힌다():
+    """★ **세는 일을 판정자에게 맡기지 않는다** — 한 판정자가 180줄을 110줄로 셌다(§261)."""
+    글 = L.줄수를_박는다(180)
+    assert "180" in 글 and 글.count("180") >= 2, 글
+    assert "적으면 쓰지 못합니다" in 글
+
+
+def test_지시문이_잘린_표를_먼저_묻는다():
+    """★ **일부만 매긴 답은 버려야 하고, 버리면 그 판정자는 끝이다**(§108 이 다시 못 받게 한다)."""
+    assert "표가 끝까지 보이지 않으면 판정하지 말고" in L.PROMPT
+
+
+def test_지시문에_이름을_안_주면_말한다(capsys):
+    """★ **조용히 안 박으면 안 박은 줄 모른다** — 빈 채로 나가는 것이 종전 모습이다."""
+    assert L.main(["prompt"]) == 0
+    나온것 = capsys.readouterr()
+    assert "--name" in 나온것.err and "몇 줄인지" in 나온것.err
+    assert "이 표는" not in 나온것.out
+
+
+def test_이름을_주면_열쇠의_줄_수가_박힌다(tmp_path, monkeypatch, capsys):
+    _열쇠를_놓는다(tmp_path, monkeypatch, n=5)          # 팔 둘 × 5줄 = 10
+    assert L.main(["prompt", "--name", "t"]) == 0
+    assert "이 표는 **10줄**입니다" in capsys.readouterr().out
+
+
+def test_공백으로_가른_답도_읽는다():
+    """★ **지시문이 탭을 말해도 돌려주는 쪽이 지킨다는 보장이 없다**(DECISIONS §261).
+    2026-10-01 한 판정자가 공백으로 돌려줬고 180줄이 전부 「빈 칸」 으로 셌다."""
+    assert L.한줄을_읽는다("6102a235\t맞다") == ("6102a235", "맞다")
+    assert L.한줄을_읽는다("6102a235 맞다") == ("6102a235", "맞다")
+    assert L.한줄을_읽는다("  6102a235   어긋난다  ") == ("6102a235", "어긋난다")
+
+
+def test_네칸짜리_표가_먼저다():
+    """★ **원문·번역 칸에 공백이 들었다** — 공백으로 가르는 길은 두 칸처럼 보일 때만 쓴다."""
+    줄 = "6102a235\tFor more information about VPC.\tVPC 에 대한 자세한 내용.\t맞다"
+    assert L.한줄을_읽는다(줄) == ("6102a235", "맞다")
+    빈칸 = "6102a235\tFor more information.\tVPC 에 대한 내용.\t"
+    assert L.한줄을_읽는다(빈칸) == ("6102a235", "")
+
+
+def test_딴_표를_매기면_세어서_한_번에_말한다(tmp_path, monkeypatch):
+    """★ **하나에 죽으면 「오타 하나」 와 「딴 표를 매겼다」 가 같은 화면을 낸다**(§261).
+    2026-10-01 한 판정자가 43줄을 냈는데 43개가 전부 이 표에 없는 태그였다."""
+    import pytest
+    _열쇠를_놓는다(tmp_path, monkeypatch, n=3)
+    답 = tmp_path / "답.txt"
+    답.write_text("deadbeef\t맞다\ncafef00d\t맞다\n", encoding="utf-8")
+    with pytest.raises(SystemExit) as e:
+        L.read("t", 답, "누구", "무엇")
+    말 = str(e.value)
+    assert "열쇠에 없는 표가 2" in 말 and "하나도 안 맞는다" in 말, 말
+
+
+def test_지시문이_첫_줄과_마지막_줄을_되읽게_한다():
+    """★ **표가 안 열린 것과 매기기 싫은 것은 다르다** — 되읽으면 그 자리에서 갈린다."""
+    assert "첫 줄 태그와 마지막 줄 태그" in L.PROMPT
