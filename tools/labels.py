@@ -51,7 +51,7 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
-from seshat import catalog, evaluate  # noqa: E402
+from seshat import catalog, evaluate, terms  # noqa: E402
 
 
 def _도구(이름: str):
@@ -184,6 +184,15 @@ def make(arms: dict[str, pathlib.Path], rows: list[dict], name: str, n: int,
             t = tag(name, rid, arm)
             sheet.append((t, src[rid], got[arm][rid]))
             key.append({"tag": t, "id": rid, "arm": arm})
+    # ★ **벗겨진 괄호가 든 줄을 말한다**(2026-10-01 · DECISIONS §263). 막지는 않는다 — 옛 판으로도
+    #   표를 떠야 하고, 망가진 줄도 **판정자가 보는 것이 맞다.** 다만 **모르고 보내지 않는다**:
+    #   2026-10-01 `⟧AWS Identity and Access Management⟧` 이 든 줄이 넷에게 나갔고 아무도 안 알렸다
+    상한줄 = sorted({rid for rid in picked for arm in arms
+                     if terms.맨괄호.search(got[arm].get(rid, ""))})
+    if 상한줄:
+        print(f"  ※ **벗겨진 자리표시 괄호가 {len(상한줄)}줄에 있다** — 표에 그대로 들어간다\n"
+              f"    {' · '.join(상한줄[:8])}{' …' if len(상한줄) > 8 else ''}\n"
+              f"    `keep` · `lit` 은 이것을 못 본다(DECISIONS §263 · §95)", file=sys.stderr)
     rng.shuffle(sheet)                            # ★ 같은 줄의 팔들이 나란히 서지 않게
     lines = ["\t".join(HEAD)] + ["\t".join([t, s.replace("\t", " "), o.replace("\t", " "), ""]) for t, s, o in sheet]
     return "\n".join(lines) + "\n", key, 판

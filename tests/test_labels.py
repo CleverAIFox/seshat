@@ -909,3 +909,17 @@ def test_딴_표를_매기면_세어서_한_번에_말한다(tmp_path, monkeypat
 def test_지시문이_첫_줄과_마지막_줄을_되읽게_한다():
     """★ **표가 안 열린 것과 매기기 싫은 것은 다르다** — 되읽으면 그 자리에서 갈린다."""
     assert "첫 줄 태그와 마지막 줄 태그" in L.PROMPT
+
+
+def test_표를_뜨면서_괄호_남은_줄을_말한다(tmp_path, monkeypatch, capsys):
+    """★ **막지 않고 말한다**(DECISIONS §263) — 망가진 줄도 판정자가 보는 것이 맞다.
+    다만 **모르고 보내지 않는다**: 2026-10-01 그 줄이 넷에게 나갔고 아무도 안 알렸다."""
+    monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
+    a = _run(tmp_path, "4b")
+    줄 = [json.loads(x) for x in a.read_text(encoding="utf-8").splitlines()]
+    줄[1]["out"] = "⟧AWS Identity and Access Management⟧ 역할"       # 2026-10-01 실물
+    a.write_text("\n".join(json.dumps(x, ensure_ascii=False) for x in 줄) + "\n", encoding="utf-8")
+    L.make({"a": a, "b": _run(tmp_path, "12b")}, ROWS, "t", 20, 31)
+    말 = capsys.readouterr().err
+    assert "벗겨진 자리표시 괄호가 1줄" in 말, 말
+    assert ROWS[0]["id"] in 말, 말

@@ -88,6 +88,22 @@ def josa_머리() -> re.Pattern:
 SLOT_FORMS = _forms("T")
 _AFTER = re.compile(SLOT_FORMS + _JOSA_TAIL)
 RESIDUE = re.compile(SLOT_FORMS)
+# ★ **벗겨진 괄호 글자**(2026-10-01 · DECISIONS §263). `RESIDUE` 는 `⟦T1⟧` **꼴**의 잔재를 보는데,
+#   모델이 **이름은 되돌려 놓고 괄호만 남기는** 일이 있다 — 2026-10-01 판정표에서
+#   `⟧AWS Identity and Access Management⟧` 를 봤다. 이름이 제자리에 있으므로 `keep` 도 `lit` 도
+#   **초록이고**, `RESIDUE` 도 `T\d+` 가 없어 못 본다. **지표 여섯이 초록인데 줄이 망가진** §95 의 꼴이다.
+# ★ **이 두 글자는 번역문에 원래 못 나온다** — AWS 문서에도 한국어에도 안 쓰는 글자다. 거짓 양성이 0 인
+#   검사이고, 그래서 **막아도 사람이 검사를 안 끈다**(§213).
+맨괄호 = re.compile(f"[{OPEN}{CLOSE}]")
+
+
+def 괄호가_남은_줄(출력: dict[str, str]) -> list[str]:
+    """`⟦` · `⟧` 가 남은 줄의 id. **이름이 제자리여도 망가진 줄이다**(DECISIONS §263).
+
+    ★ 부르는 쪽이 둘이다 — 기록판의 문(`tools/gate.py`)과 판정표를 뜨는 자리(`tools/labels.py`).
+      **판단은 여기 한 번만 적는다**(§158 · §151).
+    """
+    return sorted(i for i, o in 출력.items() if o and 맨괄호.search(o))
 
 
 @functools.lru_cache(maxsize=8)

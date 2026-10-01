@@ -785,3 +785,39 @@ def test_셋이_다르면_안_갈아끼운다(tmp_path, monkeypatch, capsys):
                                 encoding="utf-8")
     assert G.main([판, "--swap-arm", "까닭"]) == 1
     assert "셋이 다르다" in capsys.readouterr().err
+
+
+# ── 벗겨진 자리표시 괄호(DECISIONS §263) ──────────────────────────────────────
+
+def test_괄호가_남은_줄을_찾는다():
+    """★ **이름이 제자리여도 망가진 줄이다** — `keep` · `lit` · `RESIDUE` 가 셋 다 초록이다."""
+    from seshat import terms
+    출력 = {
+        "a": "정상적인 번역입니다.",
+        "b": "⟧AWS Identity and Access Management⟧ 역할을 지정하십시오.",   # 2026-10-01 실물
+        "c": "⟦T1⟧ 을 고릅니다.",                                        # 꼴이 남은 것도 잡는다
+    }
+    assert terms.괄호가_남은_줄(출력) == ["b", "c"], terms.괄호가_남은_줄(출력)
+    # ★ `RESIDUE` 는 b 를 못 본다 — 그것이 이 검사를 만든 까닭이다
+    assert not terms.RESIDUE.search(출력["b"])
+    assert terms.RESIDUE.search(출력["c"])
+
+
+def test_문이_괄호_남은_판을_막는다(tmp_path):
+    """★ **`--accept` 로도 안 받는다** — 맞바꿈이 아니라 망가진 줄이다."""
+    import importlib.util
+    import json
+    import pathlib
+    root = pathlib.Path(__file__).resolve().parents[1]
+    spec = importlib.util.spec_from_file_location("g", root / "tools/gate.py")
+    G = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(G)
+    판 = tmp_path / "run.jsonl"
+    판.write_text("\n".join(json.dumps(x, ensure_ascii=False) for x in [
+        {"meta": True, "backend": "x", "set_sha256": "s"},
+        {"id": "a", "out": "정상입니다."},
+        {"id": "b", "out": "⟧AWS Identity and Access Management⟧ 역할"},
+    ]) + "\n", encoding="utf-8")
+    assert G.괄호가_남았나(str(판)) == ["b"]
+    글 = (root / "tools/gate.py").read_text(encoding="utf-8")
+    assert "`--accept` 로도 안 받는다" in 글, "받을 길을 열어 두면 그 길로 간다"

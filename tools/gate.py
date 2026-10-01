@@ -32,7 +32,7 @@ import tomllib
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
-from seshat import backends, catalog, compare  # noqa: E402
+from seshat import backends, catalog, compare, terms  # noqa: E402
 
 PATH = ROOT / "data/scoreboard.toml"
 
@@ -61,6 +61,25 @@ def head_of(run: str) -> dict:
             if d.get("meta"):
                 return d
     raise SystemExit(f"{pathlib.Path(run).name} 에 머리줄이 없다 — 재현 조건 없는 파일은 안 받는다")
+
+
+def 괄호가_남았나(run: str) -> list[str]:
+    """판의 출력에 벗겨진 자리표시 괄호가 남은 줄(DECISIONS §263).
+
+    ★ **이름이 제자리여도 망가진 줄이다.** 2026-10-01 판정표에서
+      `⟧AWS Identity and Access Management⟧` 를 봤는데 `keep` · `lit` · `RESIDUE` 가 **셋 다 초록**
+      이었다 — 이름은 되돌려졌고 `T\\d+` 는 없다. **지표 여섯이 초록인데 줄이 망가진** §95 의 꼴이다.
+    ★ **이 문에 두는 까닭** — 기록판에 오르면 그 판이 선과 기록이 된다. 망가진 줄이 든 판으로 세운
+      기록은 **그만큼 거짓이고 되돌릴 길이 없다**(§132 과 같은 규율).
+    """
+    출력 = {}
+    for line in pathlib.Path(run).read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        d = json.loads(line)
+        if not d.get("meta"):
+            출력[d["id"]] = d.get("out", "")
+    return terms.괄호가_남은_줄(출력)
 
 
 def 고른다(board: dict, head: dict, arm: str | None, 꼭: bool = False) -> dict | None:
@@ -437,6 +456,16 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     head = head_of(a.run)
+    # ★ **벗겨진 괄호가 든 판은 기록판에 안 올린다**(2026-10-01 · DECISIONS §263). `--accept` 로도
+    #   안 받는다 — 이것은 맞바꿈이 아니라 **망가진 줄**이고, 받을 까닭이 없다
+    괄호 = 괄호가_남았나(a.run)
+    if 괄호:
+        print(f"  ✗ **벗겨진 자리표시 괄호가 {len(괄호)}줄에 남았다** — `keep` · `lit` 은 이것을 못 본다\n"
+              f"    {' · '.join(괄호[:8])}{' …' if len(괄호) > 8 else ''}\n"
+              f"    그 줄을 읽는다 : python3 tools/show_misses.py {a.run}\n"
+              f"    ★ 이름이 제자리여도 망가진 줄이다(DECISIONS §263 · §95). **`--accept` 로도 안 받는다**",
+              file=sys.stderr)
+        return 1
     rec = 고른다(board, head, a.arm, a.require)
     if rec is None:
         print(f"  기록판에 없는 팔 — 문이 볼 것이 없다 ({head.get('backend') or head.get('model')})")

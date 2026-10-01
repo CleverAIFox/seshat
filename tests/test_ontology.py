@@ -94,14 +94,22 @@ def test_모델이_바꾼_자리표시도_되돌린다(form):
     assert ko == "Amazon S3를 씁니다." and missing == []
 
 
-def test_대조_도구와_되돌리기가_같은_모양을_본다():
+def test_대조_도구가_되돌리기의_모양을_그대로_쓴다():
+    """★ **사본이 아니라 같은 것이어야 한다**(2026-10-01 · DECISIONS §263).
+
+    종전 시험은 **두 글이 같은지**를 봤다 — 같기만 하면 통과하므로 **왜 둘인지는 안 물었다.**
+    사본의 까닭(「패키지 없이도 돌게」)은 그 파일이 `from seshat import compare` 를 하는 순간
+    거짓이었고, 시험이 그 거짓을 **열흘 동안 지켜 줬다.**
+    """
     import importlib.util
     import pathlib
     root = pathlib.Path(__file__).resolve().parents[1]
     spec = importlib.util.spec_from_file_location("cr", root / "tools/compare_runs.py")
     cr = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(cr)
-    assert cr.RESIDUE.pattern == terms.RESIDUE.pattern
+    assert cr.RESIDUE is terms.RESIDUE, "같은 글이 아니라 **같은 물건**이어야 한다"
+    글 = (root / "tools/compare_runs.py").read_text(encoding="utf-8")
+    assert "re.compile(r\"(?:⟦T" not in 글, "사본이 돌아왔다"
 
 
 def test_백틱으로_싼_자리표시를_되돌린다():

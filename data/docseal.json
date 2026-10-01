@@ -20,7 +20,7 @@
  "100": {
   "날짜": "2026-09-27",
   "읽음": true,
-  "지문": "bd7cee545265bbf2",
+  "지문": "341a8d8d911d8a4c",
   "파일": [
    "tools/labels.py",
    "tests/test_labels.py"
@@ -70,7 +70,7 @@
  "108": {
   "날짜": "2026-09-27",
   "읽음": true,
-  "지문": "41b71d43bff6c87d",
+  "지문": "fe63606f2fb5fd54",
   "파일": [
    "tools/labels.py"
   ]
@@ -284,8 +284,8 @@
  },
  "131": {
   "날짜": "2026-09-27",
-  "읽음": false,
-  "지문": "ac8a86b370e4e46c",
+  "읽음": true,
+  "지문": "9bfb707f63c2c89a",
   "파일": [
    "tests/test_gate.py",
    ".github/workflows/gpu-eval.yml"
@@ -536,11 +536,11 @@
  },
  "16": {
   "날짜": "2026-09-22",
-  "읽음": false,
-  "지문": "83bf527ebfd24bc7",
+  "읽음": true,
+  "지문": "685f01e524b89cb8",
   "파일": [
    "tests/test_ontology.py::test_모델이_바꾼_자리표시도_되돌린다",
-   "tests/test_ontology.py::test_대조_도구와_되돌리기가_같은_모양을_본다",
+   "tests/test_ontology.py::test_대조_도구가_되돌리기의_모양을_그대로_쓴다",
    "tests/test_compare_runs.py::test_다시_채점한다"
   ]
  },
@@ -626,8 +626,8 @@
  },
  "169": {
   "날짜": "2026-09-28",
-  "읽음": false,
-  "지문": "6329a283789f873e",
+  "읽음": true,
+  "지문": "7b6c160cf620bf50",
   "파일": [
    "seshat/compare.py",
    "tools/gate.py",
@@ -658,7 +658,7 @@
  "171": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "13fc12b98120c1bf",
+  "지문": "499fdf69be567b37",
   "파일": [
    "seshat/ontology.py",
    "seshat/evaluate.py",
@@ -735,8 +735,8 @@
  },
  "178": {
   "날짜": "2026-09-28",
-  "읽음": false,
-  "지문": "7337b3f551968bce",
+  "읽음": true,
+  "지문": "464305595a0ae42e",
   "파일": [
    "tools/compare_runs.py",
    "docs/next/hypotheses.md"
@@ -1097,8 +1097,8 @@
  },
  "214": {
   "날짜": "2026-09-29",
-  "읽음": false,
-  "지문": "9b25cec2b0ff08fa",
+  "읽음": true,
+  "지문": "2ba5f0d7a0e52437",
   "파일": [
    "docs/next/hypotheses.md",
    "tools/show_misses.py",
@@ -1222,7 +1222,7 @@
  "226": {
   "날짜": "2026-09-29",
   "읽음": true,
-  "지문": "e90d27ab04b1ae4e",
+  "지문": "ea4ee17a8b7aea21",
   "파일": [
    "tools/check_hypotheses.py",
    "tests/test_hypotheses.py::test_문턱_위는_선과_자를_둘_다_요구한다",
@@ -1233,7 +1233,7 @@
  "227": {
   "날짜": "2026-09-29",
   "읽음": true,
-  "지문": "05967da9492e46d4",
+  "지문": "55e3e978ea6ad2de",
   "파일": [
    "tools/labels.py",
    "tests/test_labels.py::test_모델을_안_적으면_판정을_안_받는다"
@@ -1242,7 +1242,7 @@
  "228": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "313c22d6bea9dd7f",
+  "지문": "6ef4bd687c03276e",
   "파일": [
    "tools/labels.py",
    "tests/test_labels.py::test_머리줄이_없는_답은_첫_줄을_안_먹는다",
@@ -1315,7 +1315,7 @@
  "234": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "ceb12089f7772aa6",
+  "지문": "e5e4646596fb54f5",
   "파일": [
    "docs/why/DECISIONS.md",
    "docs/next/PLAN.md",
@@ -1394,7 +1394,7 @@
  "241": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "2134b9182754e82a",
+  "지문": "70984c7eec33926f",
   "파일": [
    "tools/check_numbers.py",
    "docs/why/DECISIONS.md"
@@ -1403,7 +1403,7 @@
  "242": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "31384156d20c9176",
+  "지문": "7477815b71be8d2d",
   "파일": [
    "tools/labels.py",
    "tests/test_labels.py",
@@ -1414,7 +1414,7 @@
  "243": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "66614e17e5b670fe",
+  "지문": "074675587be3cff9",
   "파일": [
    "tools/labels.py",
    "tests/test_labels.py"
@@ -1423,7 +1423,7 @@
  "244": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "c5ef7b204b25ccc1",
+  "지문": "96f9858bf09f9226",
   "파일": [
    "tools/labels.py",
    "tests/test_labels.py::test_자마다_못_매기는_줄이_달라도_안_죽는다"
@@ -1432,7 +1432,7 @@
  "245": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "fffa6eec79d6f6c5",
+  "지문": "7d108c63739a8d84",
   "파일": [
    "tools/labels.py",
    "tests/test_labels.py::test_줄_수를_찍는다"
@@ -2027,7 +2027,7 @@
  "94": {
   "날짜": "2026-09-27",
   "읽음": true,
-  "지문": "51da5d289aa7d7c4",
+  "지문": "33fb3c5d7c1f6c08",
   "파일": [
    "tools/check_ontology.py",
    "tests/test_ontology.py"

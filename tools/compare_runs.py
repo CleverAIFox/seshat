@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 import sys
 from collections import Counter, defaultdict
 from pathlib import Path
@@ -19,9 +18,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from seshat import compare as _축  # noqa: E402  (이 파일에 `compare` 함수가 따로 있다)
 
-# seshat/terms.py 의 SLOT_FORMS 와 같다. 도구가 패키지 없이도 돌게 여기에 둔다 — 테스트가 둘을 대조한다
-RESIDUE = re.compile(r"(?:⟦T(\d+)⟧|\\?\[T(\d+)\\?\]|【T(\d+)】|`T(\d+)`"
-                     r"|(?<![A-Za-z0-9])T(\d+)(?![0-9]))")
+# ★ **사본을 지웠다**(2026-10-01 · DECISIONS §263). 「도구가 패키지 없이도 돌게 여기에 둔다」 고
+#   적혀 있었는데 **이 파일은 바로 위에서 `from seshat import compare` 를 한다** — 패키지 없이는
+#   애초에 안 돈다. **까닭이 거짓인 사본**이었고, 시험은 둘이 같은지를 보면서 **왜 둘인지는 안 물었다.**
+from seshat.terms import RESIDUE  # noqa: E402
 
 
 def read(path: str) -> tuple[dict, dict[str, dict]]:
