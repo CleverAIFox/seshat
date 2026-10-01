@@ -658,7 +658,7 @@
  "171": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "499fdf69be567b37",
+  "지문": "337eb4d17413b94e",
   "파일": [
    "seshat/ontology.py",
    "seshat/evaluate.py",
@@ -1315,7 +1315,7 @@
  "234": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "d3d3719b10962955",
+  "지문": "5a75be3a554a62a5",
   "파일": [
    "docs/why/DECISIONS.md",
    "docs/next/PLAN.md",
@@ -1394,7 +1394,7 @@
  "241": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "ee4ac58c2aae7707",
+  "지문": "dc595e459341e748",
   "파일": [
    "tools/check_numbers.py",
    "docs/why/DECISIONS.md"
@@ -2027,7 +2027,7 @@
  "94": {
   "날짜": "2026-09-27",
   "읽음": true,
-  "지문": "427392a36d4f5486",
+  "지문": "a148b9777197b821",
   "파일": [
    "tools/check_ontology.py",
    "tests/test_ontology.py"

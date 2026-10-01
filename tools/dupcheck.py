@@ -14,6 +14,9 @@
 ★ **함수만 보면 오늘의 병을 하나도 못 막는다.** 2026-09-28 의 사본 넷은 **상수**였다
   (조사 목록이 네 곳 · `seshat/terms.py` 의 `JOSA`). 그래서 **긴 글자 사본**도 같이 센다 — 열두 자 이상의 같은
   문자열이 두 곳에 있으면 든다. 정규식 · 메시지 · 경로가 여기 걸린다.
+★ **정규식은 컴파일한 뒤에 센다**(2026-10-01 · §266). 글자로 세면 f-string 으로 짠 원본과
+  손으로 베낀 사본이 **다른 글자**라 안 걸린다 — `compare_runs` 의 사본이 그래서 열흘 살았다.
+  **들여 쓰는 것은 사본이 아니다**(물건이 하나다) · **못 들인 파일은 0 이 아니다**(§172).
 ★ **`--min` 을 낮추면 잡음이 는다.** 한 줄짜리 접근자는 당연히 같다 — 기본 10 노드는 그 아래를 뺀다.
 """
 from __future__ import annotations
@@ -98,6 +101,81 @@ def 글자_사본(디렉토리: tuple[str, ...], 길이: int) -> dict[str, list[
                     if len(v) >= 길이 and v not in 흔한 and v not in 독들 and "\n" not in v[:-1]:
                         무리[v].append(f"{f.relative_to(ROOT)}:{n.lineno}")
     return {k: sorted(set(v)) for k, v in 무리.items() if len(set(v)) > 1}
+
+
+def _제_손으로_짓는_이름(f: pathlib.Path) -> set[str]:
+    """그 파일이 **제 손으로 짓는** 최상위 이름(2026-10-01 · DECISIONS §266).
+
+    ★ **들여 쓰는 것과 짓는 것을 가른다.** `from seshat.terms import RESIDUE` 는 짓는 것이 아니고
+      `RESIDUE = terms.RESIDUE` 도 아니다 — 둘 다 **남이 지은 물건에 이름만 붙인 것**이다.
+      **부름의 결과**(`re.compile(…)` · `_forms(…)`)만 짓는 것으로 센다.
+    ★ **무엇을 부르는지는 안 맞힌다.** 처음 짠 판이 `re.compile` 이라는 **이름**을 찾았고,
+      `import re as _re2` 한 사본이 그 사이로 샜다. **이름을 맞히는 검사는 별칭으로 뚫린다** —
+      부르는 쪽의 `isinstance(…, re.Pattern)` 이 진짜 거름이고, 여기서는 **짓는가**만 묻는다.
+    ★ **`id` 로는 못 가른다** — `re.compile` 이 **같은 글자에 같은 객체를 돌려준다**(모듈 캐시).
+      그 판이 **손으로 베낀 사본을 「같은 물건」 으로 보고 놓쳤다.**
+    """
+    try:
+        나무 = ast.parse(f.read_text(encoding="utf-8"))
+    except SyntaxError:
+        return set()                      # 못 읽은 것은 부르는 쪽이 「못 들였다」 로 든다
+    짓는다 = set()
+    for n in 나무.body:                   # ★ 최상위만 — 함수 안의 것은 모듈 속성이 아니다
+        값 = n.value if isinstance(n, (ast.Assign, ast.AnnAssign)) else None
+        if not isinstance(값, ast.Call):
+            continue
+        대상 = n.targets if isinstance(n, ast.Assign) else [n.target]
+        짓는다 |= {x.id for x in 대상 if isinstance(x, ast.Name)}
+    return 짓는다
+
+
+def 같은_정규식(디렉토리: tuple[str, ...], 길이: int = 12) -> tuple[dict[str, list[str]], list[str]]:
+    """(같은 뜻의 정규식을 **두 파일이 각각 짓는** 자리, **못 들인 파일**) — DECISIONS §266.
+
+    ★ **글자 사본으로는 못 잡는다.** 2026-10-01 `tools/compare_runs.py` 가 `seshat/terms.py` 의
+      자리표시 정규식을 베꼈는데, 원본은 **f-string 으로 짜여** 있어 글자가 다르다. 그래서
+      `글자_사본` 도 `지문` 도 못 봤고, **시험 하나가 「둘이 같은지」 만 보며 사본을 지켜 줬다**(§263).
+    ★ **컴파일한 뒤에 견준다** — f-string 이 풀린 뒤라 **뜻이 같으면 글자가 같다.**
+    ★ **짓는 자리만 센다**(`_정규식을_짓는_이름`). 들여 쓰는 것은 사본이 아니다 —
+      거짓 양성 하나가 검사를 끈다(§213).
+    ★ **못 들인 파일을 같이 돌려준다.** 안 본 파일을 0 으로 세면 **거짓 초록**이다(§172 · §258) —
+      처음 짠 판이 `seshat/` 여섯을 못 들이고 「0 건」 을 찍었다.
+    ★ **꾸러미는 꾸러미로 들인다.** `seshat/*.py` 를 파일로 들이면 상대 import 가 깨진다.
+    ★ **한 파일 안의 둘은 안 든다.** `_AFTER` 와 `RESIDUE` 가 겹치는 것은 설계다.
+    """
+    import importlib
+    import importlib.util
+    import re as _re
+    무리: dict[str, list[str]] = collections.defaultdict(list)
+    못본: list[str] = []
+    if str(ROOT) not in sys.path:
+        sys.path.insert(0, str(ROOT))
+    for d in 디렉토리:
+        꾸러미인가 = (ROOT / d / "__init__.py").exists()
+        for f in sorted((ROOT / d).rglob("*.py")):
+            이름 = f.relative_to(ROOT).as_posix()
+            if f.stem == "__init__":
+                continue
+            짓는이름 = _제_손으로_짓는_이름(f)
+            try:
+                if 꾸러미인가:
+                    m = importlib.import_module(f"{d}.{f.stem}")
+                else:
+                    spec = importlib.util.spec_from_file_location(f"_dup_{f.stem}", f)
+                    m = importlib.util.module_from_spec(spec)
+                    sys.modules[spec.name] = m
+                    spec.loader.exec_module(m)
+            except Exception as e:                  # noqa: BLE001
+                print(f"    ※ {이름} 을 못 들였다 — {e.__class__.__name__}: {e}", file=sys.stderr)
+                못본.append(이름)
+                continue
+            for 속 in 짓는이름:
+                v = getattr(m, 속, None)
+                if isinstance(v, _re.Pattern) and len(v.pattern) >= 길이:
+                    무리[v.pattern].append(f"{이름}::{속}")
+    난것 = {k: sorted(set(v)) for k, v in 무리.items()
+            if len({x.split("::")[0] for x in v}) > 1}
+    return 난것, 못본
 
 
 def _점이름(node: ast.AST) -> str:
@@ -211,6 +289,7 @@ def main(argv: list[str] | None = None) -> int:
     본 = sorted(훑는다(곳, a.min).values(), key=len, reverse=True)
     글 = sorted(글자_사본(곳, a.chars).items(), key=lambda kv: -len(kv[1]))
     부름 = sorted(부름_갈림(곳, a.shapes).items(), key=lambda kv: -len(kv[1]))
+    정규식, 못본 = 같은_정규식(BASE)        # ★ 시험은 서로 닮는 것이 정상이라 `tests/` 는 안 본다
     if a.calls:
         print(f"  인자가 갈리는 부름 {len(부름)} · 본 곳 {' '.join(곳)}")
         print("  ※ **갈리는 것이 요점인 자리가 많다** — 이 도구는 볼 자리를 준다(§171)\n")
@@ -221,7 +300,10 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     print(f"  구조가 같은 함수 무리 {len(본)}(최소 {a.min} 노드) · "
           f"긴 글자 사본 {len(글)}(최소 {a.chars} 자) · "
-          f"인자가 갈리는 부름 {len(부름)}(`--calls` 로 본다) · 본 곳 {' '.join(곳)}")
+          f"인자가 갈리는 부름 {len(부름)}(`--calls` 로 본다) · "
+          f"**같은 정규식이 파일을 넘는 자리 {len(정규식)}**"
+          + (f" · ⚠ **못 들인 파일 {len(못본)}**" if 못본 else "")
+          + f" · 본 곳 {' '.join(곳)}")
     print("  ※ **세는 것**이지 고치라는 것이 아니다 — 같은 규칙이 두 곳에 있으면 한 곳만 고쳐진다\n")
     for 무 in 본:
         print(f"    함수 {len(무)}벌")
@@ -229,6 +311,10 @@ def main(argv: list[str] | None = None) -> int:
             print(f"        {x}")
     for v, 곳들 in 글:
         print(f"    글자 {len(곳들)}곳  {v[:64]!r}")
+        for x in 곳들:
+            print(f"        {x}")
+    for v, 곳들 in sorted(정규식.items()):
+        print(f"    정규식 {len(곳들)}벌  {v[:64]!r}")
         for x in 곳들:
             print(f"        {x}")
     return 0

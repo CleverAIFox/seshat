@@ -380,8 +380,13 @@ def test_모양을_더해도_되돌리기가_안_깨진다():
     assert "groups" in 코드, "모양 수를 정규식에게 물어야 한다"
     for i in range(2, 9):
         assert f"group({i})" not in 코드, f"모양 번호 {i} 를 손으로 적었다 — 모양을 더하면 밀린다"
-    # ★ 모든 모양이 **조사까지** 산다
-    for 꼴 in ("⟦T1⟧을", "⟧T1⟧을", "[T1]을", "【T1】을", "`T1`을", "T1을"):
+    # ★ **모양 수를 정규식에게 묻는다**(DECISIONS §266). 모양을 더하면 여기가 빨개지고,
+    #   사례를 더하지 않고는 통과할 수 없다 — §42 가 맨 모양을 넣으면서 시험을 안 더한 자리다
+    모양들 = ("⟦T1⟧을", "⟧T1⟧을", "[T1]을", "【T1】을", "`T1`을", "T1을")
+    assert len(모양들) == pat.groups - 1, (
+        f"`_forms` 의 모양이 {pat.groups - 1} 인데 사례가 {len(모양들)} 다 — "
+        "**모양을 더했으면 그 모양을 보는 사례도 더한다**(DECISIONS §266)")
+    for 꼴 in 모양들:
         ko, missing = terms.unmask(꼴, _슬롯)
         assert missing == ["T2"], (꼴, missing)
         assert ko.startswith("AWS Identity and Access Management"), (꼴, ko)
