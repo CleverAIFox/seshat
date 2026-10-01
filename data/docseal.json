@@ -1273,7 +1273,7 @@
  "230": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "2328573c188cc6ac",
+  "지문": "ae92aefb027a9a90",
   "파일": [
    "tools/check_rules.py",
    "tests/test_rules.py",
