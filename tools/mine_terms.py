@@ -29,6 +29,7 @@ from collections import Counter
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 from seshat import ontology  # noqa: E402
+from seshat import paths  # noqa: E402
 
 # 후보가 될 수 있는 꼴. 평범한 영어 명사(구)만 본다 — 식별자꼴은 개념이 아니다(§150)
 _낱말 = re.compile(r"[A-Za-z][A-Za-z-]*")
@@ -100,7 +101,7 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     rows = [d for d in (json.loads(x) for x in
-            pathlib.Path(a.set).read_text(encoding="utf-8").splitlines() if x.strip())
+            paths.줄들(a.set, "셋", ("`ls data/**/*.jsonl` 로 있는 셋을 본다",)))
             if d.get("src")]
     onto = ontology.load()
     셈 = 캔다(rows, onto)

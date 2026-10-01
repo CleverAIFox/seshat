@@ -33,6 +33,7 @@ import tomllib
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 from seshat import backends, catalog, compare, terms  # noqa: E402
+from seshat import paths  # noqa: E402
 
 PATH = ROOT / "data/scoreboard.toml"
 
@@ -55,7 +56,7 @@ def load(path: pathlib.Path | None = None) -> dict:
 
 
 def head_of(run: str) -> dict:
-    for line in pathlib.Path(run).read_text(encoding="utf-8").splitlines():
+    for line in paths.줄들(run, "판", ("`ls runs/*.jsonl` 로 있는 판을 본다",)):
         if line.strip():
             d = json.loads(line)
             if d.get("meta"):
@@ -73,7 +74,7 @@ def 괄호가_남았나(run: str) -> list[str]:
       기록은 **그만큼 거짓이고 되돌릴 길이 없다**(§132 과 같은 규율).
     """
     출력 = {}
-    for line in pathlib.Path(run).read_text(encoding="utf-8").splitlines():
+    for line in paths.줄들(run, "판", ("`ls runs/*.jsonl` 로 있는 판을 본다",)):
         if not line.strip():
             continue
         d = json.loads(line)

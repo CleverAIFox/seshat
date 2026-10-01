@@ -17,6 +17,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from seshat import compare as _축  # noqa: E402  (이 파일에 `compare` 함수가 따로 있다)
+from seshat import paths  # noqa: E402
 
 # ★ **사본을 지웠다**(2026-10-01 · DECISIONS §263). 「도구가 패키지 없이도 돌게 여기에 둔다」 고
 #   적혀 있었는데 **이 파일은 바로 위에서 `from seshat import compare` 를 한다** — 패키지 없이는
@@ -25,7 +26,7 @@ from seshat.terms import RESIDUE  # noqa: E402
 
 
 def read(path: str) -> tuple[dict, dict[str, dict]]:
-    lines = [json.loads(x) for x in Path(path).read_text(encoding="utf-8").splitlines() if x.strip()]
+    lines = [json.loads(x) for x in paths.줄들(path, "판", ("`ls runs/*.jsonl` 로 있는 판을 본다",))]
     head = next(x for x in lines if x.get("meta"))
     return head, {x["id"]: x for x in lines if not x.get("meta")}
 
@@ -187,7 +188,7 @@ def main(argv=None) -> int:
     hb, rb = read(a.b)
     spec = {}
     if a.set:
-        spec = {x["id"]: x for x in (json.loads(y) for y in Path(a.set).read_text(encoding="utf-8").splitlines() if y.strip())
+        spec = {x["id"]: x for x in (json.loads(y) for y in paths.줄들(a.set, "셋", ("`ls data/**/*.jsonl` 로 있는 셋을 본다",)))
                 if not x.get("meta")}
     # ★ **축은 `seshat/compare.py` 하나에만 적는다**(DECISIONS §157). 2026-09-28 까지 이 도구는
     #   셋과 사전만 보고 **자는 안 봤다** — 같은 병의 여덟 번째였다

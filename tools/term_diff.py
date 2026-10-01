@@ -22,10 +22,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 from seshat import ontology  # noqa: E402
+from seshat import paths  # noqa: E402
 
 
 def read(path: Path) -> tuple[dict, dict[str, dict]]:
-    lines = [json.loads(x) for x in path.read_text(encoding="utf-8").splitlines() if x.strip()]
+    lines = [json.loads(x) for x in paths.줄들(path, "판", ("`ls runs/*.jsonl` 로 있는 판을 본다",))]
     head = next((x for x in lines if x.get("meta")), None)
     if head is None:
         raise SystemExit(f"결과 파일이 아니다 — 머리줄이 없다 : {path}\n"

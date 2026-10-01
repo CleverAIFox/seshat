@@ -32,6 +32,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 from seshat import backends, compare, evaluate  # noqa: E402
+from seshat import paths  # noqa: E402
 
 # 줄마다 (분자, 분모)를 낼 수 있는 지표. `_n` 이 결과에 실리거나 분모를 줄에서 셀 수 있어야 한다
 지표 = ("term_off", "term", "term_bad", "lit", "ui", "keep", "style", "hangul")
@@ -136,7 +137,7 @@ def _selftest() -> int:
 
 
 def read(path: str) -> tuple[dict, dict[str, dict]]:
-    lines = [json.loads(x) for x in Path(path).read_text(encoding="utf-8").splitlines() if x.strip()]
+    lines = [json.loads(x) for x in paths.줄들(path, "판", ("`ls runs/*.jsonl` 로 있는 판을 본다",))]
     head = next(x for x in lines if x.get("meta"))
     return head, {x["id"]: x for x in lines if not x.get("meta")}
 
@@ -154,7 +155,9 @@ def 밖에서_잰_것(경로: str, 가팔: str | None, 나팔: str | None, 같�
     """
     점수: dict[tuple[str, str], float] = {}
     팔들: set[str] = set()
-    for 줄 in Path(경로).read_text(encoding="utf-8").splitlines():
+    길 = ("`tools/gemba.py --out <여기>` 가 끝났나 — 아직 도는 중이면 그 파일이 없다",
+          "보기 : tail -f /tmp/gemba.log")
+    for 줄 in paths.줄들(경로, "점수 파일", 길):
         if not 줄.strip():
             continue
         d = json.loads(줄)

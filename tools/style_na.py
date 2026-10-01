@@ -25,10 +25,11 @@ from collections import Counter
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 from seshat import compare, evaluate  # noqa: E402
+from seshat import paths  # noqa: E402
 
 
 def read(path: str) -> tuple[dict, dict[str, dict]]:
-    줄 = [json.loads(x) for x in pathlib.Path(path).read_text(encoding="utf-8").splitlines() if x.strip()]
+    줄 = [json.loads(x) for x in paths.줄들(path, "판", ("`ls runs/*.jsonl` 로 있는 판을 본다",))]
     머리 = next(x for x in 줄 if x.get("meta"))
     return 머리, {x["id"]: x for x in 줄 if not x.get("meta") and x.get("id")}
 
