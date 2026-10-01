@@ -27,6 +27,14 @@ _PAIRS = [("을", "를"), ("이", "가"), ("은", "는"), ("과", "와"), ("이�
 
 
 def mask(onto: list[dict], text: str) -> tuple[str, dict[str, dict]]:
+    """영어로 남을 이름을 `⟦Tn⟧` 로 뺀다. (가린 글, 슬롯).
+
+    ★ **밖 — 온톨로지가 아는 이름만 본다**(DECISIONS §267). 사전에 없는 제품 이름은 **안 가려지고**
+      모델이 한글로 옮겨도 이 자는 모른다 — 2026-09-27 `Amazon OpenSearch Serverless` 가 그
+      자리였다(§94). **가린 수가 0 이라고 가릴 것이 없었다는 뜻이 아니다.**
+    ★ **밖 — 되돌아오는지는 안 본다.** 되돌리기는 `unmask` 이고, 모델이 괄호를 망가뜨리는 꼴은
+      거기서 받는다(§265). 가린 뒤에 일어나는 일은 이 함수의 밖이다.
+    """
     out, slots, last, n = [], {}, 0, 0
     for start, end, s in ontology.find(onto, text, keep_only=True):
         n += 1

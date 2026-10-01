@@ -152,6 +152,9 @@ def 토막_길이(ids, rows: dict) -> dict[str, int]:
 
     ★ **가린 뒤에 센다.** `+ph` 가 이름을 먼저 빼므로 사전은 **가려진 글**에서 찾는다 —
       원문으로 세면 이름까지 세어 실제보다 길게 나온다(`glossary.for_line` 의 문서주석과 같은 말).
+    ★ **밖 — 토막이 실제로 프롬프트에 실렸는지는 안 본다**(DECISIONS §267). 지금 사전으로 다시
+      세는 것이므로, **그 판이 돌 때의 사전과 다르면 다른 수가 난다** — 판을 다시 재는 것이
+      아니라 **지금 사전으로 그 줄을 보는 것**이다(§166 이 그 차이로 틀린 절이다).
     """
     from seshat import glossary, ontology, terms
     onto = ontology.load()

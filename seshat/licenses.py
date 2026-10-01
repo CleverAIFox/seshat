@@ -84,7 +84,14 @@ EXCLUDED: dict[str, str] = {
 
 
 def can_teach(name: str) -> bool:
-    """출력을 학생 학습에 쓸 수 있는가(DECISIONS §44). 대장에 없으면 거짓이다 — 모르면 못 쓴다."""
+    """출력을 학생 학습에 쓸 수 있는가(DECISIONS §44). 대장에 없으면 거짓이다 — 모르면 못 쓴다.
+
+    ★ **밖 — 약관을 읽지 않는다**(DECISIONS §267). 이 함수가 보는 것은 **사람이 대장에 적어 둔
+      한 칸**이고, 그 칸이 맞는지도 언제 읽은 것인지도 안 본다. `amazon.nova-lite-v1:0` 의
+      `unknown` 이 그 자리다 — §50 원문을 못 읽어서 모르는 것이고, 이 자는 그 사정을 모른다.
+    ★ **밖 — 학생이 무엇을 상속하는지는 안 본다.** `yes` 라도 Gemma 약관은 **학생에게 따라붙는다**
+      (§44) — 그것은 `LEDGER` 의 라이선스 칸을 사람이 읽어야 안다.
+    """
     row = LEDGER.get(name)
     return bool(row) and row[2] == "yes"
 

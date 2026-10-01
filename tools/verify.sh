@@ -54,6 +54,7 @@ step crashes            uv run python tools/check_crashes.py
 step scope              uv run python tools/check_scope.py
 step dead               uv run python tools/check_dead.py
 step deadchecks         uv run python tools/check_deadchecks.py
+step claims             uv run python tools/check_claims.py
 step docseal            uv run python tools/docseal.py
 step bootstrap          uv run python tools/bootstrap.py --selftest
 step catalog            uv run python tools/check_catalog.py
