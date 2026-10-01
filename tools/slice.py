@@ -22,6 +22,7 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 from seshat import evaluate, grammar  # noqa: E402
+from seshat import paths  # noqa: E402
 
 SHOW = ("term_off", "term", "keep", "lit", "ui", "hangul", "style")
 # 제 분모를 드는 지표. 나머지는 줄 수가 분모다
@@ -46,7 +47,7 @@ def 축_of(rows: list[dict]) -> dict[str, tuple[str, ...]]:
 
 
 def read_run(path: str) -> tuple[dict, dict[str, str]]:
-    lines = [json.loads(x) for x in pathlib.Path(path).read_text(encoding="utf-8").splitlines() if x.strip()]
+    lines = [json.loads(x) for x in paths.줄들(path, "판", ("`ls runs/*.jsonl` 로 있는 판을 본다",))]
     head = next((x for x in lines if x.get("meta")), {})
     return head, {x["id"]: x["out"] for x in lines if not x.get("meta") and "out" in x}
 
@@ -59,7 +60,8 @@ def read_labels(path: str) -> dict[str, dict[str, str]]:
       덮는다** — 팔을 견주려고 만든 자가 팔을 지워 버린다.
     """
     out: dict[str, dict[str, str]] = {}
-    for x in pathlib.Path(path).read_text(encoding="utf-8").splitlines():
+    for x in paths.줄들(path, "판정 파일", ("`tools/labels.py read` 가 레이크에 넣은 것이다",
+                                      "있는 것 : python3 tools/lake.py ls")):
         if not x.strip():
             continue
         d = json.loads(x)

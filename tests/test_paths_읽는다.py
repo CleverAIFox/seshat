@@ -18,35 +18,53 @@ sys.path.insert(0, str(ROOT))
 from seshat import paths  # noqa: E402
 
 없는 = "/tmp/__seshat_없는파일__.jsonl"
-셋 = "data/domain/d002.jsonl"
+# ★ **셋은 시험이 제 손으로 만든다**(2026-10-01 · DECISIONS §271). 종전에는 `data/domain/d002.jsonl`
+#   을 줬는데 **그 파일은 레이크에 있고 git 에는 없다** — 없는 기계에서는 도구가 **「평가셋이 없다」
+#   로 앞 단계에서 멈추고**, 진짜 밟으려던 자리에 **닿지도 못한 채 초록**이 났다. `slice.py` 가
+#   그렇게 샜고 사람 기계에서만 빨개졌다. **§170 과 같은 병** — 이 기계의 초록이 저 기계의 초록이 아니다.
 
-# ★ **경로를 받는 도구와 그것을 밟는 인자.** 아래 시험이 이 표가 **빠짐없는지**까지 묻는다
-밟는다: dict[str, list[str]] = {
-    "bootstrap.py": [없는, 없는, "--set", 셋],
-    "compare_runs.py": [없는, 없는, "--set", 셋],
-    "gemba.py": ["--run", f"x={없는}", "--out", "/tmp/_o.jsonl"],
-    "qe.py": ["--run", f"x={없는}", "--out", "/tmp/_o.jsonl"],
-    "rescore.py": [없는],
-    "show_misses.py": [없는],
-    "slice.py": [없는, "--set", 셋],
-    "style_na.py": [없는],
-    "term_diff.py": [없는, 없는],
-    "noise.py": [없는],
-    "mine_terms.py": [없는],
-    "gate.py": [없는],
-    "labels.py": ["corr", "--set", 없는],
-    "lake.py": ["check"],
-}
+
+@pytest.fixture(scope="module")
+def 셋(tmp_path_factory) -> str:
+    """git 에 있는 셋에서 **세 줄만** 떠서 임시 셋을 만든다 — 어느 기계에서나 같은 깊이까지 간다."""
+    원 = ROOT / "data/domain/d001.jsonl"
+    assert 원.exists(), "git 에 있는 셋이 사라졌다 — 이 시험의 전제다"
+    p = tmp_path_factory.mktemp("셋") / "t.jsonl"
+    p.write_text("\n".join(원.read_text(encoding="utf-8").splitlines()[:3]) + "\n", encoding="utf-8")
+    return str(p)
+
+
+def _밟는다(셋: str) -> dict[str, list[str]]:
+    """**경로를 받는 도구와 그것을 밟는 인자.** 아래 시험이 이 표가 **빠짐없는지**까지 묻는다."""
+    return {
+        "bootstrap.py": [없는, 없는, "--set", 셋],
+        "compare_runs.py": [없는, 없는, "--set", 셋],
+        "gemba.py": ["--run", f"x={없는}", "--out", "/tmp/_o.jsonl", "--set", 셋],
+        "qe.py": ["--run", f"x={없는}", "--out", "/tmp/_o.jsonl", "--set", 셋],
+        "rescore.py": [없는, "--set", 셋],
+        "show_misses.py": [없는],
+        "slice.py": [없는, "--set", 셋],
+        "style_na.py": [없는, "--set", 셋],
+        "term_diff.py": [없는, 없는],
+        "noise.py": [없는],
+        "mine_terms.py": [없는],
+        "gate.py": [없는],
+        "labels.py": ["corr", "--set", 셋, "--a", 없는],
+        "lake.py": ["check"],
+    }
+
+
+밟는다 = _밟는다("")      # ★ 이름만 쓰는 자리를 위한 것 — 인자는 `셋` 을 받아 다시 만든다
 
 
 @pytest.mark.parametrize("도구", sorted(밟는다))
-def test_없는_파일에_맨몸으로_안_죽는다(도구):
+def test_없는_파일에_맨몸으로_안_죽는다(도구, 셋):
     """★ 2026-10-01 **열넷 중 일곱**이 역추적과 「도구가 깨졌다」 를 뱉었다(DECISIONS §270).
 
     `gemba` 가 아직 도는 중인데 `bootstrap --점수` 를 부른 것이 그 자리였다 — **도구는 멀쩡한데
     「제가 깨졌다」 고 말하고 `verify.sh` 로 고치라고 했다.** 고칠 것이 없는데.
     """
-    r = subprocess.run([sys.executable, f"tools/{도구}", *밟는다[도구]],
+    r = subprocess.run([sys.executable, f"tools/{도구}", *_밟는다(셋)[도구]],
                        cwd=ROOT, capture_output=True, text=True, timeout=90)
     글 = r.stdout + r.stderr
     assert "Traceback" not in 글, f"{도구} 가 맨몸으로 죽는다\n{글[-600:]}"
