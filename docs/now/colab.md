@@ -23,22 +23,43 @@
 ```python
 !apt-get -qq install -y zstd
 !curl -fsSL https://ollama.com/install.sh | sh
-!nohup ollama serve > /tmp/ollama.log 2>&1 &
-import time; time.sleep(5)
+!OLLAMA_HOST=0.0.0.0:11434 OLLAMA_ORIGINS='*' nohup ollama serve > /tmp/ollama.log 2>&1 &
+import time; time.sleep(6)
 !ollama pull gemma3:12b
-!curl -s http://localhost:11434/api/tags | head -c 120
+!nvidia-smi --query-gpu=name,memory.total --format=csv,noheader
 !wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -O /usr/local/bin/cloudflared && chmod +x /usr/local/bin/cloudflared
 !nohup cloudflared tunnel --url http://localhost:11434 > /tmp/tunnel.log 2>&1 &
 import time; time.sleep(12)
-!grep -o 'https://[a-z0-9-]*\.trycloudflare\.com' /tmp/tunnel.log | head -1
+주소 = !grep -o 'https://[a-z0-9-]*\.trycloudflare\.com' /tmp/tunnel.log | head -1
+주소 = 주소[0]
+print(주소)
+print("---- **터널로 들어오는 것처럼** 물어본다")
+!curl -s -H "Host: {주소[8:]}" http://localhost:11434/api/tags | head -c 120
 ```
 
 ★ **`zstd` 를 먼저 깐다**(2026-10-01). 안 깔면 설치본이 **「This version requires zstd for extraction」**
   로 죽고, 그 뒤 `ollama` 는 `command not found` 가 된다. **그런데 터널은 그대로 열린다** —
   **주소가 떴다고 뒤에 모델이 있는 것이 아니다.**
-★ **`api/tags` 가 `gemma3:12b` 를 보여야 다음으로 간다.** 이 한 줄이 「터널은 섰는데 빈 집」 을 막는다.
+★ **`OLLAMA_HOST=0.0.0.0` 과 `OLLAMA_ORIGINS='*'` 가 없으면 터널 너머에서 403 이 온다**
+  (2026-10-01). ollama 는 `Host` 가 `localhost` 가 아니면 **외부 출처로 보고 막는다** —
+  터널을 거치면 `Host` 가 `…trycloudflare.com` 이 되고, 그래서 거절한다. **ollama 안에서는 멀쩡하다.**
+★ **확인을 `Host` 를 바꿔서 한다.** 그냥 `curl localhost` 로 물으면 **403 이 안 난다** —
+  2026-10-01 그렇게 확인하고 「됐다」 고 적었다가 사람이 403 을 맞았다. §271 · §275 의 그 병이다:
+  **밟아 본 자리가 실제로 지나갈 자리가 아니었다.**
+★ **`gemma3:12b` 가 보여야 다음으로 간다.** 이 한 줄이 「터널은 섰는데 빈 집」 을 막는다.
+★ **GPU 를 같이 찍는다** — `Tesla T4` 가 안 나오면 런타임 유형이 GPU 가 아니다. 그러면
+  `ollama ps` 의 `PROCESSOR` 가 `100% CPU` 가 되고 **줄당 몇 분**이 된다(§201 의 그 자리).
 
 마지막 줄이 찍는 **주소가 `OLLAMA_URL`** 이다.
+
+## ①-2 노트북 쪽 — **밖에서** 한 번 확인한다
+
+```bash
+curl -s https://받은-주소.trycloudflare.com/api/tags | head -c 120
+```
+
+★ **모델 목록이 나와야 한다.** `403` 이면 ollama 를 `OLLAMA_ORIGINS='*'` 로 다시 올린다.
+★ **이 한 줄이 2~3시간을 아낀다** — 안 하면 던지고 90초 뒤에 403 을 본다.
 
 ## ② 노트북 쪽 — 그 주소를 들고 돈다
 
