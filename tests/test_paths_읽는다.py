@@ -40,46 +40,25 @@ def 셋(tmp_path_factory) -> str:
     return str(p)
 
 
-def test_시험이_git_밖의_파일에_안_기댄다():
-    """★ **있는 것과 git 에 있는 것은 다르다**(DECISIONS §273).
+def test_이_시험이_여는_셋이_git_에_있다():
+    """★ **있는 것과 git 에 있는 것은 다르다**(DECISIONS §275).
 
     2026-10-01 이 시험이 `data/domain/d001.jsonl` 을 썼다. 작업 트리에는 있고 **git 에는 없다** —
     `.gitignore` 가 `data/domain/` 을 뺀다. 그래서 **사람 기계에서는 초록이고 CI 에서만 빨갰다.**
     §271 이 그 규칙을 적은 **바로 그 패치**에서 어겼고, 어긴 까닭은 **`ls` 로 확인**했기 때문이다.
-    **git 에 있나는 git 에게 묻는다.**
+
+    ★ **좁게 묻는다.** 「시험 전부가 git 밖 파일에 안 기대는가」 를 **정적으로** 재려고 세 판을
+      썼고 세 판 다 **거짓 양성**이 남았다(카탈로그 조회 · 도장 규칙 · tmp 에 적는 글자는
+      `ROOT /` 와 붙어도 **파일을 안 연다**). **그 물음에 답하는 자는 이미 있다 — CI 다.**
+      레이크가 없는 곳에서 돌기 때문이고, 오늘도 **CI 가 잡았다.** 여기서는 **이 파일이 여는
+      하나**만 묻는다(DECISIONS §275).
     """
-    # ★ **「읽는가」 로 좁힌다.** 경로를 **글자로** 쓰는 시험이 많다 — 카탈로그 조회 · 도장 규칙 ·
-    #   기대값. 그것까지 들면 거짓 양성이 쏟아지고 **사람이 검사를 끈다**(§213). 그 함수가
-    #   **파일을 여는가**(`read_text` · `open` · `exists` · `glob`)로 가른다
-    여는말 = ("read_text(", "open(", ".exists()", ".glob(", "read_bytes(")
-    난것 = []
-    for f in sorted((ROOT / "tests").glob("*.py")):
-        글 = f.read_text(encoding="utf-8")
-        나무 = ast.parse(글)
-        # ★ **함수 안과 모듈 상수를 같이 본다**(DECISIONS §273). 처음 판은 함수만 봤고,
-        #   그 바람에 **바로 이 파일의 `셋원본` 상수를 못 봤다** — 옛 꼴을 되살려 보고 알았다.
-        #   상수는 **그 파일이 파일을 여는 파일일 때**만 본다
-        칸들 = [x for x in ast.walk(나무) if isinstance(x, (ast.FunctionDef, ast.AsyncFunctionDef))
-                and any(w in (ast.get_source_segment(글, x) or "") for w in 여는말)]
-        모듈상수 = [x for x in 나무.body if isinstance(x, (ast.Assign, ast.AnnAssign))]
-        if any(w in 글 for w in 여는말):
-            칸들 = [*칸들, *모듈상수]
-        for 함수 in 칸들:
-            for n in ast.walk(함수):
-                if not (isinstance(n, ast.Constant) and isinstance(n.value, str)):
-                    continue
-                v = n.value
-                if not v.startswith(("data/", "runs/", "docs/")) or "*" in v or v.endswith("/"):
-                    continue
-                # ★ **저장소에 실재하는 것만 본다.** `tmp_path` 안의 가짜 이름(`runs/a.jsonl`)은
-                #   기대는 것이 아니다. 그리고 이 조건이 맞다 — **파일이 있는 기계에서만 거짓
-                #   초록이 나므로 거기서만 울리면 된다**(CI 에는 애초에 없어서 안 걸린다)
-                if not (ROOT / v).exists():
-                    continue
-                if subprocess.run(["git", "check-ignore", "-q", v], cwd=ROOT).returncode == 0:
-                    난것.append(f"{f.name}:{n.lineno}  {getattr(함수, 'name', '(모듈)')}  {v}")
-    assert 난것 == [], ("시험이 **git 밖의 파일**에 기댄다 — 그 기계에서만 초록이다:\n    "
-                      + "\n    ".join(난것))
+    r = subprocess.run(["git", "ls-files", "--error-unmatch", 셋원본],
+                       cwd=ROOT, capture_output=True, text=True)
+    assert r.returncode == 0, (
+        f"{셋원본} 이 git 에 없다 — 이 시험은 **git 에 든 셋**만 전제해야 한다(DECISIONS §275).\n"
+        f"    git 에 있나는 git 에게 묻는다 : git ls-files {셋원본}\n"
+        f"    무시되나 : git check-ignore -v {셋원본}")
 
 
 def _밟는다(셋: str) -> dict[str, list[str]]:
