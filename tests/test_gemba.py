@@ -8,6 +8,9 @@ from __future__ import annotations
 import importlib.util
 import json
 import pathlib
+import sys
+
+import pytest
 
 ROOT = next(p for p in pathlib.Path(__file__).resolve().parents if (p / "tools/gemba.py").exists())
 _spec = importlib.util.spec_from_file_location("gemba", ROOT / "tools/gemba.py")
@@ -101,3 +104,48 @@ def test_없는_표는_말을_한다(tmp_path, monkeypatch):
         assert "표의 열쇠가 없다" in str(e) and "--표 를 뺀다" in str(e)
     else:
         raise AssertionError("안 멈췄다")
+
+
+# ── 한 줄씩 쓰고 이어서 돈다(DECISIONS §272) ──────────────────────────────────
+
+def test_로그로_나가면_줄바꿈으로_찍는다(capsys, monkeypatch):
+    """★ **`\\r` 는 터미널에서만 진행이다**(DECISIONS §272).
+
+    1,200 판정을 백그라운드로 던진 사람이 **한 시간 동안 살아 있는지도 몰랐다** —
+    파일로 리다이렉트하면 `\\r` 가 한 줄을 덮어써서 `tail` 에 아무것도 안 보인다.
+    """
+    monkeypatch.setattr(sys.stderr, "isatty", lambda: False, raising=False)
+    for i in (1, 20, 21, 40, 100):
+        G._진행(i, 100)
+    err = capsys.readouterr().err
+    assert err.count("\n") == 4, err          # 1 · 20 · 40 · 100(끝) — 21 은 안 찍는다
+    assert "\r" not in err
+
+
+def test_이미_잰_것은_안_묻는다(tmp_path):
+    """★ **끊기면 GPU 시간이 통째로 날아간다**(DECISIONS §272 · §21 — `runs/` 는 다시 못 만든다)."""
+    머리 = {"meta": True, "model": "qwen3:8b", "체계_sha": "abc123"}
+    p = tmp_path / "g.jsonl"
+    p.write_text("\n".join([
+        json.dumps(머리, ensure_ascii=False),
+        json.dumps({"id": "a", "arm": "4b", "score": 70}, ensure_ascii=False),
+    ]) + "\n", encoding="utf-8")
+    got = G.이미_잰_것(p, 머리)
+    assert got == {("a", "4b"): 70}
+
+
+def test_자가_다르면_안_이어_돈다(tmp_path):
+    """★ **이어서 도는 것과 섞는 것은 다르다** — 한 파일에 두 자가 섞이면 **아무 물음에도 답 못 한다**."""
+    p = tmp_path / "g.jsonl"
+    p.write_text(json.dumps({"meta": True, "model": "qwen3:8b", "체계_sha": "옛것"},
+                            ensure_ascii=False) + "\n", encoding="utf-8")
+    with pytest.raises(SystemExit) as e:
+        G.이미_잰_것(p, {"model": "qwen3:8b", "체계_sha": "새것"})
+    글 = str(e.value)
+    assert "다른 자로 잰 것" in 글 and "체계_sha" in 글
+    assert "--out <새 이름>" in 글, "막기만 하고 길을 안 줬다(DECISIONS §210)"
+
+
+def test_없는_파일은_빈_것으로_본다(tmp_path):
+    """★ 처음 도는 판은 **이어 돌 것이 없다** — 그것은 오류가 아니다."""
+    assert G.이미_잰_것(tmp_path / "없다.jsonl", {"model": "x", "체계_sha": "y"}) == {}

@@ -98,16 +98,68 @@ def 읽는다(답: str) -> float | None:
     return v if 0 <= v <= 100 else None
 
 
-def 잰다(줄: list[dict], 모형: str) -> list[tuple[dict, float | None]]:
-    """★ **한 줄씩 묻는다.** 묶어 보내면 모델이 자리를 섞고, 섞인 것을 못 알아챈다."""
+def 이미_잰_것(낼곳: pathlib.Path, 머리: dict) -> dict[tuple[str, str], float]:
+    """같은 `--out` 에 이미 든 (줄,팔) → 점수. **자가 다르면 멈춘다**(2026-10-01 · DECISIONS §272).
+
+    ★ **이어서 도는 것과 섞는 것은 다르다.** 모형이나 지시문이 바뀐 뒤 이어서 돌면 **한 파일 안에
+      두 자의 수가 섞이고**, 그 파일은 **아무 물음에도 답할 수 없다**(§57 · §182 의 그 얼굴).
+      머리줄의 `model` 과 `체계_sha` 가 다르면 **이어서 안 돈다 — 멈추고 길을 든다.**
+    """
+    if not 낼곳.exists():
+        return {}
+    줄 = [json.loads(x) for x in 낼곳.read_text(encoding="utf-8").splitlines() if x.strip()]
+    옛머리 = next((x for x in 줄 if x.get("meta")), {})
+    다른 = [k for k in ("model", "체계_sha") if 옛머리.get(k) != 머리[k]]
+    if 다른:
+        raise SystemExit(
+            f"이미 있는 `{낼곳}` 은 **다른 자로 잰 것**이다 — {' · '.join(다른)} 이 다르다\n"
+            f"    있는 것 : model {옛머리.get('model')} · 체계_sha {옛머리.get('체계_sha')}\n"
+            f"    이번 것 : model {머리['model']} · 체계_sha {머리['체계_sha']}\n"
+            "    **한 파일에 두 자를 섞으면 그 파일은 아무 물음에도 답 못 한다**(DECISIONS §57)\n"
+            "    다른 이름으로 낸다 : --out <새 이름>.jsonl")
+    return {(x["id"], x["arm"]): x["score"] for x in 줄 if not x.get("meta") and "score" in x}
+
+
+def _진행(i: int, n: int) -> None:
+    """★ **`\\r` 는 터미널에서만 진행이다**(2026-10-01 · DECISIONS §272).
+
+    파일로 리다이렉트하면 한 줄을 계속 덮어쓴 것이 되어 `tail` 에 **아무것도 안 보인다.**
+    1,200 판정짜리를 백그라운드로 던진 사람이 **한 시간 동안 살아 있는지도 몰랐다.**
+    터미널이면 종전대로 덮어쓰고, 아니면 **스무 줄에 한 번 줄바꿈으로** 찍는다.
+    """
+    if sys.stderr.isatty():
+        print(f"\r  {i}/{n}", end="", file=sys.stderr, flush=True)
+    elif i == 1 or i == n or i % 20 == 0:
+        print(f"  {i}/{n}", file=sys.stderr, flush=True)
+
+
+def 잰다(줄: list[dict], 모형: str, 낼곳: pathlib.Path | None = None,
+        머리: dict | None = None, 이미: dict | None = None) -> list[tuple[dict, float | None]]:
+    """★ **한 줄씩 묻는다.** 묶어 보내면 모델이 자리를 섞고, 섞인 것을 못 알아챈다.
+
+    ★ **낸 것을 바로 쓴다**(2026-10-01 · DECISIONS §272). 종전에는 전부 메모리에 들고 **맨 끝에
+      한 번** 썼다 — 1,200 판정이 한두 시간이고, 그 사이에 끊기면 **GPU 시간이 통째로 날아간다.**
+      `runs/` 는 「다시 만들 수 없다」 고 적어 둔 층이다(§21) — **쓰기도 전에 잃는 것**이 그보다 싸지 않다.
+    ★ **이미 잰 (줄,팔) 은 안 묻는다** — 같은 `--out` 으로 다시 부르면 **이어서 돈다.**
+    """
     부른다 = backends.ollama_chat(모형, 체계 + backends.NO_THINK, {"think": False}, backends.NO_THINK)
+    이미 = 이미 or {}
     난것 = []
-    for i, x in enumerate(줄, 1):
+    물을것 = [x for x in 줄 if (x["id"], x["arm"]) not in 이미]
+    if 낼곳 is not None and 머리 is not None and not 낼곳.exists():
+        낼곳.write_text(json.dumps(머리, ensure_ascii=False) + "\n", encoding="utf-8")
+    for i, x in enumerate(물을것, 1):
         답 = 부른다([f"English: {x['src']}\nKorean: {x['out']}"], {})[0]
-        난것.append((x, 읽는다(답)))
-        print(f"\r  {i}/{len(줄)}", end="", file=sys.stderr, flush=True)
-    print("", file=sys.stderr)
-    return 난것
+        v = 읽는다(답)
+        난것.append((x, v))
+        if 낼곳 is not None and v is not None:
+            with 낼곳.open("a", encoding="utf-8") as f:
+                f.write(json.dumps({"id": x["id"], "arm": x["arm"], "score": v},
+                                   ensure_ascii=False) + "\n")
+        _진행(i, len(물을것))
+    if sys.stderr.isatty():
+        print("", file=sys.stderr)
+    return [*((x, 이미[(x["id"], x["arm"])]) for x in 줄 if (x["id"], x["arm"]) in 이미), *난것]
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -136,21 +188,25 @@ def main(argv: list[str] | None = None) -> int:
     줄 = 물을_줄(판, a.표, a.setpath)
     print(f"  {len(줄)}줄 · 팔 {len(판)} · {a.model}" + (f" · 표 {a.표}" if a.표 else ""),
           file=sys.stderr)
-    잰것 = 잰다(줄, a.model)
-
-    못읽음 = [x for x, v in 잰것 if v is None]
     # ★ **머리줄이 조건을 든다**(DECISIONS §57). 자가 바뀌면 수가 바뀐다
+    체계sha = __import__("hashlib").sha256(체계.encode("utf-8")).hexdigest()[:16]
     머리 = {"meta": True, "자": "gemba-qwen3-8b", "model": a.model, "대장이름": 대장이름,
-            "표": a.표 or "(판 전부)", "체계_sha": __import__("hashlib").sha256(
-                체계.encode("utf-8")).hexdigest()[:16],
-            "못읽음": len(못읽음), "뒤집었다": False,
+            "표": a.표 or "(판 전부)", "체계_sha": 체계sha, "뒤집었다": False,
             "note": "0~100 · 클수록 좋다 — 뒤집지 않는다(DECISIONS §253)"}
-    글 = [json.dumps(머리, ensure_ascii=False)]
-    글 += [json.dumps({"id": x["id"], "arm": x["arm"], "score": v}, ensure_ascii=False)
-           for x, v in 잰것 if v is not None]
-    pathlib.Path(a.out).write_text("\n".join(글) + "\n", encoding="utf-8")
-    print(f"  {a.out}  {len(글) - 1}줄" + (f" · **못 읽은 답 {len(못읽음)}** (그 줄은 안 냈다)"
-                                          if 못읽음 else " · 전부 읽혔다"))
+    낼곳 = pathlib.Path(a.out)
+    이미 = 이미_잰_것(낼곳, 머리)
+    if 이미:
+        print(f"  **이미 잰 {len(이미)} 은 안 묻는다 — 이어서 돈다**(DECISIONS §272)", file=sys.stderr)
+    잰것 = 잰다(줄, a.model, 낼곳, 머리, 이미)
+    못읽음 = [x for x, v in 잰것 if v is None]
+    낸수 = sum(1 for _, v in 잰것 if v is not None)
+    # ★ **못 읽은 수는 머리줄이 못 든다 — 다 재기 전에는 모른다**(DECISIONS §272). 머리줄을 먼저
+    #   쓰고 한 줄씩 붙이므로, **꼬리줄**에 적는다. 버리지 않고 세는 규율은 그대로다(§244).
+    with 낼곳.open("a", encoding="utf-8") as f:
+        f.write(json.dumps({"meta": True, "끝": True, "못읽음": len(못읽음), "낸줄": 낸수},
+                           ensure_ascii=False) + "\n")
+    print(f"  {a.out}  {낸수}줄" + (f" · **못 읽은 답 {len(못읽음)}** (그 줄은 안 냈다)"
+                                   if 못읽음 else " · 전부 읽혔다"))
     print("  자가 사람과 같은 순서인지 묻는다 :\n"
           f"    python3 tools/labels.py corr --name {a.표 or '<표>'} --judges <쉼표> "
           f"--자 gemba={a.out} --자 metricx=<점수> --기준 metricx")
