@@ -7,6 +7,7 @@
   python3 tools/labels.py agree --name d001-60 --judges gpt,gemini,pplx   # 쌍마다 카파
   python3 tools/labels.py gap  --name d001-60 --judges gpt,gemini,pplx --arm 4b --vs 12b
   python3 tools/labels.py prompt > /tmp/judge.txt    # 다른 판정자에게 줄 지시문
+  python3 tools/labels.py sheet --name d001-60       # 날아간 /tmp 표를 열쇠에서 되살린다
 
 ★ **「뜻이 맞다」 비율 둘을 눈으로 견주는 것은 선이 아니다**(DECISIONS §226). 그것은 §139 · §178 ·
   §179 · §216 이 네 번 저지른 **손으로 그은 선**이다. `gap` 이 `tools/bootstrap.py` 의 **짝지은
@@ -27,6 +28,10 @@
   보고 고르면 그 표본이 결론이다(DECISIONS §86 이 같은 잘못을 적는다).
 ★ **판정은 셋이다.** `맞다`(뜻이 통한다) · `어긋난다`(뜻이 틀렸거나 지어냈다) · `아니다`(번역이 아니다).
   표기가 공식이 아닌 것은 **맞다** 다 — `term_off` 가 이미 그것을 센다. 여기서 재는 것은 **뜻**이다.
+★ **열쇠가 정본이고 표는 되살리는 것이다**(DECISIONS §259). 표는 `/tmp` 에 사는데 `/tmp` 는 날아간다 —
+  2026-10-01 판정 전에 날아갔고 **되살릴 길이 없어 `make` 를 다시 돌려야 했다.** 그런데 `make` 는
+  이미 쓴 이름을 막는다(§256). 그래서 `sheet` 가 있다 — **같은 씨로 다시 뽑아 열쇠와 한 줄씩 대 보고,
+  똑같을 때만** 표를 쓴다. 다르면 안 쓰고 어디가 다른지 말한다. **덮는 길이 아니라 증명하는 길이다.**
 ★ **아무것도 커밋되지 않는다.** 채점표는 `/tmp` 에, 판정은 작업대 `labels/`(git 밖)에 나고
   **레이크에는 `lake.py put raw --into labels labels/*.jsonl` 로 넣는다** — `runs/` 와 같은 모양이다.
   저장소가 드는 것은 **인사이트**뿐이다 — 숫자와 배운 것은 DECISIONS 가, 판정 규칙은 이 파일이 든다
@@ -600,6 +605,63 @@ def 어느판인가(name: str) -> dict[str, dict]:
     return 첫.get("판", {}) if 첫.get("meta") else {}
 
 
+def 열쇠를_읽는다(name: str) -> tuple[dict, list[dict]]:
+    """(머리줄, 줄들). **열쇠가 정본이다**(DECISIONS §259)."""
+    kp = out_dir() / f"{name}.key.jsonl"
+    _있나(kp, "열쇠", f"    있는 표를 본다 : ls {_짧게(out_dir())}/*.key.jsonl")
+    줄 = [json.loads(x) for x in kp.read_text(encoding="utf-8").splitlines() if x.strip()]
+    머리 = 줄[0] if 줄 and 줄[0].get("meta") else {}
+    return 머리, [r for r in 줄 if not r.get("meta")]
+
+
+def 표를_되살린다(name: str, arms: dict[str, pathlib.Path], setpath: str,
+                 n: int, seed: int, 빼고: list[str]) -> tuple[str, list[str]]:
+    """같은 씨로 다시 뽑아 **열쇠와 한 줄씩 대 본다.** (표, 다른 자리들).
+
+    ★ **덮는 길이 아니라 증명하는 길이다**(DECISIONS §259). 똑같이 나와야만 그 표가 그 열쇠의
+      표다. 하나라도 다르면 **표를 안 쓴다** — 판정자가 다른 줄을 보고 매기면 수가 조용히 거짓이
+      된다(§256 과 같은 병이고, 이쪽은 **되살리다가** 걸린다).
+    """
+    머리, 있던 = 열쇠를_읽는다(name)
+    sheet, 다시, _ = make(arms, evaluate.load(setpath), name, n, seed, 빼고)
+    다른 = []
+    if len(다시) != len(있던):
+        다른.append(f"줄 수가 다르다 — 열쇠 {len(있던)} · 다시 뽑은 것 {len(다시)}")
+    for i, (x, y) in enumerate(zip(있던, 다시)):
+        if (x["tag"], x["id"], x["arm"]) != (y["tag"], y["id"], y["arm"]):
+            다른.append(f"{i + 1}번째 줄 — 열쇠 {x['tag']}/{x['id']}/{x['arm']} · "
+                        f"다시 뽑은 것 {y['tag']}/{y['id']}/{y['arm']}")
+            if len(다른) >= 5:
+                다른.append("…")
+                break
+    return sheet, 다른
+
+
+def _되살리는_재료(머리: dict, a) -> tuple[dict[str, pathlib.Path], str, int, int, list[str]]:
+    """열쇠의 머리줄이 든 것을 쓰되 **손으로 준 것이 이긴다.**
+
+    ★ **옛 열쇠는 셋·수·뺀 표를 안 들었다**(§243 은 판만 적었다). 그래서 머리줄에 없으면
+      손으로 받고, **무엇이 비었는지 말한다** — 짐작해서 채우면 다른 표가 나온다.
+    """
+    판 = 머리.get("판", {})
+    arms = {k: pathlib.Path(v["run"]) for k, v in 판.items()}
+    for spec in a.arm:
+        k, _, v = spec.partition("=")
+        arms[k.strip()] = pathlib.Path(v.strip())
+    setpath = a.setpath or 머리.get("set", "")
+    n = a.n if a.n else 머리.get("n", 0)
+    seed = a.seed if a.seed is not None else 머리.get("seed")
+    빼고 = a.빼고 or 머리.get("빼고", [])
+    빈것 = [이름 for 이름, 값 in (("--arm", arms), ("--set", setpath), ("--n", n), ("--seed", seed))
+            if not 값]
+    if 빈것:
+        raise SystemExit(
+            f"열쇠가 안 든 것이 있다 — 손으로 준다 : {' · '.join(빈것)}\n"
+            f"    ★ **짐작해서 채우면 다른 표가 난다**(DECISIONS §259). 옛 열쇠는 셋·수·뺀 표를\n"
+            f"      안 적었다 — 그 표를 만든 명령을 찾는다 : grep -rn 'labels.py make' ~/.bash_history")
+    return arms, setpath, int(n), int(seed), list(빼고)
+
+
 def _있나(p: pathlib.Path, 무엇: str, 길: str) -> None:
     """★ **벽도 없고 길도 없는 자리를 안 만든다**(DECISIONS §232 · §243). 없는 파일에 역추적을
     내면 도구가 깨진 것과 파일이 없는 것을 사람이 못 가른다."""
@@ -728,6 +790,13 @@ def main(argv: list[str] | None = None) -> int:
     r.add_argument("--judge", default="claude", help="판정자의 이름 — 자리다")
     r.add_argument("--model", default="", help="무엇이 판정했나 — 모델과 판. 이쪽이 자다")
     sub.add_parser("prompt")
+    s = sub.add_parser("sheet")
+    s.add_argument("--name", required=True)
+    s.add_argument("--set", dest="setpath", default="", help="비우면 열쇠의 머리줄이 든 셋")
+    s.add_argument("--arm", action="append", default=[], metavar="이름=경로", help="비우면 열쇠의 판")
+    s.add_argument("--n", type=int, default=0, help="비우면 열쇠의 수")
+    s.add_argument("--seed", type=int, default=None, help="비우면 열쇠의 씨")
+    s.add_argument("--빼고", action="append", default=[], metavar="표", help="비우면 열쇠가 적은 것")
     g = sub.add_parser("agree")
     g.add_argument("--name", required=True)
     g.add_argument("--judges", required=True, help="쉼표로 둘 이상 — 카파는 쌍마다 난다")
@@ -782,6 +851,25 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  {a.out}  {len(난것)}줄 ({a.metric})")
         else:
             print(글, end="")
+        return 0
+
+    if a.cmd == "sheet":
+        머리, 있던 = 열쇠를_읽는다(a.name)
+        arms, setpath, n, seed, 빼고 = _되살리는_재료(머리, a)
+        sheet, 다른 = 표를_되살린다(a.name, arms, setpath, n, seed, 빼고)
+        if 다른:
+            print("  ✗ 되살린 표가 열쇠와 다르다 — **안 쓴다**(DECISIONS §259)", file=sys.stderr)
+            for x in 다른:
+                print(f"    {x}", file=sys.stderr)
+            print("    ★ **판정자가 다른 줄을 보고 매기면 수가 조용히 거짓이 된다**(§256).\n"
+                  "      판·셋·수·씨·뺀 표 중 하나가 그때와 다르다 — 열쇠의 머리줄을 본다 :\n"
+                  f"      head -1 {_짧게(out_dir() / f'{a.name}.key.jsonl')}", file=sys.stderr)
+            return 1
+        out = pathlib.Path(f"/tmp/labels-{a.name}.tsv")
+        out.write_text(sheet, encoding="utf-8")
+        print(f"  {out}  {len(있던)}줄 — **열쇠와 한 줄씩 대 봤고 똑같다**(DECISIONS §259)")
+        print("  지시문 : python3 tools/labels.py prompt > /tmp/judge.txt")
+        print(f"  다 매기면 : python3 tools/labels.py read --name {a.name} --judge <판정자> --model <무엇>")
         return 0
 
     if a.cmd == "prompt":
@@ -839,7 +927,10 @@ def main(argv: list[str] | None = None) -> int:
     _이름이_비었나(name, a.덮는다)
     sheet, key, 판 = make(arms, evaluate.load(a.setpath), name, a.n, a.seed, a.빼고)
     # ★ **머리줄이 어느 판에서 난 표인지 든다**(DECISIONS §243). 이것이 없으면 판정을 판에 못 잇는다
-    머리 = {"meta": True, "name": name, "seed": a.seed, "판": 판}
+    # ★ **되살릴 재료를 전부 싣는다**(DECISIONS §259). §243 이 판만 적었더니 `/tmp` 가 날아간 날
+    #   셋·수·뺀 표를 **사람의 기억에서** 꺼내야 했다 — 하나만 틀려도 다른 표가 난다
+    머리 = {"meta": True, "name": name, "seed": a.seed, "판": 판,
+            "set": a.setpath, "n": a.n, "빼고": list(a.빼고)}
     (out_dir() / f"{name}.key.jsonl").write_text(
         "\n".join(json.dumps(x, ensure_ascii=False) for x in [머리] + key) + "\n", encoding="utf-8")
     out = pathlib.Path(f"/tmp/labels-{name}.tsv")

@@ -736,3 +736,75 @@ def test_덮는다를_주면_지나간다(tmp_path, monkeypatch):
     monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
     (tmp_path / "t.key.jsonl").write_text(json.dumps({"meta": True}) + "\n", encoding="utf-8")
     assert L._이름이_비었나("t", 덮는다=True) is None
+
+
+# ── 표를 되살린다(DECISIONS §259) ──────────────────────────────────────────────
+
+def _셋파일(tmp):
+    p = tmp / "set.jsonl"
+    p.write_text("\n".join(json.dumps(r, ensure_ascii=False) for r in ROWS) + "\n", encoding="utf-8")
+    return p
+
+
+def _열쇠를_놓는다(tmp, monkeypatch, name="t", n=5, seed=31):
+    """`make` 가 낸 것과 같은 꼴로 열쇠를 놓는다 — 머리줄에 되살릴 재료가 다 든다."""
+    monkeypatch.setattr(L, "out_dir", lambda: tmp)
+    arms = {"a": _run(tmp, "4b"), "b": _run(tmp, "12b")}
+    sheet, key, 판 = L.make(arms, ROWS, name, n, seed)
+    머리 = {"meta": True, "name": name, "seed": seed, "판": 판,
+            "set": str(_셋파일(tmp)), "n": n, "빼고": []}
+    (tmp / f"{name}.key.jsonl").write_text(
+        "\n".join(json.dumps(x, ensure_ascii=False) for x in [머리] + key) + "\n", encoding="utf-8")
+    return arms, sheet, key
+
+
+def test_열쇠에서_같은_표가_난다(tmp_path, monkeypatch):
+    """★ **덮는 길이 아니라 증명하는 길이다** — 같은 씨로 다시 뽑아 열쇠와 대 본다."""
+    arms, sheet, _ = _열쇠를_놓는다(tmp_path, monkeypatch)
+    다시, 다른 = L.표를_되살린다("t", arms, str(_셋파일(tmp_path)), 5, 31, [])
+    assert 다른 == [], 다른
+    assert 다시 == sheet, "같은 씨인데 표가 다르다"
+
+
+def test_씨가_다르면_안_쓴다(tmp_path, monkeypatch):
+    """★ **판정자가 다른 줄을 보고 매기면 수가 조용히 거짓이 된다**(§256 과 같은 병)."""
+    arms, _, _ = _열쇠를_놓는다(tmp_path, monkeypatch)
+    _, 다른 = L.표를_되살린다("t", arms, str(_셋파일(tmp_path)), 5, 999, [])
+    assert 다른, "씨가 다른데 같다고 했다"
+    assert "번째 줄" in " ".join(다른) or "줄 수가" in " ".join(다른)
+
+
+def test_수가_다르면_안_쓴다(tmp_path, monkeypatch):
+    arms, _, _ = _열쇠를_놓는다(tmp_path, monkeypatch)
+    _, 다른 = L.표를_되살린다("t", arms, str(_셋파일(tmp_path)), 7, 31, [])
+    assert any("줄 수가 다르다" in x for x in 다른), 다른
+
+
+def test_머리줄이_되살릴_재료를_다_든다(tmp_path, monkeypatch):
+    """★ **§243 은 판만 적었다** — 셋·수·뺀 표가 없으면 사람의 기억에서 꺼내야 한다."""
+    _열쇠를_놓는다(tmp_path, monkeypatch)
+    머리 = json.loads((tmp_path / "t.key.jsonl").read_text(encoding="utf-8").splitlines()[0])
+    assert {"판", "set", "n", "seed", "빼고"} <= set(머리), 머리
+    글 = (ROOT / "tools/labels.py").read_text(encoding="utf-8")
+    assert '"set": a.setpath' in 글 and '"n": a.n' in 글 and '"빼고": list(a.빼고)' in 글
+
+
+def test_옛_열쇠는_손으로_받되_짐작하지_않는다(tmp_path, monkeypatch):
+    """★ **짐작해서 채우면 다른 표가 난다** — 없으면 무엇이 비었는지 말하고 멈춘다."""
+    import argparse
+    import pytest
+    monkeypatch.setattr(L, "out_dir", lambda: tmp_path)
+    a = argparse.Namespace(arm=[], setpath="", n=0, seed=None, 빼고=[])
+    with pytest.raises(SystemExit) as e:
+        L._되살리는_재료({"판": {}}, a)                       # 옛 열쇠 — 아무것도 안 적혔다
+    for 이름 in ("--arm", "--set", "--n", "--seed"):
+        assert 이름 in str(e.value), str(e.value)
+
+
+def test_손으로_준_것이_열쇠를_이긴다(tmp_path, monkeypatch):
+    import argparse
+    _열쇠를_놓는다(tmp_path, monkeypatch)
+    머리 = json.loads((tmp_path / "t.key.jsonl").read_text(encoding="utf-8").splitlines()[0])
+    a = argparse.Namespace(arm=[], setpath="/딴/셋.jsonl", n=0, seed=None, 빼고=[])
+    _arms, setpath, n, seed, _빼고 = L._되살리는_재료(머리, a)
+    assert setpath == "/딴/셋.jsonl" and n == 5 and seed == 31
