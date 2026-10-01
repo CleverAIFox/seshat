@@ -80,3 +80,19 @@ def test_카탈로그가_이_도구를_안다():
     assert e and e["id"] == "k8s-docs", e
     assert catalog.allowed(e["id"], "train"), "학습에 못 쓰는 출처를 증류 원문으로 들었다"
     assert e["license"] == "CC BY 4.0"
+
+
+def test_받은_것도_카탈로그가_안다():
+    """★ **받은 것과 뽑은 것은 두 자리다**(DECISIONS §277).
+
+    `fetch_k8s` 는 레이크의 `cache/k8s/` 에 저장소를 받고 `data/train/` 에 문장을 낸다.
+    2026-10-01 뒤엣것만 적어서 **레이크가 1,841 건을 「카탈로그 밖」 으로 짚었다** —
+    `awsdocs` 는 `awsdocs-guides`(cache)와 `awsdocs-domain`(repo)로 **이미 갈려 있었다.**
+    """
+    from seshat import catalog
+    받은것 = catalog.match(catalog.load(), "lake", "cache/k8s/website/README.md")
+    assert 받은것 and 받은것["id"] == "k8s-website", 받은것
+    assert 받은것["license"] == "CC BY 4.0"
+    # ★ 뽑은 것은 **다른 출처**다 — 섞으면 「어느 것의 라이선스인가」 가 흐려진다
+    뽑은것 = catalog.match(catalog.load(), "repo", "data/train/k001.jsonl")
+    assert 뽑은것 and 뽑은것["id"] == "k8s-docs", 뽑은것
