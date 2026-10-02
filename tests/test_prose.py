@@ -164,6 +164,55 @@ def test_도구_셋이면_목록이다(tmp_path):
     assert 난 and "서로 다른 도구 3" in 난[0], 난
 
 
+# ---------- 4. 낱말 사전 ----------
+
+def test_표에서_낱말을_걷는다():
+    글 = NL.join(["### 0-0. 낱말", "", "| 낱말 | 뜻 | 헷갈리는 자리 |", "|---|---|---|",
+                 "| **자** | 재는 것 | 조사와 같다 |", "| **셋** | 줄 묶음 | 수 3 과 같다 |",
+                 "", "## 1. 다음 절", "", "| **팔** | 여기는 표 밖이다 |"])
+    assert CP.사전(글) == ["자", "셋"], CP.사전(글)
+
+
+def test_표가_없으면_빈_목록이다():
+    assert CP.사전("## 0. 규약" + NL) == []
+
+
+def test_저장소의_사전이_살아_있다():
+    assert CP.check_낱말(ROOT) == []
+
+
+def test_표가_사라지면_잡는다(tmp_path):
+    """★ **사전이 장식이 되는 길 ①** — 표가 통째로 없어진다."""
+    (tmp_path / "docs/now").mkdir(parents=True)
+    (tmp_path / "docs/now/MASTER.md").write_text("## 0. 규약" + NL, encoding="utf-8")
+    난 = CP.check_낱말(tmp_path)
+    assert 난 and "표가 없다" in 난[0], 난
+
+
+def test_안_쓰이는_낱말을_잡는다(tmp_path):
+    """★ **사전이 장식이 되는 길 ②** — 표에만 있고 아무도 안 쓰는 말이 는다.
+
+    둘째가 더 나쁘다. **죽은 낱말이 섞이면 표 전체를 못 믿는다.**
+    """
+    (tmp_path / "docs/now").mkdir(parents=True)
+    (tmp_path / "docs/now/MASTER.md").write_text(
+        NL.join(["## 0. 규약", "", "### 0-0. 낱말", "", "| 낱말 | 뜻 | 헷갈리는 자리 |",
+                 "|---|---|---|", "| **쇠지렛대** | 아무도 안 쓴다 | — |", ""]), encoding="utf-8")
+    난 = CP.check_낱말(tmp_path)
+    assert 난 and "쇠지렛대(0)" in 난[0], 난
+
+
+def test_표_안의_등장은_안_센다(tmp_path):
+    """★ **적은 것과 쓴 것은 다르다.** 표 자신을 세면 어떤 낱말도 영원히 안 죽는다 —
+    그러면 이 검사가 **아무것도 안 하는 검사**가 된다(DECISIONS §21)."""
+    (tmp_path / "docs/now").mkdir(parents=True)
+    몸 = NL.join(["## 0. 규약", "", "### 0-0. 낱말", "", "| 낱말 | 뜻 | 헷갈리는 자리 |", "|---|---|---|"]
+                + ["| **쇠지렛대** | 쇠지렛대 쇠지렛대 쇠지렛대 쇠지렛대 쇠지렛대 | — |", ""])
+    (tmp_path / "docs/now/MASTER.md").write_text(몸, encoding="utf-8")
+    난 = CP.check_낱말(tmp_path)
+    assert 난, "표 안의 여섯 번을 본문 사용으로 셌다"
+
+
 # ---------- 4. 빈 약속 ----------
 
 def test_행이_없는_약속을_잡는다():
