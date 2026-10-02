@@ -1315,7 +1315,7 @@
  "234": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "10c272c67bfad31c",
+  "지문": "f1b48b45d1471106",
   "파일": [
    "docs/why/DECISIONS.md",
    "docs/next/PLAN.md",
@@ -1394,7 +1394,7 @@
  "241": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "edf92ff7e8c556dd",
+  "지문": "aa2099dd5a95acc8",
   "파일": [
    "tools/check_numbers.py",
    "docs/why/DECISIONS.md"
@@ -2091,7 +2091,7 @@
  "M1": {
   "날짜": "",
   "읽음": false,
-  "지문": "7859ab60ee975796",
+  "지문": "c6af6eb0b70d557b",
   "파일": [
    "data/scoreboard.toml"
   ]
@@ -2132,7 +2132,7 @@
  "M5": {
   "날짜": "",
   "읽음": false,
-  "지문": "3c913b94defa93fa",
+  "지문": "4901558f15821b19",
   "파일": [
    "tools/verify.sh"
   ]

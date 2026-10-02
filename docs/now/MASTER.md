@@ -114,7 +114,7 @@ tools/fetch_awsdocs.py   AWS 공식 안내서(CC BY-SA 4.0)에서 도메인 문�
 ```
 
 봉인 — `data/scoreboard.toml`
-  지금 선 팔과 그 값. 2026-10-02 이 절이 9일 묵은 팔을 이름으로 들고 있었다.
+  지금 선 팔과 그 값. 2026-10-02 이 절이 9일 묵은 팔을 이름으로 들고 있었다(DECISIONS §281).
 
 ## 2. thoth 와의 계약
 
@@ -240,8 +240,10 @@ bash tools/verify.sh --only=pytest  # 부분 실행 — 마지막에 일부러 �
 
 **단계 목록의 정본은 `tools/verify.sh` 하나다.** 여기 표를 두었더니 열하나를 적는 동안 실물이
 스물셋이 됐다(DECISIONS §281) — `verify.sh` 머리말이 **바로 이 사고를 겪고 적어 둔 자리**인데
-같은 자리가 또 어긋났다. **CI 밖인 것만 적는다** — `훅`(CI 는 커밋을 안 한다) ·
-`lake`(SSD 는 이 기계에만 있다).
+같은 자리가 또 어긋났다. **CI 에서 다르게 도는 것만 적는다** — `훅`(CI 는 커밋을 안 한다) ·
+`lake`(SSD 는 이 기계에만 있다) · `ci`(CI 안에서는 이 판이 그 판이다).
+2026-10-03 까지 이 줄이 **셋 중 둘만** 들고 있었다(DECISIONS §285) — 「전부 적는다」 고 적은 자리가
+또 빠뜨렸다. `tools/check_prose.py` 의 「CI밖」 이 `verify.sh` 와 글자로 견준다.
 
 ★ §5-1 CI(`.github/workflows/ci.yml`)는 `bash tools/verify.sh` 한 줄이다. 목록을 늘어놓지 않는다(DECISIONS §20).
 ★ §5-2 이 기계에서 `SESHAT_DATA` 가 비었거나 드라이브가 안 붙었으면 `lake` 가 실패한다 — 조용히 건너뛰지 않는다.

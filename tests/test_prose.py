@@ -213,6 +213,83 @@ def test_표_안의_등장은_안_센다(tmp_path):
     assert 난, "표 안의 여섯 번을 본문 사용으로 셌다"
 
 
+# ---------- 5. 날짜가 든 줄 ----------
+
+def test_가리킨_자리가_없는_날짜를_잡는다():
+    assert CP.날짜만있는줄("2026-09-29 그렇게 됐다" + NL) == [1]
+
+
+def test_절을_가리키면_통과한다():
+    """★ **음성 대조다.** 날짜 자체를 금지하면 `MASTER §0-1` 이 요구하는
+    「근거의 분모」 를 못 적는다 — 「2026-09-29 재니 0.94 tok/s」 는 경위가 아니라 **실측의 조건**이다."""
+    assert CP.날짜만있는줄("2026-09-29 재니 0.94 tok/s 였다(DECISIONS §55)" + NL) == []
+    assert CP.날짜만있는줄("2026-09-29 H-032 로 쟀다" + NL) == []
+
+
+def test_줄바꿈으로_흩어진_참조도_본다():
+    """★ 한 문장이 세 줄에 걸치는 문서다. 한 줄만 보면 **멀쩡한 글이 걸린다.**"""
+    글 = NL.join(["2026-09-29 그렇게 됐다", "— 자세한 것은 DECISIONS §55 에 있다", ""])
+    assert CP.날짜만있는줄(글) == []
+
+
+def test_울_안의_날짜는_안_본다():
+    assert CP.날짜만있는줄(NL.join(["```bash", "# 2026-09-29", "```", ""])) == []
+
+
+def test_MASTER_의_날짜가_전부_자리를_가리킨다():
+    """★ 2026-10-03 실측 — 날짜가 든 줄 **스물 중 열아홉이 이미 가리키고 있었다.**
+    감사 §7 의 「과거 서술이 대량으로 통과한다」 는 재 보니 과장이었고, 고친 것은 한 줄이다.
+    **세기 전에 고치기 시작했으면 열아홉을 헛되이 건드렸다.**"""
+    assert CP.check_날짜(ROOT) == []
+
+
+# ---------- 6. CI 에서 다르게 도는 단계 ----------
+
+def test_verify_의_선언을_걷는다():
+    글 = NL.join(['if [ "$CI" = "true" ]; then NAMES+=("훅"); MARKS+=("CI 밖")',
+                 '  NAMES+=("$name"); MARKS+=("통과")',
+                 'NAMES+=("lake")', ""])
+    assert CP.CI밖(글) == ["훅", "lake"], CP.CI밖(글)
+
+
+def test_변수_이름은_단계가_아니다():
+    """★ `NAMES+=("$name")` 은 **모든** 단계가 지나는 자리다 — 그것을 세면 선언이 늘 맞는다."""
+    assert CP.CI밖('NAMES+=("$name")' + NL) == []
+
+
+def test_MASTER_가_셋을_다_든다():
+    assert CP.check_CI밖(ROOT) == []
+
+
+def test_하나라도_빠지면_잡는다(tmp_path):
+    """★ **같은 병이 같은 자리에서 세 번째다**(DECISIONS §285).
+
+    §199 가 「목록을 두 곳에 적으면 한쪽만 는다」 를, §281 이 「§5 가 열하나를 적는 동안
+    실물이 스물셋이 됐다」 를 배웠다. 그 고침이 목록을 **줄였는데** 줄인 목록이 또 빠뜨렸다 —
+    **목록을 줄이는 것은 없애는 것이 아니다.**
+    """
+    (tmp_path / "docs/now").mkdir(parents=True)
+    (tmp_path / "tools").mkdir(parents=True)
+    (tmp_path / "tools/verify.sh").write_text(
+        NL.join(['NAMES+=("훅")', 'NAMES+=("lake")', 'NAMES+=("ci")', ""]), encoding="utf-8")
+    (tmp_path / "docs/now/MASTER.md").write_text(
+        NL.join(["## 5. 점검", "", "CI 밖은 `훅` · `lake` 다.", "", "## 6. 다음", ""]),
+        encoding="utf-8")
+    난 = CP.check_CI밖(tmp_path)
+    assert 난 and "ci" in 난[0], 난
+
+
+def test_셋을_다_들면_통과한다(tmp_path):
+    (tmp_path / "docs/now").mkdir(parents=True)
+    (tmp_path / "tools").mkdir(parents=True)
+    (tmp_path / "tools/verify.sh").write_text(
+        NL.join(['NAMES+=("훅")', 'NAMES+=("lake")', ""]), encoding="utf-8")
+    (tmp_path / "docs/now/MASTER.md").write_text(
+        NL.join(["## 5. 점검", "", "CI 밖은 `훅` · `lake` 다.", "", "## 6. 다음", ""]),
+        encoding="utf-8")
+    assert CP.check_CI밖(tmp_path) == []
+
+
 # ---------- 4. 빈 약속 ----------
 
 def test_행이_없는_약속을_잡는다():
