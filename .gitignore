@@ -23,3 +23,6 @@ data/probes/
 # AWS 문서에서 뽑은 도메인셋 — CC BY-SA 라 나눠 줄 때 조건이 붙는다. 받는 도구만 커밋한다(DECISIONS §92)
 data/domain/
 data/train/
+
+# 받은 패치는 통로다 — 내용은 이미 커밋으로 들어와 있다(2026-10-02 · seshat-274 에서 딸려 들어갔다)
+INBOX/
