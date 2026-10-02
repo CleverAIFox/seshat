@@ -56,6 +56,37 @@ def 진행률() -> int:
     return int(sum(int(w) * int(v) for w, v in 칸) / 100)
 
 
+def _온톨로지():
+    """종류별 노드 수와 표기 수. **정본은 `seshat/ontology.py` 의 함수다** — 세는 규칙을 두 벌 안 둔다."""
+    sys.path.insert(0, str(ROOT))
+    from seshat import ontology
+    노드 = ontology.load()
+    return 노드, ontology.surfaces(노드)
+
+
+def 종류수(어느: str):
+    def 센다() -> int:
+        노드, _ = _온톨로지()
+        return sum(1 for n in 노드 if (n.get("kind") or n.get("종류")) == 어느)
+    return 센다
+
+
+def 표기수() -> int:
+    return len(_온톨로지()[1])
+
+
+def 대장수() -> int:
+    """라이선스 대장의 줄 수. **대장이 비었다고 적어 두고 열넷이 들어 있었다**(DECISIONS §281)."""
+    sys.path.insert(0, str(ROOT))
+    from seshat import licenses
+    return len(licenses.LEDGER)
+
+
+def _칸(표기: str) -> re.Pattern:
+    """표의 한 칸을 집는 앵커. `| `service` | 41 |` 의 41 만 문다."""
+    return re.compile(rf"(?<=\| `{표기}` \| )(\d+)(?= \|)")
+
+
 # (정본, 어느 파일, 앵커 — 수를 든 무리가 하나여야 한다)
 #
 # ★ **커밋이 흔드는 수는 여기 못 들어온다**(DECISIONS §238). `docseal audit` 의 수를 축으로 세웠다가
@@ -64,6 +95,15 @@ def 진행률() -> int:
 #   수**이고, 흔드는 수는 문서에 안 적고 도구가 물을 때마다 센다.
 축 = {
     "진행률": (진행률, "docs/now/MASTER.md", re.compile(r"(?<=\*\*합 )(\d+)(?=%\*\*)")),
+    # ★ **MASTER §9 의 표가 2026-10-02 에 넷 다 틀렸다**(DECISIONS §281) — `feature` 20(참 24) ·
+    #   `concept` 60(참 74) · 표기 227(참 265). 손으로 적은 수는 사전이 자랄 때마다 늙는다.
+    #   **커밋이 흔드는 수가 아니다**(§238) — 사전을 고치는 커밋만 흔든다
+    "서비스": (종류수("service"), "docs/now/MASTER.md", _칸("service")),
+    "기능": (종류수("feature"), "docs/now/MASTER.md", _칸("feature")),
+    "API": (종류수("api"), "docs/now/MASTER.md", _칸("api")),
+    "개념": (종류수("concept"), "docs/now/MASTER.md", _칸("concept")),
+    "표기": (표기수, "docs/now/MASTER.md", re.compile(r"(?<=표기\(이름 \+ 별칭\)는 )(\d+)(?= 이고)")),
+    "라이선스대장": (대장수, "docs/now/MASTER.md", re.compile(r"(?<=대장에 )(\d+)(?= 줄이 있다)")),
 }
 
 

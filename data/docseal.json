@@ -285,7 +285,7 @@
  "131": {
   "날짜": "2026-09-27",
   "읽음": true,
-  "지문": "9bfb707f63c2c89a",
+  "지문": "d7627fa0643bee5c",
   "파일": [
    "tests/test_gate.py",
    ".github/workflows/gpu-eval.yml"
@@ -745,7 +745,7 @@
  "18": {
   "날짜": "2026-09-22",
   "읽음": true,
-  "지문": "843d17d3ae61f54a",
+  "지문": "291d553231cb48a5",
   "파일": [
    "tools/doc_fsck.py::check_tools",
    "tests/test_workflows.py"
@@ -1127,7 +1127,7 @@
  "217": {
   "날짜": "2026-09-29",
   "읽음": true,
-  "지문": "ca5c489299c67dea",
+  "지문": "8fcae71176af10c7",
   "파일": [
    "tools/docseal.py",
    "docs/next/PLAN.md",
@@ -1315,7 +1315,7 @@
  "234": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "5bf7d2d5d6d92dc6",
+  "지문": "1729c4052c481e14",
   "파일": [
    "docs/why/DECISIONS.md",
    "docs/next/PLAN.md",
@@ -1345,7 +1345,7 @@
  "237": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "2780ac964ba2229a",
+  "지문": "a15c20abb82ca228",
   "파일": [
    "tools/docgen.py",
    "tests/test_docgen.py",
@@ -1356,7 +1356,7 @@
  "238": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "86779bf208718f58",
+  "지문": "16e047f3c135f845",
   "파일": [
    "tools/docgen.py",
    "tests/test_docgen.py::test_커밋이_흔드는_수는_축이_아니다"
@@ -1394,7 +1394,7 @@
  "241": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "f1de13134bb593cd",
+  "지문": "7fca6742aea7db36",
   "파일": [
    "tools/check_numbers.py",
    "docs/why/DECISIONS.md"
@@ -1481,7 +1481,7 @@
  "27": {
   "날짜": "2026-09-23",
   "읽음": true,
-  "지문": "fc0ffa0ba6fde390",
+  "지문": "bd0093f91ea6bc4c",
   "파일": [
    "tests/test_baselines.py",
    "tools/check_model_licenses.py",
@@ -1494,6 +1494,29 @@
   "지문": "eadf5aee8f232bd2",
   "파일": [
    "tests/test_workflows.py::test_결과는_레이크보다_먼저_아티팩트로_간다"
+  ]
+ },
+ "280": {
+  "날짜": "2026-10-02",
+  "읽음": false,
+  "지문": "f44fd11d111abd9e",
+  "파일": [
+   "tests/test_workflows.py::test_워크플로가_가설_번호를_안_박는다",
+   "tests/test_workflows.py::test_GPU_작업은_한_인터프리터로_돈다",
+   ".github/workflows/gpu-eval.yml"
+  ]
+ },
+ "281": {
+  "날짜": "2026-10-02",
+  "읽음": false,
+  "지문": "dde0c68d3a0be86b",
+  "파일": [
+   "tools/docseal.py::_봉인_줄",
+   "tools/docseal.py::절들",
+   "tests/test_docseal.py::test_MASTER_도_봉인이_붙는다",
+   "tests/test_docseal.py::test_본문의_봉인_낱말을_봉인_줄로_안_읽는다",
+   "tests/test_docseal.py::test_봉인한_파일이_바뀌면_MASTER_절이_무효가_된다",
+   "tools/docgen.py"
   ]
  },
  "29": {
@@ -2063,6 +2086,72 @@
   "지문": "635fa4c79a4948f9",
   "파일": [
    "tests/test_labels.py::test_채점표에_팔_이름이_없다"
+  ]
+ },
+ "M1": {
+  "날짜": "",
+  "읽음": false,
+  "지문": "7859ab60ee975796",
+  "파일": [
+   "data/scoreboard.toml"
+  ]
+ },
+ "M10": {
+  "날짜": "",
+  "읽음": false,
+  "지문": "33bc4611c1477769",
+  "파일": [
+   ".github/workflows/gpu-eval.yml"
+  ]
+ },
+ "M11": {
+  "날짜": "",
+  "읽음": false,
+  "지문": "88cd399511e2fe41",
+  "파일": [
+   "data/catalog.toml",
+   "tools/lake.py"
+  ]
+ },
+ "M12": {
+  "날짜": "",
+  "읽음": false,
+  "지문": "b48b4f705e80803a",
+  "파일": [
+   "tools/sweep.py"
+  ]
+ },
+ "M3": {
+  "날짜": "",
+  "읽음": false,
+  "지문": "f1a9d4f027cce4d3",
+  "파일": [
+   "seshat/evaluate.py"
+  ]
+ },
+ "M5": {
+  "날짜": "",
+  "읽음": false,
+  "지문": "54f3e10f04463b19",
+  "파일": [
+   "tools/verify.sh"
+  ]
+ },
+ "M6": {
+  "날짜": "",
+  "읽음": false,
+  "지문": "a1e29b651c1eb318",
+  "파일": [
+   "seshat/licenses.py"
+  ]
+ },
+ "M9": {
+  "날짜": "",
+  "읽음": false,
+  "지문": "9c6ca5ad2d95f5f9",
+  "파일": [
+   "data/ontology/aws.jsonl",
+   "seshat/ontology.py::validate"
   ]
  }
 }

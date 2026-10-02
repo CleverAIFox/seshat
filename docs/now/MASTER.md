@@ -59,13 +59,15 @@ bash tools/apply_patch.sh                # INBOX 의 안 붙은 seshat-*.patch �
 
 thoth 가 `ENGINE=http` 로 부를 영한 번역 서버와, 그 서버에 올릴 모델을 만드는 도구다.
 **목표는 영→한 범용에서 AWS Translate 를 넘는 것이고**(DECISIONS §11), thoth 의 도메인은 그 위의
-특화다. **2026-09-23 현재 가장 좋은 팔은 `gemma3-4b+ph+retry+endings+terms` 이고 값이 0 이다**(DECISIONS §58 · §61) —
-탐침 200 줄에서 keep 0.993 · josa 1.0 · style 1.00 · 공식 표기 0.846 대 AWS Translate 0.795.
+특화다. **지금 선 팔의 정본은 `data/scoreboard.toml` 이다**(DECISIONS §131) — `tools/gate.py` 가 판에서 박고
+손으로 안 고친다. 처음 0 을 넘은 팔은 `gemma3-4b+ph+retry+endings+terms` 였고(2026-09-23 · DECISIONS
+§58 · §61) 탐침 200 줄에서 keep 0.993 · josa 1.0 · style 1.00 · 공식 표기 0.846 대 AWS Translate 0.795 였다.
 **체급은 양쪽을 다 올린다** — 공정한 사전 · 탐침 600 줄에서 12B 가 도메인 term_off 를 **+0.068**(p < 0.001),
-범용 chrf 를 +4.97 올린다(DECISIONS §90). 처음의 −0.066 은 사전의 빈자리였다(§86 · §87). **실문서 600 줄에서는 같은 부호에 +0.035 다**(p = 0.003 · DECISIONS §94 · §97) — 탐침은 순위를 옮기고 값은 안 옮긴다. **그 0.035 가 진짜 격차는 아니다** — `term_off` 는 「표기가 다르다」와 「뜻이 틀렸다」를 같은 무게로 세고, 4B 가 이긴 자리는 전자뿐인데 12B 가 이긴 자리는 후자다(DECISIONS §98 · H-046). **형식 전선은 닫혔다.** 다만 **이것은 AWS 도메인 표기에 한한 승리다**(DECISIONS §76) — 사전이 안 닿는
+범용 chrf 를 +4.97 올린다(DECISIONS §90). 처음의 −0.066 은 사전의 빈자리였다(§86 · §87). **실문서 600 줄에서는 같은 부호에 +0.035 다**(p = 0.003 · DECISIONS §94 · §97) — 탐침은 순위를 옮기고 값은 안 옮긴다. **그 0.035 가 진짜 격차는 아니다** — `term_off` 는 「표기가 다르다」와 「뜻이 틀렸다」를 같은 무게로 세고, 4B 가 이긴 자리는 전자뿐인데 12B 가 이긴 자리는 후자다(DECISIONS §98 · H-046). **탐침 200 줄의 형식 지표에서는 닫혔다** — 줄을 열면 아직 샌다(DECISIONS §95 · §263). 다만 **이것은 AWS 도메인 표기에 한한 승리다**(DECISIONS §76) — 사전이 안 닿는
 FLORES+ 범용 200 줄에서는 chrf 28.83 대 AWS 38.47 로 **9.6 점 뒤진다.** 남은 것은 뜻과 어순이고,
 그 둘은 사전이 아니라 **학습의 일**이다.
-`aws-translate` 는 이제 이길 대상이 아니라 **기준선**으로 남는다.
+**도메인 표기 전선에서는** `aws-translate` 가 넘어선 **기준선**이고, 범용에서는 아직 9.6 점 뒤지므로
+거기서는 **여전히 이길 대상**이다 — 한 이름이 전선마다 다른 자리에 선다.
 
 ```
 seshat/
@@ -80,6 +82,9 @@ tools/doctor.py          **이 기계**를 센다 — 레이크 · 가중치 자
 tools/fetch_flores.py    FLORES+ 영→한을 data/bench/ 에 받는다 (커밋하지 않는다)
 tools/fetch_awsdocs.py   AWS 공식 안내서(CC BY-SA 4.0)에서 도메인 문장을 뽑는다 → data/domain/ (커밋하지 않는다)
 ```
+
+봉인 — `data/scoreboard.toml`
+  지금 선 팔과 그 값. 2026-10-02 이 절이 9일 묵은 팔을 이름으로 들고 있었다.
 
 ## 2. thoth 와의 계약
 
@@ -135,15 +140,16 @@ uv run --group eval python -m seshat.evaluate --url https://<워커> --thoth \
 ★ §3-3 **가설 없이 재지 않는다.** echo 가 아닌 백엔드 · 서버는 `--hypothesis H-NNN` 을 요구하고 그 가설은 대장에서
 `실험` 상태여야 한다(DECISIONS §14). 배선만 보는 실행은 `--smoke` 다.
 
-★ §3-4 **결과 파일 머리줄이 재현 조건을 든다** — `hypothesis` · `commit` · `dirty` · `set_sha256` · `chars` ·
-`backend` · `weights` · `decoding` · `cost_usd`(AWS Translate). 가설을 채택 · 기각할 때 이 파일이 근거다.
+★ §3-4 **결과 파일 머리줄이 재현 조건을 든다.** 가설을 채택 · 기각할 때 이 파일이 근거다.
+  **칸의 정본은 `seshat/evaluate.py` 가 쓰는 머리줄 하나다** — 여기 목록을 두면 칸이 늘 때 갈린다
+  (2026-10-02 실제로 갈려 있었다 · DECISIONS §281). 판정에 바로 걸리는 칸만 적는다:
+  `metrics`(자가 바뀌면 옛 수와 못 견준다 · DECISIONS §145) · `onto_leak`(시험지가 제 분모를 골랐나 ·
+  DECISIONS §171) · `set_stale`(셋이 만들어진 뒤 사전이 자랐나 · DECISIONS §207) ·
+  `dirty`(깨끗하지 않은 나무에서 쟀나).
 
-| 백엔드 | 가중치 | 쓰임 |
-|---|---|---|
-| `echo` | — | 배선 |
-| `aws-translate` | — | 이길 대상. 서빙하지 않는다(`BASELINE_ONLY`) |
-| `translategemma-4b` | `google/translategemma-4b-it` · ollama Q4_K_M 3.3GB | 후보 1호. ollama 가 GPU 를 맡는다 · `temperature 0` · `seed 42` |
-| `translategemma-4b+ph` | 같다 | H-001 처치군 — 용어 자리표시를 두른다 |
+**백엔드 이름의 정본은 `seshat/backends.py` 의 `REGISTRY` 다.** 여기 표를 두었더니 넷을 적는 동안
+실물이 서른이 됐다(DECISIONS §281). 두 자리만 뜻이 고정돼 있어 적어 둔다 —
+`echo` 는 배선이고, `aws-translate` 는 **이길 대상이라 서빙하지 않는다**(`BASELINE_ONLY`).
 
 **커밋 시점 방어는 `.githooks/pre-commit` 이고 그것이 실제로 도는지는 `tools/hookcheck.sh` 가
 실행으로 잰다**(DECISIONS §164) — 「훅 파일이 있는가」 와 「훅이 도는가」 는 다른 물음이다.
@@ -182,6 +188,9 @@ DECISIONS §92)에서 산문 문장만 꺼내고 **온톨로지가 든 줄만** 
 | `data/eval/seed.jsonl` | 12 | 초안. 사람이 쓰지 않는다 — 교사 합의 + 검사기로 만든다(PLAN #18 · #3) |
 | `data/bench/flores_plus.dev.jsonl` · `.devtest.jsonl` | 997 · 1,012 | FLORES+ 정답(평어체) · CC BY-SA 4.0 · 받아서 쓴다 |
 
+봉인 — `seshat/evaluate.py`
+  지표 · 머리줄 칸 · 판정 조건. 칸이 늘면 이 절을 다시 읽는다.
+
 ## 4. 기계
 
 | | |
@@ -199,21 +208,20 @@ bash tools/verify.sh              # 전부. 실패해도 끝까지 돌고 표로
 bash tools/verify.sh --only=pytest  # 부분 실행 — 마지막에 일부러 실패한다
 ```
 
-| 단계 | 무엇 | CI |
-|---|---|---|
-| ruff · pytest | 코드 | 돈다 |
-| check_docs · doc_fsck | 문서 ↔ 문서 · 문서 ↔ 실물 | 돈다 |
-| ways · docseal | 막는 자리 ↔ 넘는 길(§210) · 절 ↔ 그 절이 짚은 코드(§211) | 돈다 |
-| model_licenses · hypotheses · ontology · catalog | 대장 넷 | 돈다 |
-| lake | SSD 레이크 대장 · 가설 근거(§11) | **CI 밖** — SSD 는 이 기계에만 있다 |
+**단계 목록의 정본은 `tools/verify.sh` 하나다.** 여기 표를 두었더니 열하나를 적는 동안 실물이
+스물셋이 됐다(DECISIONS §281) — `verify.sh` 머리말이 **바로 이 사고를 겪고 적어 둔 자리**인데
+같은 자리가 또 어긋났다. **CI 밖인 것만 적는다** — `훅`(CI 는 커밋을 안 한다) ·
+`lake`(SSD 는 이 기계에만 있다).
 
 ★ §5-1 CI(`.github/workflows/ci.yml`)는 `bash tools/verify.sh` 한 줄이다. 목록을 늘어놓지 않는다(DECISIONS §20).
 ★ §5-2 이 기계에서 `SESHAT_DATA` 가 비었거나 드라이브가 안 붙었으면 `lake` 가 실패한다 — 조용히 건너뛰지 않는다.
 
+봉인 — `tools/verify.sh`
+  점검 단계. 이 절이 열하나를 적는 동안 실물은 스물셋이 됐다.
+
 ## 6. 라이선스 대장
 
-`seshat/licenses.py` 가 대장이다(DECISIONS §6). **지금은 비어 있다** — 가중치를 부르는 코드가 없다.
-첫 가중치가 들어오는 커밋이 그 줄을 채운다.
+`seshat/licenses.py` 가 대장이다(DECISIONS §6). 대장에 13 줄이 있다.
 
 **축이 둘이다**(DECISIONS §44) — 서빙에 쓸 수 있는가(상업)와 **출력을 학생 학습에 쓸 수 있는가**(교사).
 
@@ -234,6 +242,9 @@ bash tools/verify.sh --only=pytest  # 부분 실행 — 마지막에 일부러 �
 | `tencent/hunyuan-mt*` · `tencent/hy-mt*` | Tencent HY Community License — EU · 영국 · 대한민국 제외 |
 
 ---
+
+봉인 — `seshat/licenses.py`
+  라이선스 대장. 이 절이 「비어 있다」 고 적는 동안 열셋이 들어 있었다.
 
 ## 7. 연구 트랙
 
@@ -262,7 +273,7 @@ bash tools/verify.sh --only=pytest  # 부분 실행 — 마지막에 일부러 �
 | thoth 와의 경계 | HTTP JSON — `POST /translate` · `GET /health`(§2). thoth 워커(Lambda)가 서버 대 서버로 부른다 | 스트리밍이 필요하면 같은 경로에 SSE(thoth PLAN #38) |
 | 서빙 | `serve.py` · 표준 라이브러리 · echo | 이미지 → ECR → Lambda 컨테이너(PLAN #27) · **유휴 비용 0** 이 조건이다(§13). 집의 장비로 서빙하지 않는다 — 꺼지면 thoth 번역이 죽는다 |
 | 환경 | uv · ollama | 컨테이너(PLAN #26) — torch 가 들어올 때 |
-| 실험 | `evaluate.py` → `runs/`(커밋 밖) · 머리줄에 재현 조건 · 견적과 상한(`--max-usd` · DECISIONS §35) · GPU 러너(§10) · **A/B 전에 A/A**(`tools/noise.py` — 같은 팔을 여러 판 돌려 흔들림을 재고 그 최댓값이 `tol` 이다 · DECISIONS §139) | 평가 게이트(`tools/gate.py` · `data/scoreboard.toml` · DECISIONS §131) · 비용 장부 |
+| 실험 | `evaluate.py` → `runs/`(커밋 밖) · 머리줄에 재현 조건 · 견적과 상한(`--max-usd` · DECISIONS §35) · GPU 러너(§10) · **A/B 전에 A/A**(`tools/noise.py` · DECISIONS §139) · **평가 게이트**(`tools/gate.py` · `data/scoreboard.toml` · DECISIONS §131) | 비용 장부 |
 | 학습 | 없다 | ② 원격 T4 · 스팟 → ③ 학습용 데스크탑 |
 | 데이터 | 저장소의 `data/`(작은 정본 · 받는 도구) · SSD 레이크 `SESHAT_DATA`(raw · runs · cache — §11) | thoth 쌍(원문만) · 교사 공장 산출 · 온톨로지 2판 원천 |
 
@@ -278,16 +289,17 @@ bash tools/verify.sh --only=pytest  # 부분 실행 — 마지막에 일부러 �
 | 종류 | 수 | 번역 | 예 |
 |---|---|---|---|
 | `service` | 41 | 영어로 남는다 | `Amazon Kinesis Data Streams` · 별칭 `Kinesis Data Streams` · `KDS` |
-| `feature` | 20 | 영어로 남는다 · 부모가 서비스 | `AWS Glue Data Catalog` · `DynamoDB Streams` · S3 스토리지 클래스 |
+| `feature` | 24 | 영어로 남는다 · 부모가 서비스 | `AWS Glue Data Catalog` · `DynamoDB Streams` · S3 스토리지 클래스 |
 | `api` | 12 | 영어로 남는다 · 부모가 서비스 | `PutRecord` · `BatchWriteItem` · `StartQueryExecution` |
-| `concept` | 60 | 한국어로 옮긴다 | `partition key → 파티션 키` · `dead-letter queue → 배달 못한 편지 대기열` |
+| `concept` | 74 | 한국어로 옮긴다 | `partition key → 파티션 키` · `dead-letter queue → 배달 못한 편지 대기열` |
+| `brand` | 1 | 영어로 남는다 | `AWS` — 서비스가 아니라 상표다 |
 
-표기(이름 + 별칭)는 227 이고 전체에서 유일하다.
+표기(이름 + 별칭)는 265 이고 전체에서 유일하다.
 
 | 필드 | 뜻 |
 |---|---|
 | `coda` | 한국어로 읽은 끝소리 — `none`(모음) · `closed`(받침) · `rieul`(ㄹ). 자리표시 뒤 조사를 고른다. 약어 별칭은 마지막 글자의 영어 읽기로 센다(`IAM` 받침 · `KPL` ㄹ) |
-| `src` | `thoth-glossary`(배포본에서 쓰는 값) · `author`(이 저장소가 적은 값) |
+| `src` | `thoth-glossary`(배포본에서 쓰는 값) · `author`(이 저장소가 적은 값) · `aws-glossary`(AWS 공식 용어집) |
 | `alt_ko` | **허용 표기.** 뜻이 통하는 다른 표기 — 음차(`role` → 롤) · 의역(`operational overhead` → 운영상의 부담) · 다른 공식 표기(`queue` → 큐 · 대기열) |
 | `ko_ref` | 공식 표기의 근거 — AWS 한국어 문서의 `<서비스>/<페이지>`. 있으면 대조를 마친 노드다(DECISIONS §34) |
 | `bad_ko` | **관측된 오역.** 뜻이 바뀐 표기다 — `quota` → 쿼리 한도 · `visibility timeout` → 시각성 시간 초과. H-001 에서 본 것만 적는다(DECISIONS §25) |
@@ -302,9 +314,12 @@ ko, missing = terms.unmask(model_output, slots)                                 
 ★ §9-1 **긴 표기가 이긴다.** `Amazon Kinesis Data Streams` 가 `Kinesis Data Streams` 보다 먼저 잡힌다.
 ★ §9-2 **약어는 대소문자를 지킨다.** 영어 본문의 소문자 조각(`dms`)을 서비스로 읽지 않는다.
 ★ §9-3 **서술격은 건드리지 않는다.** `⟦T1⟧이다` 의 `이` 는 조사가 아니다 — 조사 뒤에 한글이 이어지면 고치지 않는다.
-★ §9-4 **2판은 대조를 시작했다**(DECISIONS §34). `ko_ref` 를 든 개념 18/60 은 AWS 한국어 문서와 맞췄고 일곱은 1판이 틀렸다.
-★ §9-5 **나머지는 아직 대조 전이다.** 개념의 `ko` 는 thoth 용어집(배포본에서 쓰는 중)과 이 저장소가 적은
-값이다. 대조는 PLAN #22 에 남았다.
+★ §9-4 **개념은 전부 대조를 마쳤다**(DECISIONS §34). 개념 74 가 모두 `ko_ref` 를 들고,
+`seshat/ontology.py::validate` 가 **`ko_ref` 없는 번역 대상을 거부한다** — 사람이 지키는 규약이 아니다.
+PLAN #22 에 남은 것은 대조가 아니라 **파라미터 · 서비스 사이 관계 · DEA-C01 전범위**다.
+
+봉인 — `data/ontology/aws.jsonl` · `seshat/ontology.py::validate`
+  사전과 그 문. 수는 `docgen` 이 채우고 규칙은 이 절이 적는다.
 
 ## 10. GPU 러너
 
@@ -330,6 +345,9 @@ mkdir -p ~/actions-runner && cd ~/actions-runner      # 저장소 밖 · 한 번
 ★ §10-2 **노트북이 꺼져 있으면 작업이 줄을 선다.** 켜고 `./run.sh` 를 띄우면 받아 간다.
 ★ §10-3 **비공개 저장소라서 안전하다.** 셀프 호스티드 러너는 공개 저장소에서 남의 PR 을 이 기계에서 돌린다.
 ★ §10-4 러너 폴더(`~/actions-runner`)는 저장소 밖이다. 러너 토큰을 커밋하지 않는다.
+
+봉인 — `.github/workflows/gpu-eval.yml`
+  GPU 러너가 실제로 하는 일.
 
 ## 11. 데이터 관리
 
@@ -357,7 +375,7 @@ uv run python tools/check_catalog.py --list     # 층과 출처를 표로
 | 저장소 안에 남는 것 | 이유 |
 |---|---|
 | `data/ontology/` · `data/eval/seed.jsonl` | 사람이 고치는 작은 정본이다. diff 로 봐야 한다 |
-| 받는 도구(`fetch_flores.py` · `fetch_awsdocs.py`) · 만드는 도구(`make_probes.py`) | 산출물은 다시 만든다 |
+| 받는 도구(`fetch_flores.py` · `fetch_awsdocs.py` · `fetch_k8s.py`) · 만드는 도구(`make_probes.py`) | 산출물은 다시 만든다 |
 | `docs/next/papers.md` | 논문의 **읽은 결과**가 자산이다. PDF 는 cache 다 |
 
 ```bash
@@ -388,9 +406,16 @@ python3 tools/lake.py check                  # 해시 · 대장 밖 파일 · �
 | `how` | 얻는 도구 또는 `사람`. 도구 경로는 실재해야 한다 |
 
 ★ §11-8 **쓰임이 문이다.** 평가셋(FLORES+ · 탐침)은 `train` 이 없다 — 학습에 새면 이길 대상의 숫자가 거짓말을 한다.
-  라이선스가 `미확인` 인 출처(AWS 문서 스냅숏)는 `train` 을 달 수 없다.
+  라이선스가 `미확인` 인 출처는 `train` 을 달 수 없다.
 ★ §11-9 가중치의 라이선스는 `seshat/licenses.py` 가 정본이다(§6). 카탈로그는 자리만 든다.
-★ §11-10 파이어레인에서 옮기지 않은 것 — norm 층 · 봉인 · 획득 게이트. 원본이 작고 손으로 모으지 않는다.
+★ §11-10 파이어레인에서 옮기지 않은 것 — norm 층 · 획득 게이트. 원본이 작고 손으로 모으지 않는다.
+  **봉인은 옮겼다** — `tools/docseal.py` 가 그것이다(DECISIONS §211 · §281).
+★ §11-11 **동일조건(SA)이 붙은 출처도 `train` 을 못 단다**(DECISIONS §276). AWS 안내서는 CC BY-SA 4.0 이고
+  `미확인` 이 아니다 — 막는 까닭이 다르다. **학생을 뿌릴 수 있어야 하므로** 뿌릴 때 걸리는 조건은
+  학습 원문에 못 쓴다. 2026-10-02 이 까닭이 안 적혀 있어 그 줄이 왜 막혔는지 문서로 못 읽었다.
+
+봉인 — `data/catalog.toml` · `tools/lake.py`
+  층 선언과 레이크. 쓰임의 문이 여기서 갈린다.
 
 ## 12. WSL 위생
 
@@ -411,6 +436,9 @@ thoth 의 sweep · doctor(`OLLAMA_KEEP_ALSO`)가 본다. 두 저장소가 같은
 
 ★ §12-1 판정 규칙은 `tools/patch_subjects.py` 하나다. `apply_patch.sh`(붙었으면 안 한다)와 `sweep.py`(붙었으면 지운다)가
   같은 것을 쓴다. 레이크가 안 붙었으면 작업대 결과는 **못 잼**이다 — 0건이 아니다.
+
+봉인 — `tools/sweep.py`
+  위생 검사가 보는 자리.
 
 ## 13. 서빙 예산 — 이것이 모델 크기를 정한다
 
@@ -479,7 +507,7 @@ thoth 의 sweep · doctor(`OLLAMA_KEEP_ALSO`)가 본다. 두 저장소가 같은
 | `tools/docseal.py` | **절과 그 절이 짚은 코드의 정합 도장** — 찍은 뒤로 바뀌었으면 「다시 봐야 한다」(`audit` · `stamp --only N` · DECISIONS §211) |
 | `tools/check_crashes.py` | **도구가 역추적으로 죽지 않나** — `__main__` 이 맨몸이면 뜻밖의 예외가 말 없이 나간다. 2026-09-30 맨몸 26 에서 라쳇을 걸었다(DECISIONS §232) |
 | `tools/check_scope.py` | **관문이 제 밖과 생사를 선언하나** — 머리말이 「안 보는 것」 을 적고 `_canary` 로 판별식이 사는지 스스로 묻나. 2026-09-30 관문 14 중 9 자리를 갚았다(DECISIONS §239) |
-| `tools/check_claims.py` | **강제자라고 선언한 함수가 제 밖을 적었나** — DECISIONS 의 「강제자」 줄이 든 함수를 본다. `check_scope` 는 **관문 16** 만 보고 이쪽은 **선언한 전부**를 본다. 2026-10-01 서른일곱 중 열일곱이 안 적고 있었고 열을 갚았다(DECISIONS §267) |
+| `tools/check_claims.py` | **강제자라고 선언한 함수가 제 밖을 적었나** — DECISIONS 의 「강제자」 줄이 든 함수를 본다. `check_scope` 는 **관문만** 보고 이쪽은 **선언한 전부**를 본다. 2026-10-01 서른일곱 중 열일곱이 안 적고 있었고 열을 갚았다(DECISIONS §267) |
 | `tools/mutate.py` | **몸통을 지워도 시험이 통과하나** — 함수 몸통을 꼴에 맞는 중립값 하나로 바꾸고 돌린다. 2026-10-01 **377 중 0** 이 살아남았다 — 붙드는 시험이 없는 자리가 없다(DECISIONS §267). 관문이 아니다(한 판에 수십 분) — 손으로 돌린다 |
 | `tools/check_deadchecks.py` | **검사가 죽어 있지 않나** — 무검증 시험 · 건너뛴 시험 · 삼킨 예외 · 빈 그물. `check_dead` 와 **다른 물음**이다(그쪽은 죽은 **이름**). 2026-10-01 스물셋에서 라쳇을 걸고 열을 갚았다(DECISIONS §255) |
 | `tools/check_dead.py` | **아무도 안 부르는 최상위 이름이 있나** — 죽은 코드는 현행으로 읽혀서 고쳐진다. 2026-09-30 373 중 둘을 지우고 장부를 비웠다(DECISIONS §240) |
@@ -534,7 +562,7 @@ thoth 의 sweep · doctor(`OLLAMA_KEEP_ALSO`)가 본다. 두 저장소가 같은
 |---|---|---|---|
 | ① 재는 체계 — 무엇으로 나은지를 가리나 | 20% | **80%** | 지표 열셋 · 짝지은 부트스트랩(§180) · 떼어둔 셋 · 가설 대장이 문을 지킨다. 2026-09-30 **눈가림 사람 판정에 구간이 붙었고**(`tools/labels.py gap`) 외부 판정자 넷으로 돌렸다(H-081). **그리고 그 판정이 규칙 지표 여덟이 배포본 상대로 순위를 뒤집는다는 것을 보였다**(DECISIONS §229) — **95% 는 과장이었다.** **2026-10-01 그 자가 섰다** — `gemba`(qwen3:8b · GEMBA 꼴)가 떼어둔 60줄 · 외부 판정자 넷에서 ρ **+0.5692** 이고 `term_off` 와의 차 **+0.4865** 로 갈린다(H-085 · DECISIONS §262). **남은 것은 그 자가 보상으로 쓰일 때 밀어도 안 무너지는가**이고(PLAN #19) 그것은 아직 안 쟀다 |
 | ② 기준선 · 후보 · 처치 | 20% | 85% | AWS Translate · Nova Lite · TranslateGemma 4B · Qwen3 · Gemma3 4B/12B 를 쟀다. **처치를 두른 4B 가 배포본과 12B 를 `term_off` 에서 이기고, 뜻에서는 둘 다에게 진다**(`docs/now/related.md` §3 · §229). 잰 일은 끝났고 **무엇을 산 처치인지가 달라졌다.** 남은 것은 MADLAD-400(PLAN #5) |
-| ③ 학습 데이터 | 20% | 5% | 원문 72,680 문장은 손에 있다(AWS 안내서 14권 · CC BY-SA). **정답이 없다** — thoth 쌍은 2객체 9,880바이트고(§120) 교사 가부가 GPT · 제미나이 출력을 막는다 |
+| ③ 학습 데이터 | 20% | 5% | 원문은 **k8s 문서 11,503 문장**이다(`data/train/k001.jsonl` · CC BY 4.0 · DECISIONS §276). AWS 안내서 59,145 문장은 **동일조건(SA) 때문에 학습에서 뺐다** — 평가셋으로만 쓴다. **정답이 없다** — thoth 쌍은 2객체 9,880바이트고(§120) 교사 가부가 GPT · 제미나이 출력을 막는다 |
 | ④ 학습 | 25% | 0% | `seshat/` 에 학습 코드가 한 줄도 없다. 장비가 아니라 ③ 이 막고 있다 |
 | ⑤ 서빙 | 15% | 10% | 계약(§2) · 예산과 크기 조건(§13)은 섰다. 서버는 `echo` 백엔드뿐이다 |
 

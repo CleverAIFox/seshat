@@ -136,3 +136,39 @@ def test_한글_이름도_그대로_온다(tmp_path, monkeypatch):
     monkeypatch.setattr(DS, "ROOT", tmp_path)
     monkeypatch.setattr(DS, "_아는파일", [])
     assert "대조판.jsonl" in DS._깃이_아는_파일()
+
+
+def test_MASTER_도_봉인이_붙는다():
+    """★ **낡는 문서는 DECISIONS 가 아니라 MASTER 다**(DECISIONS §281).
+
+    DECISIONS 는 추가만 하니 구조상 안 낡는다. MASTER 는 「현재」 축이라 **정의상 실물을
+    따라가야 하는 유일한 문서**인데 2026-10-02 까지 봉인이 안 걸려 있었고, 소급해서 읽으니
+    아홉 자리가 낡아 있었다 — **아홉 다 이 봉인으로 잡히는 꼴**이었다.
+    """
+    마 = [x for x in DS.절들() if x["번호"].startswith("M") and x["파일"]]
+    assert 마, "봉인을 든 MASTER 절이 하나도 없다 — 그 문서가 통째로 대상 밖이다"
+    assert all(x["표시"].startswith("MASTER §") for x in 마)
+    # 열쇠가 DECISIONS 와 안 겹친다 — 겹치면 옛 도장이 MASTER 절로 읽힌다
+    모두 = [x["번호"] for x in DS.절들()]
+    assert len(모두) == len(set(모두)), "절 번호가 겹친다"
+
+
+def test_본문의_봉인_낱말을_봉인_줄로_안_읽는다():
+    """★ MASTER 본문에는 「봉인」 이 그냥 나온다(§11-10 이 그렇다). DECISIONS 의 `rfind` 꼴을
+    그대로 쓰면 그 절이 **거짓 양성**으로 걸린다 — 2026-10-02 실제로 §11 이 걸렸다."""
+    assert DS._봉인_줄("## 11. 데이터 관리\n봉인은 옮겼다 — `tools/docseal.py` 가 그것이다.\n") == ""
+    assert "tools/verify.sh" in DS._봉인_줄("## 5. 점검\n봉인 — `tools/verify.sh`\n  까닭.\n")
+
+
+def test_봉인한_파일이_바뀌면_MASTER_절이_무효가_된다(tmp_path, monkeypatch):
+    """**이 시험이 지키는 것은 「절이 참이다」 가 아니라 「바뀌면 무효가 된다」 다.**"""
+    절 = next(x for x in DS.절들() if x["번호"] == "M6")        # §6 라이선스 대장
+    before = DS.지문(절)
+    원 = (ROOT / "seshat/licenses.py")
+    글 = 원.read_text(encoding="utf-8")
+    try:
+        원.write_text(글.replace("LEDGER: dict", "LEDGER2: dict", 1), encoding="utf-8")
+        assert DS.지문(절) != before, "봉인한 파일이 바뀌었는데 지문이 같다 — 도장이 안 가른다"
+    finally:
+        원.write_text(글, encoding="utf-8")
+    assert DS.지문(절) == before, "되돌렸는데 지문이 안 돌아왔다"
