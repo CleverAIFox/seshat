@@ -36,16 +36,14 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
         "못 센다", "안 받는다", "못 가른다")
 
 # ★ **장부**(2026-10-01 · DECISIONS §267). 지금 밖을 안 적은 자리를 적어 두고 **늘면 막는다.**
-#   `main` 처럼 밖이 없는 것이 맞는 자리가 있어 한 판에 다 못 갚는다. **늘리지 않는다.**
-장부: frozenset[str] = frozenset({
-    "seshat/backends.py::_ask",
-    "seshat/backends.py::이름을_박아_묻는다",
-    "seshat/evaluate.py::conditions",
-    "seshat/evaluate.py::door",
-    "seshat/evaluate.py::main",
-    "seshat/evaluate.py::part_본다",
-    "tools/labels.py::_이름이_비었나",
-})
+#
+# ★ **2026-10-03 일곱을 다 갚아 0 이 됐다**(DECISIONS §286). 종전 주석은 「`main` 처럼 밖이
+#   없는 것이 맞는 자리가 있어 한 판에 다 못 갚는다」 였는데 **그것이 틀렸다** — `main` 에도
+#   밖이 있었다(「판정하지 않는다」 · 「레이크에 안 넣는다」). **「밖이 없는 함수」 는 대개
+#   「밖을 아직 안 생각한 함수」** 다.
+# ★ **0 이 된 장부는 지우지 않는다.** 비어 있는 채로 두면 **다음에 하나가 늘 때 그 줄이 보인다** —
+#   지우면 「장부가 없다」 와 「장부가 비었다」 를 못 가른다.
+장부: frozenset[str] = frozenset()
 
 
 def 선언한_자리(글: str | None = None) -> set[tuple[str, str]]:

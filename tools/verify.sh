@@ -63,6 +63,7 @@ step pytest             uv run pytest -q
 step check_docs         uv run python tools/check_docs.py
 step check_rules        uv run python tools/check_rules.py
 step check_prose        uv run python tools/check_prose.py
+step check_size         uv run python tools/check_size.py
 step numbers            uv run python tools/check_numbers.py
 step docgen             uv run python tools/docgen.py
 step doc_fsck           uv run python tools/doc_fsck.py

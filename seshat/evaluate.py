@@ -178,6 +178,10 @@ def part_본다(path: pathlib.Path) -> tuple[dict, int]:
     ★ 막는 자리가 「무엇이 잘못인가」 만 말하고 「무엇을 하면 되는가」 를 안 말하면 사람이 딴 길로 간다
       (§174 · §175 · §188 · §196 과 같은 꼴). 여기서는 **얼마나 들어 있나**가 그 한 마디다 —
       열 줄이면 지우고 새로 돌리고, 사백 줄이면 이어 돌린다. 그 수를 모르면 고를 수가 없다.
+    ★ 밖 — **이을 수 있는지는 안 본다.** 조건이 같은지를 보는 것은 `part_read` 이고, 여기는
+      **머리줄과 줄 수만** 돌려준다. 둘을 한 함수에 넣으면 「보여 주기」 가 「고르기」 를 겸하게 된다.
+    ★ 밖 — **줄이 성한지는 안 본다.** 깨진 JSON 은 여기서 예외로 터지고, 그것이 맞다 —
+      **반쯤 읽은 수로 고르게 하지 않는다.**
     """
     줄 = [json.loads(x) for x in path.read_text(encoding="utf-8").splitlines() if x.strip()]
     머리 = next((x for x in 줄 if x.get("meta")), {})
@@ -470,7 +474,13 @@ def via_backend(name: str):
 
 
 def door(h: str) -> None:
-    """가설 대장의 문. 실험 상태의 가설이 아니면 재지 않는다."""
+    """가설 대장의 문. 실험 상태의 가설이 아니면 재지 않는다.
+
+    ★ 밖 — **그 가설이 좋은지는 안 본다.** 검증 방법과 비용 상한이 적혔는지는
+      `tools/check_hypotheses.py` 가 보고, **무엇을 확인하려는지가 말이 되는가**는 사람이 본다.
+    ★ 밖 — **이 판이 그 가설을 실제로 재는지는 안 본다.** `--hypothesis H-019` 를 달고 딴 것을
+      재도 여기는 통과한다 — 2026-09-22 에 그렇게 났다(DECISIONS §280). 그 자리는 워크플로가 든다.
+    """
     import importlib.util
     root = pathlib.Path(__file__).resolve().parent.parent
     spec = importlib.util.spec_from_file_location("ch", root / "tools/check_hypotheses.py")
@@ -566,6 +576,10 @@ def conditions(a, rows: list[dict], 코드: dict | None = None) -> dict:
     """재현 조건. 결과 파일 머리줄에 싣는다.
 
     ★ `코드` 는 판을 **시작할 때** 찍어 둔 상태다. 안 주면 지금 찍는다 — 짧은 판과 도구용 길이다.
+    ★ 밖 — **조건이 옳은지는 안 본다.** 지금 상태를 그대로 적을 뿐이고, 더러운 나무로 잰 판도
+      `dirty: true` 를 달고 그냥 적힌다. **막는 것은 `door` 와 게이트의 일**이다.
+    ★ 밖 — **기계(GPU · 드라이버 · ollama 판)는 안 싣는다.** 같은 커밋 · 같은 셋 · 같은 사전이면
+      같은 수가 나온다는 전제이고, 그 전제가 깨지는 날은 `noise` 가 퍼짐으로 먼저 말한다.
     """
     from . import backends, ontology
     코드 = 코드 or 코드_상태()
@@ -656,6 +670,16 @@ def ollama_placement() -> dict | None:
 
 
 def main(argv=None) -> int:
+    """한 판을 재고 `runs/` 에 적는다. 인자 · 문 · 재기 · 적기를 잇는 자리다.
+
+    ★ 밖 — **판정하지 않는다.** 나은지 못한지는 `tools/compare_runs.py` 와 `tools/gate.py` 가
+      본다. 여기는 **수를 내고 머리줄에 조건을 실어 적는** 데서 끝난다 — 재는 자리와 판정하는
+      자리를 한 함수에 넣으면 **재면서 기준을 고르게 된다**(DECISIONS §279 의 순서).
+    ★ 밖 — **셋이 좋은지는 안 본다.** 어느 셋으로 잴지는 가설이 정하고(`--set`), 그 셋이 낡았나는
+      `셋이_낡았나` 가 머리줄에 **싣기만** 한다. 막지 않는다 — 옛 셋으로 잰 판도 기록은 남는다.
+    ★ 밖 — **레이크에 안 넣는다.** `runs/` 에 적는 데서 끝나고 넣는 것은 `tools/lake.py` 다.
+      **적기와 넣기를 한 자리에 두면 재기가 SSD 에 기대게 된다**(§28 — 결과는 레이크 앞에서 건진다).
+    """
     ap = argparse.ArgumentParser()
     where = ap.add_mutually_exclusive_group(required=True)
     where.add_argument("--url")

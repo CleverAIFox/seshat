@@ -531,6 +531,7 @@ thoth 의 sweep · doctor(`OLLAMA_KEEP_ALSO`)가 본다. 두 저장소가 같은
 | `tools/docgen.py` | **문서가 드는 수를 도구가 채운다** — 지금은 §15 의 합 하나. `--fix` 가 갈아 넣고 관문은 대조만 한다. **커밋이 흔드는 수는 축이 못 된다**(DECISIONS §237 · §238) |
 | `tools/check_numbers.py` | **결과 문서가 든 수에 근거가 있나** — `related.md` 의 수를 DECISIONS · 가설 대장 · MASTER · 기록판에서 찾는다(DECISIONS §235) |
 | `tools/check_rules.py` | **MASTER 의 ★ 규칙 번호**(`§11-3`) — 유일 · 오름차순 · 가리킨 번호가 실재하나(DECISIONS §230) |
+| `tools/check_size.py` | **파일이 배치마다 조금씩 늘지 않나** — 상한 600 · 넘는 여섯은 예외표에 수로 적는다. **늘어도 줄어도 운다**(파이어레인 `sizecheck.py` · DECISIONS §286) |
 | `tools/check_prose.py` | **문서명 없는 `§N` 이 풀리나** · 빈 줄 뒤에 홀로 선 표 줄 · `PLAN #N` 없는 빈 약속(DECISIONS §282) |
 | `tools/check_docs.py` | 문서 ↔ 문서 — 문체 · 절 · PLAN 표 · 참조 · DECISIONS · **문서 지도** · **도구 목록**. `--fix-index` 가 DECISIONS 색인을 다시 쓴다 |
 | `tools/doc_fsck.py` | 문서 ↔ 실물 — 경로 · 테스트 · 아무도 안 부르는 도구 |
