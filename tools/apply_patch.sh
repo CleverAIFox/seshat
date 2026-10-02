@@ -82,17 +82,17 @@ fi
 
 # ★ 패치가 선 자리와 여기가 같은가(DECISIONS §30). 봇이 GitHub 에서 main 을 움직이면 여기서 갈린다
 BASE="$(sed -n 's/^Seshat-Base-Tree: //p' "$TMP" | head -1)"
-if [ -n "$BASE" ] && [ "$BASE" != "$(git rev-parse HEAD^{tree})" ]; then
+if [ -n "$BASE" ] && [ "$BASE" != "$(git rev-parse "HEAD^{tree}")" ]; then
   if git cat-file -e "$BASE" 2>/dev/null && git merge-base --is-ancestor "$BASE" HEAD 2>/dev/null; then
     echo "       이 패치는 지난 자리에서 만들어졌다 — 그 뒤 커밋이 있다" >&2
   else
     echo "이 패치가 선 자리가 여기와 다르다 — 만든 쪽이 모르는 커밋이 여기 있다(봇 PR 등)" >&2
     echo "       기준 나무 $BASE" >&2
-    echo "       지금 나무 $(git rev-parse HEAD^{tree})" >&2
+    echo "       지금 나무 $(git rev-parse "HEAD^{tree}")" >&2
     echo "       뒤에 온 합본이 이것을 품고 있으면 그것으로 붙는다 — 아니면" >&2
     echo "       git log --oneline -8 을 만든 쪽에 보이고 다시 받는다" >&2
     exit 3        # ★ **3 은 「자리가 안 맞는다」 다**(DECISIONS §205). 1 과 갈라야 뒤엣것을 이어 붙인다
-    
+
   fi
 fi
 

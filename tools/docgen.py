@@ -107,10 +107,19 @@ def _칸(표기: str) -> re.Pattern:
 }
 
 
-def 견준다() -> list[tuple[str, int, int]]:
-    """(축, 문서의 수, 실측). **안 맞는 것만** 든다. 앵커가 한 번 안 잡히면 멈춘다."""
+def 견준다(고를: set[str] | None = None) -> list[tuple[str, int, int]]:
+    """(축, 문서의 수, 실측). **안 맞는 것만** 든다. 앵커가 한 번 안 잡히면 멈춘다.
+
+    ★ `고를` 은 **시험이 한 축만 보려고** 쓴다(DECISIONS §281). 합성 문서에는 다른 축의
+      앵커가 없어, 축이 늘 때마다 그 문서를 같이 늘리지 않으면 **엉뚱한 축의 「0 곳」 으로
+      멈춘다** — 그러면 시험이 보려던 것과 다른 것을 보게 된다.
+    ★ 밖 — **게이트는 이것을 안 쓴다.** 부분 실행을 허락하면 축을 빼고 통과시킬 수 있다.
+      `main()` 은 언제나 전부 본다.
+    """
     안맞 = []
     for 이름, (정본, 자리, 앵커) in 축.items():
+        if 고를 is not None and 이름 not in 고를:
+            continue
         글 = (ROOT / 자리).read_text(encoding="utf-8")
         잡힌 = 앵커.findall(글)
         if len(잡힌) != 1:
@@ -123,8 +132,8 @@ def 견준다() -> list[tuple[str, int, int]]:
     return 안맞
 
 
-def 고친다() -> list[tuple[str, int, int]]:
-    바뀐 = 견준다()
+def 고친다(고를: set[str] | None = None) -> list[tuple[str, int, int]]:
+    바뀐 = 견준다(고를)
     for 이름, _, 참 in 바뀐:
         _, 자리, 앵커 = 축[이름]
         p = ROOT / 자리

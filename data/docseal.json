@@ -104,7 +104,7 @@
  "111": {
   "날짜": "2026-09-27",
   "읽음": false,
-  "지문": "ee1c04cb21a6b2a8",
+  "지문": "572ab03a8d802b40",
   "파일": [
    "tests/test_catalog.py::test_옮겼는데_기본_자리에_다시_받은_것을_짚는다",
    "tools/lib/env.sh"
@@ -285,7 +285,7 @@
  "131": {
   "날짜": "2026-09-27",
   "읽음": true,
-  "지문": "d7627fa0643bee5c",
+  "지문": "fc16d9e358cd5df4",
   "파일": [
    "tests/test_gate.py",
    ".github/workflows/gpu-eval.yml"
@@ -446,7 +446,7 @@
  "15": {
   "날짜": "2026-09-22",
   "읽음": true,
-  "지문": "080481f369744404",
+  "지문": "bdd8d1a865673458",
   "파일": [
    "tools/check_hypotheses.py",
    "tests/test_compare_runs.py",
@@ -581,7 +581,7 @@
  "164": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "36feb059b095cc9b",
+  "지문": "11051f421719c8bd",
   "파일": [
    "tools/verify.sh",
    "tests/test_workflows.py::test_셸의_변수_이름은_ASCII_다"
@@ -647,7 +647,7 @@
  "170": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "e7a981a3578360d5",
+  "지문": "4b403befc62e1253",
   "파일": [
    "tools/ci_status.py",
    "tools/verify.sh",
@@ -745,7 +745,7 @@
  "18": {
   "날짜": "2026-09-22",
   "읽음": true,
-  "지문": "291d553231cb48a5",
+  "지문": "a6cb70c512d7ad70",
   "파일": [
    "tools/doc_fsck.py::check_tools",
    "tests/test_workflows.py"
@@ -754,7 +754,7 @@
  "180": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "48c4916ca9b54864",
+  "지문": "b9a536f96a8d79c2",
   "파일": [
    "tools/bootstrap.py",
    "tests/test_bootstrap.py",
@@ -958,7 +958,7 @@
  "20": {
   "날짜": "2026-09-22",
   "읽음": true,
-  "지문": "36035256a276c5c5",
+  "지문": "3e42e902b84041d3",
   "파일": [
    "tests/test_workflows.py::test_워크플로마다_권한을_적는다",
    "tests/test_workflows.py::test_gitleaks_는_PR_을_읽을_수_있다",
@@ -1004,7 +1004,7 @@
  "205": {
   "날짜": "2026-09-29",
   "읽음": false,
-  "지문": "957ec002e4035e96",
+  "지문": "21ac665b8f7276e4",
   "파일": [
    "tools/apply_patch.sh",
    "tests/test_sweep.py::test_자리가_안_맞는_패치가_뒤엣것을_안_막는다"
@@ -1203,7 +1203,7 @@
  "224": {
   "날짜": "2026-09-29",
   "읽음": false,
-  "지문": "99020c4141ca390d",
+  "지문": "84fa9bfec2a44d07",
   "파일": [
    ".github/workflows/ci.yml",
    "tools/plan_closed.py::얕은가",
@@ -1273,7 +1273,7 @@
  "230": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "6abdb15f1e919db6",
+  "지문": "dc0452e58e41af26",
   "파일": [
    "tools/check_rules.py",
    "tests/test_rules.py",
@@ -1315,7 +1315,7 @@
  "234": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "1729c4052c481e14",
+  "지문": "ce6387768f81568e",
   "파일": [
    "docs/why/DECISIONS.md",
    "docs/next/PLAN.md",
@@ -1325,7 +1325,7 @@
  "235": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "ff04e91e542f2699",
+  "지문": "03d40c90f1090d47",
   "파일": [
    "tools/check_numbers.py",
    "tests/test_numbers.py",
@@ -1345,7 +1345,7 @@
  "237": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "a15c20abb82ca228",
+  "지문": "5211f666127480d9",
   "파일": [
    "tools/docgen.py",
    "tests/test_docgen.py",
@@ -1356,7 +1356,7 @@
  "238": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "16e047f3c135f845",
+  "지문": "bd7619de7f863a08",
   "파일": [
    "tools/docgen.py",
    "tests/test_docgen.py::test_커밋이_흔드는_수는_축이_아니다"
@@ -1365,7 +1365,7 @@
  "239": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "b1e0acab748f32f4",
+  "지문": "75d0adf94ccddb6d",
   "파일": [
    "tools/check_scope.py",
    "tests/test_scope.py",
@@ -1384,7 +1384,7 @@
  "240": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "223b5d1fb6cc0755",
+  "지문": "b4b49b6c99afb18d",
   "파일": [
    "tools/check_dead.py",
    "tests/test_dead.py",
@@ -1394,7 +1394,7 @@
  "241": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "7fca6742aea7db36",
+  "지문": "aed8652dfdf4b337",
   "파일": [
    "tools/check_numbers.py",
    "docs/why/DECISIONS.md"
@@ -1481,7 +1481,7 @@
  "27": {
   "날짜": "2026-09-23",
   "읽음": true,
-  "지문": "bd0093f91ea6bc4c",
+  "지문": "16f88c0901bae2ef",
   "파일": [
    "tests/test_baselines.py",
    "tools/check_model_licenses.py",
@@ -1499,7 +1499,7 @@
  "280": {
   "날짜": "2026-10-02",
   "읽음": false,
-  "지문": "f44fd11d111abd9e",
+  "지문": "1d23a3ab88a7b3db",
   "파일": [
    "tests/test_workflows.py::test_워크플로가_가설_번호를_안_박는다",
    "tests/test_workflows.py::test_GPU_작업은_한_인터프리터로_돈다",
@@ -1509,7 +1509,7 @@
  "281": {
   "날짜": "2026-10-02",
   "읽음": false,
-  "지문": "dde0c68d3a0be86b",
+  "지문": "99e8d1fcb198a7fe",
   "파일": [
    "tools/docseal.py::_봉인_줄",
    "tools/docseal.py::절들",
@@ -1942,7 +1942,7 @@
  "8": {
   "날짜": "2026-09-22",
   "읽음": true,
-  "지문": "159402b667065a33",
+  "지문": "92368cd307a499fd",
   "파일": [
    ".github/workflows/ci.yml"
   ]
@@ -2099,7 +2099,7 @@
  "M10": {
   "날짜": "",
   "읽음": false,
-  "지문": "33bc4611c1477769",
+  "지문": "467b216f3d4454b5",
   "파일": [
    ".github/workflows/gpu-eval.yml"
   ]
@@ -2107,7 +2107,7 @@
  "M11": {
   "날짜": "",
   "읽음": false,
-  "지문": "88cd399511e2fe41",
+  "지문": "828c05560034b830",
   "파일": [
    "data/catalog.toml",
    "tools/lake.py"
@@ -2124,7 +2124,7 @@
  "M3": {
   "날짜": "",
   "읽음": false,
-  "지문": "f1a9d4f027cce4d3",
+  "지문": "127fc2a9bfb334ce",
   "파일": [
    "seshat/evaluate.py"
   ]
@@ -2132,7 +2132,7 @@
  "M5": {
   "날짜": "",
   "읽음": false,
-  "지문": "54f3e10f04463b19",
+  "지문": "3c913b94defa93fa",
   "파일": [
    "tools/verify.sh"
   ]

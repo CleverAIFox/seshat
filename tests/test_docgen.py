@@ -86,13 +86,35 @@ def test_앵커가_둘이면_멈춘다(tmp_path, monkeypatch):
 
 
 def test_틀린_수가_걸리고_fix_가_고친다(tmp_path, monkeypatch):
+    # ★ **진행률 축만 본다**(DECISIONS §281). 합성 MASTER 에는 온톨로지 표도 라이선스
+    #   문장도 없으므로, 전부 보게 하면 엉뚱한 축의 「앵커 0 곳」 으로 멈춘다 —
+    #   그러면 이 시험이 보려던 `--fix` 를 못 본다. 축이 하나였을 때는 같은 말이었다.
     monkeypatch.setattr(DG, "ROOT", tmp_path)
     _놓는다(tmp_path, master=표.replace("**합 35%**", "**합 99%**"))
-    안맞 = DG.견준다()
+    안맞 = DG.견준다({"진행률"})
     assert ("진행률", 99, 35) in 안맞, 안맞
-    DG.고친다()
-    assert DG.견준다() == []
+    DG.고친다({"진행률"})
+    assert DG.견준다({"진행률"}) == []
     assert "**합 35%**" in (tmp_path / "docs/now/MASTER.md").read_text(encoding="utf-8")
+
+
+def test_게이트는_축을_골라_보지_않는다():
+    """★ **부분 실행을 허락하면 축을 빼고 통과시킬 수 있다**(DECISIONS §281).
+
+    `고를` 은 시험만 쓰는 손잡이다. `main()` 이 그것을 넘기면 CI 에서 축 하나를
+    끄고 초록을 받을 길이 생긴다 — 그 길이 없는지를 여기서 못 박는다.
+    """
+    몸 = (ROOT / "tools/docgen.py").read_text(encoding="utf-8")
+    머리 = 몸[몸.index("def main("):]
+    assert "견준다()" in 머리 and "견준다(고를" not in 머리, "main() 이 축을 골라 본다"
+
+
+def test_축마다_앵커가_실제로_한_곳이다():
+    """★ 축을 더하면서 앵커 표기를 안 맞추면 `견준다` 가 **멈추지 않고** 0 곳에서
+    조용히 지나갈 길은 없다 — 그래도 축이 전부 실재하는지는 따로 못 박는다."""
+    for 이름, (_, 자리, 앵커) in DG.축.items():
+        글 = (ROOT / 자리).read_text(encoding="utf-8")
+        assert len(앵커.findall(글)) == 1, f"{이름} 의 앵커가 {자리} 에서 한 곳이 아니다"
 
 
 def test_커밋이_흔드는_수는_축이_아니다():

@@ -40,9 +40,29 @@ if [ "${CI:-}" = "true" ]; then NAMES+=("훅"); MARKS+=("CI 밖 — CI 는 커�
 else step 훅            bash tools/hookcheck.sh --check; fi
 step lock               uv lock --check
 step ruff               uv run ruff check .
+# ★ **셸도 린트한다**(DECISIONS §282). 2026-10-02 까지 이 저장소에 shellcheck 호출이 **한 곳도
+#   없었다** — 셸 파일이 다섯인데 thoth 는 돌리고 CI 가 존재까지 단언한다. 「같은 규율을
+#   공유한다」 고 MASTER 에 적어 두고 **이 축만 안 건너왔다.**
+# ★ **등급을 warning 까지만 본다.** info · style 은 취향이고 커밋을 막을 일이 아니다(thoth §46).
+# ★ **CI 에서는 없는 것이 실패다.** ubuntu-24.04 러너에는 깔려 있다. 이 기계에 없으면 까닭을
+#   적고 건너뛰는데, **그러면 강제자는 CI 하나다** — 훅과 CI 를 가르는 것과 같은 꼴이다(§170).
+shellcheck_step() {
+  # ★ 변수 이름은 ASCII 다 — 배시는 한글 이름을 못 받는다(DECISIONS §164).
+  local SH_FILES; mapfile -t SH_FILES < <(git ls-files '*.sh' '.githooks/*')
+  if ! command -v shellcheck >/dev/null 2>&1; then
+    if [ "${CI:-}" = "true" ]; then
+      echo "shellcheck 가 CI 에 없다 — 러너 이미지가 바뀌었다" >&2; return 1
+    fi
+    echo "       shellcheck 가 없어 못 봤다 (CI 에서는 돈다) : sudo apt install shellcheck"
+    return 0
+  fi
+  shellcheck -S warning -f gcc "${SH_FILES[@]}"
+}
+step shellcheck         shellcheck_step
 step pytest             uv run pytest -q
 step check_docs         uv run python tools/check_docs.py
 step check_rules        uv run python tools/check_rules.py
+step check_prose        uv run python tools/check_prose.py
 step numbers            uv run python tools/check_numbers.py
 step docgen             uv run python tools/docgen.py
 step doc_fsck           uv run python tools/doc_fsck.py

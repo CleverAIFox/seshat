@@ -9,20 +9,72 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 NODE20 = {"actions/checkout": 4, "actions/setup-python": 5, "astral-sh/setup-uv": 6,
           "gitleaks/gitleaks-action": 2, "actions/upload-artifact": 4}
 USES = re.compile(r"uses:\s*([\w.-]+/[\w.-]+)@v(\d+)\b")
+# ★ **SHA 로 고정한 줄의 판은 주석에 산다**(DECISIONS §282). 그래서 `@v(\d+)` 하나만 보면
+#   고정한 뒤로 이 검사가 **조용히 0건이 된다** — thoth 가 같은 날 정확히 그렇게 됐다.
+#   꼴을 바꾸는 고침이 **그 꼴을 읽던 검사를 껐다.**
+USES_PINNED = re.compile(r"uses:\s*([\w.-]+/[\w.-]+)@[0-9a-f]{40}\s*#\s*v(\d+)\b")
+# `uses:` 가 가리킬 수 있는 꼴 — 저장소 액션 · 같은 저장소 경로 · 도커.
+USES_ANY = re.compile(r"^\s*(?:-\s*)?uses:\s*(\S+)")
+
+
+def 액션들(line: str) -> list[tuple[str, int]]:
+    """한 줄에서 (액션 이름, 메이저). 맨 태그와 SHA 고정을 다 읽는다."""
+    것 = [(m.group(1), int(m.group(2))) for m in USES.finditer(line.split("#", 1)[0])]
+    것 += [(m.group(1), int(m.group(2))) for m in USES_PINNED.finditer(line)]
+    return 것
+
+
+def 안고정된것(text: str) -> list[tuple[int, str]]:
+    """SHA 로 안 고정한 `uses:`. 판 주석이 없는 것도 잡는다 — 주석은 위 검사의 자료다."""
+    bad = []
+    for n, line in enumerate(text.split("\n"), 1):
+        m = USES_ANY.match(line.split("#", 1)[0])
+        if not m:
+            continue
+        ref = m.group(1)
+        if ref.startswith(("./", "docker://")):
+            continue
+        _, _, 가리키는것 = ref.partition("@")
+        if not re.fullmatch(r"[0-9a-f]{40}", 가리키는것):
+            bad.append((n, ref))
+        elif not re.search(r"#\s*v\d+", line):
+            bad.append((n, f"{ref[:20]}… 판 주석이 없다"))
+    return bad
 
 
 def test_Node_20_액션이_없다():
     bad = []
     for p in sorted((ROOT / ".github/workflows").glob("*.yml")):
         for n, line in enumerate(p.read_text(encoding="utf-8").splitlines(), 1):
-            m = USES.search(line)
-            if m and m.group(1) in NODE20 and int(m.group(2)) <= NODE20[m.group(1)]:
-                bad.append(f"{p.name}:{n} {m.group(0)}")
+            for 이름, 메이저 in 액션들(line):
+                if 이름 in NODE20 and 메이저 <= NODE20[이름]:
+                    bad.append(f"{p.name}:{n} {이름}@v{메이저}")
     assert bad == []
+
+
+def test_고정한_줄에서도_Node20_을_읽는다():
+    """★ **이것이 이 묶음의 핵이다**(DECISIONS §282).
+
+    고정은 **판을 못 박는 것**이고 **옛 판을 허락하는 것이 아니다.** 옛 메이저를 SHA 로
+    고정해도 잡혀야 한다 — 그러지 않으면 「고정했다」 가 「검사를 껐다」 와 같은 말이 된다.
+    """
+    옛 = "      - uses: actions/checkout@" + "a" * 40 + "  # v4.2.2\n"
+    assert [x for x in 액션들(옛)] == [("actions/checkout", 4)]
+
+
+def test_액션을_SHA_로_고정한다():
+    """★ 메이저 태그는 업스트림이 옮긴다. 러너를 `ubuntu-24.04` 로 못 박은 것과 같은 규율이고,
+    고정이 가장 값진 자리는 **자격증명과 같은 작업에서 도는 액션**이다(thoth DECISIONS §125)."""
+    나쁜 = [f"{p.name}:{n} {ref}"
+           for p in _workflows()
+           for n, ref in 안고정된것(p.read_text(encoding="utf-8"))]
+    assert 나쁜 == [], "`uses:` 를 40자 SHA 로 고정하고 판을 `# v7.0.1` 로 적는다\n" + "\n".join(나쁜)
 
 
 def test_카나리아():
     assert USES.search("      - uses: actions/upload-artifact@v4").groups() == ("actions/upload-artifact", "4")
+    assert 안고정된것("      - uses: actions/checkout@v7\n") == [(1, "actions/checkout@v7")]
+    assert 안고정된것("      - uses: a/b@" + "0" * 40 + "  # v1.2.3\n") == []
 
 
 def test_GPU_작업은_손으로만_돈다():
@@ -40,11 +92,31 @@ def test_워크플로마다_권한을_적는다():
 
 
 def test_gitleaks_는_PR_을_읽을_수_있다():
-    """gitleaks 는 PR 의 커밋 목록을 읽는다. `pull-requests: read` 가 없으면 봇의 PR 에서 403 이다(2026-09-22)."""
+    """★ **`read` 로는 모자란다**(DECISIONS §282).
+
+    ★ **이름은 안 바꿨다.** DECISIONS §20 의 강제자와 MASTER 가 이 이름을 들고 있고
+      DECISIONS 는 덧붙이기만 한다 — 이름을 바꾸면 **옛 절의 강제자가 죽는다.**
+      `write` 는 `read` 를 품으므로 이름이 거짓이 되지도 않는다.
+
+    gitleaks 는 PR 의 커밋 목록을 읽고(2026-09-22 봇의 첫 PR 에서 403), **누출을 찾으면
+    PR 에 위치를 댓글로 단다** — `GITLEAKS_ENABLE_COMMENTS` 의 기본값이 켬이다. 읽기만
+    주면 그 호출이 403 이고, **지금까지 초록이었던 것은 누출이 없었기 때문**이다.
+    전의 이 검사는 `read|write` 둘 다 받아서 **thoth 와 어긋난 것을 못 잡았다** —
+    한쪽만 받도록 좁힌다.
+    """
     bad = [p.name for p in _workflows()
            if "gitleaks/gitleaks-action" in (t := p.read_text(encoding="utf-8"))
-           and not re.search(r"^\s+pull-requests:\s*(read|write)\b", t, re.M)]
-    assert bad == []
+           and not re.search(r"^\s+pull-requests:\s*write\b", t, re.M)]
+    assert bad == [], "gitleaks 가 도는 작업에 `pull-requests: write` 를 준다"
+
+
+def test_쓰기_권한은_그것을_쓰는_작업에만_있다():
+    """★ **맨 위 `permissions:` 는 모든 작업에 걸린다**(DECISIONS §282). gitleaks 때문에
+    필요한 쓰기를 거기 적으면 `verify` 작업도 그 권한을 들고 돈다 — 쓰지 않는 권한이다."""
+    # ★ 주석을 벗긴 뒤에 본다. **까닭을 적은 줄이 검사에 걸리면 까닭을 못 적는다.**
+    몸 = _몸만(ROOT / ".github/workflows/ci.yml")
+    위 = 몸[:몸.index("jobs:")]
+    assert "pull-requests:" not in 위, "맨 위에 쓰기를 두면 모든 작업이 그것을 받는다"
 
 
 def test_CI_는_verify_를_부르기만_한다():

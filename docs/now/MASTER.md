@@ -48,7 +48,7 @@ bash tools/apply_patch.sh                # INBOX 의 안 붙은 seshat-*.patch �
 | **점수를 내는 셋에서 캔 노드는 누수 장부에 적는다.** 출처를 사전 안에 적지 않는다 — 적으면 `onto_sha256` 이 바뀌어 **뜻이 안 바뀐 편집이 옛 판을 전부 막는다**(DECISIONS §168) | `data/ontology/mined.jsonl` · `tools/check_ontology.py` · `tools/mine_terms.py` 의 거절 · `tests/test_mined.py` |
 | **차이가 잡음인지는 손으로 안 정한다.** 허용치 · 배수 · 중앙값을 사람이 그으면 자가 변수에 안 맞는다 — 2026-09-28 하루에 세 번 틀렸다(§139 · §178 · §179). 짝지은 부트스트랩이 **크기와 확실함을 따로** 준다(DECISIONS §180) | `tools/bootstrap.py` · `tests/test_bootstrap.py` · `verify.sh` 의 `bootstrap` 단계 |
 | **🔴 는 「지금 적어 놓은 문장 하나를 못 쓰게 하는 빚」 이다.** 「측정을 더럽힌다」 만으로는 끝이 없다 — 재는 것은 늘 조금씩 더럽다. 각 🔴 행은 `docs/now/related.md` §3 의 **어느 줄을 막는지**를 든다. 그러면 🔴 의 수가 **말하려는 문장의 수로 위가 막힌다**(DECISIONS §187) | `tools/check_docs.py::check_plan` |
-| **가설을 닫는 판마다 빚 한 줄을 같이 움직인다.** 재면 **재는 도구의 결함이 보이므로** 가설 닫기는 빚을 만든다 — 2026-09-28 가설 17 을 닫고 빚이 18 에서 20 이 됐다(DECISIONS §168) | 패치 제목 아래 **갚은 줄**을 적는다 · `docs/next/PLAN.md` 의 「일부 갚음」 |
+| **가설을 닫는 판마다 빚 한 줄을 같이 움직인다.** 재면 **재는 도구의 결함이 보이므로** 가설 닫기는 빚을 만든다 — 2026-09-28 가설 17 을 닫고 빚이 18 에서 20 이 됐다(DECISIONS §168) | 패치 제목 아래 **갚은 줄**을 적는다 · `docs/next/PLAN.md` #47 |
 | 위생 도구는 근거가 있을 때만 지운다 | `tools/sweep.py` · `tests/test_sweep.py` |
 
 ---
@@ -128,7 +128,7 @@ uv run --group eval python -m seshat.evaluate --url https://<워커> --thoth \
 | `chrf` | 그렇다 | chrF++ (sacrebleu, `word_order=2`) |
 | `ms` | — | 문장당 지연. 9건씩 묶어 보낸다 |
 | `josa` | 아니다 | `keep` 이름 바로 뒤 조사가 그 이름의 끝소리(온톨로지 `coda`)와 맞는 비율. 조사가 붙지 않은 자리는 세지 않는다 |
-| `hangul` | 아니다 | **번역처럼 보이는 줄의 비율** — 한글이 20% 이상이고 길이가 원문의 세 배 이내. 배선이 깨지면 여기서 먼저 보인다(DECISIONS §49 · §50) |
+| `hangul` | 아니다 | **번역처럼 보이는 줄의 비율** — **지킨 이름을 뺀 뒤** 한글이 글자의 20% 이상이고 길이가 `3 × 원문 + 40` 이내. **`+ 40` 이 짧은 줄의 판정을 가른다** — 그것 없이 「세 배」 로만 적으면 보기 한 줄짜리가 거짓으로 걸린다. 정본은 `seshat/evaluate.py::ko_line` 이다. 배선이 깨지면 여기서 먼저 보인다(DECISIONS §49 · §50) |
 | `term` | 아니다 | 원문에 나온 온톨로지 개념의 뜻이 남았나 — 공식(`ko`) 또는 허용(`alt_ko`) 표기가 번역에 있는 비율. **문서가 표시한 자리(`lit` · `ui`)는 개념이 아니라 값 · 라벨이므로 분모에서 뺀다**(DECISIONS §122 · §123) |
 | `term_off` | 아니다 | 그중 **공식 표기 그대로**인 비율. thoth 의 도메인은 표기까지 맞아야 한다 |
 | `term_bad` | 아니다 | 관측된 오역(`bad_ko`)만 보이는 비율 — 뜻이 바뀐 자리다(DECISIONS §25) |
@@ -185,7 +185,7 @@ DECISIONS §92)에서 산문 문장만 꺼내고 **온톨로지가 든 줄만** 
 
 | 평가셋 | 줄 | 정답 |
 |---|---|---|
-| `data/eval/seed.jsonl` | 12 | 초안. 사람이 쓰지 않는다 — 교사 합의 + 검사기로 만든다(PLAN #18 · #3) |
+| `data/eval/seed.jsonl` | 12 | 초안. 사람이 쓰지 않는다 — 교사 합의 + 검사기로 만든다(PLAN #18 · DECISIONS §262) |
 | `data/bench/flores_plus.dev.jsonl` · `.devtest.jsonl` | 997 · 1,012 | FLORES+ 정답(평어체) · CC BY-SA 4.0 · 받아서 쓴다 |
 
 봉인 — `seshat/evaluate.py`
@@ -355,7 +355,7 @@ mkdir -p ~/actions-runner && cd ~/actions-runner      # 저장소 밖 · 한 번
 `/mnt/f/projects/thoth` 옆 `/mnt/f/projects/seshat`. 경로 정본은 `seshat/paths.py` 이고 **셸이 `.env` 를 이긴다.**
 심링크는 쓰지 않는다.
 
-★ §11-1 **층 정책의 정본은 `data/catalog.toml` 의 `[layers]` 블록이다**(DECISIONS §114). 이 절은 그것을
+★ §11-0 **층 정책의 정본은 `data/catalog.toml` 의 `[layers]` 블록이다**(DECISIONS §114). 이 절은 그것을
 가리키기만 한다 — 표를 여기 두면 정본이 둘이 되고, 실제로 그래서 판정 파일 자리를 하루에 세 번 옮겼다.
 
     data/catalog.toml [layers]   정책. base · dirs · committed · regenerable · managed
@@ -499,6 +499,7 @@ thoth 의 sweep · doctor(`OLLAMA_KEEP_ALSO`)가 본다. 두 저장소가 같은
 | `tools/docgen.py` | **문서가 드는 수를 도구가 채운다** — 지금은 §15 의 합 하나. `--fix` 가 갈아 넣고 관문은 대조만 한다. **커밋이 흔드는 수는 축이 못 된다**(DECISIONS §237 · §238) |
 | `tools/check_numbers.py` | **결과 문서가 든 수에 근거가 있나** — `related.md` 의 수를 DECISIONS · 가설 대장 · MASTER · 기록판에서 찾는다(DECISIONS §235) |
 | `tools/check_rules.py` | **MASTER 의 ★ 규칙 번호**(`§11-3`) — 유일 · 오름차순 · 가리킨 번호가 실재하나(DECISIONS §230) |
+| `tools/check_prose.py` | **문서명 없는 `§N` 이 풀리나** · 빈 줄 뒤에 홀로 선 표 줄 · `PLAN #N` 없는 빈 약속(DECISIONS §282) |
 | `tools/check_docs.py` | 문서 ↔ 문서 — 문체 · 절 · PLAN 표 · 참조 · DECISIONS · **문서 지도** · **도구 목록**. `--fix-index` 가 DECISIONS 색인을 다시 쓴다 |
 | `tools/doc_fsck.py` | 문서 ↔ 실물 — 경로 · 테스트 · 아무도 안 부르는 도구 |
 | `tools/check_hypotheses.py` | 가설 대장 — 실험의 문 |

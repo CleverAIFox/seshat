@@ -7,19 +7,28 @@ on:
 # ★ **권한을 적는다**(DECISIONS §20). 비공개 저장소의 GITHUB_TOKEN 은 적지 않은 권한이 없다. gitleaks 는 PR 의
 #   커밋 목록(`pulls/N/commits`)을 읽는데, 적지 않았더니 의존성 봇의 첫 PR 에서 403 으로 죽었다(2026-09-22).
 #   thoth 는 공개 저장소라 같은 줄이 없어도 읽혔다 — 공개냐 비공개냐가 결과를 가른다.
+#
+# ★ **기본은 읽기만이고 쓰기는 그것을 쓰는 작업에만 준다**(DECISIONS §282). 전에는
+#   `pull-requests: read` 가 맨 위에 하나 있었다 — gitleaks 는 누출을 찾으면 **PR 에 위치를
+#   댓글로 다는데**(`GITLEAKS_ENABLE_COMMENTS` 기본값이 켬) 읽기만으로는 그 호출이 403 이다.
+#   **지금까지 초록이었던 것은 누출이 없었기 때문**이고, 찾는 날 처음 죽을 자리였다.
 permissions:
   contents: read
-  pull-requests: read
 
 # ★ 러너와 액션 메이저는 thoth 와 같다. `ubuntu-latest` 는 저절로 넘어가고
 #   Node 20 액션은 강제 전환이 끝나는 날 멈춘다(thoth §100 · §105).
+# ★ **`uses:` 는 40자 SHA 로 고정하고 판을 주석에 적는다**(DECISIONS §282). 메이저 태그는
+#   업스트림이 옮긴다. thoth 와 같은 규율이고 `tests/test_workflows.py` 가 강제한다.
 jobs:
   gitleaks:
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with: { fetch-depth: 0 }
-      - uses: gitleaks/gitleaks-action@v3
+      - uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e  # v3.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -29,10 +38,10 @@ jobs:
       # ★ **이력째 받는다**(DECISIONS §224). 기본 `checkout` 은 **깊이 1** 이라 `git log` 가 비고,
       #   `tools/plan_closed.py` 처럼 이력을 읽는 도구와 그 시험이 CI 에서만 죽는다 —
       #   2026-09-29 그렇게 빨개졌다. 「이 기계에 있는 것」 의 목록에 **이력**이 새로 들어왔다(§170)
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with: { fetch-depth: 0 }
-      - uses: astral-sh/setup-uv@v7
-      - uses: actions/setup-python@v7
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78  # v7.6.0
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
         with: { python-version: "3.12" }
       - run: uv sync --group eval
       # ★ 점검 목록은 verify.sh 하나에 산다. 여기에 단계를 늘어놓지 않는다(DECISIONS §20)

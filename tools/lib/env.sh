@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # ★ **thoth 의 `tools/lib/env.sh` 사본이다**(DECISIONS §5 · §21). 고칠 것이 있으면 thoth 에서 고치고 다시 복사한다.
 # .env 로더. 모든 도구가 이것 하나를 쓴다.
 #
