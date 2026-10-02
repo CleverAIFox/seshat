@@ -40,7 +40,7 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
-from seshat import evaluate, paths  # noqa: E402
+from seshat import evaluate, paths
 
 기본모형 = "google/metricx-24-hybrid-large-v2p6"
 기본토크나이저 = "google/mt5-xl"
@@ -121,7 +121,7 @@ def _탐침(models, transformers) -> None:
         with torch.no_grad():
             작은(input_ids=torch.tensor([[5, 6, 7, 8, 9], [5, 6, 7, 0, 0]], device=장치),
                 attention_mask=torch.tensor([[1, 1, 1, 1, 1], [1, 1, 1, 0, 0]], device=장치))
-    except Exception as e:                        # noqa: BLE001
+    except Exception as e:
         raise SystemExit(
             f"MetricX 가 이 `transformers`({transformers.__version__})에서 안 돈다 — "
             f"{type(e).__name__}: {e}\n"
@@ -147,7 +147,7 @@ def 모형을_든다(d: pathlib.Path, 모형: str, 토크나이저: str, 판본:
         기움.append("__HEAD_MASK_WARNING_MSG")
     try:
         from metricx24 import models
-    except Exception as e:                        # noqa: BLE001
+    except Exception as e:
         raise SystemExit(
             f"MetricX 를 못 들였다 — {type(e).__name__}: {e}\n"
             f"    받은 자리 : {d}\n"
@@ -157,7 +157,7 @@ def 모형을_든다(d: pathlib.Path, 모형: str, 토크나이저: str, 판본:
     _탐침(models, transformers)
     try:
         tok = transformers.AutoTokenizer.from_pretrained(토크나이저, legacy=False, use_fast=True)
-    except Exception as e:                        # noqa: BLE001
+    except Exception as e:
         # ★ **마지막 말이 길을 잘못 든다**(DECISIONS §246). `spiece.model` 을 빠른 토크나이저로
         #   바꾸려면 `protobuf` 가 있어야 하는데, 없으면 transformers 5 가 **tiktoken 으로 넘어갔다가**
         #   거기서 죽는다 — 화면의 마지막 줄이 `pip install tiktoken` 이라 **엉뚱한 것을 깔게 된다**

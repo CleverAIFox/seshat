@@ -745,7 +745,7 @@
  "18": {
   "날짜": "2026-09-22",
   "읽음": true,
-  "지문": "a6cb70c512d7ad70",
+  "지문": "be1e7937471749cc",
   "파일": [
    "tools/doc_fsck.py::check_tools",
    "tests/test_workflows.py"
@@ -1203,7 +1203,7 @@
  "224": {
   "날짜": "2026-09-29",
   "읽음": false,
-  "지문": "84fa9bfec2a44d07",
+  "지문": "d7382ec2184b2f2c",
   "파일": [
    ".github/workflows/ci.yml",
    "tools/plan_closed.py::얕은가",
@@ -1273,7 +1273,7 @@
  "230": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "dc0452e58e41af26",
+  "지문": "0ab51c4165b82065",
   "파일": [
    "tools/check_rules.py",
    "tests/test_rules.py",
@@ -1315,7 +1315,7 @@
  "234": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "ce6387768f81568e",
+  "지문": "5de98735f29db219",
   "파일": [
    "docs/why/DECISIONS.md",
    "docs/next/PLAN.md",
@@ -1394,7 +1394,7 @@
  "241": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "aed8652dfdf4b337",
+  "지문": "ddd96359b1bb6f25",
   "파일": [
    "tools/check_numbers.py",
    "docs/why/DECISIONS.md"
@@ -1403,7 +1403,7 @@
  "242": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "7b176cc0ffb52425",
+  "지문": "0905f0e1af7acd89",
   "파일": [
    "tools/labels.py",
    "tests/test_labels.py",
@@ -1441,7 +1441,7 @@
  "246": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "e2b742af9465312a",
+  "지문": "f77837fe2c968134",
   "파일": [
    "tools/qe.py",
    "tests/test_qe.py",
@@ -1481,7 +1481,7 @@
  "27": {
   "날짜": "2026-09-23",
   "읽음": true,
-  "지문": "16f88c0901bae2ef",
+  "지문": "314b7cbf98d3c95e",
   "파일": [
    "tests/test_baselines.py",
    "tools/check_model_licenses.py",
@@ -1631,7 +1631,7 @@
  "4": {
   "날짜": "2026-09-22",
   "읽음": true,
-  "지문": "770a95a2c160f128",
+  "지문": "a60ad5e62dd4c1b8",
   "파일": [
    "pyproject.toml"
   ]
@@ -1639,7 +1639,7 @@
  "40": {
   "날짜": "2026-09-23",
   "읽음": true,
-  "지문": "4136b2f88236c3c8",
+  "지문": "e279e6c9fa2a4cc8",
   "파일": [
    "pyproject.toml"
   ]
@@ -1942,7 +1942,7 @@
  "8": {
   "날짜": "2026-09-22",
   "읽음": true,
-  "지문": "92368cd307a499fd",
+  "지문": "ee37d18628a5dac4",
   "파일": [
    ".github/workflows/ci.yml"
   ]

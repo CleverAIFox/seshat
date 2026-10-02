@@ -26,7 +26,7 @@ from collections import Counter
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from seshat import paths  # noqa: E402
+from seshat import paths
 
 한글 = re.compile(r"[가-힣]")
 

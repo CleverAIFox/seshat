@@ -21,8 +21,8 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
-import seshat  # noqa: E402,F401  — 불러 오는 것이 곧 `.env` 를 얹는 일이다(DECISIONS §39)
-from seshat import catalog  # noqa: E402
+import seshat  # noqa: F401  — 불러 오는 것이 곧 `.env` 를 얹는 일이다(DECISIONS §39)
+from seshat import catalog
 
 OUT = ROOT / "data/bench"
 # ★ 데이터셋이다. 가중치가 아니므로 라이선스 대장(seshat/licenses.py) 밖이다.

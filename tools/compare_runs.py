@@ -16,13 +16,13 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from seshat import compare as _축  # noqa: E402  (이 파일에 `compare` 함수가 따로 있다)
-from seshat import paths  # noqa: E402
+from seshat import compare as _축  # 이 파일에 `compare` 함수가 따로 있다
+from seshat import paths
 
 # ★ **사본을 지웠다**(2026-10-01 · DECISIONS §263). 「도구가 패키지 없이도 돌게 여기에 둔다」 고
 #   적혀 있었는데 **이 파일은 바로 위에서 `from seshat import compare` 를 한다** — 패키지 없이는
 #   애초에 안 돈다. **까닭이 거짓인 사본**이었고, 시험은 둘이 같은지를 보면서 **왜 둘인지는 안 물었다.**
-from seshat.terms import RESIDUE  # noqa: E402
+from seshat.terms import RESIDUE
 
 
 def read(path: str) -> tuple[dict, dict[str, dict]]:
@@ -58,7 +58,7 @@ def style_flips(a_rows: dict, b_rows: dict, spec: dict[str, dict]) -> dict:
             flips.append(i)
         if d is not None:
             (dist_flip if flipped else dist_rest).append(d)
-    mean = lambda xs: round(sum(xs) / len(xs), 2) if xs else None  # noqa: E731
+    mean = lambda xs: round(sum(xs) / len(xs), 2) if xs else None
     return {"flips": flips, "after_flip": mean(dist_flip), "after_rest": mean(dist_rest),
             **style_sides(a_rows, b_rows, ev)}
 

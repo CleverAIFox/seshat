@@ -32,7 +32,7 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
-from seshat import ontology, paths  # noqa: E402
+from seshat import ontology, paths
 
 REPO = "https://github.com/kubernetes/website.git"
 가지 = "main"

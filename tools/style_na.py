@@ -24,8 +24,8 @@ from collections import Counter
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
-from seshat import compare, evaluate  # noqa: E402
-from seshat import paths  # noqa: E402
+from seshat import compare, evaluate
+from seshat import paths
 
 
 def read(path: str) -> tuple[dict, dict[str, dict]]:

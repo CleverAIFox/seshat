@@ -36,7 +36,7 @@ ROOT = Path(__file__).resolve().parent.parent
 #   쓰면 없는 자리를 import 경로에 넣는다. 이 파일이 있는 자리가 곧 도구 자리다
 TOOLS = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
-from seshat import backends, catalog, licenses, paths  # noqa: E402
+from seshat import backends, catalog, licenses, paths
 
 HITS: list[tuple[str, str]] = []
 NOTES: list[str] = []

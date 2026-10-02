@@ -32,8 +32,8 @@ import tomllib
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
-from seshat import backends, catalog, compare, terms  # noqa: E402
-from seshat import paths  # noqa: E402
+from seshat import backends, catalog, compare, terms
+from seshat import paths
 
 PATH = ROOT / "data/scoreboard.toml"
 

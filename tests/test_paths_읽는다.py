@@ -15,7 +15,7 @@ import pytest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from seshat import paths  # noqa: E402
+from seshat import paths
 
 없는 = "/tmp/__seshat_없는파일__.jsonl"
 # ★ **셋은 시험이 제 손으로 만든다**(2026-10-01 · DECISIONS §271). 종전에는 `data/domain/d002.jsonl`

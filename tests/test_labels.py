@@ -39,7 +39,7 @@ def test_두_팔이_나란히_서지_않는다(tmp_path):
 
 def test_seed_가_표본을_정한다(tmp_path):
     a, b = _run(tmp_path, "4b"), _run(tmp_path, "12b")
-    ids = lambda seed: sorted({r["id"] for r in L.make({"a": a, "b": b}, ROWS, "t", 5, seed)[1]})  # noqa: E731
+    ids = lambda seed: sorted({r["id"] for r in L.make({"a": a, "b": b}, ROWS, "t", 5, seed)[1]})
     assert ids(31) == ids(31)
     assert ids(31) != ids(32)
 

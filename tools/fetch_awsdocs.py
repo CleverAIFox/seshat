@@ -42,7 +42,7 @@ import typing
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
-from seshat import catalog, evaluate, ontology, paths  # noqa: E402
+from seshat import catalog, evaluate, ontology, paths
 
 OUT = ROOT / "data/domain"
 LICENSE = "CC BY-SA 4.0"
@@ -279,7 +279,7 @@ def rows(onto: list[dict], picked: list[Line]) -> list[dict]:
     out = []
     for i, ln in enumerate(picked, 1):
         keep = sorted({ln.text[a:b] for a, b, _ in ontology.find(onto, ln.text, keep_only=True)})
-        빼기 = lambda xs: [[t, at] for t, at in xs if t not in keep]  # noqa: E731
+        빼기 = lambda xs: [[t, at] for t, at in xs if t not in keep]
         out.append({"id": f"awsdocs-{i:04d}", "src": ln.text, "keep": keep,
                     "lit": 빼기(ln.lit), "ui": 빼기(ln.ui),
                     "guide": ln.guide, "doc": ln.doc})

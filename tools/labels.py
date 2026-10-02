@@ -51,7 +51,7 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
-from seshat import catalog, evaluate, terms  # noqa: E402
+from seshat import catalog, evaluate, terms
 
 
 def _도구(이름: str):
@@ -424,7 +424,7 @@ def 판정자를_찍는다(name: str, judges: list[str]) -> None:
               f"      다시 읽는다 : python3 tools/labels.py read --name {name} --judge <이름> --model <무엇>")
 
 
-def agree(name: str, judges: list[str]) -> int:   # noqa: C901
+def agree(name: str, judges: list[str]) -> int:
     """판정자들의 일치를 **쌍마다** 낸다. **어긋난 줄을 이름으로 든다** — 거기가 기준이 무른 자리다.
 
     ★ **셋 이상이어도 카파는 쌍마다다.** 여럿을 한 수로 합치는 자(Fleiss)가 있지만, **어느 둘이

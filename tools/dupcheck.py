@@ -35,17 +35,17 @@ BASE = ("seshat", "tools")
 class _지운다(ast.NodeTransformer):
     """이름 · 글자 · 수를 전부 한 가지로 만든다. **구조만 남는다.**"""
 
-    def visit_Name(self, n):            # noqa: N802
+    def visit_Name(self, n):
         return ast.copy_location(ast.Name(id="_", ctx=n.ctx), n)
 
-    def visit_arg(self, n):             # noqa: N802
+    def visit_arg(self, n):
         return ast.copy_location(ast.arg(arg="_", annotation=None), n)
 
-    def visit_Attribute(self, n):       # noqa: N802
+    def visit_Attribute(self, n):
         self.generic_visit(n)
         return ast.copy_location(ast.Attribute(value=n.value, attr="_", ctx=n.ctx), n)
 
-    def visit_Constant(self, n):        # noqa: N802
+    def visit_Constant(self, n):
         return ast.copy_location(ast.Constant(value="_"), n)
 
 
@@ -165,7 +165,7 @@ def 같은_정규식(디렉토리: tuple[str, ...], 길이: int = 12) -> tuple[d
                     m = importlib.util.module_from_spec(spec)
                     sys.modules[spec.name] = m
                     spec.loader.exec_module(m)
-            except Exception as e:                  # noqa: BLE001
+            except Exception as e:
                 print(f"    ※ {이름} 을 못 들였다 — {e.__class__.__name__}: {e}", file=sys.stderr)
                 못본.append(이름)
                 continue

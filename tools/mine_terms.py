@@ -28,8 +28,8 @@ from collections import Counter
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
-from seshat import ontology  # noqa: E402
-from seshat import paths  # noqa: E402
+from seshat import ontology
+from seshat import paths
 
 # 후보가 될 수 있는 꼴. 평범한 영어 명사(구)만 본다 — 식별자꼴은 개념이 아니다(§150)
 _낱말 = re.compile(r"[A-Za-z][A-Za-z-]*")

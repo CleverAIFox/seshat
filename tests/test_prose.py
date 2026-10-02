@@ -16,6 +16,9 @@ _spec = importlib.util.spec_from_file_location("cp", ROOT / "tools/check_prose.p
 CP = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(CP)
 
+NL = chr(10)
+NL2 = NL + NL
+
 
 # ---------- 1. 맨 §N ----------
 
@@ -86,7 +89,82 @@ def test_문서에_떨어진_표_줄이_없다():
     assert CP.check_표깨짐(ROOT) == []
 
 
-# ---------- 3. 빈 약속 ----------
+# ---------- 3. 명령의 정본 ----------
+
+def test_이_절_꼴의_선언을_읽는다():
+    assert CP.정본선언.search("**명령의 정본은 이 절 하나다**(DECISIONS §199).")
+
+
+def test_절_번호_꼴의_선언을_읽는다():
+    assert CP.정본선언.search("명령의 정본은 `now/MASTER.md` §14 하나다.").group(1) == "14"
+
+
+def test_아무_문장이나_선언으로_안_읽는다():
+    """★ **음성 대조다.** 넓게 잡으면 「명령을 여기 적지 않는다」 같은 줄이 선언이 되고,
+    그러면 선언이 저절로 늘어 「정본이 둘」 이 거짓으로 뜬다."""
+    assert not CP.정본선언.search("명령을 여기 적지 않는다")
+    assert not CP.정본선언.search("정본은 verify.sh 하나다")
+
+
+def test_울_안의_명령만_센다():
+    """★ 산문이 `tools/y.py` 를 언급하는 것은 「목록에 있다」 가 아니다."""
+    assert CP.울밖명령("```bash\npython3 tools/x.py\n```\n산문의 `tools/y.py`\n") == [2]
+
+
+def test_저장소의_정본이_한_곳이다():
+    assert CP.check_정본하나(ROOT) == []
+
+
+def _나무(tmp_path, master, readme):
+    """합성 저장소 하나. **셋을 따로 쓰면 그 셋이 매번 조금씩 달라진다.**"""
+    (tmp_path / "docs/now").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "docs/why").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "docs/now/MASTER.md").write_text(master, encoding="utf-8")
+    (tmp_path / "docs/README.md").write_text(readme, encoding="utf-8")
+    (tmp_path / "docs/why/DECISIONS.md").write_text("## §1. x" + NL, encoding="utf-8")
+    return tmp_path
+
+
+M14 = "## 0. 규약" + NL2 + "## 14. 도구" + NL2 + "**명령의 정본은 이 절 하나다**" + NL
+R14 = "★ **명령의 정본은 `now/MASTER.md` §14 하나다.**" + NL
+R0 = "★ **명령의 정본은 `now/MASTER.md` §0 하나다.**" + NL
+
+
+def test_선언이_둘로_갈리면_잡는다(tmp_path):
+    """★ **이것이 2026-10-03 의 실물이다**(DECISIONS §283).
+
+    `docs/README.md` 가 `MASTER §0` 을, `MASTER §14` 가 「이 절」 을 정본으로 선언하고 있었다.
+    **「정본이 하나다」 를 두 곳에 적으면 정본이 둘이 된다.**
+    """
+    난 = CP.check_정본하나(_나무(tmp_path, M14, R0))
+    assert 난 and "서로 다른 절" in 난[0], 난
+
+
+def test_한_절을_함께_가리키면_통과한다(tmp_path):
+    assert CP.check_정본하나(_나무(tmp_path, M14, R14)) == []
+
+
+def test_도구_둘까지는_목록이_아니다(tmp_path):
+    """★ **줄 수가 아니라 서로 다른 도구 수로 가른다**(DECISIONS §283).
+
+    §12 가 `sweep.py` 를 두 줄 쓰는 것은 **그 절이 설명하는 명령**이고 목록이 아니다.
+    맞는 상태를 위반으로 잡는 검사는 **끄는 쪽부터 찾게 된다**(thoth DECISIONS §46).
+    """
+    울 = "```bash"
+    둘 = NL.join(["## 12. 위생", "", 울, "python3 tools/sweep.py",
+                 "python3 tools/sweep.py --fix", 울, "", ""])
+    assert CP.check_정본하나(_나무(tmp_path, 둘 + M14, R14)) == []
+
+
+def test_도구_셋이면_목록이다(tmp_path):
+    울 = "```bash"
+    셋 = NL.join(["## 12. 위생", "", 울, "python3 tools/sweep.py",
+                 "python3 tools/lake.py check", "bash tools/verify.sh", 울, "", ""])
+    난 = CP.check_정본하나(_나무(tmp_path, 셋 + M14, R14))
+    assert 난 and "서로 다른 도구 3" in 난[0], 난
+
+
+# ---------- 4. 빈 약속 ----------
 
 def test_행이_없는_약속을_잡는다():
     assert CP.빈약속("이 항목은 열려 있다.\n") == [(1, "열려 있다")]

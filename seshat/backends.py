@@ -53,7 +53,7 @@ def aws_translate(texts: list[str], terms: dict[str, str], client=None) -> list[
     for t in texts:
         try:
             r = client.translate_text(Text=t, SourceLanguageCode="en", TargetLanguageCode="ko")
-        except Exception as e:                    # noqa: BLE001 — botocore 예외를 이름으로 가른다
+        except Exception as e:                    # botocore 예외를 이름으로 가른다
             raise _aws_말(e) from None
         out.append(r["TranslatedText"])
     return out

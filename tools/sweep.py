@@ -23,8 +23,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "tools"))
-import patch_subjects  # noqa: E402
-from seshat import paths  # noqa: E402
+import patch_subjects
+from seshat import paths
 
 TMP = Path(os.environ.get("TMPDIR", "/tmp"))
 OLD_DAYS = 14

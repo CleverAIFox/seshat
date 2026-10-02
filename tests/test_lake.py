@@ -8,7 +8,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location("lake", ROOT / "tools/lake.py")
 lake = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(lake)
-from seshat import paths  # noqa: E402
+from seshat import paths
 
 
 def _lake(tmp_path):

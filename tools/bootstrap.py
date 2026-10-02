@@ -31,8 +31,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
-from seshat import backends, compare, evaluate  # noqa: E402
-from seshat import paths  # noqa: E402
+from seshat import backends, compare, evaluate
+from seshat import paths
 
 # 줄마다 (분자, 분모)를 낼 수 있는 지표. `_n` 이 결과에 실리거나 분모를 줄에서 셀 수 있어야 한다
 지표 = ("term_off", "term", "term_bad", "lit", "ui", "keep", "style", "hangul")

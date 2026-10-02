@@ -21,8 +21,8 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
-from seshat import evaluate, grammar  # noqa: E402
-from seshat import paths  # noqa: E402
+from seshat import evaluate, grammar
+from seshat import paths
 
 SHOW = ("term_off", "term", "keep", "lit", "ui", "hangul", "style")
 # 제 분모를 드는 지표. 나머지는 줄 수가 분모다

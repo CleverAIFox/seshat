@@ -27,7 +27,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
-from seshat import catalog, paths  # noqa: E402
+from seshat import catalog, paths
 
 # ★ **손으로 적지 않는다** — 층 선언이 정본이다(DECISIONS §114 · catalog.toml `[layers]`)
 MANAGED = catalog.managed_tiers()

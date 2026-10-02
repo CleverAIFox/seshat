@@ -18,7 +18,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
-from seshat import catalog, ontology  # noqa: E402
+from seshat import catalog, ontology
 
 # (구문, 템플릿). {S} 서비스 · 기능 · {S2} 두 번째 · {A} API(그 부모가 {P}) · {C} 개념
 TEMPLATES = [

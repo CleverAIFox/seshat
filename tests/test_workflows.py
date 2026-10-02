@@ -278,3 +278,59 @@ def test_이_커밋의_판이_있으면_그것으로_판정한다():
     assert C.고른다(판, "여기")[0] == 0
     판[0]["conclusion"] = ""        # 도는 중
     assert C.고른다(판, "여기")[0] == 0
+
+
+# ---------- 작업 시간 상한 (파이어레인 tools/actionpin.py · DECISIONS §283) ----------
+
+작업머리 = re.compile(r"^  ([\w-]+):\s*$")
+
+
+def 작업들(text: str) -> dict[str, list[str]]:
+    """`jobs:` 아래의 (작업 이름 → 그 블록의 줄들)."""
+    것, 이름, 안 = {}, None, False
+    for 줄 in text.split("\n"):
+        if 줄.startswith("jobs:"):
+            안 = True
+            continue
+        if not 안:
+            continue
+        if 줄 and not 줄.startswith(" "):
+            break
+        if m := 작업머리.match(줄):
+            이름 = m.group(1)
+            것[이름] = []
+            continue
+        if 이름:
+            것[이름].append(줄)
+    return 것
+
+
+def 상한없는것(text: str) -> list[str]:
+    난것 = []
+    for 이름, 블록 in 작업들(text).items():
+        if any(re.match(r"^    uses:\s*\S", x) for x in 블록):
+            continue                   # 재사용 워크플로 호출 — GitHub 이 상한을 거부한다
+        if not any(re.match(r"^    timeout-minutes:\s*\d+", x) for x in 블록):
+            난것.append(이름)
+    return 난것
+
+
+def test_작업마다_시간_상한이_있다():
+    """★ **없으면 GitHub 기본 6시간까지 매달린다**(DECISIONS §283).
+
+    이 저장소에서 더 아픈 자리는 `gpu-eval` 이다 — **셀프 호스티드 러너가 이 기계다.**
+    매달린 작업이 GPU 를 여섯 시간 쥐고 있으면 그 시간은 다시 안 온다(DECISIONS §28).
+    `gpu-eval` 은 상한을 들고 있었고 **나머지 셋이 안 들고 있었다.**
+
+    ★ **족 가드다**(파이어레인 `tools/actionpin.py`). 「이 작업에 상한이 있나」 를 하나씩
+      묻지 않고 「상한 없는 작업이 있나」 를 묻는다 — 새 작업이 생기는 순간 물린다.
+    """
+    나쁜 = [f"{p.name} · {이름}" for p in _workflows() for 이름 in 상한없는것(p.read_text(encoding="utf-8"))]
+    assert 나쁜 == [], "작업마다 `timeout-minutes` 를 적는다\n" + "\n".join(나쁜)
+
+
+def test_상한_카나리아():
+    좋 = "jobs:\n  a:\n    runs-on: x\n    timeout-minutes: 5\n    steps:\n      - run: echo\n"
+    assert 상한없는것(좋) == []
+    assert 상한없는것(좋.replace("    timeout-minutes: 5\n", "")) == ["a"]
+    assert 상한없는것("jobs:\n  a:\n    uses: ./.github/workflows/x.yml\n") == []

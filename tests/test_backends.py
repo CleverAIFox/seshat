@@ -120,8 +120,8 @@ def test_되묻기가_다_실패하면_이름을_박아_한_번_더_묻는다(mo
     monkeypatch.setattr(b, "REPAIR_STATS", {"tried": 0, "fixed": 0})
     assert 옛 is not b.REPAIR_STATS
 
-    안 = lambda texts, terms_, marks=None: ["이름이 사라진 말"]          # noqa: E731
-    막 = lambda texts, terms_, marks=None: ["또 사라진 말"]              # noqa: E731
+    안 = lambda texts, terms_, marks=None: ["이름이 사라진 말"]
+    막 = lambda texts, terms_, marks=None: ["또 사라진 말"]
     쟀다 = {}
 
     def 이름물음(text, names):

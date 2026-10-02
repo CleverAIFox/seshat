@@ -22,6 +22,7 @@ permissions:
 jobs:
   gitleaks:
     runs-on: ubuntu-24.04
+    timeout-minutes: 10
     permissions:
       contents: read
       pull-requests: write
@@ -34,6 +35,9 @@ jobs:
 
   verify:
     runs-on: ubuntu-24.04
+    # ★ **상한을 적는다**(파이어레인 `tools/actionpin.py` · DECISIONS §282). 없으면 GitHub 기본
+    #   **6시간**까지 매달린다 — 러너 시간과, 자격증명을 든 작업이면 그 세션까지 같이 태운다.
+    timeout-minutes: 20
     steps:
       # ★ **이력째 받는다**(DECISIONS §224). 기본 `checkout` 은 **깊이 1** 이라 `git log` 가 비고,
       #   `tools/plan_closed.py` 처럼 이력을 읽는 도구와 그 시험이 CI 에서만 죽는다 —

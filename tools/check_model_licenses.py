@@ -28,7 +28,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
-from seshat.licenses import EXCLUDED, LEDGER, VALID_COMMERCIAL, VALID_TEACHER, excluded  # noqa: E402
+from seshat.licenses import EXCLUDED, LEDGER, VALID_COMMERCIAL, VALID_TEACHER, excluded
 
 CALL = re.compile(
     r"(?:from_pretrained|snapshot_download|hf_hub_download|Translator)\(\s*(?:repo_id\s*=\s*)?[\"']([^\"']+)[\"']")

@@ -12,20 +12,16 @@
 **thoth 와 같은 규약이다**(DECISIONS §5 · thoth MASTER §0). 규약마다 강제자가 있다.
 
 ```bash
-bash tools/verify.sh                     # ★ 아래 전부 + 레이크 — 점검 목록의 정본이다. CI 도 이것만 부른다
-python3 tools/check_docs.py              # 문서 ↔ 문서 — 문체 · 절 · PLAN 표 · 참조 · DECISIONS
-python3 tools/doc_fsck.py                # 문서 ↔ 실물 — 경로 · 테스트 · 죽은 도구
-python3 tools/check_model_licenses.py    # 코드 ↔ 라이선스 대장
-python3 tools/check_hypotheses.py        # 가설 대장 — 실험의 문
-python3 tools/check_ontology.py          # 온톨로지 — 표기 유일 · 부모 · 끝소리
-python3 tools/check_catalog.py           # 데이터 카탈로그 — 칸 · 쓰임 · data/ 의 카탈로그 밖 파일(§11)
-python3 tools/bootstrap.py A B --set S   # ★ **차이가 잡음인가** — 짝지은 재표집(§180 · Koehn 2004)
-python3 tools/style_na.py 판들...        # 합쇼체가 설 수 없는 줄의 **후보** — 판정은 사람이 한다(§189)
-python3 tools/ci_status.py               # ★ **마지막 CI 가 초록인가** — 이 기계의 초록은 CI 의 초록이 아니다(§170)
-python3 tools/sweep.py [--fix]           # WSL 위생 — seshat 이 남긴 흔적만(§12)
-bash tools/deps.sh --merge               # 의존성 봇(Actions 만) — 초록만 합치고 가지를 지운다
-bash tools/apply_patch.sh                # INBOX 의 안 붙은 seshat-*.patch 를 번호 순서로 붙인다(§11)
+bash tools/verify.sh     # 규약을 포함한 점검 전부 — 점검 목록의 정본이다. CI 도 이것만 부른다
 ```
+
+**명령 목록은 여기 안 적는다 — 정본은 §14 다**(DECISIONS §283). 2026-10-03 까지 이 자리에
+명령 13줄이 있었고, 그것이 든 도구 17 이 **전부 §14 에도 있었다**(여기에만 있는 것은 0). 그런데
+`docs/README.md` 는 「명령의 정본은 §0 이다」 라고, §14 는 「정본은 이 절이다」 라고 적고 있었다 —
+**「정본이 하나다」 를 두 곳에 적으면 정본이 둘이 된다.** §199 가 고친 병의 재발이고, 그때와
+다른 것은 **한쪽이 자기를 정본이라고 선언하고 있었다는 것**뿐이다.
+강제자는 `tools/check_prose.py` 의 「명령의 정본은 한 곳이다」 다.
+
 
 | 규칙 | 강제자 |
 |---|---|

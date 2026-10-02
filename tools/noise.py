@@ -24,7 +24,7 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
-from seshat import compare  # noqa: E402
+from seshat import compare
 
 # 흔들림을 볼 지표. `ms` 는 기계 속도지 번역이 아니다 — 여기 넣으면 늘 빨갛다
 METRICS = ("term_off", "lit", "keep", "style", "term", "hangul", "josa", "ui", "chrf")

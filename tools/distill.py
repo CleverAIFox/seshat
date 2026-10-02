@@ -21,8 +21,8 @@ from collections import Counter
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from seshat import paths  # noqa: E402
-from tools.escape import 이탈  # noqa: E402
+from seshat import paths
+from tools.escape import 이탈
 
 
 def 줄줄이(경로: str, 무엇: str, 길: tuple[str, ...] = ()):

@@ -18,7 +18,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
-from seshat import endings, evaluate, ontology, terms  # noqa: E402
+from seshat import endings, evaluate, ontology, terms
 
 
 def rescore(run_path: str, set_path: str, post: str = "none") -> tuple[dict, list[dict]]:

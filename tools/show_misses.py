@@ -22,9 +22,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
-from seshat import evaluate as ev  # noqa: E402
-from seshat import ontology  # noqa: E402
-from seshat import paths  # noqa: E402
+from seshat import evaluate as ev
+from seshat import ontology
+from seshat import paths
 
 WHAT = ("keep", "term", "hangul", "style", "short", "all")
 

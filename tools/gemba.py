@@ -33,7 +33,7 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
-from seshat import backends  # noqa: E402
+from seshat import backends
 
 # ★ 대장이 이 가중치를 안다(DECISIONS §6) — `Qwen/Qwen3-8B` · Apache-2.0 · 상업 yes · 교사 yes
 기본모형 = "qwen3:8b"

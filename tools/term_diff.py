@@ -21,8 +21,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
-from seshat import ontology  # noqa: E402
-from seshat import paths  # noqa: E402
+from seshat import ontology
+from seshat import paths
 
 
 def read(path: Path) -> tuple[dict, dict[str, dict]]:
