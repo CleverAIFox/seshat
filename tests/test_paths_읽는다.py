@@ -90,9 +90,16 @@ def test_없는_파일에_맨몸으로_안_죽는다(도구, 셋):
 
     `gemba` 가 아직 도는 중인데 `bootstrap --점수` 를 부른 것이 그 자리였다 — **도구는 멀쩡한데
     「제가 깨졌다」 고 말하고 `verify.sh` 로 고치라고 했다.** 고칠 것이 없는데.
+
+    ★ **상한을 90 초에서 240 초로 올렸다**(2026-10-02). `lake.py check` 가 레이크 전체를 훑는데
+      §277 이 받아 둔 k8s 클론이 **작은 파일 1,841 개**를 얹었고, 레이크는 `/mnt/f` 에 있다.
+      실측 **63 초**인데 그중 CPU 는 **5 초**다 — 나머지는 전부 WSL↔윈도우 I/O 대기다.
+      912 개 시험이 디스크를 같이 쓰면 63 초가 90 초를 넘는다.
+      ★ **도구가 느려진 것이 아니라 레이크가 커졌고, 그 레이크가 느린 자리에 있다.**
+        이 수가 다시 걸리면 올릴 것이 아니라 **레이크의 자리**를 다시 봐야 한다.
     """
     r = subprocess.run([sys.executable, f"tools/{도구}", *_밟는다(셋)[도구]],
-                       cwd=ROOT, capture_output=True, text=True, timeout=90)
+                       cwd=ROOT, capture_output=True, text=True, timeout=240)
     글 = r.stdout + r.stderr
     assert "Traceback" not in 글, f"{도구} 가 맨몸으로 죽는다\n{글[-600:]}"
     assert "도구가 깨졌다" not in 글, f"{도구} 가 사람의 실수를 **도구 고장**이라 부른다\n{글[-600:]}"

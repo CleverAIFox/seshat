@@ -1,0 +1,50 @@
+{"id": "esc-t001", "src": "Use a minimum of H2 headings (with two leading # characters).", "갈래": "방아쇠", "전점수": 0}
+{"id": "esc-t002", "src": "Make sure you indent sub-list items 2 spaces.", "갈래": "방아쇠", "전점수": 0}
+{"id": "esc-t003", "src": "Avoid words such as \"just\", \"simply\", \"easy\", \"easily\", or \"simple\".", "갈래": "방아쇠", "전점수": 0}
+{"id": "esc-t004", "src": "Do not write API kinds with code formatting.", "갈래": "방아쇠", "전점수": 0}
+{"id": "esc-t005", "src": "Use GitHub suggestions to point out any required changes.", "갈래": "방아쇠", "전점수": 0}
+{"id": "esc-t006", "src": "Assume good intent and ask clarifying questions.", "갈래": "방아쇠", "전점수": 0}
+{"id": "esc-t007", "src": "Use horizontal rules for breaks in paragraph content.", "갈래": "방아쇠", "전점수": 0}
+{"id": "esc-t008", "src": "Use double quotes to quote text inside JSONPath expressions.", "갈래": "방아쇠", "전점수": 95}
+{"id": "esc-t009", "src": "Set served to false for the old version in the spec.versions list.", "갈래": "방아쇠", "전점수": 100}
+{"id": "esc-t010", "src": "Leave the uid value set the same as you found it.", "갈래": "방아쇠", "전점수": 100}
+{"id": "esc-t011", "src": "Prepend your diagram caption with Figure NUMBER..", "갈래": "방아쇠", "전점수": 50}
+{"id": "esc-t012", "src": "Use command line flags if they exist: --client-certificate, --client-key, --username, --password, --token.", "갈래": "방아쇠", "전점수": 50}
+{"id": "esc-t013", "src": "If the output is 1, it is already enabled.", "갈래": "방아쇠", "전점수": 0}
+{"id": "esc-t014", "src": "If the output is 0, then follow next steps.", "갈래": "방아쇠", "전점수": 0}
+{"id": "esc-t015", "src": "Then proceed with the steps outlined below.", "갈래": "방아쇠", "전점수": 0}
+{"id": "esc-t016", "src": "Note that your pod name and command prompt will be different.", "갈래": "방아쇠", "전점수": 0}
+{"id": "esc-t017", "src": "You'll need to know the two-letter language code for your language.", "갈래": "방아쇠", "전점수": 0}
+{"id": "esc-t018", "src": "Determine the actual user information to use.", "갈래": "방아쇠", "전점수": 0}
+{"id": "esc-t019", "src": "Don't rely on context, preferences, or other implicit states.", "갈래": "방아쇠", "전점수": 0}
+{"id": "esc-t020", "src": "Exclude this label from your webhook match conditions.", "갈래": "방아쇠", "전점수": 0}
+{"id": "esc-t021", "src": "Note there's no mention of your Service.", "갈래": "방아쇠", "전점수": 0}
+{"id": "esc-t022", "src": "You have alternative option to generate json with -j.", "갈래": "방아쇠", "전점수": 0}
+{"id": "esc-t023", "src": "As an example, you can follow this conversation in Istio community.", "갈래": "방아쇠", "전점수": 0}
+{"id": "esc-t024", "src": "The default output will be printed to stdout in YAML format.", "갈래": "방아쇠", "전점수": 0}
+{"id": "esc-t025", "src": "You can also use HTML, but it is not preferred.", "갈래": "방아쇠", "전점수": 0}
+{"id": "esc-t026", "src": "TokenReview objects to send/receive information from the webhook.", "갈래": "방아쇠", "전점수": 0}
+{"id": "esc-q001", "src": "Select all that apply.", "갈래": "퀴즈"}
+{"id": "esc-q002", "src": "Choose the best answer.", "갈래": "퀴즈"}
+{"id": "esc-q003", "src": "Mark this question for review.", "갈래": "퀴즈"}
+{"id": "esc-q004", "src": "Drag each item to the correct category.", "갈래": "퀴즈"}
+{"id": "esc-q005", "src": "Enter your answer in the box below.", "갈래": "퀴즈"}
+{"id": "esc-q006", "src": "Click Submit when you are finished.", "갈래": "퀴즈"}
+{"id": "esc-q007", "src": "Read the scenario carefully before answering.", "갈래": "퀴즈"}
+{"id": "esc-q008", "src": "Do not refresh the page during the quiz.", "갈래": "퀴즈"}
+{"id": "esc-q009", "src": "Review your answers before submitting.", "갈래": "퀴즈"}
+{"id": "esc-q010", "src": "Type the command that lists all pods in the default namespace.", "갈래": "퀴즈"}
+{"id": "esc-q011", "src": "Pause the video and try this yourself.", "갈래": "퀴즈"}
+{"id": "esc-q012", "src": "Skip this question if you are unsure.", "갈래": "퀴즈"}
+{"id": "esc-q013", "src": "Note: you may select more than one option.", "갈래": "퀴즈"}
+{"id": "esc-q014", "src": "Explain your reasoning in two sentences.", "갈래": "퀴즈"}
+{"id": "esc-c001", "src": "The deployment creates three replicas by default.", "갈래": "대조"}
+{"id": "esc-c002", "src": "A Service exposes an application running in a set of Pods.", "갈래": "대조"}
+{"id": "esc-c003", "src": "This value is measured in milliseconds.", "갈래": "대조"}
+{"id": "esc-c004", "src": "The controller watches for changes to the resource.", "갈래": "대조"}
+{"id": "esc-c005", "src": "Logs are written to standard output.", "갈래": "대조"}
+{"id": "esc-c006", "src": "Each node runs a kubelet process.", "갈래": "대조"}
+{"id": "esc-c007", "src": "Memory limits are enforced by the container runtime.", "갈래": "대조"}
+{"id": "esc-c008", "src": "The certificate expires after one year.", "갈래": "대조"}
+{"id": "esc-c009", "src": "Students completed the course in six weeks.", "갈래": "대조"}
+{"id": "esc-c010", "src": "The scheduler assigns the Pod to a node with enough free memory.", "갈래": "대조"}

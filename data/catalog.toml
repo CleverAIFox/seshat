@@ -35,7 +35,7 @@
 
 [layers."정본"]
 base = "repo"
-dirs = ["data/ontology", "data/eval", "data/scoreboard.toml"]
+dirs = ["data/ontology", "data/eval", "data/probe", "data/scoreboard.toml"]
 committed = true
 regenerable = false
 managed = false
@@ -266,3 +266,14 @@ uses = ["evidence"]
 how = "tools/gate.py"
 feeds = ["tools/gate.py — 회귀를 막는 문(PLAN #28)"]
 note = "값은 레이크의 결과 파일에서 온다. 여기 적힌 것은 그 결과를 가리키는 숫자와 이름뿐이다"
+
+[[source]]
+id = "escape-probe"
+where = "repo:data/probe/*.jsonl"
+origin = "역할 이탈 탐침 50줄 — 26줄은 data/train/k001.jsonl 에서 실제로 이탈한 원문(k8s 문서)이고, 24줄은 직접 지었다(Udemy 투 지시문 14 · 대조 평서문 10)"
+license = "CC BY 4.0(k8s 에서 온 26줄) · 자체(직접 지은 24줄)"
+uses = ["eval"]
+how = "사람"
+feeds = ["tools/escape.py — 이탈률을 잰다"]
+note = """★ **품질 셋이 아니다.** 번역이 맞는지가 아니라 번역이기는 한지를 잰다.
+26줄이 학습셋(k001)과 겹치므로 품질 숫자에 섞으면 오염이다 — 읽는 것은 escape.py 하나뿐이다."""
