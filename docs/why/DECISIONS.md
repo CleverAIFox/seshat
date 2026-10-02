@@ -8,7 +8,7 @@
 ---
 
 <!-- 색인 시작 -->
-<details><summary><b>절 색인</b> — 279 절. <code>python3 tools/check_docs.py --fix-index</code> 가 다시 쓴다</summary>
+<details><summary><b>절 색인</b> — 280 절. <code>python3 tools/check_docs.py --fix-index</code> 가 다시 쓴다</summary>
 
 | § | 날짜 | 무엇 |
 |---|---|---|
@@ -291,6 +291,7 @@
 | 277 | 2026-10-01 | 받은 것을 안 적어서 레이크가 1,841 건을 짚었다 |
 | 278 | 2026-10-01 | 안에서 물으면 403 이 안 난다 — 세 번째 같은 병 |
 | 279 | 2026-10-02 | 원문이 모델에게 지시로 읽혔다 — 그리고 심판이 거기에 만점을 줬다 |
+| 280 | 2026-10-02 | 원칙을 적어 두고 한 칸 아래에서 어겼다 — 이름과 내용이 갈린 판 하나 |
 
 </details>
 <!-- 색인 끝 -->
@@ -11549,3 +11550,42 @@ gemma3:12b 이 403 로 거절했다 — https://ethical-deny-drunk-quebec.tryclo
 
 강제자 — `tools/escape.py::이탈` · `tools/distill.py` · `tests/test_escape.py` 23건 ·
 `data/probe/escape.jsonl` · `data/catalog.toml` 의 `escape-probe` · `docs/now/escape.md`
+
+## §280. 원칙을 적어 두고 한 칸 아래에서 어겼다 — 이름과 내용이 갈린 판 하나
+
+**2026-10-02** — 문서 감사 중에 `.github/workflows/gpu-eval.yml` 에서 나왔다.
+
+```yaml
+# ★ 팔은 입력이 정한다(DECISIONS §27). 워크플로에 백엔드 이름을 박으면 실험마다 이 파일을 고친다
+- run: uv run python tools/make_probes.py --name h001 --n "${{ inputs.probes }}"
+  …  --set data/probes/h001.jsonl --hypothesis "$H" --name "$H-$b"
+- run: cp data/probes/h001.jsonl "runs/${{ inputs.hypothesis }}-probes-….jsonl"
+```
+
+★ **탐침은 `h001` 로 만들고 `h001` 로 재는데, 결과 파일만 입력한 가설 번호로 복사했다.**
+  H-019 로 돌리면 **이름은 `H-019-probes-*` 이고 내용은 h001 의 탐침**이다.
+★ **그 ★ 줄이 바로 위에 있었다.** 「이름을 박으면 실험마다 이 파일을 고친다」 를 적어 놓고
+  백엔드만 입력으로 받고 **탐침 이름은 박았다.** 한 가지를 고치면서 같은 꼴의 나머지를 안 봤다.
+★ 잡 이름도 `h001` 이었고, `check_hypotheses` 와 `lake.py put` 만 시스템 `python3` 이었다 —
+  나머지는 `uv run` 이다. **셀프 호스티드 러너에서 두 해석기가 다르면 조용히 다르게 돈다.**
+
+### 피해 범위는 한 판이다
+
+레이크 `runs/` 119건 중 `*-probes-*.jsonl` 은 **`H-019-probes-35808674254.jsonl` 하나**다.
+그 판의 탐침은 H-019 의 것이 아니라 **h001 의 것**이다. 결과 자체가 틀린 것은 아니지만
+**무엇으로 쟀는지가 파일 이름과 다르다** — 그리고 GPU 시간은 다시 못 만든다(DECISIONS §28).
+
+★ **잘못 라벨된 결과는 안 만든 것보다 나쁘다.** 없으면 다시 재면 되는데, 있으면 **맞는 줄 알고
+  쓴다.** 이 저장소가 파는 것이 「제대로 쟀다」 하나인데 그 자리가 깨져 있었다.
+
+### 배운 것
+
+★ **주석이 적은 원칙은 그 주석 아래 한 줄에만 적용된다.** 「이름을 박지 않는다」 를 적었으면
+  **그 파일의 모든 이름**을 봐야 했다. 원칙을 적는 것과 적용 범위를 세는 것은 다른 일이다.
+★ **원칙은 주석이 아니라 검사로 적는다.** 같은 문장을 `tests/test_workflows.py` 에 옮기니
+  옛 코드에서 즉시 빨개졌다 — 주석은 2026-09-22 부터 넉 달을 아무것도 안 막았다.
+★ **이름과 내용을 따로 정하는 자리는 전부 갈릴 수 있다.** 여기서는 「만드는 이름」 과
+  「복사하는 이름」 이 따로였다. 하나가 정하게 하면 갈릴 자리가 없어진다.
+
+강제자 — `tests/test_workflows.py::test_워크플로가_가설_번호를_안_박는다` ·
+`tests/test_workflows.py::test_GPU_작업은_한_인터프리터로_돈다` · `.github/workflows/gpu-eval.yml`

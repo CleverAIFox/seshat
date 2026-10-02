@@ -61,6 +61,39 @@ def test_verify_가_검사기를_빠뜨리지_않는다():
     assert [t for t in tools if f"tools/{t}" not in v] == []
 
 
+def _몸만(p) -> str:
+    """주석을 벗긴 워크플로 본문. **까닭을 적은 줄이 검사에 걸리면 까닭을 못 적는다.**"""
+    return "\n".join(x.split("#", 1)[0] for x in p.read_text(encoding="utf-8").splitlines())
+
+
+def test_워크플로가_가설_번호를_안_박는다():
+    """★ **2026-09-22 `h001` 이 박힌 채로 H-019 를 쟀다**(DECISIONS §280).
+
+    탐침은 `h001` 로 만들고 `--set data/probes/h001.jsonl` 로 재는데, 결과 파일만
+    `H-019-probes-*` 로 복사했다 — **이름은 H-019 이고 내용은 h001 이다.** 레이크에 들어가면
+    나중에 데이터만 보고는 구별이 안 되고, **GPU 시간은 다시 못 만든다**(DECISIONS §28).
+    그 파일 안의 ★ 가 「백엔드 이름을 박으면 실험마다 이 파일을 고친다」 를 적어 놓고 있었다 —
+    **원칙을 적어 두고 한 칸 아래에서 어겼다.** 이름은 입력이 정한다.
+    """
+    박힘 = re.compile(r"\bh\d{3}\b|\bH-\d{3}\b")
+    나쁜 = [f"{p.name}:{i} {m.group(0)}"
+           for p in _workflows()
+           for i, 줄 in enumerate(_몸만(p).splitlines(), 1)
+           if (m := 박힘.search(줄))]
+    assert 나쁜 == [], "워크플로에 가설 번호가 박혔다 — 입력이 정한다\n" + "\n".join(나쁜)
+
+
+def test_GPU_작업은_한_인터프리터로_돈다():
+    """★ 셀프 호스티드 러너에서 `python3` 과 `uv run python` 이 다른 해석기면 **조용히 다르게 돈다.**
+
+    2026-10-02 `check_hypotheses` 와 `lake.py put` 만 시스템 `python3` 이었다 — 그 둘이 다른
+    자리의 의존성을 보면 문이 열리거나 레이크가 비어도 작업은 초록이다.
+    """
+    몸 = _몸만(ROOT / ".github/workflows/gpu-eval.yml")
+    나쁜 = [x.strip() for x in 몸.splitlines() if re.search(r"(?<!uv run )\bpython3? tools/", x)]
+    assert 나쁜 == [], "GPU 작업은 `uv run` 하나로 돈다\n" + "\n".join(나쁜)
+
+
 def test_결과는_레이크보다_먼저_아티팩트로_간다():
     """레이크 단계가 실패해도 GPU 시간이 살아남는다(DECISIONS §28)."""
     t = (ROOT / ".github/workflows/gpu-eval.yml").read_text(encoding="utf-8")

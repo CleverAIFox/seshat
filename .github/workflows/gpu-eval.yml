@@ -29,7 +29,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  h001:
+  eval:
     runs-on: [self-hosted, gpu]
     timeout-minutes: 180
     steps:
@@ -41,9 +41,12 @@ jobs:
           curl -sf http://127.0.0.1:11434/api/version || { echo "ollama 가 떠 있지 않다 — ollama serve"; exit 1; }
           ollama pull translategemma:4b
       - run: uv sync --group eval
-      - run: python3 tools/check_hypotheses.py
+      - run: uv run python tools/check_hypotheses.py
+      # ★ **탐침 이름은 가설이 정한다**(DECISIONS §280). 2026-09-22 `h001` 이 박혀 있어서 H-019 를
+      #   **H-001 의 탐침으로 쟀고**, 결과 파일만 `H-019-probes-*` 로 복사했다 — 이름과 내용이 갈렸다.
+      #   바로 아래 ★ 가 「백엔드 이름을 박지 않는다」 를 적어 놓고 탐침 이름은 박고 있었다
       - name: 탐침을 만든다
-        run: uv run python tools/make_probes.py --name h001 --n "${{ inputs.probes }}"
+        run: uv run python tools/make_probes.py --name "${{ inputs.hypothesis }}" --n "${{ inputs.probes }}"
       # ★ 팔은 입력이 정한다(DECISIONS §27). 워크플로에 백엔드 이름을 박으면 실험마다 이 파일을 고친다
       - name: 팔마다 잰다
         env:
@@ -51,10 +54,10 @@ jobs:
           ARMS: ${{ inputs.arms }}
         run: |
           for b in $ARMS; do
-            uv run python -m seshat.evaluate --backend "$b" --set data/probes/h001.jsonl --hypothesis "$H" --name "$H-$b"
+            uv run python -m seshat.evaluate --backend "$b" --set "data/probes/$H.jsonl" --hypothesis "$H" --name "$H-$b"
           done
       - name: 탐침을 결과와 함께 남긴다 — 대조 도구가 구문을 붙인다
-        run: cp data/probes/h001.jsonl "runs/${{ inputs.hypothesis }}-probes-${{ github.run_id }}.jsonl"
+        run: cp "data/probes/${{ inputs.hypothesis }}.jsonl" "runs/${{ inputs.hypothesis }}-probes-${{ github.run_id }}.jsonl"
       # ★ **먼저 아티팩트로 올린다**(DECISIONS §28). 레이크 단계가 실패하면 GPU 시간이 통째로 사라진다 —
       #   결과는 다시 만들 수 없다. `always()` 는 앞 단계가 깨져도 남은 결과를 건진다
       - uses: actions/upload-artifact@v7
@@ -81,4 +84,4 @@ jobs:
         if: always()
         run: |
           [ -n "${SESHAT_DATA:-}" ] || { echo "러너에 SESHAT_DATA 가 없다 — ~/actions-runner/.env 에 적고 러너를 다시 띄운다"; exit 1; }
-          python3 tools/lake.py put runs runs/*.jsonl
+          uv run python tools/lake.py put runs runs/*.jsonl
