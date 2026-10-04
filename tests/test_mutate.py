@@ -231,3 +231,65 @@ def test_물_수_없는_자리를_적어_뒀다():
     다시 물려 보려다 시간을 버린다 — `돌린다` 의 `== _울었다` 가 그 자리다. 가드가 이미
     `{0, 1}` 로 좁혀 놓아 `!= 0` 과 **증명 가능하게 같다.**"""
     assert "물 수 없다" in _몸(), "못 무는 자리를 머리말에 안 적었다"
+
+
+# ── 바이트코드와 건너뜀 (DECISIONS §289) ──────────────────────────────────
+
+def test_되돌린_뒤_바이트코드를_버린다(tmp_path):
+    """★ **길이가 같은 바꿈은 `__pycache__` 를 중독시킨다.** 파이썬은 소스의 크기와 mtime
+    으로 캐시를 쓰므로 둘 다 같으면 **되돌린 뒤에도 뚫린 바이트코드를 다시 쓴다** —
+    해시로 소스를 확인해도 안 잡힌다. 이 자는 몸통을 통째로 바꾸므로 길이가 같아지기 쉽다.
+    """
+    f = tmp_path / "a.py"
+    f.write_text("def main() -> int:\n    return 3\n", encoding="utf-8")
+    캐시 = tmp_path / "__pycache__"
+    캐시.mkdir()
+    썩은 = 캐시 / "a.cpython-312.pyc"
+    썩은.write_bytes(b"stale bytecode")
+    MU._바이트코드를_버린다(f)
+    assert not 썩은.exists(), "옛 바이트코드가 남았다"
+
+
+def test_남의_캐시는_안_지운다(tmp_path):
+    캐시 = tmp_path / "__pycache__"
+    캐시.mkdir()
+    (tmp_path / "a.py").write_text("x = 1\n", encoding="utf-8")
+    남 = 캐시 / "b.cpython-312.pyc"
+    남.write_bytes(b"other")
+    MU._바이트코드를_버린다(tmp_path / "a.py")
+    assert 남.exists(), "다른 모듈의 캐시까지 지운다"
+
+
+def test_전부_건너뛰면_도구_고장으로_멈춘다(monkeypatch):
+    """★ **건너뛴 시험은 안 문다.** 통과로 끝나므로 「약해서 안 물었다」 와 구별이 안 된다 —
+    thoth CI 가 그렇게 빨개졌고 두 실패가 한 원인이었다."""
+    import subprocess
+
+    import pytest
+    monkeypatch.setattr(MU.subprocess, "run",
+                        lambda *a, **k: subprocess.CompletedProcess([], 0, "4 skipped in 0.1s", ""))
+    with pytest.raises(SystemExit) as e:
+        MU.돌린다(["x"])
+    assert e.value.code == 2
+
+
+def test_통과가_섞이면_건너뜀이_아니다(monkeypatch):
+    import subprocess
+    monkeypatch.setattr(MU.subprocess, "run",
+                        lambda *a, **k: subprocess.CompletedProcess([], 0, "3 passed, 1 skipped", ""))
+    assert MU.돌린다(["x"]) is False, "하나라도 돌았으면 건너뜀이 아니다"
+
+
+def test_뚫린_동안_바이트코드를_안_만든다():
+    몸 = (ROOT / "tools/mutate.py").read_text(encoding="utf-8")
+    assert "PYTHONDONTWRITEBYTECODE" in 몸, "뚫린 동안 캐시가 쌓인다"
+    블록 = 몸[몸.index("def 돌린다("):몸.index("def _canary(")]
+    assert "PYTHONDONTWRITEBYTECODE" in 블록, "시험을 돌리는 자리에서 안 막는다"
+
+
+def test_되돌리는_자리마다_캐시를_버린다():
+    몸 = (ROOT / "tools/mutate.py").read_text(encoding="utf-8")
+    신호 = 몸[몸.index("def _되돌리고_죽는다("):몸.index("def main(")]
+    assert "_바이트코드를_버린다(p)" in 신호, "끊겨 죽을 때 캐시가 남는다"
+    본 = 몸[몸.index("        finally:"):]
+    assert "_바이트코드를_버린다(f)" in 본, "되돌린 뒤 캐시를 안 버린다"

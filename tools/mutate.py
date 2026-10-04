@@ -46,6 +46,7 @@ from __future__ import annotations
 import argparse
 import ast
 import hashlib
+import os
 import pathlib
 import signal
 import subprocess
@@ -61,7 +62,7 @@ _뚫린것: dict[pathlib.Path, str] = {}
 # ★ **양방향**(§287). 산 자리는 절대 0 이고, 못 잰 자리는 늘면 울고, **잴 자리는 줄면 운다** —
 #   반환 주석을 떼면 그 함수가 조용히 검사 밖으로 나간다. 2026-10-01 → 10-04 에 못 잰 자리가
 #   41 → 47 로 늘었는데 **아무도 안 셌다.**
-MIN_잴것 = 438
+MIN_잴것 = 439
 MAX_못잴것 = 47
 # ★ **장부**(§287). `verify.sh` 가 보는 범위에서 **지금 붙드는 시험이 없는 자리.** 늘면 막고,
 #   갚으면 `--update` 가 줄인다 — `check_deadchecks` 와 같은 꼴(§255 · §258).
@@ -205,12 +206,22 @@ def 돌린다(걸음: list[str]) -> bool:
       좁혀 놓아 `!= 0` 과 **증명 가능하게 같다.** 관문이 아니라 **독립성**이므로 선언하지
       않는다 — 적어 두지 않으면 다음 사람이 다시 물려 보려다 시간을 버린다.
     """
-    r = subprocess.run(걸음, cwd=ROOT, capture_output=True, text=True)
+    # ★ **뚫린 동안 바이트코드를 남기지 않는다**(§289). 막는 것이 치우는 것보다 싸다.
+    r = subprocess.run(걸음, cwd=ROOT, capture_output=True, text=True,
+                       env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"})
     if r.returncode not in (0, _울었다):
         print(f"\n    ★ **pytest 가 {r.returncode} 로 끝났다 — 시험이 운 것이 아니라 도구가"
               f" 깨졌다.**\n       {' '.join(걸음)}\n"
               f"       의존성 묶음을 깐다 : uv sync --group eval\n"
               f"{r.stdout[-700:]}", file=sys.stderr)
+        raise SystemExit(2)
+    # ★ **건너뛴 시험은 안 문다**(§289). 의존성이 없는 기계에서 `skip` 된 시험은 통과로
+    #   끝나므로 **「약해서 안 물었다」 와 구별이 안 된다** — thoth CI 가 그렇게 빨개졌고
+    #   두 실패(돌연변이 · 문서 건수)가 **한 원인**이었다.
+    if r.returncode == 0 and "skipped" in r.stdout and " passed" not in r.stdout:
+        print("    ★ 시험이 **전부 건너뛰어졌다** — 건너뛴 시험은 안 문다.\n"
+              "       깐다 : uv sync --group eval\n"
+              f"       그 뒤 다시 : {' '.join(걸음)}", file=sys.stderr)
         raise SystemExit(2)
     return r.returncode == _울었다
 
@@ -227,6 +238,21 @@ def _canary() -> None:
     if _중립값(ast.parse("def f() -> list[str]: ...").body[0].returns) != "[]":
         print("    ★ 카나리아가 죽었다 — 꼴을 못 읽는다")
         sys.exit(2)
+
+
+def _바이트코드를_버린다(파일: pathlib.Path) -> None:
+    """★ **길이가 같은 바꿈은 `__pycache__` 를 중독시킨다**(DECISIONS §289 · thoth §157).
+
+    파이썬은 소스의 **크기와 mtime** 으로 캐시를 쓴다. 둘 다 같으면 **되돌린 뒤에도 뚫린
+    바이트코드를 다시 쓴다** — 해시로 소스를 확인해도 안 잡힌다. 소스는 멀쩡하기 때문이다.
+
+    ★ **이 자는 몸통을 통째로 `return <중립값>` 으로 바꾸므로** 길이가 같아지기 쉽다 —
+      한 줄짜리 함수가 특히 그렇다. thoth 에서 `return 3` → `return 0` 으로 실제로 났고,
+      시험 하나가 **설명 없이** 틀려 두 기계에서 각각 진단에 시간을 썼다.
+    ★ **그 뒤의 모든 판정이 거짓이 된다** — 한 판이 끝난 뒤 사람이 돌리는 시험까지.
+    """
+    for q in 파일.parent.glob(f"__pycache__/{파일.stem}.*.pyc"):
+        q.unlink(missing_ok=True)
 
 
 def _이름(p: pathlib.Path) -> str:
@@ -247,6 +273,7 @@ def _되돌리고_죽는다(signum: int, _frame: object) -> None:
     for p, 원 in list(_뚫린것.items()):
         try:
             p.write_text(원, encoding="utf-8")
+            _바이트코드를_버린다(p)
             print(f"\n    신호 {signum} — {_이름(p)} 을 되돌렸다", file=sys.stderr)
         except Exception as e:
             print(f"\n    ★ 신호 {signum} — **{_이름(p)} 을 못 되돌렸다**({e}) : "
@@ -301,10 +328,14 @@ def main(argv: list[str] | None = None) -> int:
                     느린길 += 1
                 물었나 = 돌린다(전부)
             if not 물었나:
+                # ★ **막는 자리에는 넘는 길을 같이 적는다**(DECISIONS §210). 한 자리를 보려면
+                #   `python3 tools/mutate.py --only <파일>` 로 좁혀 다시 돌린다.
                 산다.append(f"{파일}::{이름}  (몸통을 `return {v}` 로 바꿔도 통과)")
-                print(f"    ✗ {파일}::{이름}", file=sys.stderr)
+                print(f"    ✗ {파일}::{이름}"
+                      f"  — 좁혀 본다 : python3 tools/mutate.py --only {파일}", file=sys.stderr)
         finally:
             f.write_text(원, encoding="utf-8")
+            _바이트코드를_버린다(f)
             _뚫린것.pop(f, None)
         if hashlib.sha256(f.read_text(encoding="utf-8").encode()).hexdigest() != 앞해시:
             print(f"    ★ **{파일} 을 못 되돌렸다** — git 으로 되돌린다 : git checkout -- {파일}",

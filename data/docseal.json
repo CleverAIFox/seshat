@@ -1315,7 +1315,7 @@
  "234": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "eeb3938ed0d84b4f",
+  "지문": "d950a08447ffed72",
   "파일": [
    "docs/DECISIONS.md",
    "docs/PLAN.md",
@@ -1394,7 +1394,7 @@
  "241": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "08a36d8aee9cab1b",
+  "지문": "88a0d6b2ecc2b0b0",
   "파일": [
    "tools/check_numbers.py",
    "docs/DECISIONS.md"
@@ -1665,7 +1665,7 @@
  "267": {
   "날짜": "2026-10-01",
   "읽음": false,
-  "지문": "ace54f1724c5ae8d",
+  "지문": "1876263b271a7a45",
   "파일": [
    "tools/check_claims.py",
    "tests/test_claims.py",
@@ -1845,7 +1845,7 @@
  "287": {
   "날짜": "2026-10-04",
   "읽음": false,
-  "지문": "3d9368aad3847482",
+  "지문": "7555bc925a9547ca",
   "파일": [
    "tools/mutate.py::톱니",
    "tools/mutate.py::견준다",
@@ -1861,12 +1861,21 @@
  "288": {
   "날짜": "2026-10-04",
   "읽음": false,
-  "지문": "408f6efe13423c16",
+  "지문": "e3106f69080bf4f9",
   "파일": [
    "tools/check_docs.py::check_map",
    "tools/plan_closed.py",
    "tests/test_plan_closed.py::test_닫힌_행의_본문을_이력에서_꺼낸다",
    "docs/README.md"
+  ]
+ },
+ "289": {
+  "날짜": "2026-10-05",
+  "읽음": false,
+  "지문": "41b30d66cfbd2eae",
+  "파일": [
+   "tools/mutate.py",
+   "tests/test_mutate.py"
   ]
  },
  "29": {
