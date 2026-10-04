@@ -3,7 +3,7 @@ r"""**결과 문서가 든 수에 근거가 있는가**(DECISIONS §235).
   python3 tools/check_numbers.py            # 근거 없는 수가 있으면 1
   python3 tools/check_numbers.py --list     # 어느 줄의 어느 수인지 찍는다
 
-★ `docs/now/related.md` 는 **결과를 요약하는 문서**다 — 수를 **만들지 않고 옮겨 적는다.** 그런데
+★ `docs/related.md` 는 **결과를 요약하는 문서**다 — 수를 **만들지 않고 옮겨 적는다.** 그런데
   옮겨 적는 일에는 강제자가 없었다. `+0.0739` 를 `+0.0793` 으로 잘못 치면 **아무도 안 운다.**
 ★ **파이어레인의 `docnum_check` 를 여기 맞춘 것이다**(파이어레인 MASTER 의 「문서 숫자 대조」).
   거기는 산출물에서 **다시 세어** 대조하는데, 이 저장소의 수는 레이크의 판에서 나므로 **clone 직후에
@@ -24,9 +24,9 @@ import re
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-문서 = "docs/now/related.md"
+문서 = "docs/related.md"
 # 근거가 사는 자리. **늘리는 것이지 줄이는 것이 아니다**
-근거 = ("docs/why/DECISIONS.md", "docs/next/hypotheses.md", "docs/now/MASTER.md",
+근거 = ("docs/DECISIONS.md", "docs/hypotheses.md", "docs/MASTER.md",
         "data/scoreboard.toml")
 수꼴 = re.compile(r"\d+\.\d{3,5}")
 # ★ arXiv 번호는 수가 아니라 이름이다 — `2310.0582` 를 지표로 읽으면 논문 표가 전부 걸린다
@@ -70,7 +70,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"    {문서}:{n} 의 `{수}` 가 근거에 없다 — {줄}")
     if 없:
         print(f"    ✗ 근거 없는 수 {len(없)} — **결과 문서는 수를 만들지 않는다**(DECISIONS §235)\n"
-              f"      그 수를 낸 판의 절에 적는다 : docs/why/DECISIONS.md\n"
+              f"      그 수를 낸 판의 절에 적는다 : docs/DECISIONS.md\n"
               f"      옮겨 적기가 틀렸으면 고친다 : {문서}\n"
               f"      무엇을 보는지 다시 본다 : python3 tools/check_numbers.py --list", file=sys.stderr)
         return 1

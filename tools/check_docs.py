@@ -39,7 +39,7 @@ ROOT = Path(__file__).resolve().parent.parent
 # ★ README 는 서술 규약에서 뺀다. 나머지 셋은 미래의 나를 향하고 README 는
 #   처음 읽는 사람을 향한다. 대상이 다르면 문체도 다르다. 빠진 것이 아니라
 #   뺀 것이다. **참조 검사는 README 도 본다** — 처음 읽는 사람이 죽은 링크를 만난다.
-DOCS = ["docs/now/MASTER.md", "docs/next/PLAN.md", "docs/why/DECISIONS.md"]
+DOCS = ["docs/MASTER.md", "docs/PLAN.md", "docs/DECISIONS.md"]
 
 # 1·2인칭. 문서는 3인칭으로 쓴다.
 PERSON = re.compile(r"(?<![가-힣])(우리|저희|여러분|당신|제가|내가|너희)(?![가-힣])")
@@ -235,7 +235,7 @@ def check_plan(text: str, fails: list) -> None:
         #   **말하려는 문장의 수로 위가 막힌다.** 막는 문장이 없으면 그것은 넓히는 일(🟡)이다
         if "🔴" in marks and "related.md" not in item:
             fails.append(f"PLAN #{n} 이 🔴 인데 **어느 문장을 막는지** 안 적었다 — "
-                         f"`docs/now/related.md` §3 의 줄을 든다(DECISIONS §187). "
+                         f"`docs/related.md` §3 의 줄을 든다(DECISIONS §187). "
                          f"막는 문장이 없으면 🔴 가 아니라 🟡 다")
         for tok in PLAN_REF.findall(deps):
             if int(tok) not in known:
@@ -255,7 +255,7 @@ def check_plan(text: str, fails: list) -> None:
 
 def _targets(root: Path) -> list[Path]:
     out = [root / "README.md", root / MAP,        # ★ 지도의 참조도 검사한다(§199)
-           root / "docs/now/MASTER.md", root / "docs/next/PLAN.md"]
+           root / "docs/MASTER.md", root / "docs/PLAN.md"]
     out += sorted((root / "docs/bench").glob("*")) if (root / "docs/bench").exists() else []
     for d in REF_DIRS:
         base = root / d
@@ -276,9 +276,9 @@ def check_refs(root: Path, fails: list) -> None:
       DECISIONS 는 지우지 않으므로 없는 절을 가리키면 오타다.
     ★ 1판은 `PLAN §x #N` 꼴만 보았다. `MASTER §x` 와 `DECISIONS §N` 은 아무도 보지 않았다.
     """
-    plan = (root / "docs/next/PLAN.md").read_text(encoding="utf-8")
-    master = (root / "docs/now/MASTER.md").read_text(encoding="utf-8")
-    dec = (root / "docs/why/DECISIONS.md").read_text(encoding="utf-8")
+    plan = (root / "docs/PLAN.md").read_text(encoding="utf-8")
+    master = (root / "docs/MASTER.md").read_text(encoding="utf-8")
+    dec = (root / "docs/DECISIONS.md").read_text(encoding="utf-8")
     rows = {n for n, _ in plan_rows(plan)[0]}
     plan_secs = {int(m.group(1)) for _, t in _h2(plan) if (m := H2_NUM.match(t))}
     master_secs = set(HEAD_ANY.findall(master))
@@ -495,7 +495,7 @@ def main(argv=None) -> int:
     args = sys.argv[1:] if argv is None else argv
     _canary()
     if "--fix-index" in args:
-        p = ROOT / "docs/why/DECISIONS.md"
+        p = ROOT / "docs/DECISIONS.md"
         옛 = p.read_text(encoding="utf-8")
         새 = _색인을_박는다(옛)
         p.write_text(새, encoding="utf-8")
@@ -516,13 +516,13 @@ def main(argv=None) -> int:
         check_headings(p.name, texts[rel], fails)
         check_eof(p.name, texts[rel], fails)
     if len(texts) == len(DOCS):
-        check_plan(texts["docs/next/PLAN.md"], fails)
-        check_master(texts["docs/now/MASTER.md"], fails)
-        check_decisions(texts["docs/why/DECISIONS.md"], fails)
-        check_index(texts["docs/why/DECISIONS.md"], fails)
-        check_plan_closed(ROOT, texts["docs/next/PLAN.md"], texts["docs/why/DECISIONS.md"], fails)
+        check_plan(texts["docs/PLAN.md"], fails)
+        check_master(texts["docs/MASTER.md"], fails)
+        check_decisions(texts["docs/DECISIONS.md"], fails)
+        check_index(texts["docs/DECISIONS.md"], fails)
+        check_plan_closed(ROOT, texts["docs/PLAN.md"], texts["docs/DECISIONS.md"], fails)
         check_map(ROOT, fails)
-        check_tools_listed(ROOT, texts["docs/now/MASTER.md"], fails)
+        check_tools_listed(ROOT, texts["docs/MASTER.md"], fails)
         check_refs(ROOT, fails)
     for f in fails:
         print(f"    {f}")

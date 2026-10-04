@@ -20,7 +20,13 @@ import subprocess
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-PLAN = "docs/next/PLAN.md"
+PLAN = "docs/PLAN.md"
+# ★ **옮긴 자리를 전부 든다**(DECISIONS §288). 이 파일은 세 시대를 지났다 —
+#   `docs/PLAN.md` → `docs/next/PLAN.md`(DECISIONS §199) → `docs/PLAN.md`(DECISIONS §288, 평탄화).
+#   **가운데 시대를 빠뜨리면 그 기간의 닫힌 행을 영영 못 꺼낸다** — 2026-10-04 에
+#   평탄화하면서 경로를 일괄 치환했고, 그 치환이 **역사를 적어 둔 자리까지 덮었다.**
+#   시험이 잡았다(`test_닫힌_행의_본문을_이력에서_꺼낸다`).
+옛자리 = ("docs/next/PLAN.md",)
 # ★ `re.M` 이 없으면 `findall` 이 **첫 줄만** 본다 — 닫힌 행이 0 으로 나온다
 행 = re.compile(r"^\| (\d+) \|", re.M)
 
@@ -30,14 +36,14 @@ def _git(*args: str) -> str:
 
 
 def 판본들() -> list[tuple[str, str, str]]:
-    """(커밋, 날짜, 제목) — 새것부터. **옮긴 자리를 따라간다**(§199 에서 `docs/PLAN.md` 였다)."""
+    """(커밋, 날짜, 제목) — 새것부터. **`--follow` 가 옮긴 자리를 따라간다**(§199 · §288)."""
     글 = _git("log", "--follow", "--format=%H\t%cs\t%s", "--", PLAN)
     return [tuple(x.split("\t", 2)) for x in 글.splitlines() if x.count("\t") >= 2]
 
 
 def 그때의_행(커밋: str, n: int) -> str:
     """그 커밋에서 `#n` 행의 본문. 없으면 빈 글."""
-    for 자리 in (PLAN, "docs/PLAN.md"):
+    for 자리 in (PLAN, *옛자리):
         글 = _git("show", f"{커밋}:{자리}")
         if 글:
             for x in 글.splitlines():
@@ -64,7 +70,7 @@ def 닫힌_번호() -> list[int]:
 
 def 든_절(n: int) -> list[str]:
     """그 번호를 든 DECISIONS 절. **번호만 보고 뜻은 안 본다**(그것은 사람이 읽는다)."""
-    글 = (ROOT / "docs/why/DECISIONS.md").read_text(encoding="utf-8")
+    글 = (ROOT / "docs/DECISIONS.md").read_text(encoding="utf-8")
     절 = [(m.group(1), m.start()) for m in re.finditer(r"^## §(\d+)\.", 글, re.M)]
     본 = set()
     for m in re.finditer(rf"(?<![\w§-])#{n}(?!\d)", 글):

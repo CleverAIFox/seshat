@@ -43,8 +43,8 @@ bash tools/verify.sh     # 규약을 포함한 점검 전부 — 점검 목록�
 | **기록판은 손으로 안 고친다 — 선 줄도 그렇다.** 기록은 `--update`, 선은 `--pin-target` 이 판에서 박는다(DECISIONS §171) | `tools/gate.py::_블록을_고친다` · `tools/gate.py::_선을_박는다` · `tests/test_gate.py` |
 | **점수를 내는 셋에서 캔 노드는 누수 장부에 적는다.** 출처를 사전 안에 적지 않는다 — 적으면 `onto_sha256` 이 바뀌어 **뜻이 안 바뀐 편집이 옛 판을 전부 막는다**(DECISIONS §168) | `data/ontology/mined.jsonl` · `tools/check_ontology.py` · `tools/mine_terms.py` 의 거절 · `tests/test_mined.py` |
 | **차이가 잡음인지는 손으로 안 정한다.** 허용치 · 배수 · 중앙값을 사람이 그으면 자가 변수에 안 맞는다 — 2026-09-28 하루에 세 번 틀렸다(§139 · §178 · §179). 짝지은 부트스트랩이 **크기와 확실함을 따로** 준다(DECISIONS §180) | `tools/bootstrap.py` · `tests/test_bootstrap.py` · `verify.sh` 의 `bootstrap` 단계 |
-| **🔴 는 「지금 적어 놓은 문장 하나를 못 쓰게 하는 빚」 이다.** 「측정을 더럽힌다」 만으로는 끝이 없다 — 재는 것은 늘 조금씩 더럽다. 각 🔴 행은 `docs/now/related.md` §3 의 **어느 줄을 막는지**를 든다. 그러면 🔴 의 수가 **말하려는 문장의 수로 위가 막힌다**(DECISIONS §187) | `tools/check_docs.py::check_plan` |
-| **가설을 닫는 판마다 빚 한 줄을 같이 움직인다.** 재면 **재는 도구의 결함이 보이므로** 가설 닫기는 빚을 만든다 — 2026-09-28 가설 17 을 닫고 빚이 18 에서 20 이 됐다(DECISIONS §168) | 패치 제목 아래 **갚은 줄**을 적는다 · `docs/next/PLAN.md` #47 |
+| **🔴 는 「지금 적어 놓은 문장 하나를 못 쓰게 하는 빚」 이다.** 「측정을 더럽힌다」 만으로는 끝이 없다 — 재는 것은 늘 조금씩 더럽다. 각 🔴 행은 `docs/related.md` §3 의 **어느 줄을 막는지**를 든다. 그러면 🔴 의 수가 **말하려는 문장의 수로 위가 막힌다**(DECISIONS §187) | `tools/check_docs.py::check_plan` |
+| **가설을 닫는 판마다 빚 한 줄을 같이 움직인다.** 재면 **재는 도구의 결함이 보이므로** 가설 닫기는 빚을 만든다 — 2026-09-28 가설 17 을 닫고 빚이 18 에서 20 이 됐다(DECISIONS §168) | 패치 제목 아래 **갚은 줄**을 적는다 · `docs/PLAN.md` #47 |
 | 위생 도구는 근거가 있을 때만 지운다 | `tools/sweep.py` · `tests/test_sweep.py` |
 
 
@@ -130,7 +130,7 @@ tools/fetch_awsdocs.py   AWS 공식 안내서(CC BY-SA 4.0)에서 도메인 문�
 - 한 요청 최대 50건. thoth 워커의 상한과 같다
 - 백엔드가 길이를 어기면 서버가 먼저 `500 backend_length_mismatch` 로 죽는다
 
-정본은 thoth `docs/now/MASTER.md` §7-4 다. 이 절은 그 요약이고, 어긋나면 저쪽이 맞다.
+정본은 thoth `docs/MASTER.md` §7-4 다. 이 절은 그 요약이고, 어긋나면 저쪽이 맞다.
 
 ## 3. 평가
 
@@ -281,12 +281,12 @@ bash tools/verify.sh --only=pytest  # 부분 실행 — 마지막에 일부러 �
 ## 7. 연구 트랙
 
 **seshat 은 개발이 아니라 연구다**(DECISIONS §12). 화면은 thoth 가 맡고, 이 저장소는 번역의 뇌 — 모델 ·
-데이터 · 평가 · 서빙 백엔드 — 만 든다. 가설은 `docs/next/hypotheses.md` 에, 남의 연구는 `docs/next/papers.md` 에 쌓는다.
+데이터 · 평가 · 서빙 백엔드 — 만 든다. 가설은 `docs/hypotheses.md` 에, 남의 연구는 `docs/papers.md` 에 쌓는다.
 비공개 저장소라 쌓는 지식은 공개하지 않는다. 데이터 · 가중치는 그래도 커밋하지 않는다(§2).
 
 | 트랙 | 무엇 | 쌓이는 것 |
 |---|---|---|
-| R1 한 · 영 문법 대조 | **`docs/now/grammar.md` 가 열 축을 든다**(관형절 · 명사절 · 피동 · 부정 · 최상급 · 비교급 · 조건절 · 목적 · 등위 · 연쇄). 조사 · 높임법은 축이 아니라 지표다(`josa` · `style`) | `seshat/grammar.py` 가 문장을 축에 넣고 `tools/slice.py` 가 결과를 축으로 가른다(DECISIONS §125) |
+| R1 한 · 영 문법 대조 | **`docs/grammar.md` 가 열 축을 든다**(관형절 · 명사절 · 피동 · 부정 · 최상급 · 비교급 · 조건절 · 목적 · 등위 · 연쇄). 조사 · 높임법은 축이 아니라 지표다(`josa` · `style`) | `seshat/grammar.py` 가 문장을 축에 넣고 `tools/slice.py` 가 결과를 축으로 가른다(DECISIONS §125) |
 | R2 도메인 지식 · 온톨로지 | AWS 서비스 · 기능 · API · 파라미터 · 공식 한국어 표기의 그래프 | 용어 자리표시 · 참조(RAG) · 용어 보상의 원천 |
 | R3 모델 · 구조 | 2026 년 흐름 — 디코더 LLM + 추론 시점 연산 · 검증 가능한 보상의 강화학습 · 소형 번역 특화 · SSM 혼합 · 증류 · 병합 | 후보 표 · 구조 대결 |
 | R4 에이전트 교사 공장 | 초안 → 문법 · 용어 검토 → 수정의 그래프. **오프라인에서만** 돈다 — 실시간은 단일 모델 | 증류용 최고 품질 데이터 |
@@ -408,7 +408,7 @@ uv run python tools/check_catalog.py --list     # 층과 출처를 표로
 |---|---|
 | `data/ontology/` · `data/eval/seed.jsonl` | 사람이 고치는 작은 정본이다. diff 로 봐야 한다 |
 | 받는 도구(`fetch_flores.py` · `fetch_awsdocs.py` · `fetch_k8s.py`) · 만드는 도구(`make_probes.py`) | 산출물은 다시 만든다 |
-| `docs/next/papers.md` | 논문의 **읽은 결과**가 자산이다. PDF 는 cache 다 |
+| `docs/papers.md` | 논문의 **읽은 결과**가 자산이다. PDF 는 cache 다 |
 
 ```bash
 python3 tools/lake.py init                   # 한 번 — 층 디렉터리와 MANIFEST.tsv
@@ -585,7 +585,7 @@ thoth 의 sweep · doctor(`OLLAMA_KEEP_ALSO`)가 본다. 두 저장소가 같은
 
 | 도구 | 무엇 |
 |---|---|
-| `tools/watch_papers.py` | 주 1회 신규 논문 · 모델을 훑어 `docs/next/papers.md` 에 후보를 붙인다 |
+| `tools/watch_papers.py` | 주 1회 신규 논문 · 모델을 훑어 `docs/papers.md` 에 후보를 붙인다 |
 
 ## 15. 어디까지 왔나
 
@@ -595,7 +595,7 @@ thoth 의 sweep · doctor(`OLLAMA_KEEP_ALSO`)가 본다. 두 저장소가 같은
 | 단계 | 비중 | 지금 | 근거 |
 |---|---|---|---|
 | ① 재는 체계 — 무엇으로 나은지를 가리나 | 20% | **80%** | 지표 열셋 · 짝지은 부트스트랩(§180) · 떼어둔 셋 · 가설 대장이 문을 지킨다. 2026-09-30 **눈가림 사람 판정에 구간이 붙었고**(`tools/labels.py gap`) 외부 판정자 넷으로 돌렸다(H-081). **그리고 그 판정이 규칙 지표 여덟이 배포본 상대로 순위를 뒤집는다는 것을 보였다**(DECISIONS §229) — **95% 는 과장이었다.** **2026-10-01 그 자가 섰다** — `gemba`(qwen3:8b · GEMBA 꼴)가 떼어둔 60줄 · 외부 판정자 넷에서 ρ **+0.5692** 이고 `term_off` 와의 차 **+0.4865** 로 갈린다(H-085 · DECISIONS §262). **남은 것은 그 자가 보상으로 쓰일 때 밀어도 안 무너지는가**이고(PLAN #19) 그것은 아직 안 쟀다 |
-| ② 기준선 · 후보 · 처치 | 20% | 85% | AWS Translate · Nova Lite · TranslateGemma 4B · Qwen3 · Gemma3 4B/12B 를 쟀다. **처치를 두른 4B 가 배포본과 12B 를 `term_off` 에서 이기고, 뜻에서는 둘 다에게 진다**(`docs/now/related.md` §3 · §229). 잰 일은 끝났고 **무엇을 산 처치인지가 달라졌다.** 남은 것은 MADLAD-400(PLAN #5) |
+| ② 기준선 · 후보 · 처치 | 20% | 85% | AWS Translate · Nova Lite · TranslateGemma 4B · Qwen3 · Gemma3 4B/12B 를 쟀다. **처치를 두른 4B 가 배포본과 12B 를 `term_off` 에서 이기고, 뜻에서는 둘 다에게 진다**(`docs/related.md` §3 · §229). 잰 일은 끝났고 **무엇을 산 처치인지가 달라졌다.** 남은 것은 MADLAD-400(PLAN #5) |
 | ③ 학습 데이터 | 20% | 5% | 원문은 **k8s 문서 11,503 문장**이다(`data/train/k001.jsonl` · CC BY 4.0 · DECISIONS §276). AWS 안내서 59,145 문장은 **동일조건(SA) 때문에 학습에서 뺐다** — 평가셋으로만 쓴다. **정답이 없다** — thoth 쌍은 2객체 9,880바이트고(§120) 교사 가부가 GPT · 제미나이 출력을 막는다 |
 | ④ 학습 | 25% | 0% | `seshat/` 에 학습 코드가 한 줄도 없다. 장비가 아니라 ③ 이 막고 있다 |
 | ⑤ 서빙 | 15% | 10% | 계약(§2) · 예산과 크기 조건(§13)은 섰다. 서버는 `echo` 백엔드뿐이다 |

@@ -1,7 +1,7 @@
-"""주 1회 신규 논문 · 모델을 훑어 `docs/next/papers.md` 의 「읽을 것」 에 후보를 붙인다(DECISIONS §126).
+"""주 1회 신규 논문 · 모델을 훑어 `docs/papers.md` 의 「읽을 것」 에 후보를 붙인다(DECISIONS §126).
 
   python3 tools/watch_papers.py                 후보를 화면에
-  python3 tools/watch_papers.py --write         docs/next/papers.md 에 붙인다
+  python3 tools/watch_papers.py --write         docs/papers.md 에 붙인다
   python3 tools/watch_papers.py --days 14
 
 ★ **요약하지 않는다.** 제목 · 초록 첫 문장 · 왜 걸렸는지만 적고 **「읽을 것」 에 넣는다.** 표 본문의
@@ -27,7 +27,7 @@ import urllib.parse
 import urllib.request
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-PAPERS = ROOT / "docs/next/papers.md"
+PAPERS = ROOT / "docs/papers.md"
 UA = "seshat-watch-papers (https://github.com/CleverAIFox/seshat)"
 
 # 무엇을 찾는가 — DECISIONS §126 의 다섯. 제목 + 초록에서 하나라도 걸려야 후보다
@@ -145,7 +145,7 @@ def write(text: str, 새것: list[str], 오늘: str) -> str:
     머리 = "## 읽을 것"
     if 머리 not in text:
         raise SystemExit(f"{PAPERS.name} 에 「{머리}」 가 없다 — 붙일 자리를 못 찾았다\n"
-                         f"    그 제목 줄을 되살린다 : git log -p -- docs/next/papers.md | head -40")
+                         f"    그 제목 줄을 되살린다 : git log -p -- docs/papers.md | head -40")
     덩이 = "\n".join([f"\n### 훑은 날 {오늘}", *새것])
     i = text.index(머리) + len(머리)
     return text[:i] + "\n" + 덩이 + "\n" + text[i:].lstrip("\n")

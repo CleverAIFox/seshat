@@ -20,7 +20,7 @@ def _나무(tmp_path: pathlib.Path, 코드: str, 강제자: str) -> pathlib.Path
     for d in ("seshat", "tools", "docs/why"):
         (tmp_path / d).mkdir(parents=True, exist_ok=True)
     (tmp_path / "seshat/a.py").write_text(코드, encoding="utf-8")
-    (tmp_path / "docs/why/DECISIONS.md").write_text(f"강제자 — {강제자}\n", encoding="utf-8")
+    (tmp_path / "docs/DECISIONS.md").write_text(f"강제자 — {강제자}\n", encoding="utf-8")
     return tmp_path
 
 
@@ -39,26 +39,26 @@ def test_카나리아가_산다():
 
 def test_밖을_안_적으면_걸린다(tmp_path):
     t = _나무(tmp_path, 'def f():\n    """무엇을 보는지만 적는다."""\n', "`seshat/a.py::f`")
-    난 = CC.안한것(t, (t / "docs/why/DECISIONS.md").read_text(encoding="utf-8"))
+    난 = CC.안한것(t, (t / "docs/DECISIONS.md").read_text(encoding="utf-8"))
     assert len(난) == 1 and "밖을 안 적었다" in 난[0][1], 난
 
 
 def test_밖을_적으면_안_걸린다(tmp_path):
     t = _나무(tmp_path, 'def f():\n    """잰다.\n\n    ★ **밖 — 뜻은 안 본다.**\n    """\n', "`seshat/a.py::f`")
-    assert CC.안한것(t, (t / "docs/why/DECISIONS.md").read_text(encoding="utf-8")) == []
+    assert CC.안한것(t, (t / "docs/DECISIONS.md").read_text(encoding="utf-8")) == []
 
 
 def test_모듈_머리말이_적어도_된다(tmp_path):
     """★ **파일 하나가 한 규칙인 자리가 많다** — `RESIDUE` 가 그렇다."""
     t = _나무(tmp_path, '"""이 파일은 꼴만 본다 — 뜻은 **안 본다**."""\n\n\ndef f():\n    """잰다."""\n',
               "`seshat/a.py::f`")
-    assert CC.안한것(t, (t / "docs/why/DECISIONS.md").read_text(encoding="utf-8")) == []
+    assert CC.안한것(t, (t / "docs/DECISIONS.md").read_text(encoding="utf-8")) == []
 
 
 def test_없는_함수를_강제자로_들면_걸린다(tmp_path):
     """★ **이름이 바뀌면 그 선언이 거짓이 된다** — 2026-10-01 §16 이 그 자리였다(§265)."""
     t = _나무(tmp_path, 'def g():\n    """잰다. 뜻은 **안 본다**."""\n', "`seshat/a.py::f`")
-    난 = CC.안한것(t, (t / "docs/why/DECISIONS.md").read_text(encoding="utf-8"))
+    난 = CC.안한것(t, (t / "docs/DECISIONS.md").read_text(encoding="utf-8"))
     assert len(난) == 1 and "함수가 없다" in 난[0][1], 난
 
 

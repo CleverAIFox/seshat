@@ -87,7 +87,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 
-문서들 = ("docs/now/MASTER.md", "docs/next/PLAN.md", "docs/why/DECISIONS.md")
+문서들 = ("docs/MASTER.md", "docs/PLAN.md", "docs/DECISIONS.md")
 볼디렉터리 = ("seshat", "tools", "tests", "data", ".github", "docs")
 볼확장 = {".py", ".js", ".sh", ".md", ".json", ".toml", ".yml", ".html"}
 
@@ -100,7 +100,7 @@ ROOT = Path(__file__).resolve().parent.parent
 붙은앞 = re.compile(
     r"(?:"
     rf"{이름}(?:\.md)?[`\s]*"                      # MASTER · `MASTER.md`
-    rf"|\]\([^)]*\)[`\s]*"                        # [docs/now/MASTER.md](...) 뒤
+    rf"|\]\([^)]*\)[`\s]*"                        # [docs/MASTER.md](...) 뒤
     rf"|§\s*\d+(?:-\d+[a-z]?)?\s*[·,]\s*"         # `§98 · ` 사슬
     r")$")
 # 되돌아볼 길이. 줄바꿈으로 끊긴 사슬(`(DECISIONS §58 ·\n§61)`)도 잡으려고 줄을 이어 본다.
@@ -121,7 +121,7 @@ def _자기번호(글: str) -> set[str]:
 
 
 def _DECISIONS번호(root: Path) -> set[str]:
-    글 = (root / "docs/why/DECISIONS.md").read_text(encoding="utf-8")
+    글 = (root / "docs/DECISIONS.md").read_text(encoding="utf-8")
     return {m.group(1) for m in re.finditer(r"^## §(\d+)\.", 글, re.M)}
 
 
@@ -229,7 +229,7 @@ def _절블록(글: str) -> dict[str, str]:
 def 선언된정본(root: Path) -> dict[str, str]:
     """(그 선언이 있는 자리 → 가리키는 MASTER 절 번호)."""
     것 = {}
-    for rel in ("docs/now/MASTER.md", "docs/README.md", "README.md", "docs/next/PLAN.md"):
+    for rel in ("docs/MASTER.md", "docs/README.md", "README.md", "docs/PLAN.md"):
         p = root / rel
         if not p.exists():
             continue
@@ -282,7 +282,7 @@ def check_정본하나(root: Path) -> list[str]:
     #   한 절이 도구 셋 이상을 늘어놓으면 **그 절이 무엇을 설명하는지 명령으로는 못 읽는다** —
     #   그것이 목록이다.
     문턱 = 3
-    for 번호, 몸 in _절블록((root / "docs/now/MASTER.md").read_text(encoding="utf-8")).items():
+    for 번호, 몸 in _절블록((root / "docs/MASTER.md").read_text(encoding="utf-8")).items():
         if 번호 == 정본:
             continue
         줄들 = 몸.splitlines()
@@ -318,10 +318,10 @@ def 사전(글: str) -> list[str]:
 
 
 def check_낱말(root: Path) -> list[str]:
-    master = (root / "docs/now/MASTER.md").read_text(encoding="utf-8")
+    master = (root / "docs/MASTER.md").read_text(encoding="utf-8")
     것 = 사전(master)
     if not 것:
-        return [f"docs/now/MASTER.md 에 `{낱말머리}` 표가 없다 — "
+        return [f"docs/MASTER.md 에 `{낱말머리}` 표가 없다 — "
                 f"이 저장소의 말이 어디에도 정의돼 있지 않게 된다(DECISIONS §284)"]
     # 표 자신은 빼고 센다. 표 안의 등장은 「쓴 것」 이 아니라 「적은 것」 이다.
     자리 = master.index(낱말머리)
@@ -381,8 +381,8 @@ def 날짜만있는줄(글: str) -> list[int]:
 
 
 def check_날짜(root: Path) -> list[str]:
-    글 = (root / "docs/now/MASTER.md").read_text(encoding="utf-8")
-    return [f"docs/now/MASTER.md:{n} 날짜를 적고 **그 경위가 어디 사는지**는 안 적었다 — "
+    글 = (root / "docs/MASTER.md").read_text(encoding="utf-8")
+    return [f"docs/MASTER.md:{n} 날짜를 적고 **그 경위가 어디 사는지**는 안 적었다 — "
             f"`(DECISIONS §N)` 을 단다. MASTER 는 「지금」 이다"
             for n in 날짜만있는줄(글)]
 
@@ -408,11 +408,11 @@ def CI밖(글: str) -> list[str]:
 
 def check_CI밖(root: Path) -> list[str]:
     선언 = set(CI밖((root / "tools/verify.sh").read_text(encoding="utf-8")))
-    master = (root / "docs/now/MASTER.md").read_text(encoding="utf-8")
+    master = (root / "docs/MASTER.md").read_text(encoding="utf-8")
     i = master.find("## 5. ")
     절 = master[i:master.find("\n## 6. ", i)] if i >= 0 else ""
     if not 절:
-        return ["docs/now/MASTER.md 에 `## 5.` 절이 없다 — 점검을 적는 자리가 사라졌다"]
+        return ["docs/MASTER.md 에 `## 5.` 절이 없다 — 점검을 적는 자리가 사라졌다"]
     빠진 = sorted(n for n in 선언 if f"`{n}`" not in 절)
     if 빠진:
         return [f"MASTER §5 가 CI 에서 다르게 도는 단계를 빠뜨렸다 — {' · '.join(빠진)}\n"
@@ -444,8 +444,8 @@ def 빈약속(글: str) -> list[tuple[int, str]]:
 
 
 def check_빈약속(root: Path) -> list[str]:
-    글 = (root / "docs/now/MASTER.md").read_text(encoding="utf-8")
-    return [f"docs/now/MASTER.md:{n} 「{말}」 를 적고 `PLAN #N` 을 안 붙였다 — "
+    글 = (root / "docs/MASTER.md").read_text(encoding="utf-8")
+    return [f"docs/MASTER.md:{n} 「{말}」 를 적고 `PLAN #N` 을 안 붙였다 — "
             f"행이 없는 약속은 약속이 아니다"
             for n, 말 in 빈약속(글)]
 
@@ -471,8 +471,8 @@ def _canary() -> None:
         "맨절 — 아는 번호는 통과": 맨절("보라 §9 를", {"9"}) == [],
         "맨절 — 사슬 뒤쪽도 붙은 것이다": 맨절("(DECISIONS §98 · §110)", {"98", "110"}) == [],
         "맨절 — 줄바꿈으로 끊긴 사슬": 맨절("(DECISIONS §58 ·\n§61) 탐침", {"58", "61"}) == [],
-        "맨절 — 백틱 문서명": 맨절("thoth `docs/now/MASTER.md` §7-4 다", {"7"}) == [],
-        "맨절 — 마크다운 링크": 맨절("[PLAN](docs/next/PLAN.md) §0 부터", {"0"}) == [],
+        "맨절 — 백틱 문서명": 맨절("thoth `docs/MASTER.md` §7-4 다", {"7"}) == [],
+        "맨절 — 마크다운 링크": 맨절("[PLAN](docs/PLAN.md) §0 부터", {"0"}) == [],
         "맨절 — 규칙 번호는 밖이다": 맨절("★ §11-3 **결과 파일**", set()) == [],
         "표깨짐 — 붙은 표는 통과": 표깨짐("| a | b |\n|---|---|\n| 1 | 2 |\n") == [],
         "표깨짐 — 떨어진 줄을 잡는다": 표깨짐("| a | b |\n|---|---|\n| 1 | 2 |\n\n| 3 | 4 |\n") == [5],

@@ -1,4 +1,4 @@
-"""문법 축 — 무더기를 가르는 자다(DECISIONS §125 · docs/now/grammar.md).
+"""문법 축 — 무더기를 가르는 자다(DECISIONS §125 · docs/grammar.md).
 
 ★ **정확도를 시험이 지키지 않는다.** 0.68 은 사람이 20줄을 읽어 잰 값이고 시험이 재현할 수 없다.
   시험이 지키는 것은 **가르는 규칙이 뒤집히지 않는 것**이다 — `that` 두 갈래 · 표시 제외 · 분모.
@@ -66,8 +66,8 @@ def test_축은_겹친다():
 
 
 def test_축_이름은_문서와_같다():
-    """`docs/now/grammar.md` 의 표가 축을 정한다 — 이름이 갈리면 표를 못 읽는다."""
-    표 = (ROOT / "docs/now/grammar.md").read_text(encoding="utf-8")
+    """`docs/grammar.md` 의 표가 축을 정한다 — 이름이 갈리면 표를 못 읽는다."""
+    표 = (ROOT / "docs/grammar.md").read_text(encoding="utf-8")
     for ax in grammar.AXES:
         assert f"**{ax}**" in 표, ax
 

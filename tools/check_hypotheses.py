@@ -42,7 +42,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-LEDGER = ROOT / "docs/next/hypotheses.md"
+LEDGER = ROOT / "docs/hypotheses.md"
 STATES = {"제안", "실험", "채택", "기각"}
 TRACKS = {f"R{i}" for i in range(1, 8)}
 ROW = re.compile(r"^\| (H-\d{3}) \|(.*)\|\s*$")
@@ -123,7 +123,7 @@ def check(text: str, 대장: str = "") -> list[str]:
         if state == "실험" and h in 기댄것 and not evidence:
             fails.append(f"{where} **DECISIONS 가 강제자로 드는데 결과칸이 비었다** — 기대려면 "
                          f"쟀어야 하고, 쟀으면 적는다. **채택 · 기각으로 닫는다**(DECISIONS §268). "
-                         f"어느 절이 드는지 : grep -n '강제자.*{h}' docs/why/DECISIONS.md")
+                         f"어느 절이 드는지 : grep -n '강제자.*{h}' docs/DECISIONS.md")
     return fails
 
 
@@ -142,10 +142,10 @@ def _canary() -> None:
 
 def main() -> int:
     _canary()
-    대장 = ROOT / "docs/why/DECISIONS.md"
+    대장 = ROOT / "docs/DECISIONS.md"
     fails = (check(LEDGER.read_text(encoding="utf-8"),
                    대장.read_text(encoding="utf-8") if 대장.exists() else "")
-             if LEDGER.exists() else ["docs/next/hypotheses.md 가 없다"])
+             if LEDGER.exists() else ["docs/hypotheses.md 가 없다"])
     for f in fails:
         print(f"    {f}")
     return 1 if fails else 0

@@ -46,11 +46,11 @@ def test_줄바꿈으로_끊긴_사슬도_붙은_참조다():
 
 
 def test_백틱_문서명도_붙은_참조다():
-    assert CP.맨절("정본은 thoth `docs/now/MASTER.md` §7-4 다", {"7"}) == []
+    assert CP.맨절("정본은 thoth `docs/MASTER.md` §7-4 다", {"7"}) == []
 
 
 def test_마크다운_링크_뒤도_붙은_참조다():
-    assert CP.맨절("[PLAN](docs/next/PLAN.md) §0 부터 읽는다", {"0"}) == []
+    assert CP.맨절("[PLAN](docs/PLAN.md) §0 부터 읽는다", {"0"}) == []
 
 
 def test_규칙_번호는_이_검사의_밖이다():
@@ -119,9 +119,9 @@ def _나무(tmp_path, master, readme):
     """합성 저장소 하나. **셋을 따로 쓰면 그 셋이 매번 조금씩 달라진다.**"""
     (tmp_path / "docs/now").mkdir(parents=True, exist_ok=True)
     (tmp_path / "docs/why").mkdir(parents=True, exist_ok=True)
-    (tmp_path / "docs/now/MASTER.md").write_text(master, encoding="utf-8")
+    (tmp_path / "docs/MASTER.md").write_text(master, encoding="utf-8")
     (tmp_path / "docs/README.md").write_text(readme, encoding="utf-8")
-    (tmp_path / "docs/why/DECISIONS.md").write_text("## §1. x" + NL, encoding="utf-8")
+    (tmp_path / "docs/DECISIONS.md").write_text("## §1. x" + NL, encoding="utf-8")
     return tmp_path
 
 
@@ -184,7 +184,7 @@ def test_저장소의_사전이_살아_있다():
 def test_표가_사라지면_잡는다(tmp_path):
     """★ **사전이 장식이 되는 길 ①** — 표가 통째로 없어진다."""
     (tmp_path / "docs/now").mkdir(parents=True)
-    (tmp_path / "docs/now/MASTER.md").write_text("## 0. 규약" + NL, encoding="utf-8")
+    (tmp_path / "docs/MASTER.md").write_text("## 0. 규약" + NL, encoding="utf-8")
     난 = CP.check_낱말(tmp_path)
     assert 난 and "표가 없다" in 난[0], 난
 
@@ -195,7 +195,7 @@ def test_안_쓰이는_낱말을_잡는다(tmp_path):
     둘째가 더 나쁘다. **죽은 낱말이 섞이면 표 전체를 못 믿는다.**
     """
     (tmp_path / "docs/now").mkdir(parents=True)
-    (tmp_path / "docs/now/MASTER.md").write_text(
+    (tmp_path / "docs/MASTER.md").write_text(
         NL.join(["## 0. 규약", "", "### 0-0. 낱말", "", "| 낱말 | 뜻 | 헷갈리는 자리 |",
                  "|---|---|---|", "| **쇠지렛대** | 아무도 안 쓴다 | — |", ""]), encoding="utf-8")
     난 = CP.check_낱말(tmp_path)
@@ -208,7 +208,7 @@ def test_표_안의_등장은_안_센다(tmp_path):
     (tmp_path / "docs/now").mkdir(parents=True)
     몸 = NL.join(["## 0. 규약", "", "### 0-0. 낱말", "", "| 낱말 | 뜻 | 헷갈리는 자리 |", "|---|---|---|"]
                 + ["| **쇠지렛대** | 쇠지렛대 쇠지렛대 쇠지렛대 쇠지렛대 쇠지렛대 | — |", ""])
-    (tmp_path / "docs/now/MASTER.md").write_text(몸, encoding="utf-8")
+    (tmp_path / "docs/MASTER.md").write_text(몸, encoding="utf-8")
     난 = CP.check_낱말(tmp_path)
     assert 난, "표 안의 여섯 번을 본문 사용으로 셌다"
 
@@ -272,7 +272,7 @@ def test_하나라도_빠지면_잡는다(tmp_path):
     (tmp_path / "tools").mkdir(parents=True)
     (tmp_path / "tools/verify.sh").write_text(
         NL.join(['NAMES+=("훅")', 'NAMES+=("lake")', 'NAMES+=("ci")', ""]), encoding="utf-8")
-    (tmp_path / "docs/now/MASTER.md").write_text(
+    (tmp_path / "docs/MASTER.md").write_text(
         NL.join(["## 5. 점검", "", "CI 밖은 `훅` · `lake` 다.", "", "## 6. 다음", ""]),
         encoding="utf-8")
     난 = CP.check_CI밖(tmp_path)
@@ -284,7 +284,7 @@ def test_셋을_다_들면_통과한다(tmp_path):
     (tmp_path / "tools").mkdir(parents=True)
     (tmp_path / "tools/verify.sh").write_text(
         NL.join(['NAMES+=("훅")', 'NAMES+=("lake")', ""]), encoding="utf-8")
-    (tmp_path / "docs/now/MASTER.md").write_text(
+    (tmp_path / "docs/MASTER.md").write_text(
         NL.join(["## 5. 점검", "", "CI 밖은 `훅` · `lake` 다.", "", "## 6. 다음", ""]),
         encoding="utf-8")
     assert CP.check_CI밖(tmp_path) == []

@@ -29,7 +29,7 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SEAL = ROOT / "data/docseal.json"
-DEC = ROOT / "docs/why/DECISIONS.md"
+DEC = ROOT / "docs/DECISIONS.md"
 
 # (열쇠앞, 자리, 절머리, 앵커낱말, 표시) — **봉인이 두 문서를 본다**(DECISIONS §281).
 #
@@ -58,8 +58,8 @@ def _봉인_줄(본문: str) -> str:
 
 
 문서 = [
-    ("", "docs/why/DECISIONS.md", re.compile(r"^## §(\d+)\. (.+)$", re.M), _강제자_뒤, "§"),
-    ("M", "docs/now/MASTER.md", re.compile(r"^## (\d+)\. (.+)$", re.M), _봉인_줄, "MASTER §"),
+    ("", "docs/DECISIONS.md", re.compile(r"^## §(\d+)\. (.+)$", re.M), _강제자_뒤, "§"),
+    ("M", "docs/MASTER.md", re.compile(r"^## (\d+)\. (.+)$", re.M), _봉인_줄, "MASTER §"),
 ]
 절머리 = 문서[0][2]
 날짜 = re.compile(r"\*\*(20\d\d-\d\d-\d\d)\*\*")
@@ -203,8 +203,8 @@ def 절들(글: str | None = None) -> list[dict]:
 #   여덟이 「내가 안 건드린 남의 행」 때문이다. **소음이 된 무효는 안 읽힌다**(§211 과 같은 규율).
 # ★ **PLAN 도 줄 대장이다**(DECISIONS §219). `hypotheses.md` 만 좁혀 놓고 PLAN 은 파일째 물었더니,
 #   행 하나의 수를 고치자 그 문서를 짚은 절이 또 무효가 됐다 — §215 를 한쪽에만 적용한 것이다.
-대장 = {"docs/next/hypotheses.md": (r"^\| (H-\d+) \|", r"H-\d+"),
-        "docs/next/PLAN.md": (r"^\| (\d+) \|", r"(?<![\w§-])#(\d+)(?!\d)")}
+대장 = {"docs/hypotheses.md": (r"^\| (H-\d+) \|", r"H-\d+"),
+        "docs/PLAN.md": (r"^\| (\d+) \|", r"(?<![\w§-])#(\d+)(?!\d)")}
 
 
 def _대장_조각(자리: str, 본문: str, 글: str) -> str:

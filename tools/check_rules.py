@@ -21,11 +21,11 @@ import re
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-MASTER = ROOT / "docs/now/MASTER.md"
+MASTER = ROOT / "docs/MASTER.md"
 # 규칙 번호를 가리킬 수 있는 문서. 늘리는 것이지 줄이는 것이 아니다
-DOCS = ("docs/README.md", "docs/now/MASTER.md", "docs/now/related.md", "docs/now/grammar.md",
-        "docs/next/PLAN.md", "docs/next/hypotheses.md", "docs/next/papers.md",
-        "docs/why/DECISIONS.md")
+DOCS = ("docs/README.md", "docs/MASTER.md", "docs/related.md", "docs/grammar.md",
+        "docs/PLAN.md", "docs/hypotheses.md", "docs/papers.md",
+        "docs/DECISIONS.md")
 
 
 def 규칙들(master: str, fails: list) -> dict[int, list[int]]:
@@ -92,7 +92,7 @@ def _canary() -> None:
 def main() -> int:
     _canary()
     if not MASTER.exists():
-        print("    docs/now/MASTER.md 가 없다\n"
+        print("    docs/MASTER.md 가 없다\n"
               "    문서 지도를 본다 : docs/README.md")
         return 1
     fails = check(MASTER.read_text(encoding="utf-8"))

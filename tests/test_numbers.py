@@ -18,7 +18,7 @@ def _나무(tmp_path: pathlib.Path, 결과: str, 근거글: str = "") -> pathlib
     for d in ("docs/now", "docs/why", "docs/next", "data"):
         (tmp_path / d).mkdir(parents=True, exist_ok=True)
     (tmp_path / CN.문서).write_text(결과, encoding="utf-8")
-    (tmp_path / "docs/why/DECISIONS.md").write_text(근거글, encoding="utf-8")
+    (tmp_path / "docs/DECISIONS.md").write_text(근거글, encoding="utf-8")
     return tmp_path
 
 
@@ -76,4 +76,4 @@ def test_넘는_길을_든다(capsys):
         sys.stderr = 옛
     # 지금은 근거 없는 수가 0 이라 안 운다 — 울 때의 글이 길을 드는지는 소스로 본다
     글 = (ROOT / "tools/check_numbers.py").read_text(encoding="utf-8")
-    assert "docs/why/DECISIONS.md" in 글 and "--list" in 글, 말
+    assert "docs/DECISIONS.md" in 글 and "--list" in 글, 말

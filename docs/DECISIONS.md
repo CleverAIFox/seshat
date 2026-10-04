@@ -8,7 +8,7 @@
 ---
 
 <!-- 색인 시작 -->
-<details><summary><b>절 색인</b> — 287 절. <code>python3 tools/check_docs.py --fix-index</code> 가 다시 쓴다</summary>
+<details><summary><b>절 색인</b> — 288 절. <code>python3 tools/check_docs.py --fix-index</code> 가 다시 쓴다</summary>
 
 | § | 날짜 | 무엇 |
 |---|---|---|
@@ -299,6 +299,7 @@
 | 285 | 2026-10-03 | 목록을 줄였더니 줄인 목록이 또 빠뜨렸다 — 같은 자리 세 번째 |
 | 286 | 2026-10-03 | 「밖이 없는 함수」 는 「밖을 아직 안 생각한 함수」 였다 |
 | 287 | 2026-10-04 | 사슬 밖의 돌연변이와, 그것을 재던 자의 거짓 초록 |
+| 288 | 2026-10-04 | 폴더가 축을 나르지 않았다 — 셋을 평평하게 폈다 |
 
 </details>
 <!-- 색인 끝 -->
@@ -630,7 +631,7 @@ thoth 에서 배운 "재지 않은 것은 고치지 않는다" 를 "먼저 잰�
 
 ### 결정
 
-- **가설 대장** `docs/next/hypotheses.md` — 한 줄에 직관 · 트랙 · 검증 방법 · 비용 상한 · 근거. 상태는 제안 ·
+- **가설 대장** `docs/hypotheses.md` — 한 줄에 직관 · 트랙 · 검증 방법 · 비용 상한 · 근거. 상태는 제안 ·
   실험 · 채택 · 기각. **검증 방법과 비용 상한이 없으면 실험에 들어가지 못하고, 판정은 근거를 든다.**
   기각도 지우지 않는다. 첫 판 12개
 - **연구 트랙 일곱**(MASTER §7) — 한 · 영 문법 대조 · 도메인 온톨로지 · 모델 구조 · 에이전트 교사 공장 ·
@@ -1306,7 +1307,7 @@ H-001 처치군 결과(`H-001-ph-20260922-162419.jsonl`)를 `tools/rescore.py` �
 - 이길 대상에 **파파고**를 더한다(H-027). AWS Translate 만 이기고 번역기를 만들었다고 하기는 약하다. 한국어
   상대는 파파고다
 
-강제자 — `docs/next/hypotheses.md`(H-026 · H-027) · `tools/check_hypotheses.py`
+강제자 — `docs/hypotheses.md`(H-026 · H-027) · `tools/check_hypotheses.py`
 
 ### 배운 것
 
@@ -1329,7 +1330,7 @@ H-001 처치군 결과(`H-001-ph-20260922-162419.jsonl`)를 `tools/rescore.py` �
 - 적중률은 재야 안다(H-026 · 상한 0). 탐침은 생성기가 만든 것이라 부풀려진 숫자가 나온다 — **thoth 의 실제 쌍
   로그로 재야** 뜻이 있다
 
-강제자 — `docs/next/hypotheses.md`(H-026) · `seshat/terms.py::mask`
+강제자 — `docs/hypotheses.md`(H-026) · `seshat/terms.py::mask`
 
 ### 배운 것
 
@@ -1459,7 +1460,7 @@ H-001 처치군 결과(`H-001-ph-20260922-162419.jsonl`)를 `tools/rescore.py` �
   저장소의 사전을 쓴다)
 - H-031 이 되면 **사전이 모델보다 오래 남는 자산**이라는 것이 증명된다. 엔진은 갈아 끼워도 용어집은 남는다
 
-강제자 — `docs/next/hypotheses.md`(H-030 · H-031) · `tools/check_hypotheses.py`
+강제자 — `docs/hypotheses.md`(H-030 · H-031) · `tools/check_hypotheses.py`
 
 ### 배운 것
 
@@ -2730,7 +2731,7 @@ H-024 가 같은 200 줄을 새 사전으로 다시 재고, 그 숫자가 앞으
 - H-045 가 그것을 묻는다. 같은 두 팔(4B · 12B)을 `d001` 600줄에 걸어 `term_off` 의 **부호**가 h004 와
   같은지 본다. 값은 달라도 된다 — 순위가 뒤집히는지만 본다
 
-강제자 — `docs/next/hypotheses.md` H-045 · `tools/term_diff.py`
+강제자 — `docs/hypotheses.md` H-045 · `tools/term_diff.py`
 
 ### 배운 것
 
@@ -2789,7 +2790,7 @@ H-045 가 확인한 것은 **순위**뿐이고, 「12B 가 0.069 낫다」 는 �
   으로 적혀 있었는데, 오늘 그것이 **없어서 판정이 틀릴 뻔했다**
 - H-046 이 먼저다 — 자를 만들기 전에 **잴 것이 얼마나 되는지**부터 센다
 
-강제자 — `docs/next/hypotheses.md` H-046
+강제자 — `docs/hypotheses.md` H-046
 
 ### 배운 것
 
@@ -3281,7 +3282,7 @@ H-045 가 확인한 것은 **순위**뿐이고, 「12B 가 0.069 낫다」 는 �
   | 행 | 무엇이었나 | 닫는 근거 |
   |---|---|---|
   | **#1** 평가셋 | 범용 + 도메인 평가셋을 세운다 | 범용 FLORES+ dev · devtest(§11) · 탐침 h001~h004(`make_probes`) · **실문서 `d001` 600 줄과 59,145 문장 풀**(§92). 「정답은 사람이 쓰지 않는다」 는 #18 · #3 이 든다 |
-  | **#13** 논문 대장 | `docs/next/papers.md` 를 만든다 | 섰다. 7 편 읽었고 **안 읽은 것은 그 파일의 「읽을 것」이 든다** — 같은 목록을 PLAN 에 또 두면 정본이 둘이 된다 |
+  | **#13** 논문 대장 | `docs/papers.md` 를 만든다 | 섰다. 7 편 읽었고 **안 읽은 것은 그 파일의 「읽을 것」이 든다** — 같은 목록을 PLAN 에 또 두면 정본이 둘이 된다 |
   | **#15** 용어 자리표시 | 서비스명을 `⟦T1⟧` 로 지키고 조사를 받침으로 고른다 | `seshat/terms.py` · `with_placeholders`. H-013 채택(josa 0.859 → 1.000) · H-016 채택(keep 0.785 → 0.993 · §17). **「구조로 100%」 는 못 됐다** — 실측 0.993~1.000 이고 남은 몫은 H-015 가 든다 |
   | **#23** 문형 탐침 생성기 | 템플릿 × 어휘로 통제 문장을 만든다 | `tools/make_probes.py`. h001~h004 를 냈고 **그 탐침이 실문서를 대신하는지까지 쟀다**(H-045 · §94) |
 
@@ -3451,7 +3452,7 @@ H-045 가 확인한 것은 **순위**뿐이고, 「12B 가 0.069 낫다」 는 �
 - H-051 이 그것을 건다. 자를 더 좁히려는 시도(H-049)는 두 번 실패했으므로 **자의 쓰임을 낮춘다** —
   못 하는 것을 하게 만들려 하지 않고, 할 수 있는 것으로 쓴다
 
-강제자 — `docs/next/hypotheses.md` H-051
+강제자 — `docs/hypotheses.md` H-051
 
 ### 배운 것
 
@@ -3471,7 +3472,7 @@ H-045 가 확인한 것은 **순위**뿐이고, 「12B 가 0.069 낫다」 는 �
   |---|---|---|
   | 열었다 | #29 #30 #31 #32 | 말로만 미룬 빚을 등재했다(§112) |
   | 닫았다 | #1 | 평가셋 — FLORES+ · 탐침 · 실문서 600줄 + 59,145 풀 |
-  | | #13 | 논문 대장 — `docs/next/papers.md` 7편. 남은 것은 그 파일의 「읽을 것」이 든다 |
+  | | #13 | 논문 대장 — `docs/papers.md` 7편. 남은 것은 그 파일의 「읽을 것」이 든다 |
   | | #15 | 용어 자리표시 — H-013 · H-016 채택 |
   | | #23 | 문형 탐침 생성기 — H-045 가 타당성까지 쟀다 |
   | | #29 | 계층을 선언으로 — `[layers]` 가 정본이다(§114) |
@@ -3504,7 +3505,7 @@ H-045 가 확인한 것은 **순위**뿐이고, 「12B 가 0.069 낫다」 는 �
   |---|---|
   | `thoth-pairs` | PLAN #6 이 Athena 에서 뽑을 때. **2026-09-27 현재 S3 에 2객체 9,880바이트뿐이고 레이크 자리는 비어 있다** |
   | `aws-docs` | 사람이 온톨로지 `ko_ref` 를 대조할 때 눈으로 본다. 코드가 안 읽는다 |
-  | `papers` | 사람이 읽고 `docs/next/papers.md` 에 적는다 |
+  | `papers` | 사람이 읽고 `docs/papers.md` 에 적는다 |
 
 - **아무도 안 읽는 것은 실패가 아니라 수다**(`catalog.unfed()`). `check_catalog` 가 센다 —
   「12출처 · 아무도 안 읽는 것 3 · 실패 0」. 세는 것과 막는 것을 가른다
@@ -3737,7 +3738,7 @@ git 이 커밋을 고쳐 쓰지 않고 쌓는 것과 같은 까닭이다.
 
 ### 결정
 
-- `docs/now/grammar.md` 가 한 · 영 대조 열 축을 든다. `seshat/grammar.py` 가 문장을 축에 넣고
+- `docs/grammar.md` 가 한 · 영 대조 열 축을 든다. `seshat/grammar.py` 가 문장을 축에 넣고
   `tools/slice.py` 가 **이미 있는 결과 파일**을 축으로 갈라 다시 센다 — 모델도 돈도 안 든다
 - d001 600줄 실측 빈도 — 목적 37.8% · 관형절 23.0% · 조건절 19.0% · 연쇄 17.5% · 피동 14.8% ·
   비교급 10.7% · 부정 9.0% · 등위 9.0% · 명사절 3.7% · 최상급 2.5%. **축이 하나도 안 걸린 줄 131**
@@ -3783,7 +3784,7 @@ git 이 커밋을 고쳐 쓰지 않고 쌓는 것과 같은 까닭이다.
 
 ### 결정
 
-- `tools/watch_papers.py` 가 arXiv(cs.CL)와 Hugging Face 를 훑어 `docs/next/papers.md` 의 **「읽을 것」**
+- `tools/watch_papers.py` 가 arXiv(cs.CL)와 Hugging Face 를 훑어 `docs/papers.md` 의 **「읽을 것」**
   아래에 후보를 붙인다. 월요일 09:17 KST 에 `.github/workflows/papers.yml` 이 돌린다. #9 를 닫는다
 - **표 본문은 안 건드린다.** 대장의 「무엇을 했나 · 주장한 결과 · 가져올 것」 은 **읽어야 쓸 수 있다.**
   안 읽고 채우면 그것이 §77 이 금한 거짓말이고, 그 줄은 나중에 근거로 인용된다
@@ -3927,7 +3928,7 @@ git 이 커밋을 고쳐 쓰지 않고 쌓는 것과 같은 까닭이다.
 - **분모가 줄 수였다.** `lit` 0.778 을 「64 줄 위의 수」 로 읽는데 실제 표시는 18 개다. 지표가 제 분모를
   들면 그것을 찍는다(`term_n` · `lit_n` · `ui_n` · DECISIONS §70)
 
-강제자 — `docs/next/hypotheses.md` H-052 · H-053 · 레이크 `runs/H-052-rescore-*.jsonl`
+강제자 — `docs/hypotheses.md` H-052 · H-053 · 레이크 `runs/H-052-rescore-*.jsonl`
 
 ### 배운 것
 
@@ -4979,14 +4980,14 @@ H-064 가 자리표시로 풀고 나면 그때 다시 잰다)
 
 - **이미 알고 있었다.** `verify.sh` 의 카탈로그 줄이 3주째 이렇게 찍었다 —
   「아무도 안 읽는 것 3(thoth-pairs · aws-docs · **papers**)」
-- 논문 대장(`docs/next/papers.md`)을 세웠고, 주 1회 수집(`tools/watch_papers.py` · §126)을 GitHub Actions 에
+- 논문 대장(`docs/papers.md`)을 세웠고, 주 1회 수집(`tools/watch_papers.py` · §126)을 GitHub Actions 에
   걸었고, 그것이 후보를 계속 쌓았다. **「읽을 것」 이 한 번도 안 줄었다**
 - §139 에 「**도구의 경고는 읽는 것이 아니라 고치는 것이다**」 라고 적은 것이 오늘 아침이다.
   그것을 적은 날, **3주 된 같은 경고가 화면에 계속 찍히고 있었다**
 
 ### 읽고 나서 바뀐 것
 
-`docs/now/related.md` 를 세웠다. **읽은 것만** 담는다(후보는 `papers.md` 가 든다).
+`docs/related.md` 를 세웠다. **읽은 것만** 담는다(후보는 `papers.md` 가 든다).
 
 - **MBR 은 이미 답이 나와 있었다.** Freitag 외(TACL 2022)가 사람 평가로 **chrF 효용이 빔서치보다
   나쁘다**고 적는다(MQM 2.139 대 2.030 · BLEURT 효용은 1.661). H-055 는 같은 결론에 **한 판 쓰고**
@@ -5017,7 +5018,7 @@ H-064 가 자리표시로 풀고 나면 그때 다시 잰다)
 ★ **바깥의 눈이 3주를 이겼다.** 안에서 쌓은 강제자 열둘이 못 한 일을 지적 넷이 한 번에 했다.
 「외부 검증이 없다」 는 지적 자체가 **외부 검증이 왜 필요한지의 증거**다 — #35 는 그래서 선다.
 
-강제자 — `docs/now/related.md`(읽은 것만 담는다) · PLAN #34 · #35 ·
+강제자 — `docs/related.md`(읽은 것만 담는다) · PLAN #34 · #35 ·
 `tools/catalog.py` 의 「아무도 안 읽는 것」 줄(이제 `papers` 가 빠져야 참이다)
 
 ---
@@ -5396,7 +5397,7 @@ H-059 가 살아남은 것은 부풀림이 **네 팔에 균일했기 때문**이
   가른다) · §154(보호해도 버린다) · §155(보호가 문맥을 먹는다)는 전부 **문서가 표시한 글자**에
   기대는데 **FLORES+ 에는 표시가 아예 없다**
 - **PLAN 행으로 안 남긴다** — 행은 할 수 있는 일을 적는 자리다. 지금 할 수 있는 일이 없는 한계는
-  `docs/now/related.md` §3 의 「말할 수 없는 것」 이 든다
+  `docs/related.md` §3 의 「말할 수 없는 것」 이 든다
 
 ### 배운 것
 
@@ -5406,7 +5407,7 @@ H-059 가 살아남은 것은 부풀림이 **네 팔에 균일했기 때문**이
 ★ **한계를 행으로 적을지 문서로 적을지는 「지금 할 수 있는가」 가 가른다.** 할 수 있으면 빚이고,
 못 하면 **적어 두는 한계**다. 못 하는 것을 빚으로 적으면 목록이 영영 안 줄고, 그러면 목록을 안 본다.
 
-강제자 — `docs/now/related.md` §3 · `tools/check_docs.py` 의 `check_plan`(닫힌 행을 가리키면 빨개진다)
+강제자 — `docs/related.md` §3 · `tools/check_docs.py` 의 `check_plan`(닫힌 행을 가리키면 빨개진다)
 
 ---
 
@@ -5625,7 +5626,7 @@ H-059 가 살아남은 것은 부풀림이 **네 팔에 균일했기 때문**이
 **측정을 고치는 일의 방향은 미리 알 수 없다** — 그래서 고치기 전에 「올라갈 것」 이나 「내려갈 것」 을
 적고, 그것으로 고침의 옳고 그름을 판단하지 않는다.
 
-강제자 — `docs/now/related.md` §3(말할 수 없는 것) · PLAN #36 · H-073
+강제자 — `docs/related.md` §3(말할 수 없는 것) · PLAN #36 · H-073
 
 ---
 
@@ -5689,7 +5690,7 @@ H-059 가 살아남은 것은 부풀림이 **네 팔에 균일했기 때문**이
 나머지 넷은 **참인데 너무 넓게 적은 것**이다. 넓게 적은 문장은 반박도 안 되고 검증도 안 된다 —
 **좁혀 적어야 다음 판이 그것을 잴 수 있다.**
 
-강제자 — PLAN #37 · H-067(§155 의 기전) · `docs/now/related.md` §3 ·
+강제자 — PLAN #37 · H-067(§155 의 기전) · `docs/related.md` §3 ·
 **이 표 자체**(다음에 「배운 것」 을 적을 때 근거의 분모를 같이 든다)
 
 ## §168. 누수를 못 없애면 재는 것이 다음 수다
@@ -6160,7 +6161,7 @@ H-073-넓은사전 (982자리)             term_off 0.9532   style 0.9667   keep
 ★ **정렬하고 나면 이기는 자리와 지는 자리가 같이 보인다.** 어긋난 표에서는 이기는 자리만 보였다.
 
 강제자 — `data/scoreboard.toml`(세 줄이 `metrics` 3 · `onto_score` `ec178d89`) · H-075 ·
-`docs/now/related.md` §3
+`docs/related.md` §3
 
 ## §177. 7줄은 세는 것이 아니라 여는 것이다
 
@@ -6242,7 +6243,7 @@ B: … 추가하고 제거할 수 있습니다AWS Management Console … 실행 
 ★ **비교군에 「그럴 수가 없는 것」 을 넣지 않는다.** 토막이 없는 줄은 토막 길이의 대조군이 아니다.
 
 강제자 — H-076(항목 수별 깨짐 비율 · 단조 증가) · `tools/compare_runs.py` 의 항목 수별 표 ·
-`docs/next/hypotheses.md` 의 H-075 판정에 적힌 「선이 약했다」
+`docs/hypotheses.md` 의 H-075 판정에 적힌 「선이 약했다」
 
 ## §179. 선을 두 번 연속으로 잘못 그었다 — 그리고 더 큰 것이 나왔다
 
@@ -6365,7 +6366,7 @@ Koehn, *Statistical Significance Tests for Machine Translation Evaluation*, EMNL
   「같은 팔을 두 번 재면 안 흔들린다」 이고, 그것이 「두 팔의 차이가 확실하다」 를 말하지는 않는다.
 
 강제자 — `tools/bootstrap.py` · `tests/test_bootstrap.py` · `tools/verify.sh` 의 `bootstrap` 단계 ·
-`docs/now/related.md`
+`docs/related.md`
 
 ## §181. 첫 p 값 — 맞바꿈이 통계로 섰다
 
@@ -6414,7 +6415,7 @@ Koehn, *Statistical Significance Tests for Machine Translation Evaluation*, EMNL
   **p 값 넷**이 나왔다. 측정을 늘리는 것과 **이미 잰 것에서 더 읽어내는 것**은 다른 일이고,
   뒤쪽이 훨씬 싸다.
 
-강제자 — `tools/bootstrap.py` · `docs/now/related.md` §3 · PLAN #40(수준은 여전히 더럽다)
+강제자 — `tools/bootstrap.py` · `docs/related.md` §3 · PLAN #40(수준은 여전히 더럽다)
 
 ## §182. p 값이 붙은 거짓말이 가장 그럴듯하다
 
@@ -6474,7 +6475,7 @@ lit        0.9225   0.9930   +0.0704  [+0.0245, +0.1242]  0.006   B 가 낫다
   「이겼다 · 졌다」 로 적혀 있었다.
 
 강제자 — `seshat/backends.py` 의 `보호` · `지키는_지표` · `tools/bootstrap.py` 의 `낮을수록_좋다` ·
-`tests/test_bootstrap.py` · PLAN #41 · `docs/now/related.md` §3
+`tests/test_bootstrap.py` · PLAN #41 · `docs/related.md` §3
 
 ## §183. 기전을 묻기 전에 크기가 실재하는지 묻는다
 
@@ -6561,7 +6562,7 @@ H-075 는 「길어서 샌다」 를 참으로 찍었고, 줄을 열었더니 **
 ★ **좁히면 남는 것이 더 단단하다.** 오늘 아침의 「nova 와 12B 를 넘었다」 는 근거가 없었고,
   지금의 「용어 표기에서 넘었다(p<0.001)」 는 **흔들 수 없다.**
 
-강제자 — `docs/now/related.md` §3(등수 대신 셋으로 적는다) · `tools/bootstrap.py`
+강제자 — `docs/related.md` §3(등수 대신 셋으로 적는다) · `tools/bootstrap.py`
 
 ## §185. §155 를 정정한다 — 없는 것의 기전을 찾고 있었다
 
@@ -6611,7 +6612,7 @@ gloss2 0.9134  →  +ui 0.9124  →  +marks 0.9094  →  +marks2 0.9073
 ★ **오늘 다섯 번째 정정이고, 이번 것은 자를 만들자마자 나왔다.** §167 · §179 · §182 · §184 ·
   그리고 이것. **자를 고치면 옛 주장이 줄줄이 무너지는 것이 정상**이고, 안 무너지면 자가 약한 것이다.
 
-강제자 — H-067 판정 · `tools/bootstrap.py` · `docs/now/related.md`
+강제자 — H-067 판정 · `tools/bootstrap.py` · `docs/related.md`
 
 ## §186. 정정하는 절에서 또 과장했다
 
@@ -6700,7 +6701,7 @@ gloss2 0.9134  →  +ui 0.9124  →  +marks 0.9094  →  +marks2 0.9073
   §159 가 그 걱정으로 「무엇을 더럽히는지 적어라」 를 넣었는데, **한 칸 더 좁혀야 했다.**
 
 강제자 — `tools/check_docs.py::check_plan` 의 「어느 문장을 막는지」 · PLAN 의 🔴 다섯 ·
-`docs/now/related.md` §3
+`docs/related.md` §3
 
 ## §188. 떼어둔 셋은 겹치면 떼어둔 것이 아니다
 
@@ -6923,7 +6924,7 @@ d002 (떼어둔 셋)       +0.0739  [+0.0495, +0.0984]
 ★ **「누수가 있었나」 와 「누수가 결과를 만들었나」 는 다른 물음이다.** 앞은 장부가 답하고
   뒤는 떼어둔 셋이 답한다. 앞의 답이 「있었다」 여도 뒤의 답은 「안 보인다」 일 수 있다.
 
-강제자 — H-077 판정 · `data/domain/d002.jsonl`(`held_out_from`) · `docs/now/related.md` §3 ·
+강제자 — H-077 판정 · `data/domain/d002.jsonl`(`held_out_from`) · `docs/related.md` §3 ·
 `seshat/evaluate.py` 의 `onto_leak`
 
 ## §193. 가짜 양성을 하나 지웠다 — 사전과 장부는 다르다
@@ -7215,9 +7216,9 @@ docs/  DECISIONS.md  MASTER.md  PLAN.md  grammar.md  hypotheses.md  papers.md  r
 
 ```
 docs/README.md   지도 — 무엇을 어디에 적는가
-docs/now/        MASTER.md · related.md · grammar.md      현재
-docs/next/       PLAN.md · hypotheses.md · papers.md      미래
-docs/why/        DECISIONS.md                             과거
+docs/        MASTER.md · related.md · grammar.md      현재
+docs/       PLAN.md · hypotheses.md · papers.md      미래
+docs/        DECISIONS.md                             과거
 ```
 
 - **지도를 한 장 만든다** — 축 셋, 문서마다 한 줄, 그리고 **「무엇을 적을 때 어디로 가는가」 표**.
@@ -7564,7 +7565,7 @@ H-078 의 미리 그은 선은 이랬다. **「구간이 0 을 안 품고 부호
   그렇게 말하게 했고, 다시 재는 일을 PLAN #45 로 세웠다 — **「옮겼다」 가 「다 옮겼다」 는 아니다.**
 
 강제자 — `data/scoreboard.toml` 의 `moved_from` · `moved_why` ·
-`tests/test_gate.py::test_까닭을_주면_셋을_갈아끼운다` · `docs/now/related.md` §3
+`tests/test_gate.py::test_까닭을_주면_셋을_갈아끼운다` · `docs/related.md` §3
 
 ## §208. 값을 옮기고 그 값에 대한 말은 안 옮겼다
 
@@ -7762,7 +7763,7 @@ set_sha256 = "a6d283587bd846fc"         ← d002 다
 
 ```
 ✗ §192 떼어둔 셋에서도 같은 크기가 났다 — 찍은 뒤로 본문이나 강제자가 바뀌었다
-    data/domain/d002.jsonl · docs/now/related.md · seshat/evaluate.py
+    data/domain/d002.jsonl · docs/related.md · seshat/evaluate.py
 ```
 
 아무것도 안 바뀌었다. **`d002` 가 만든 쪽에는 있고 받는 쪽에는 없었을 뿐이다** — 평가셋은
@@ -7891,7 +7892,7 @@ marks  : 뺀 것 214 · 잃은 것 0        ← 표시 쪽은 하나도 안 잃�
 ★ **이름을 재는 자가 누락을 잡았다 — 그것은 운이다.** 이름이 없는 줄에서 절이 사라지면 지금 이
   저장소는 못 본다. 규칙 지표 여섯이 그 다섯 줄을 전부 통과시켰다(§95 와 같은 얼굴).
 
-강제자 — `docs/next/hypotheses.md` 의 H-079 · `tools/show_misses.py` · `tools/compare_runs.py`
+강제자 — `docs/hypotheses.md` 의 H-079 · `tools/show_misses.py` · `tools/compare_runs.py`
 
 ## §215. 대장을 파일로 물었더니 무효 아홉 중 여덟이 남의 행이었다
 
@@ -7905,7 +7906,7 @@ marks  : 뺀 것 214 · 잃은 것 0        ← 표시 쪽은 하나도 안 잃�
 §37 §38 §43 §93 §95 §118 §129 §178 §214
 ```
 
-아홉 중 여덟은 `docs/next/hypotheses.md` 를 짚었을 뿐 **H-079 와 아무 상관이 없다.** 그 대장은
+아홉 중 여덟은 `docs/hypotheses.md` 를 짚었을 뿐 **H-079 와 아무 상관이 없다.** 그 대장은
 194 행이고 가설을 열고 닫을 때마다 바뀐다 — 그 파일을 짚은 절은 **앞으로 영원히 같이 무효가 된다.**
 
 ★ §211 이 이미 같은 판단을 했다 — 「짚은 이름의 몸만 잰다. 파일로 재면 `check_docs.py` 를 고칠
@@ -7968,8 +7969,8 @@ H-079 의 미리 그은 선은 이랬다. **「가장 짧은 20줄 중 절 누�
 ★ **떼어둔 데서 한 번 더 대 보기 전에는 자가 아니다.** 주 셋에서 넘은 것만으로 박았으면 이 저장소는
   오늘 셋을 타는 자를 하나 얻었을 것이다 — H-077 이 처치에 대해 한 일을 자에 대해서도 한다.
 
-강제자 — `docs/next/hypotheses.md` 의 H-079 · `tools/show_misses.py::짧은_줄` ·
-`docs/next/PLAN.md` #3
+강제자 — `docs/hypotheses.md` 의 H-079 · `tools/show_misses.py::짧은_줄` ·
+`docs/PLAN.md` #3
 
 ## §217. 찍은 것과 읽은 것을 갈랐다 — 그리고 처음 읽은 절이 낡아 있었다
 
@@ -8009,7 +8010,7 @@ H-079 의 미리 그은 선은 이랬다. **「가장 짧은 20줄 중 절 누�
 
 **「나머지 전부에서 못 가른다」 는 이제 참이 아니다.** §184 는 지우지 않는다 — 그 절은 `d001` 에
 대해 참이다. **여기서 좁힌다: §184 의 요약은 `d001` 에서만이다.** 지금 말할 수 있는 것은
-`docs/now/related.md` §3 이 든다.
+`docs/related.md` §3 이 든다.
 
 `§192` 도 읽었다 — 그 표의 수(`0.8839` · `0.9578` · `+0.0739` [+0.0495, +0.0984])는 오늘 자 5 로
 다시 잰 값과 **한 자리도 안 다르다.** 지금도 참이다. 둘 다 `--read` 로 찍었다.
@@ -8021,7 +8022,7 @@ H-079 의 미리 그은 선은 이랬다. **「가장 짧은 20줄 중 절 누�
 ★ **소급 감사는 첫 두 절에서 값을 냈다.** 105 를 다 읽기 전에 그만두고 싶은 유혹이 있는데,
   둘을 읽어 하나를 잡았다 — **표본이 작을 때의 적중률이 남은 것을 읽을 까닭이다.**
 
-강제자 — `tools/docseal.py` 의 `읽음` 칸 · `docs/next/PLAN.md` #47 · `docs/now/related.md` §3
+강제자 — `tools/docseal.py` 의 `읽음` 칸 · `docs/PLAN.md` #47 · `docs/related.md` §3
 
 ## §218. 온도를 흔드는 대신 무엇이 빠졌는지 말해 준다
 
@@ -8065,7 +8066,7 @@ H-079 의 미리 그은 선은 이랬다. **「가장 짧은 20줄 중 절 누�
 
 강제자 — `seshat/backends.py::이름을_박아_묻는다` ·
 `tests/test_backends.py::test_되묻기가_다_실패하면_이름을_박아_한_번_더_묻는다` ·
-`docs/next/hypotheses.md` 의 H-080
+`docs/hypotheses.md` 의 H-080
 
 ## §219. 시험이 남긴 셈을 뒤엣 시험이 봤다
 
@@ -8218,7 +8219,7 @@ H-080 이 채택됐다. 이름을 글로 박아 세 번째로 물으니 `repair`
 몇 달 동안 모아 온 **근거 · 막는 문장 · 전건**을 다 옮기지는 않는다. 그것은 `git` 에만 산다.
 
 ★ **지워진 것과 못 찾는 것은 다르다.** git 은 한 글자도 안 버렸다 — `#46` 의 본문은 지금도
-  `git show <커밋>:docs/next/PLAN.md` 안에 있다. 없던 것은 **「거기 있다」 를 아는 길**이다.
+  `git show <커밋>:docs/PLAN.md` 안에 있다. 없던 것은 **「거기 있다」 를 아는 길**이다.
 ★ 길이 없으면 사람은 **없어진 것으로 여긴다.** 그리고 없어졌다고 여기면 **다시 적는다** — 같은 빚을
   다른 번호로 또 세우는 것이 PLAN 이 부풀어 오르는 두 번째 길이다.
 
@@ -8229,7 +8230,7 @@ H-080 이 채택됐다. 이름을 글로 박아 세 번째로 물으니 `repair`
 - 인자 없이 : 닫힌 번호와 **그것을 든 절**
 - 번호를 주면 : **마지막으로 살아 있던 본문** · 사라진 판(커밋 · 날짜 · 제목) · 그 번호를 든 절
 - `--all` : 그 행이 바뀌어 온 이력 전부 — 빚이 어떻게 자랐는지가 보인다
-- **옮긴 자리를 따라간다**(`--follow`). `docs/PLAN.md` 는 §199 에서 `docs/next/PLAN.md` 가 됐다
+- **옮긴 자리를 따라간다**(`--follow`). `docs/PLAN.md` 는 §199 에서 `docs/PLAN.md` 가 됐다
 - **읽기만 한다.** 되살린 행을 PLAN 에 다시 붙이는 일은 사람이 한다 — 저절로 돌아오면 닫는 일이
   뜻을 잃는다
 
@@ -8297,7 +8298,7 @@ PLAN #35 를 **갈래별로** 다시 썼다 — 무엇이 얼마를 갚는지 �
 ★ **한 문장으로는 기계 번역을 못 가른다.** 다섯 문장을 뽑았더니 하나에서 자국이 보였고, 만든
   쪽의 글을 찾아 확정했다 — **눈으로 본 표본보다 만든 쪽의 발표가 싸고 확실하다.**
 
-강제자 없음 — 셋의 출처를 고르는 판단이다. `docs/next/PLAN.md` #35 가 갈래와 몫을 든다
+강제자 없음 — 셋의 출처를 고르는 판단이다. `docs/PLAN.md` #35 가 갈래와 몫을 든다
 
 ## §224. CI 에는 이력이 없었다
 
@@ -8390,7 +8391,7 @@ PLAN #35 를 **갈래별로** 다시 썼다 — 무엇이 얼마를 갚는지 �
 ★ **결과 문서는 대장(`hypotheses.md`)과 맞물려야 한다.** 채택된 가설의 판정이 결과 문서에 안 실리면
   그 가설은 닫힌 것이 아니다 — 지금은 사람이 잇고 있고, 그것이 오늘 끊겼다.
 
-강제자 — `docs/now/related.md` §3 · `docs/next/hypotheses.md` 의 H-046 · H-081
+강제자 — `docs/related.md` §3 · `docs/hypotheses.md` 의 H-046 · H-081
 
 ## §226. 선을 그어 놓고 그 선을 잴 자를 안 만들었다
 
@@ -8681,7 +8682,7 @@ PLAN #47 로 §14 · §94 를 읽었다. **§14 가 이렇게 적어 놨다.**
 ★ **경고가 문서에 있는 것과 그 크기를 아는 것은 다르다.** §43 은 방향을 맞혔고 **크기를 「조금」
   이라고 적었다.** 크기를 안 잰 경고는 읽고도 지나간다 — §225 의 「모른다」 와 같은 자리다.
 
-강제자 — `docs/now/related.md` §3 · `docs/next/hypotheses.md` 의 H-081 · H-082 · 레이크 `raw/labels/d002-60.*`
+강제자 — `docs/related.md` §3 · `docs/hypotheses.md` 의 H-081 · H-082 · 레이크 `raw/labels/d002-60.*`
 
 ## §230. 규칙에 번호를 박았다 — PLAN 43행을 닫는다
 
@@ -8812,7 +8813,7 @@ PLAN #47 로 §14 · §94 를 읽었다. **§14 가 이렇게 적어 놨다.**
 ★ **기각이 채택보다 싸게 왔다.** 판 둘 32분에 0원, 표 하나, 판정 네 번. **다음 몇 주를 사전에
   쓸 뻔한 것을 32분에 막았다** — 가설이 하는 일이 이것이다(§12).
 
-강제자 — `docs/now/related.md` §3 · `docs/next/hypotheses.md` 의 H-082 · 레이크 `raw/labels/d002b-60.*` · `seshat/evaluate.py` · `tests/test_evaluate.py::test_빈_조각은_막지_않고_치운다`
+강제자 — `docs/related.md` §3 · `docs/hypotheses.md` 의 H-082 · 레이크 `raw/labels/d002b-60.*` · `seshat/evaluate.py` · `tests/test_evaluate.py::test_빈_조각은_막지_않고_치운다`
 
 ## §232. 벽도 없고 길도 없는 자리 — 도구가 역추적으로 죽었다
 
@@ -8964,7 +8965,7 @@ print("    ✗ 도구가 깨졌다 — 위 역추적이 자리를 든다. 고치
   잡아 봤기 때문에 그 말이 쉽게 나왔다. **같은 모양이라고 같은 것은 아니다** — 가르는 것은
   「손대지 않은 남의 것인가」 이고, 결과 문서는 **남의 것이 아니다.**
 
-강제자 — `docs/why/DECISIONS.md` §184 의 좁힘 · `docs/next/PLAN.md` #47 · `tools/docseal.py`(안 고쳤다)
+강제자 — `docs/DECISIONS.md` §184 의 좁힘 · `docs/PLAN.md` #47 · `tools/docseal.py`(안 고쳤다)
 
 ## §235. 결과 문서의 수 여든하나를 아무도 안 보고 있었다
 
@@ -8986,7 +8987,7 @@ print("    ✗ 도구가 깨졌다 — 위 역추적이 자리를 든다. 고치
 | 강제자가 제 범위를 선언하는가(`scopedecl`) | 없다 |
 | 검사가 죽었는가(`deadcheck`) | 없다 — 도구마다 카나리아로 흩어져 있다 |
 
-★ **`docs/now/related.md` 에 수가 여든하나 있고 아무도 안 봤다.** 그 문서는 결과를 **요약**한다 —
+★ **`docs/related.md` 에 수가 여든하나 있고 아무도 안 봤다.** 그 문서는 결과를 **요약**한다 —
   수를 만들지 않고 **옮겨 적는다.** 그런데 옮겨 적는 일에 강제자가 없었다. `+0.0739` 를
   `+0.0793` 으로 잘못 치면 **아무도 안 운다.**
 
@@ -9082,7 +9083,7 @@ H-080 판과 함께 넷을 만들었다(쌍 여섯 · 약 100분 · 0원 · `gpu
 ★ **「아직 안 쟀다」 를 문서에 적어 두면 갚을 수 있다.** `related.md` 가 「`d002` 에서는 아직 안
   쟀다」 를 들고 있었고 PLAN 45행이 그것을 가리켰다 — **적어 두지 않았으면 빌린 수인 줄도 몰랐다.**
 
-강제자 — `data/scoreboard.toml` 의 `tol` · `tol_run` · `docs/now/related.md` §3 · `tools/noise.py`
+강제자 — `data/scoreboard.toml` 의 `tol` · `tol_run` · `docs/related.md` §3 · `tools/noise.py`
 
 ## §237. 하루에 같은 수를 네 번 고치고도 머리는 그대로였다
 
@@ -9151,7 +9152,7 @@ PLAN 47행의 수(`docseal audit` 의 「다시 봐야 할 절」)를 **하루�
 빨개졌다.**
 
 ```
-✗ 다시봐야할절: docs/next/PLAN.md 는 97 라 하고 실측은 98 다
+✗ 다시봐야할절: docs/PLAN.md 는 97 라 하고 실측은 98 다
 ```
 
 **수를 적은 커밋이 그 수를 바꿨다.** `docseal audit` 은 **절의 날짜**와 **그 절이 짚은 파일의
@@ -9371,7 +9372,7 @@ PLAN 47행의 수(`docseal audit` 의 「다시 봐야 할 절」)를 **하루�
 - `tools/check_numbers.py` 머리말의 「아직 안 옮겼다」 를 **「안 만든다」** 로 바꿨다 —
   **미룬 것과 정한 것은 다르고**, 「아직」 은 빚처럼 읽힌다
 
-강제자 — `tools/check_numbers.py` 머리말 · `docs/why/DECISIONS.md` §239
+강제자 — `tools/check_numbers.py` 머리말 · `docs/DECISIONS.md` §239
 
 ## §242. 자를 검증할 참값이 이미 있었다 — 그리고 NC 지표는 증류를 못 거른다
 
@@ -9941,7 +9942,7 @@ H-084 의 미리 그은 선은 **①②③④를 다 넘어야** #18 이 쓸 자
 ★ **물어봐서 알았다.** 네 장부가 다 0 이라 「잘 갚고 있다」 고 답할 뻔했고, 세어 보니 **안 세는 자리
   셋**이 나왔다. **「빚이 없다」 는 자주 「장부가 없다」 다.**
 
-강제자 — `README.md` 첫 문단 · `docs/next/PLAN.md` #48 · #49
+강제자 — `README.md` 첫 문단 · `docs/PLAN.md` #48 · #49
 
 ## §251. 취약점 넷은 오늘 이 저장소가 만든 것이고, 고칠 수 없는 종류다
 
@@ -10168,7 +10169,7 @@ H-086 의 선은 ① ρ 가 0 을 안 품고 ② **metricx 와 못 가르면 gem
 ★ ⚠ **같은 60줄이다.** `related.md` 에 박는 것은 H-085(떼어둔 60줄)가 든다 — **이기고도 안 박는다**
   (§216).
 
-강제자 — `tools/gemba.py` · `docs/next/hypotheses.md` 의 H-086 · `pyproject.toml`(`qe` 그룹이 없다)
+강제자 — `tools/gemba.py` · `docs/hypotheses.md` 의 H-086 · `pyproject.toml`(`qe` 그룹이 없다)
 
 ## §255. §240 이 이름만 같은 도구를 옮겼다 — 죽은 이름과 죽은 검사는 다른 물음이다
 
@@ -10368,7 +10369,7 @@ H-085 의 새 표를 만들면서 `--name` 을 안 줬다. 이름은 셋의 파�
   그 앞에 자(#3)가 있다. **쌍 로그는 그 줄 어디에도 안 낀다.**
 
 강제자 — `tools/check_deadchecks.py`(장부 = `frozenset()`) · `tests/test_deadchecks.py` ·
-`docs/next/PLAN.md` #6
+`docs/PLAN.md` #6
 
 ## §259. 열쇠는 남았는데 표가 날아갔다 — 되살리는 길이 없어 되살릴 수 없었다
 
@@ -10592,7 +10593,7 @@ uv run python tools/gemba.py --표 d002c-60 \
 ★ **닫는 일이 문서를 빨갛게 만드는 것은 설계대로다.** 행을 지우는 것이 **그 행을 가리키던 글을 전부
   다시 보게 한다** — docseal 과 같은 규율이고, 오늘 그 덕에 MASTER §0 의 낡은 「남은 20%」 를 잡았다.
 
-강제자 — `docs/now/related.md` §2 · §3 · `docs/next/hypotheses.md` H-085 ·
+강제자 — `docs/related.md` §2 · §3 · `docs/hypotheses.md` H-085 ·
 `tools/gemba.py` · `tools/labels.py corr`
 
 ## §263. 지표 셋이 초록인데 줄에 괄호가 남아 있었다 — 그리고 사본의 까닭이 거짓이었다
@@ -10713,7 +10714,7 @@ uv run python tools/gemba.py --표 d002c-60 \
 ★ **「전건이 풀렸다」 와 「할 수 있다」 는 다르다.** §262 는 참이다 — #3 은 닫혔고 거르는 자가 있다.
   그런데 **다음 칸에서 교사가 없었다.** PLAN 의 「막고 있는 것」 칸은 **한 칸만 앞을 본다.**
 
-강제자 — `seshat/licenses.py` · `docs/next/PLAN.md` #18 · `tools/check_model_licenses.py`
+강제자 — `seshat/licenses.py` · `docs/PLAN.md` #18 · `tools/check_model_licenses.py`
 
 ## §265. 반쪽만 받으니 쓰레기가 남았다 — 그리고 그룹 번호를 손으로 적은 자리가 조용히 죽었다
 
@@ -10998,7 +10999,7 @@ metricx      ρ +0.3086  [+0.1691, +0.4416]  p<0.001  · 줄 60
 ★ **감사의 값은 새 결함이 아니라 「세는 자가 없는 자리」 의 목록이다.** 오늘 그 목록이 넷이고,
   하나는 고쳤고 셋은 **안 세우기로 정하고 적었다** — 안 세우는 것도 결정이다(§241 과 같은 판단).
 
-강제자 — `tools/check_hypotheses.py` 의 `강제자로_든_가설` · `docs/next/hypotheses.md` H-084
+강제자 — `tools/check_hypotheses.py` 의 `강제자로_든_가설` · `docs/hypotheses.md` H-084
 
 ## §269. 교사를 못 읽어서 막힌 게 아니었다 — 벤더가 제 제품에서 안 시킨다
 
@@ -11064,7 +11065,7 @@ H-087 의 선은 「교사가 서빙 후보를 **`gemba` 평균에서** 이기�
   그 차이가 「선을 못 긋는다」 와 「선을 그었다」 를 가른다.
 
 강제자 — `seshat/licenses.py` 의 `LEDGER` · `tools/bootstrap.py` 의 `밖에서_잰_것` ·
-`tests/test_bootstrap.py` 넷 · `docs/next/hypotheses.md` H-087
+`tests/test_bootstrap.py` 넷 · `docs/hypotheses.md` H-087
 
 ## §270. 도구가 「스스로 깨졌다」 고 거짓말했다 — catch-all 은 바닥이지 길이 아니다
 
@@ -11304,7 +11305,7 @@ AssertionError: git 에 있는 셋이 사라졌다
   **두 점수의 차가 뜻의 차에 비례한다**는 뜻이 아니다. 이 구별을 안 하면 다음에
   「4.2점이면 충분한가」 를 **답할 수 있다고 착각한다.**
 
-강제자 — `docs/next/hypotheses.md` H-087 · 레이크 `runs/gemba-H087-20261001.jsonl` ·
+강제자 — `docs/hypotheses.md` H-087 · 레이크 `runs/gemba-H087-20261001.jsonl` ·
 `tools/bootstrap.py` 의 `밖에서_잰_것`
 
 ## §275. CI 를 정적으로 흉내 내려다 거짓 양성 세 판 — 좁은 자로 바꿨다
@@ -11400,7 +11401,7 @@ AssertionError: git 에 있는 셋이 사라졌다
   §158 의 그 병이 또 났다.
 
 강제자 — `tools/fetch_k8s.py` · `data/catalog.toml` 의 `k8s-docs` ·
-`tests/test_fetch_k8s.py` 여섯 · `docs/next/hypotheses.md` H-088
+`tests/test_fetch_k8s.py` 여섯 · `docs/hypotheses.md` H-088
 
 ## §277. 받은 것을 안 적어서 레이크가 1,841 건을 짚었다
 
@@ -11481,7 +11482,7 @@ gemma3:12b 이 403 로 거절했다 — https://ethical-deny-drunk-quebec.tryclo
 ★ **같은 병을 하루에 세 번 앓으면 그것은 우연이 아니라 버릇이다.** 셋 다 **닿기 쉬운
   자리에서 확인했고**, 실제 경로는 더 멀리 있었다. **확인의 자리를 고르는 것이 확인의 절반이다.**
 
-강제자 — `docs/now/colab.md` 의 ①(`OLLAMA_ORIGINS` · `Host` 를 바꾼 확인) · ①-2(밖에서 묻기)
+강제자 — `docs/colab.md` 의 ①(`OLLAMA_ORIGINS` · `Host` 를 바꾼 확인) · ①-2(밖에서 묻기)
 
 ## §279. 원문이 모델에게 지시로 읽혔다 — 그리고 심판이 거기에 만점을 줬다
 
@@ -11556,7 +11557,7 @@ gemma3:12b 이 403 로 거절했다 — https://ethical-deny-drunk-quebec.tryclo
   보장은 없다. 분포가 다르면 비율도 다르다.
 
 강제자 — `tools/escape.py::이탈` · `tools/distill.py` · `tests/test_escape.py` 23건 ·
-`data/probe/escape.jsonl` · `data/catalog.toml` 의 `escape-probe` · `docs/now/escape.md`
+`data/probe/escape.jsonl` · `data/catalog.toml` 의 `escape-probe` · `docs/escape.md`
 
 ## §280. 원칙을 적어 두고 한 칸 아래에서 어겼다 — 이름과 내용이 갈린 판 하나
 
@@ -11722,7 +11723,7 @@ gitleaks 는 **찾으면 PR 에 위치를 댓글로 단다**(`GITLEAKS_ENABLE_CO
 `tests/test_workflows.py::test_고정한_줄에서도_Node20_을_읽는다` ·
 `tests/test_workflows.py::test_gitleaks_는_PR_에_댓글을_달_수_있다` ·
 `tests/test_workflows.py::test_쓰기_권한은_그것을_쓰는_작업에만_있다` ·
-`tests/test_prose.py` · `docs/next/PLAN.md` #49
+`tests/test_prose.py` · `docs/PLAN.md` #49
 
 ### 배운 것
 
@@ -11862,7 +11863,7 @@ MASTER §14 에도 있었고, MASTER §0 에만 있는 것은 0** 이다 — **�
   바뀌었나」 를 든다. 여기가 보는 것은 **표가 죽지 않았는가** 하나다.
 
 강제자 — `tools/check_prose.py::check_낱말` · `tools/check_prose.py::사전` ·
-`tests/test_prose.py` · `docs/now/MASTER.md` 의 `### 0-0. 낱말` · `docs/next/PLAN.md` #50
+`tests/test_prose.py` · `docs/MASTER.md` 의 `### 0-0. 낱말` · `docs/PLAN.md` #50
 
 ### 배운 것
 
@@ -11912,7 +11913,7 @@ MASTER §14 에도 있었고, MASTER §0 에만 있는 것은 0** 이다 — **�
   스물셋) · 이번(셋 중 둘). **세 번 같은 자리면 그것은 사람의 부주의가 아니라 자리의 성질이다.**
 
 강제자 — `tools/check_prose.py::check_날짜` · `tools/check_prose.py::check_CI밖` ·
-`tools/check_prose.py::CI밖` · `tests/test_prose.py` · `docs/now/MASTER.md` §5
+`tools/check_prose.py::CI밖` · `tests/test_prose.py` · `docs/MASTER.md` §5
 
 ### 배운 것
 
@@ -11971,7 +11972,7 @@ MASTER §14 에도 있었고, MASTER §0 에만 있는 것은 0** 이다 — **�
   쪼개라고는 안 한다.
 
 강제자 — `tools/check_size.py::견준다` · `tools/check_size.py::_canary` · `tests/test_size.py` ·
-`tools/check_claims.py` 의 빈 장부 · `docs/next/PLAN.md` #51
+`tools/check_claims.py` 의 빈 장부 · `docs/PLAN.md` #51
 
 ### 배운 것
 
@@ -11999,7 +12000,7 @@ MASTER §14 에도 있었고, MASTER §0 에만 있는 것은 0** 이다 — **�
 ```
 tools/mutate.py          2026-10-01 부터 있다 (§267)
 verify.sh · ci.yml       mutate 를 부르는 자리 0
-docs/now/MASTER.md:545   「관문이 아니다(한 판에 수십 분) — 손으로 돌린다」
+docs/MASTER.md:545   「관문이 아니다(한 판에 수십 분) — 손으로 돌린다」
 ```
 
 **까닭이 적혀 있었고 참이었다** — 432자리 × 전체 시험 17.7초 = **2.1시간**. 사람이 기억해야
@@ -12109,7 +12110,7 @@ thoth 가 같은 날 세운 둘은 **이 저장소에 그 병이 없다.**
 
 강제자 — `tools/mutate.py::톱니` · `tools/mutate.py::견준다` · `tools/mutate.py::범위안` ·
 `tools/mutate.py::짝시험` · `tools/mutate.py::돌린다` · `tools/mutate.py::_canary` ·
-`tests/test_mutate.py` 의 시험 스물넷 · `tools/verify.sh` 의 `step mutate` · `docs/next/PLAN.md` #52
+`tests/test_mutate.py` 의 시험 스물넷 · `tools/verify.sh` 의 `step mutate` · `docs/PLAN.md` #52
 
 ### 배운 것
 
@@ -12124,3 +12125,66 @@ thoth 가 같은 날 세운 둘은 **이 저장소에 그 병이 없다.**
 **검사하는 자의 종료코드를 안 가르면, 그 자가 재는 모든 수가 거짓이 될 수 있다.** 「0 / 377」
 도 같은 코드로 잰 수다. 수가 좋을수록 **그 수를 낸 자를 먼저 의심해야 한다** — 이 저장소가
 §263 · §265 · §266 에서 하루에 다섯 번 겪은 그 일이다.
+
+## §288. 폴더가 축을 나르지 않았다 — 셋을 평평하게 폈다
+
+**2026-10-04** — thoth 세션이 네 저장소를 같은 자로 재면서 **이 저장소만 문서가 폴더 셋에
+나뉘어 있다**는 것을 적었다. 축이 셋인 것은 좋은 규율인데, **그 축을 폴더가 든 것**이
+무엇을 주고 무엇을 뺏는지는 아무도 안 쟀다.
+
+### 쟀다
+
+```
+docs/why/DECISIONS.md · docs/now/MASTER.md · docs/next/PLAN.md   + 위성 여섯
+이 경로를 가리키는 자리   237곳 · 32파일
+축을 강제하는 자         0
+```
+
+★ **`check_map` 이 머리말에 이미 적어 뒀다** — 「**이름으로 견준다.** 이름은 축을 건너
+  유일하고, **자리를 옮기는 것보다 안 적히는 것이 병이다**」. 즉 **폴더는 검사 대상이
+  아니었다.** 축을 지키는 것은 지도이고 폴더가 아니다.
+★ 폴더가 준 것은 **읽는 사람의 첫인상** 하나이고, 가져간 것은 **경로 237곳**과
+  다른 세 저장소와 **다른 꼴**이다. 지도가 축을 적으면 첫인상도 남는다.
+
+### 평평하게 폈다
+
+```
+docs/why/DECISIONS.md  →  docs/DECISIONS.md
+docs/now/MASTER.md     →  docs/MASTER.md       (+ related · grammar · escape · colab)
+docs/next/PLAN.md      →  docs/PLAN.md         (+ hypotheses · papers)
+```
+
+★ **위성 여섯은 합치지 않았다.** 분량으로 가르면 셋이 틀린다 — `hypotheses.md` 와
+  `papers.md` 는 **도구가 지키는 대장**(`check_hypotheses`)이고 행이 계속 는다.
+  `related.md` 는 **PLAN #35 가 그 문장을 강제자로 든다.** 대장과 강제자는 MASTER 의
+  절이 아니라 **제 파일**이다. 합칠지는 갈래 판단이고 이 패치의 물음이 아니다 — PLAN #55.
+
+### 일괄 치환이 역사를 덮었다
+
+`docs/why/|now/|next/` 를 전부 바꾸고 나니 시험 하나가 울었다.
+
+```
+tools/plan_closed.py   PLAN = "docs/next/PLAN.md"   ←  **옛 자리를 적어 둔 줄**
+                       for 자리 in (PLAN, "docs/PLAN.md")
+```
+
+이 도구는 **닫힌 PLAN 행을 이력에서 꺼낸다.** 그래서 **옮긴 자리를 전부 들고** 있어야
+하는데, 일괄 치환이 그 줄을 「지금 자리」 로 바꿔 **두 항목이 같아졌다.**
+
+★ **이 파일은 세 시대를 지났다** — `docs/PLAN.md` → `docs/next/PLAN.md`(§199) →
+  `docs/PLAN.md`(지금). 가운데를 빠뜨리면 **그 기간의 닫힌 행을 영영 못 꺼낸다.**
+★ **경로를 일괄로 바꾸는 일은 기계적이지 않다.** 코드 안의 경로에는 **「지금 자리」 와
+  「옛 자리」 가 섞여 있고 글자로는 안 갈린다.** 시험이 없었으면 조용히 지나갔다 —
+  닫힌 행을 꺼낼 일이 몇 달 뒤에나 생기므로.
+
+강제자 — `tools/check_docs.py::check_map` · `tools/plan_closed.py` 의 `옛자리` ·
+`tests/test_plan_closed.py::test_닫힌_행의_본문을_이력에서_꺼낸다` · `docs/README.md`
+
+### 배운 것
+
+**규율을 폴더로 들면 그 폴더는 검사 대상이 아니다.** 축은 좋은 규율이고 지금도 쓴다 —
+다만 그것을 **지도가 들면 검사가 되고, 폴더가 들면 관습이 된다.** 관습은 경로만 길게 한다.
+
+**일괄 치환이 가장 위험한 자리는 「옛 것을 적어 둔 줄」 이다.** 그 줄은 지금 자리와
+**글자가 같고 뜻이 반대**다. 고치는 손은 그것을 못 가른다 — 가르는 것은 **그 옛 자리를
+실제로 읽는 시험**뿐이다.

@@ -32,8 +32,8 @@ _spec.loader.exec_module(DG)
 def _놓는다(tmp_path, master=표, plan="절 **97** 개가 「찍은 뒤에 바뀐 코드」 를 짚는다\n"):
     for d in ("docs/now", "docs/next"):
         (tmp_path / d).mkdir(parents=True, exist_ok=True)
-    (tmp_path / "docs/now/MASTER.md").write_text(master, encoding="utf-8")
-    (tmp_path / "docs/next/PLAN.md").write_text(plan, encoding="utf-8")
+    (tmp_path / "docs/MASTER.md").write_text(master, encoding="utf-8")
+    (tmp_path / "docs/PLAN.md").write_text(plan, encoding="utf-8")
     return tmp_path
 
 
@@ -95,7 +95,7 @@ def test_틀린_수가_걸리고_fix_가_고친다(tmp_path, monkeypatch):
     assert ("진행률", 99, 35) in 안맞, 안맞
     DG.고친다({"진행률"})
     assert DG.견준다({"진행률"}) == []
-    assert "**합 35%**" in (tmp_path / "docs/now/MASTER.md").read_text(encoding="utf-8")
+    assert "**합 35%**" in (tmp_path / "docs/MASTER.md").read_text(encoding="utf-8")
 
 
 def test_게이트는_축을_골라_보지_않는다():
@@ -124,6 +124,6 @@ def test_커밋이_흔드는_수는_축이_아니다():
     수를 바꾸므로 **고정점이 한 커밋 안에 없다.**
     """
     assert "다시봐야할절" not in DG.축
-    plan = (ROOT / "docs/next/PLAN.md").read_text(encoding="utf-8")
+    plan = (ROOT / "docs/PLAN.md").read_text(encoding="utf-8")
     assert "개가 「찍은 뒤에 바뀐 코드」" not in plan, "PLAN 이 그 수를 다시 들었다"
     assert "docseal.py audit" in plan, "그 수를 어디서 보는지가 빠졌다"

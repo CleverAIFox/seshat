@@ -78,16 +78,16 @@ def test_줄_대장은_부른_행만_문다():
     """
     대장 = "| H-001 | 채택 | R1 | 가 | 나 | 0 | 다 |\n| H-079 | 실험 | R7 | 가 | 나 | 0 | |\n"
     본문 = "## §9. 무엇\n\n**2026-09-29**\n\n### 배운 것\n\nH-079 를 연다.\n"
-    앞 = DS._대장_조각("docs/next/hypotheses.md", 본문, 대장)
+    앞 = DS._대장_조각("docs/hypotheses.md", 본문, 대장)
     assert 앞, "부른 행을 못 찾았다"
     # 남의 행이 바뀌어도 그대로다
-    assert DS._대장_조각("docs/next/hypotheses.md", 본문,
+    assert DS._대장_조각("docs/hypotheses.md", 본문,
                         대장.replace("| H-001 | 채택 |", "| H-001 | 기각 |")) == 앞
     # 내 행이 바뀌면 달라진다
-    assert DS._대장_조각("docs/next/hypotheses.md", 본문,
+    assert DS._대장_조각("docs/hypotheses.md", 본문,
                         대장.replace("| H-079 | 실험 |", "| H-079 | 채택 |")) != 앞
     # 아무 행도 안 부르면 그 파일은 지문 밖이다
-    assert DS._대장_조각("docs/next/hypotheses.md", "## §9. 무엇\n\n번호가 없다.\n", 대장) == ""
+    assert DS._대장_조각("docs/hypotheses.md", "## §9. 무엇\n\n번호가 없다.\n", 대장) == ""
 
 
 def test_무더기로_읽었다를_못_찍는다(tmp_path, monkeypatch, capsys):
@@ -101,10 +101,10 @@ def test_PLAN_도_부른_행만_문다():
     """★ §215 를 `hypotheses.md` 에만 적용하고 `PLAN.md` 는 파일째 뒀다(DECISIONS §219)."""
     대장 = "| 43 | 🟡 | 가 | |\n| 47 | 🟡 | 나 | |\n"
     본문 = "## §9. 무엇\n\n**2026-09-29**\n\n### 배운 것\n\nPLAN #47 이 든다.\n"
-    앞 = DS._대장_조각("docs/next/PLAN.md", 본문, 대장)
+    앞 = DS._대장_조각("docs/PLAN.md", 본문, 대장)
     assert 앞
-    assert DS._대장_조각("docs/next/PLAN.md", 본문, 대장.replace("| 43 | 🟡 |", "| 43 | 📄 |")) == 앞
-    assert DS._대장_조각("docs/next/PLAN.md", 본문, 대장.replace("| 47 | 🟡 |", "| 47 | 📄 |")) != 앞
+    assert DS._대장_조각("docs/PLAN.md", 본문, 대장.replace("| 43 | 🟡 |", "| 43 | 📄 |")) == 앞
+    assert DS._대장_조각("docs/PLAN.md", 본문, 대장.replace("| 47 | 🟡 |", "| 47 | 📄 |")) != 앞
 
 
 def test_아직_안_담긴_파일도_저장소의_파일이다(tmp_path, monkeypatch):

@@ -39,9 +39,9 @@ def _번호(글: str) -> list[str]:
 def _가리킴(tmp_path: pathlib.Path, 글: str) -> list[str]:
     """`tmp_path` 안의 작은 문서 하나가 가리킨 것만 본다 — 저장소 문서를 안 읽는다."""
     (tmp_path / "docs/now").mkdir(parents=True, exist_ok=True)
-    (tmp_path / "docs/now/x.md").write_text(글, encoding="utf-8")
+    (tmp_path / "docs/x.md").write_text(글, encoding="utf-8")
     옛 = CR.DOCS
-    CR.DOCS = ("docs/now/x.md",)
+    CR.DOCS = ("docs/x.md",)
     try:
         return CR.check(GOOD, tmp_path)
     finally:
@@ -53,7 +53,7 @@ def test_깨끗한_문서는_통과한다():
 
 
 def test_실제_MASTER_가_통과한다():
-    assert CR.check((ROOT / "docs/now/MASTER.md").read_text(encoding="utf-8"), ROOT) == []
+    assert CR.check((ROOT / "docs/MASTER.md").read_text(encoding="utf-8"), ROOT) == []
 
 
 def test_카나리아가_산다():

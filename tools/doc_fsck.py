@@ -27,7 +27,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-LIVE_DOCS = ["README.md", "docs/now/MASTER.md", "docs/next/PLAN.md"]
+LIVE_DOCS = ["README.md", "docs/MASTER.md", "docs/PLAN.md"]
 TOP = ("tools", "seshat", "tests", "data", "docs", ".github")  # seshat:
 # `tools/x.py` · `worker/tests/test_a.py::test_b` — 백틱 안만 본다. 글롭 · 자리표시자는 뺀다.
 PATH = re.compile(r"`((?:%s)/[^`\s*<>{}$]+?)(?:::([\w가-힣]+))?`" % "|".join(re.escape(t) for t in TOP))
@@ -73,7 +73,7 @@ def check_paths(root: Path, fails: list) -> None:
         p = root / rel
         if p.exists():
             sources.append((rel, p.read_text(encoding="utf-8")))
-    dec = root / "docs/why/DECISIONS.md"
+    dec = root / "docs/DECISIONS.md"
     if dec.exists():
         for b in re.split(r"^## §", dec.read_text(encoding="utf-8"), flags=re.M)[1:]:
             num = b.split(".")[0].strip()
@@ -94,7 +94,7 @@ def check_paths(root: Path, fails: list) -> None:
 def check_tools(root: Path, fails: list) -> None:
     tools = sorted(p for p in (root / "tools").glob("*") if p.suffix in {".py", ".sh", ".mjs"})
     corpus = []
-    for rel in ("README.md", "docs/now/MASTER.md"):
+    for rel in ("README.md", "docs/MASTER.md"):
         if (root / rel).exists():
             corpus.append((rel, (root / rel).read_text(encoding="utf-8")))
     for p in tools + sorted((root / ".github/workflows").glob("*.yml")):

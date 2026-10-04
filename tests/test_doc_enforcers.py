@@ -168,9 +168,9 @@ def test_날짜_없는_절이_걸린다():
 def _tree(tmp_path, plan=PLAN, master="# m\n\n## 1. a\n\n### 1-1. b\n", dec=None, extra=None):
     for 축 in ("now", "next", "why"):          # 축마다 한 칸(DECISIONS §199)
         (tmp_path / "docs" / 축).mkdir(parents=True)
-    (tmp_path / "docs/next/PLAN.md").write_text(plan, encoding="utf-8")
-    (tmp_path / "docs/now/MASTER.md").write_text(master, encoding="utf-8")
-    (tmp_path / "docs/why/DECISIONS.md").write_text(dec or _dec(1, "본문"), encoding="utf-8")
+    (tmp_path / "docs/PLAN.md").write_text(plan, encoding="utf-8")
+    (tmp_path / "docs/MASTER.md").write_text(master, encoding="utf-8")
+    (tmp_path / "docs/DECISIONS.md").write_text(dec or _dec(1, "본문"), encoding="utf-8")
     (tmp_path / "README.md").write_text(extra or "", encoding="utf-8")
     return tmp_path
 
@@ -251,7 +251,7 @@ def test_더럽힌다고_적었으면_무엇을_더럽히는지_적어야_한다
 def test_더럽히는_빚은_무엇을_더럽히는지_들고_있다():
     """**수를 박지 않는다.** 갚으면 줄어드는 것이 정상이고, 수를 박으면 갚을 때 시험이 빨개진다
     (2026-09-28 #34 를 갚자 「넷 이상」 이 깨졌다 · DECISIONS §161)."""
-    plan = (ROOT / "docs/next/PLAN.md").read_text(encoding="utf-8")
+    plan = (ROOT / "docs/PLAN.md").read_text(encoding="utf-8")
     붉은 = [x for x in plan.splitlines() if re.match(r"^\| \d+ \|", x) and "🔴" in x]
     assert all("더럽힌다" in x for x in 붉은), \
         "🔴 인 행은 무엇을 더럽히는지 들어야 한다 — 안 들면 「중요함」 의 다른 말이 된다"
@@ -273,7 +273,7 @@ def test_빨간_행은_막는_문장을_든다():
     cd.check_plan(나쁜, got)
     assert any("어느 문장을 막는지" in x for x in got), "카나리아가 죽었다"
 
-    좋은 = 나쁜.replace("측정을 더럽힌다.**", "측정을 더럽힌다.** `docs/now/related.md` §3 의 「무엇」 을 막는다")
+    좋은 = 나쁜.replace("측정을 더럽힌다.**", "측정을 더럽힌다.** `docs/related.md` §3 의 「무엇」 을 막는다")
     got2 = []
     cd.check_plan(좋은, got2)
     assert not any("어느 문장을 막는지" in x for x in got2)
@@ -359,8 +359,8 @@ def test_저장소의_지도와_목록이_통과한다():
     """★ 시험이 인공 나무에서만 초록이면 **저장소를 안 지킨다**(DECISIONS §170 과 같은 병)."""
     f = []
     cd.check_map(ROOT, f)
-    cd.check_tools_listed(ROOT, (ROOT / "docs/now/MASTER.md").read_text(encoding="utf-8"), f)
-    cd.check_index((ROOT / "docs/why/DECISIONS.md").read_text(encoding="utf-8"), f)
+    cd.check_tools_listed(ROOT, (ROOT / "docs/MASTER.md").read_text(encoding="utf-8"), f)
+    cd.check_index((ROOT / "docs/DECISIONS.md").read_text(encoding="utf-8"), f)
     assert f == [], f
 
 

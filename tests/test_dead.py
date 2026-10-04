@@ -20,7 +20,7 @@ def _나무(tmp_path: pathlib.Path, 코드: str, 문서: str = "") -> pathlib.Pa
     (tmp_path / "seshat/a.py").write_text(코드, encoding="utf-8")
     # ★ **부르는 자리를 놓아 둔다** — 안 그러면 fixture 의 이름이 전부 진짜로 죽는다
     (tmp_path / "tools/b.py").write_text("from seshat.a import 산다\n\n산다()\n", encoding="utf-8")
-    (tmp_path / "docs/why/DECISIONS.md").write_text(문서, encoding="utf-8")
+    (tmp_path / "docs/DECISIONS.md").write_text(문서, encoding="utf-8")
     return tmp_path
 
 

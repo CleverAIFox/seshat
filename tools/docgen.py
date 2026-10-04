@@ -42,14 +42,14 @@ def _도구(이름: str):
 
 def 진행률() -> int:
     """MASTER §15 의 합. **표가 정본이고 합은 그 표에서 나온다** — 손으로 곱해 더하지 않는다."""
-    글 = (ROOT / "docs/now/MASTER.md").read_text(encoding="utf-8")
+    글 = (ROOT / "docs/MASTER.md").read_text(encoding="utf-8")
     칸 = 단계.findall(글)
     if len(칸) < 3:
         raise SystemExit(f"정본이 죽었다 — MASTER §15 의 단계 표에서 {len(칸)} 줄만 읽혔다\n"
-                         "    표를 본다 : sed -n '/## 15\\./,/^\\*\\*합/p' docs/now/MASTER.md")
+                         "    표를 본다 : sed -n '/## 15\\./,/^\\*\\*합/p' docs/MASTER.md")
     if sum(int(w) for w, _ in 칸) != 100:
         raise SystemExit(f"정본이 죽었다 — 비중의 합이 {sum(int(w) for w, _ in 칸)}% 다(100 이어야 한다)\n"
-                         "    비중은 한 번 적고 안 흔든다 : docs/now/MASTER.md §15")
+                         "    비중은 한 번 적고 안 흔든다 : docs/MASTER.md §15")
     # ★ **내림이다. 반올림이 아니다**(DECISIONS §237). 2026-09-30 참값이 35.5 였고 반올림하면 36 이
     #   된다 — **진행률은 과장되는 쪽으로 틀리면 안 된다.** 어느 쪽으로 깎을지를 도구가 정해 두지
     #   않으면 적는 사람이 그때그때 고르고, 고르는 쪽은 늘 높은 쪽이다
@@ -94,16 +94,16 @@ def _칸(표기: str) -> re.Pattern:
 #   건드리면서 수를 바꾼다. **고정점이 한 커밋 안에 없다.** 채워 넣을 수 있는 수는 **커밋이 안 흔드는
 #   수**이고, 흔드는 수는 문서에 안 적고 도구가 물을 때마다 센다.
 축 = {
-    "진행률": (진행률, "docs/now/MASTER.md", re.compile(r"(?<=\*\*합 )(\d+)(?=%\*\*)")),
+    "진행률": (진행률, "docs/MASTER.md", re.compile(r"(?<=\*\*합 )(\d+)(?=%\*\*)")),
     # ★ **MASTER §9 의 표가 2026-10-02 에 넷 다 틀렸다**(DECISIONS §281) — `feature` 20(참 24) ·
     #   `concept` 60(참 74) · 표기 227(참 265). 손으로 적은 수는 사전이 자랄 때마다 늙는다.
     #   **커밋이 흔드는 수가 아니다**(§238) — 사전을 고치는 커밋만 흔든다
-    "서비스": (종류수("service"), "docs/now/MASTER.md", _칸("service")),
-    "기능": (종류수("feature"), "docs/now/MASTER.md", _칸("feature")),
-    "API": (종류수("api"), "docs/now/MASTER.md", _칸("api")),
-    "개념": (종류수("concept"), "docs/now/MASTER.md", _칸("concept")),
-    "표기": (표기수, "docs/now/MASTER.md", re.compile(r"(?<=표기\(이름 \+ 별칭\)는 )(\d+)(?= 이고)")),
-    "라이선스대장": (대장수, "docs/now/MASTER.md", re.compile(r"(?<=대장에 )(\d+)(?= 줄이 있다)")),
+    "서비스": (종류수("service"), "docs/MASTER.md", _칸("service")),
+    "기능": (종류수("feature"), "docs/MASTER.md", _칸("feature")),
+    "API": (종류수("api"), "docs/MASTER.md", _칸("api")),
+    "개념": (종류수("concept"), "docs/MASTER.md", _칸("concept")),
+    "표기": (표기수, "docs/MASTER.md", re.compile(r"(?<=표기\(이름 \+ 별칭\)는 )(\d+)(?= 이고)")),
+    "라이선스대장": (대장수, "docs/MASTER.md", re.compile(r"(?<=대장에 )(\d+)(?= 줄이 있다)")),
 }
 
 

@@ -490,13 +490,13 @@ def door(h: str) -> None:
     if not h:
         raise SystemExit("가설이 없다 — --hypothesis H-NNN. 무엇을 확인하려는지 없이 재지 않는다(DECISIONS §12)")
     if h not in rows:
-        raise SystemExit(f"{h} 가 가설 대장에 없다 — docs/next/hypotheses.md")
+        raise SystemExit(f"{h} 가 가설 대장에 없다 — docs/hypotheses.md")
     if rows[h][0] != "실험":
         # ★ **막으면서 넘는 길을 같이 준다**(DECISIONS §174). 2026-09-28 이 문이 **네 번** 막았고
         #   네 번 다 「닫힌 가설 번호를 집은 것」 이었다 — 그때마다 열린 것이 무엇인지 **찾으러
         #   갔다.** 화면에 있으면 안 찾는다. §139 의 「경고는 고치는 것이다」 와 같은 줄이다
         열린 = [x for x, c in rows.items() if c[0] == "실험"]
-        말 = (" · ".join(열린) if 열린 else "없다 — docs/next/hypotheses.md 에 새로 연다")
+        말 = (" · ".join(열린) if 열린 else "없다 — docs/hypotheses.md 에 새로 연다")
         raise SystemExit(f"{h} 는 '{rows[h][0]}' 상태다 — 실험 상태여야 잰다(검증 방법 · 비용 상한)\n"
                          f"  지금 실험 상태인 가설 : {말}")
 

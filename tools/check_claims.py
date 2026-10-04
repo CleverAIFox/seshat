@@ -28,7 +28,7 @@ import re
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-대장 = ROOT / "docs/why/DECISIONS.md"
+대장 = ROOT / "docs/DECISIONS.md"
 # 강제자 줄에서 뽑는 꼴 — `파일::이름`
 자리꼴 = re.compile(r"`((?:seshat|tools)/[\w./-]+\.py)::([\w가-힣_]+)`")
 # 「무엇을 안 보는가」 를 말하는 말. **넓히면 거짓 초록이 된다**
