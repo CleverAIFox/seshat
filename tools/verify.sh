@@ -75,6 +75,13 @@ step crashes            uv run python tools/check_crashes.py
 step scope              uv run python tools/check_scope.py
 step dead               uv run python tools/check_dead.py
 step deadchecks         uv run python tools/check_deadchecks.py
+# ★ **「가진 것」 과 「도는 것」 은 다르다**(DECISIONS §287). `mutate.py` 는 2026-10-01 부터
+#   있었는데 **어느 사슬에도 없었고** MASTER 가 그 까닭을 적어 뒀다 — 「한 판에 수십 분」.
+#   짝 시험으로 좁혀 **2.1시간 → 7분**이 됐고, 그래서 여기 들어온다.
+# ★ **범위는 검사 술어다.** 2026-10-01 에 터진 다섯 중 셋이 `tools/` 였다 — **재는 쪽을 안
+#   재면 검사가 거짓이어도 조용하다.** `seshat/` 쪽 335자리는 아직 손으로 돈다(PLAN).
+# ★ 좁혀 뚫어도 **장부는 저장소 전체로 센다** — 안 그러면 사슬에서 톱니가 영원히 안 운다.
+step mutate             uv run python tools/mutate.py --only 'tools/check_*.py'
 step claims             uv run python tools/check_claims.py
 step docseal            uv run python tools/docseal.py
 step bootstrap          uv run python tools/bootstrap.py --selftest

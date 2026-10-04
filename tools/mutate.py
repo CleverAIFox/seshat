@@ -13,13 +13,33 @@ r"""**몸통을 지워도 시험이 통과하나** — 붙드는 시험이 없�
 ★ **꼴을 지키는 값으로 바꾼다.** `-> bool` 은 `True`, `-> list[...]` 는 `[]` 로 바꾼다.
   `None` 으로 바꾸면 `TypeError` 로 죽는데 **그 죽음은 시험이 값을 봤다는 뜻이 아니다** —
   꼴이 맞는 값으로 바꿔야 **살아남은 것이 진짜 살아남은 것**이다.
-★ **밖 — 반환 주석이 없으면 안 잰다.** 꼴을 모르면 중립값을 못 고른다. 그 수도 같이 찍는다 —
+★ **밖 — 반환 주석이 없으면 안 본다.** 꼴을 모르면 중립값을 못 고른다. 그 수도 같이 찍는다 —
   **못 잰 것을 0 으로 세지 않는다**(§172 · §258).
 ★ **밖 — 「살아남았다」 가 「나쁘다」 는 아니다.** 사소한 접근자는 붙들 값이 없을 수 있다.
   이 도구는 **볼 자리를 준다**(§163 의 `dupcheck` 와 같은 성질) — 다만 **지표와 검사가 거기
   있으면 그것은 빚이다.**
 ★ **원본을 반드시 되돌린다.** 끝에 해시로 대 보고 다르면 **소리친다** — 중간에 끊겨 망가진
   소스를 남기는 것이 이 도구의 가장 큰 위험이다.
+
+★ **`try/finally` 는 신호를 안 막는다**(DECISIONS §287). 2026-10-04 에 이 도구를 `timeout`
+  으로 끊었더니 `tools/check_docs.py` 가 **`ast.unparse` 결과로 남았다 — 주석 269줄이
+  사라진 채로.** `git diff` 를 보고서야 알았고, 그 사이 다른 검사 넷이 빨개져서 **원인을
+  엉뚱한 데서 찾았다.** `SIGINT` · `SIGTERM` 을 받아 되돌린다 — `SIGKILL` 은 못 막으므로
+  **망가진 파일의 이름을 끝에 찍어 둔다.**
+
+★ **좁혀 부르되 믿지 않는다**(DECISIONS §287). 한 판에 시험 전부를 돌려 **2.1시간**이었고
+  그래서 MASTER 가 「관문이 아니다 — 손으로 돌린다」 고 적었다. **사슬 밖에 둔 검사는 사람이
+  기억해야 돌고, 사람은 안 돌린다** — 2026-10-01 에 적은 「못 잰 41」 이 아무도 안 세는 사이
+  **47 로 늘었다.**
+
+  짝 시험(`tools/check_X.py` ↔ `tests/test_X.py`)만 돌리면 1.4초다. 그런데 **짝이 그 함수를
+  붙드는 시험이라는 보장이 없다.** 좁힌 쪽이 조용한 것을 「붙드는 시험이 없다」 로 세면
+  **거짓 양성**이다 — 실측으로 99자리 중 21이 그랬다. 그래서 **짝이 울면 거기서 끝내고,
+  안 울면 전부로 다시 확인한다.** 빠른 길은 **긍정만** 결론내고 부정은 느린 길이 낸다.
+
+★ **관문이다**(§287). 종전에는 산 자리를 찍고 **언제나 0 으로 끝났다** — 장부가 비어 있는데도
+  늘어도 아무 일이 없었다. 셋을 본다 : 산 자리는 **0** 이어야 하고, 못 잰 자리는 **늘면** 울고,
+  잴 자리는 **줄면** 운다(양방향 — 안 그러면 주석을 떼어 잴 자리를 줄여 초록을 만든다).
 """
 from __future__ import annotations
 
@@ -27,13 +47,43 @@ import argparse
 import ast
 import hashlib
 import pathlib
+import signal
 import subprocess
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
+# ★ **신호를 받아도 되돌린다**(§287). 지금 뚫어 놓은 파일과 그 원본을 들고 있다가
+#   `SIGINT`/`SIGTERM` 에 되돌려 놓고 죽는다. 비어 있으면 뚫린 파일이 없다는 뜻이다.
+_뚫린것: dict[pathlib.Path, str] = {}
 # ★ **검사 술어가 `tools/` 에 산다.** 2026-10-01 터진 다섯 중 셋이 거기였다 — seshat/ 만 재면
 #   **재는 쪽을 안 재는 것**이다(§172 와 같은 꼴)
 볼곳 = ("seshat/*.py", "tools/*.py")
+# ★ **양방향**(§287). 산 자리는 절대 0 이고, 못 잰 자리는 늘면 울고, **잴 자리는 줄면 운다** —
+#   반환 주석을 떼면 그 함수가 조용히 검사 밖으로 나간다. 2026-10-01 → 10-04 에 못 잰 자리가
+#   41 → 47 로 늘었는데 **아무도 안 셌다.**
+MIN_잴것 = 438
+MAX_못잴것 = 47
+# ★ **장부**(§287). `verify.sh` 가 보는 범위에서 **지금 붙드는 시험이 없는 자리.** 늘면 막고,
+#   갚으면 `--update` 가 줄인다 — `check_deadchecks` 와 같은 꼴(§255 · §258).
+#
+# ★ **`main` 이 넷이다.** 관문의 `main` 을 `return 0` 으로 바꿔도 아무도 안 운다 — 시험이
+#   속 함수만 부르고 **도구를 통째로 돌려 보는 자리가 없다.** 「검사를 껐는데 초록」 의 가장
+#   곧은 꼴이다.
+# ★ **`check_prose` 술어 셋은 저장소가 깨끗해서 산다.** 지금 위반이 0 이라 `[]` 를 돌려줘도
+#   맞는 답이다 — **가짜 입력으로 물어야** 문다(§287 · thoth §150 과 같은 자리).
+# ★ **`check_size::_canary` 가 산다.** 카나리아를 붙드는 것이 없다 — 「도구가 고장났나」 를
+#   보는 자가 고장나도 조용하다.
+장부: frozenset[str] = frozenset({
+    "tools/check_claims.py::main",
+    "tools/check_deadchecks.py::견준다",
+    "tools/check_deadchecks.py::main",
+    "tools/check_prose.py::check_표깨짐",
+    "tools/check_prose.py::check_날짜",
+    "tools/check_prose.py::check_빈약속",
+    "tools/check_prose.py::main",
+    "tools/check_size.py::_canary",
+    "tools/check_size.py::main",
+})
 # 반환 주석 → 꼴을 지키는 중립값
 중립 = {"bool": "True", "int": "0", "float": "0.0", "str": '""', "bytes": 'b""',
         "list": "[]", "dict": "{}", "set": "set()", "tuple": "()"}
@@ -73,6 +123,54 @@ def 잴것(root: pathlib.Path | None = None) -> tuple[list[tuple[str, str, int, 
     return 잰다, 못잰다
 
 
+def 범위안(파일: str, 무늬: str) -> bool:
+    """`--only` 무늬에 드는가. **뚫을 자리와 장부를 같은 자로 거른다** — 두 곳이 각각
+    거르면 갈린다(§287 · thoth §132)."""
+    import fnmatch
+    return not 무늬 or fnmatch.fnmatch(파일, 무늬)
+
+
+def 견준다(산것: list[str], 장부: frozenset[str]) -> tuple[list[str], list[str]]:
+    """(장부에 없는 것, 장부에 있는데 이제 안 사는 것). **둘 다 낸다** — 늘면 막고 줄면 알린다.
+
+    ★ 장부만 보면 **갚아도 아무도 모른다.** 갚은 것을 안 찍으면 장부는 영원히 안 줄고,
+      줄지 않는 장부는 **영구 면제**가 된다(§258 이 절대 규칙으로 올린 까닭).
+    """
+    새것 = [x for x in 산것 if x not in 장부]
+    갚음 = [x for x in sorted(장부) if x not in set(산것)]
+    return 새것, 갚음
+
+
+def 톱니(잴것: int, 못잴것: int) -> list[str]:
+    """**재고 세는 일과 뚫는 일은 다르다**(§287). 뚫는 범위는 `--only` 로 좁혀도 **장부는 저장소
+    전체의 것**이다 — 좁힌 판에서 톱니를 건너뛰면 사슬에서는 톱니가 영원히 안 돈다.
+
+    ★ 순수 함수다. 저장소가 깨끗해도 **가짜 수로 물어 볼 수 있다** — 토트가 같은 모양의 돌연변이
+      셋을 살려 보내고서야 배운 것이다(토트 §145 · §147 · §150).
+    """
+    난것 = []
+    if 못잴것 > MAX_못잴것:
+        난것.append(f"못 재는 자리가 {못잴것} 로 천장 {MAX_못잴것} 을 넘었다 — "
+                    f"반환 주석을 달거나, 천장을 올린 까닭을 적는다")
+    if 잴것 < MIN_잴것:
+        난것.append(f"잴 자리가 {잴것} 로 바닥 {MIN_잴것} 아래다 — "
+                    f"주석을 떼면 그 함수가 조용히 검사 밖으로 나간다")
+    return 난것
+
+
+def 짝시험(파일: str, root: pathlib.Path | None = None) -> list[str]:
+    """그 파일의 짝 시험. 없으면 빈 목록 — **그러면 전부를 돌린다.**
+
+    `tools/check_docs.py` → `tests/test_docs.py` · `seshat/mbr.py` → `tests/test_mbr.py`.
+    `check_` 접두사는 떼고도 본다 — 저장소가 그 꼴을 쓴다.
+    """
+    root = root or ROOT
+    밑 = pathlib.Path(파일).stem
+    쓸것 = [밑, 밑[6:]] if 밑.startswith("check_") else [밑]
+    return [p for n in 쓸것
+            if (p := f"tests/test_{n}.py") and (root / p).exists()]
+
+
 def 지운다(글: str, 이름: str, 값: str) -> str:
     """그 함수의 몸통을 `return <값>` 하나로 바꾼다. 머리말은 남긴다."""
     나무 = ast.parse(글)
@@ -88,10 +186,33 @@ def 지운다(글: str, 이름: str, 값: str) -> str:
                      f"    한 파일만 : python3 tools/mutate.py --only <파일>")
 
 
+# pytest 의 종료코드 — **1만 「시험이 울었다」 다**
+#   0 전부 통과 · 1 실패 · 2 끊김 · 3 내부 오류 · 4 쓰는 법 틀림 · 5 모은 시험이 0
+_울었다 = 1
+
+
 def 돌린다(걸음: list[str]) -> bool:
-    """시험이 **빨개지나**. 빨개지면 그 함수를 붙드는 시험이 있다."""
+    """시험이 **빨개지나**. 빨개지면 그 함수를 붙드는 시험이 있다.
+
+    ★ **`!= 0` 으로 보면 도구 고장을 「물었다」 로 센다**(DECISIONS §287). 2026-10-04 에
+      의존성 묶음을 안 깐 채로 돌렸더니 **수집 단계에서 죽어 종료코드가 2** 였고, 뚫은 자리
+      전부가 「붙드는 시험이 있다」 로 찍혔다 — **거짓 초록 스물한 건.** 저장소는 §21 · §232
+      에서 「위반과 도구 고장을 다른 코드로」 를 이미 적고 있는데 **부르는 쪽이 그것을 안
+      지켰다.**
+    ★ **5(모은 시험이 0)가 좁혀 부르기의 함정이다.** 짝 시험의 이름이 틀리면 pytest 는 5 로
+      끝나고, `!= 0` 은 그것도 「물었다」 로 센다 — 이름 하나 틀리면 그 자리가 안 보인다.
+    ★ **밖 — 마지막 줄의 `== _울었다` 는 돌연변이가 물 수 없다.** 위 가드가 이미 `{0, 1}` 로
+      좁혀 놓아 `!= 0` 과 **증명 가능하게 같다.** 관문이 아니라 **독립성**이므로 선언하지
+      않는다 — 적어 두지 않으면 다음 사람이 다시 물려 보려다 시간을 버린다.
+    """
     r = subprocess.run(걸음, cwd=ROOT, capture_output=True, text=True)
-    return r.returncode != 0
+    if r.returncode not in (0, _울었다):
+        print(f"\n    ★ **pytest 가 {r.returncode} 로 끝났다 — 시험이 운 것이 아니라 도구가"
+              f" 깨졌다.**\n       {' '.join(걸음)}\n"
+              f"       의존성 묶음을 깐다 : uv sync --group eval\n"
+              f"{r.stdout[-700:]}", file=sys.stderr)
+        raise SystemExit(2)
+    return r.returncode == _울었다
 
 
 def _canary() -> None:
@@ -108,12 +229,41 @@ def _canary() -> None:
         sys.exit(2)
 
 
+def _이름(p: pathlib.Path) -> str:
+    """보기 좋은 이름. ★ **되돌리는 길에서 이름 때문에 죽지 않는다** — `relative_to` 는
+    ROOT 밖 경로에 `ValueError` 를 던지고, 그러면 **남은 파일을 못 되돌린다.**"""
+    try:
+        return p.relative_to(ROOT).as_posix()
+    except ValueError:
+        return str(p)
+
+
+def _되돌리고_죽는다(signum: int, _frame: object) -> None:
+    """★ **끊겨도 소스를 남기지 않는다.** `finally` 는 신호에 안 돈다.
+
+    ★ **한 파일이 실패해도 나머지를 끝까지 되돌린다.** 되돌리는 길에서 예외가 새면
+      그 뒤의 파일이 뚫린 채로 남는다 — 이 함수가 막으려던 바로 그 상태다.
+    """
+    for p, 원 in list(_뚫린것.items()):
+        try:
+            p.write_text(원, encoding="utf-8")
+            print(f"\n    신호 {signum} — {_이름(p)} 을 되돌렸다", file=sys.stderr)
+        except Exception as e:
+            print(f"\n    ★ 신호 {signum} — **{_이름(p)} 을 못 되돌렸다**({e}) : "
+                  f"git checkout -- {_이름(p)}", file=sys.stderr)
+    sys.exit(130)
+
+
 def main(argv: list[str] | None = None) -> int:
+    for _sig in (signal.SIGINT, signal.SIGTERM):
+        signal.signal(_sig, _되돌리고_죽는다)
     ap = argparse.ArgumentParser()
     ap.add_argument("--only", default="", help="이 파일만 — 비우면 전부")
     ap.add_argument("--list", action="store_true")
     ap.add_argument("--selftest", action="store_true")
     ap.add_argument("--tests", default="tests", help="돌릴 시험")
+    ap.add_argument("--full", action="store_true",
+                    help="짝 시험을 안 쓰고 언제나 전부 돌린다 (느리다 — 짝짓기를 의심할 때)")
     a = ap.parse_args(sys.argv[1:] if argv is None else argv)
     _canary()
     if a.selftest:
@@ -121,40 +271,74 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     잰다, 못잰다 = 잴것()
+    온잰다, 온못잰다 = len(잰다), len(못잰다)   # ★ 좁히기 **전**의 수가 장부의 정본이다
     if a.only:
-        잰다 = [x for x in 잰다 if x[0] == a.only]
-        못잰다 = [x for x in 못잰다 if x.split("::")[0] == a.only]
+        # ★ 무늬를 받는다 — `tools/check_*.py` 처럼 **사슬에 넣을 범위**를 한 줄로 고른다
+        잰다 = [x for x in 잰다 if 범위안(x[0], a.only)]
+        못잰다 = [x for x in 못잰다 if 범위안(x.split("::")[0], a.only)]
     if a.list:
         print(f"  잴 수 있는 자리 {len(잰다)} · **반환 주석이 없어 못 재는 자리 {len(못잰다)}**")
         for 파일, 이름, 줄, v in 잰다:
             print(f"    {파일}:{줄:4} {이름:34} → {v}")
         return 0
 
-    걸음 = [sys.executable, "-m", "pytest", "-x", "-q", a.tests]
-    산다 = []
+    전부 = [sys.executable, "-m", "pytest", "-x", "-q", a.tests]
+    산다, 느린길 = [], 0
     print(f"  {len(잰다)} 자리를 뚫어 본다 · 못 재는 자리 {len(못잰다)}(반환 주석 없음)", file=sys.stderr)
     for i, (파일, 이름, 줄, v) in enumerate(잰다, 1):
-        p = ROOT / 파일
-        원 = p.read_text(encoding="utf-8")
+        f = ROOT / 파일
+        원 = f.read_text(encoding="utf-8")
         앞해시 = hashlib.sha256(원.encode()).hexdigest()
+        짝 = [] if a.full else 짝시험(파일)
+        _뚫린것[f] = 원
         try:
-            p.write_text(지운다(원, 이름, v), encoding="utf-8")
-            if not 돌린다(걸음):
+            f.write_text(지운다(원, 이름, v), encoding="utf-8")
+            # ★ **빠른 길은 긍정만 낸다.** 짝이 울면 붙드는 시험이 있는 것이 확실하다.
+            물었나 = 돌린다([*전부[:-1], *짝]) if 짝 else False
+            if not 물었나:
+                # ★ 짝이 조용한 것은 **「없다」 가 아니라 「짝이 아니다」** 일 수 있다 — 전부로 센다
+                if 짝:
+                    느린길 += 1
+                물었나 = 돌린다(전부)
+            if not 물었나:
                 산다.append(f"{파일}::{이름}  (몸통을 `return {v}` 로 바꿔도 통과)")
                 print(f"    ✗ {파일}::{이름}", file=sys.stderr)
         finally:
-            p.write_text(원, encoding="utf-8")
-        if hashlib.sha256(p.read_text(encoding="utf-8").encode()).hexdigest() != 앞해시:
+            f.write_text(원, encoding="utf-8")
+            _뚫린것.pop(f, None)
+        if hashlib.sha256(f.read_text(encoding="utf-8").encode()).hexdigest() != 앞해시:
             print(f"    ★ **{파일} 을 못 되돌렸다** — git 으로 되돌린다 : git checkout -- {파일}",
                   file=sys.stderr)
             return 2
-        if i % 10 == 0:
-            print(f"    … {i}/{len(잰다)}", file=sys.stderr)
+        if i % 25 == 0:
+            print(f"    … {i}/{len(잰다)} (전부로 다시 센 것 {느린길})", file=sys.stderr)
 
     print(f"\n  붙드는 시험이 없는 자리 **{len(산다)}** / 잰 {len(잰다)} "
-          f"· 못 잰 {len(못잰다)}(반환 주석 없음)")
+          f"· 못 잰 {len(못잰다)}(반환 주석 없음) · 전부로 다시 센 것 {느린길}")
     for x in 산다:
         print(f"    {x}")
+    이름만 = [x.split("  ")[0] for x in 산다]
+    # ★ **장부도 같은 범위로 좁힌다**(§287). 안 좁히면 `--only` 로 돈 판에서 범위 **밖**
+    #   항목이 전부 「갚았다」 로 보이고, `--update` 가 그것을 지워 **장부가 조용히 비워진다.**
+    본장부 = frozenset(x for x in 장부 if 범위안(x.split("::")[0], a.only))
+    새것, 갚음 = 견준다(이름만, 본장부)
+    난것 = [f"장부에 없는 자리 — 붙드는 시험이 없다 : {x}" for x in 새것]
+    if 갚음:
+        # ★ **갚은 것은 실패가 아니라 할 일이다.** 안 찍으면 장부는 영원히 안 줄고
+        #   줄지 않는 장부는 영구 면제가 된다(§258).
+        print(f"\n  ※ 갚았다 {len(갚음)} — 장부에서 지운다 : tools/mutate.py 의 `장부`")
+        for x in 갚음:
+            print(f"      {x}")
+    # ★ **좁혀 뚫어도 장부는 전체로 센다**(§287). 사슬은 `--only` 로 도므로 여기서 건너뛰면
+    #   톱니가 영원히 안 돈다 — 「검사를 더했다」 와 「검사가 문다」 의 그 자리다.
+    난것 += 톱니(온잰다, 온못잰다)
+    if 온못잰다 < MAX_못잴것 or 온잰다 > MIN_잴것:
+        print(f"\n  ※ 좋아졌다 — MIN_잴것 을 {온잰다} 로, MAX_못잴것 을 {온못잰다} 로 내린다")
+    if 난것:
+        print()
+        for x in 난것:
+            print(f"    {x}")
+        return 1
     print("\n  ※ **「살아남았다」 가 「나쁘다」 는 아니다** — 사소한 접근자는 붙들 값이 없다.\n"
           "    그러나 **지표와 검사가 여기 있으면 그것은 빚이다**(DECISIONS §267)")
     return 0
