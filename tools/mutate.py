@@ -74,17 +74,7 @@ MAX_못잴것 = 47
 #   맞는 답이다 — **가짜 입력으로 물어야** 문다(§287 · thoth §150 과 같은 자리).
 # ★ **`check_size::_canary` 가 산다.** 카나리아를 붙드는 것이 없다 — 「도구가 고장났나」 를
 #   보는 자가 고장나도 조용하다.
-장부: frozenset[str] = frozenset({
-    "tools/check_claims.py::main",
-    "tools/check_deadchecks.py::견준다",
-    "tools/check_deadchecks.py::main",
-    "tools/check_prose.py::check_표깨짐",
-    "tools/check_prose.py::check_날짜",
-    "tools/check_prose.py::check_빈약속",
-    "tools/check_prose.py::main",
-    "tools/check_size.py::_canary",
-    "tools/check_size.py::main",
-})
+장부: frozenset[str] = frozenset({})
 # 반환 주석 → 꼴을 지키는 중립값
 중립 = {"bool": "True", "int": "0", "float": "0.0", "str": '""', "bytes": 'b""',
         "list": "[]", "dict": "{}", "set": "set()", "tuple": "()"}

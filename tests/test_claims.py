@@ -72,3 +72,36 @@ def test_라쳇은_줄어든_것을_실패로_안_읽는다():
     """★ **갚은 것은 잘한 일이지 실패가 아니다.**"""
     assert CC.견준다([], frozenset({"seshat/a.py::옛것"})) == []
     assert len(CC.견준다([("seshat/a.py::새것", "밖을 안 적었다")], frozenset())) == 1
+
+
+# ── 장부 갚기 : `main`(DECISIONS §290) ──────────────────────────
+#
+# ★ **`main` 을 `return 0` 으로 바꿔도 아무도 안 울던 자리다.** 시험이 `견준다` 와
+#   속 함수만 부르고 **도구를 통째로 돌려 보는 자리가 없었다** — 관문에서는 그것이
+#   「검사를 껐는데 초록」 의 가장 곧은 꼴이다.
+
+def test_main_이_장부보다_늘면_1_이다(monkeypatch, capsys):
+    monkeypatch.setattr(CC, "장부", frozenset())
+    monkeypatch.setattr(CC, "안한것", lambda: [("seshat/a.py::f", "밖이 없다")])
+    assert CC.main([]) == 1
+    assert "seshat/a.py::f" in capsys.readouterr().err
+
+
+def test_main_이_장부와_같으면_0_이다(monkeypatch, capsys):
+    자리 = [("seshat/a.py::f", "밖이 없다")]
+    monkeypatch.setattr(CC, "장부", frozenset({"seshat/a.py::f"}))
+    monkeypatch.setattr(CC, "안한것", lambda: 자리)
+    assert CC.main([]) == 0
+    capsys.readouterr()
+
+
+def test_main_이_list_에서는_0_이다(monkeypatch, capsys):
+    monkeypatch.setattr(CC, "장부", frozenset())
+    monkeypatch.setattr(CC, "안한것", lambda: [("seshat/a.py::f", "밖이 없다")])
+    assert CC.main(["--list"]) == 0
+    assert "seshat/a.py::f" in capsys.readouterr().out
+
+
+def test_실제_저장소를_통째로_돌려도_0_이다(capsys):
+    assert CC.main([]) == 0
+    capsys.readouterr()

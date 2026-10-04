@@ -107,3 +107,35 @@ def test_죽은_이름과_다른_물음이다():
                                            encoding="utf-8")
         assert CD.죽은이름(t) == [], CD.죽은이름(t)              # 이름은 다 불린다
         assert [a for a, _ in DC.죽은검사(t)] == ["tools/x.py:4"], DC.죽은검사(t)   # 검사는 죽어 있다
+
+
+# ── 장부 갚기 : `견준다` 와 `main`(DECISIONS §290) ──────────────
+
+def test_견준다가_새것만_낸다():
+    # ★ **장부와 견주는 그 함수가 안 묶여 있었다.** `return []` 로 바꾸면 장부가
+    #   늘어도 조용하고, 그러면 장부는 **영구 면제**가 된다.
+    지금 = [("tools/a.py::f", "까닭 가"), ("tools/b.py::g", "까닭 나")]
+    assert DC.견준다(지금, frozenset({"tools/a.py::f"})) == ["tools/b.py::g — 까닭 나"]
+
+
+def test_견준다가_갚은_것은_실패로_안_센다():
+    assert DC.견준다([], frozenset({"tools/a.py::f"})) == []
+
+
+def test_main_이_장부보다_늘면_1_이다(monkeypatch, capsys):
+    monkeypatch.setattr(DC, "장부", frozenset())
+    monkeypatch.setattr(DC, "죽은검사", lambda: [("tools/a.py::f", "안 불린다")])
+    assert DC.main([]) == 1
+    assert "tools/a.py::f" in capsys.readouterr().err
+
+
+def test_main_이_장부와_같으면_0_이다(monkeypatch, capsys):
+    monkeypatch.setattr(DC, "장부", frozenset({"tools/a.py::f"}))
+    monkeypatch.setattr(DC, "죽은검사", lambda: [("tools/a.py::f", "안 불린다")])
+    assert DC.main([]) == 0
+    capsys.readouterr()
+
+
+def test_실제_저장소를_통째로_돌려도_0_이다(capsys):
+    assert DC.main([]) == 0
+    capsys.readouterr()

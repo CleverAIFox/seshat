@@ -329,3 +329,72 @@ def test_카나리아가_살아_있다():
     finally:
         CP.표줄 = 원
     assert CP._canary() is None      # 되돌리면 다시 조용하다
+
+
+# ── 장부 갚기 : `check_*` 술어와 `main`(DECISIONS §290) ──────────
+#
+# ★ **저장소가 깨끗해서 살던 자리다.** 위반이 0 이므로 `[]` 가 맞는 답이고, 그래서
+#   술어를 `return []` 로 바꿔도 아무도 울지 않았다. **가짜 입력으로 물어야 문다.**
+
+def _문서나무(tmp_path: pathlib.Path, master: str = "# m\n", readme: str = "# r\n",
+             extra: dict[str, str] | None = None) -> pathlib.Path:
+    (tmp_path / "docs").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "docs/MASTER.md").write_text(master, encoding="utf-8")
+    (tmp_path / "README.md").write_text(readme, encoding="utf-8")
+    for rel, 글 in (extra or {}).items():
+        p = tmp_path / rel
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(글, encoding="utf-8")
+    return tmp_path
+
+
+def test_check_표깨짐이_떨어진_표줄을_문다(tmp_path):
+    표 = NL.join(["| a | b |", "|---|---|", "| 1 | 2 |", ""])
+    root = _문서나무(tmp_path, extra={"docs/x.md": 표 + NL + "| 3 | 4 |" + NL})
+    난것 = CP.check_표깨짐(root)
+    assert any("docs/x.md:5" in x for x in 난것), 난것
+
+
+def test_check_표깨짐이_멀쩡한_표에는_조용하다(tmp_path):
+    표 = NL.join(["| a | b |", "|---|---|", "| 1 | 2 |", ""])
+    assert CP.check_표깨짐(_문서나무(tmp_path, extra={"docs/x.md": 표})) == []
+
+
+def test_check_날짜가_경위_없는_날짜를_문다(tmp_path):
+    root = _문서나무(tmp_path, master="# m" + NL2 + "2026-09-29 그렇게 됐다" + NL)
+    난것 = CP.check_날짜(root)
+    assert any("docs/MASTER.md:3" in x for x in 난것), 난것
+
+
+def test_check_날짜가_경위를_든_날짜에는_조용하다(tmp_path):
+    root = _문서나무(tmp_path, master="# m" + NL2 + "2026-09-29 그렇게 됐다(DECISIONS §55)" + NL)
+    assert CP.check_날짜(root) == []
+
+
+def test_check_빈약속이_행_없는_약속을_문다(tmp_path):
+    root = _문서나무(tmp_path, master="# m" + NL2 + "이 항목은 열려 있다." + NL)
+    난것 = CP.check_빈약속(root)
+    assert any("docs/MASTER.md:3" in x and "열려 있다" in x for x in 난것), 난것
+
+
+def test_check_빈약속이_행을_든_약속에는_조용하다(tmp_path):
+    root = _문서나무(tmp_path, master="# m" + NL2 + "이 항목은 열려 있고 PLAN #47 이 그 자리다" + NL)
+    assert CP.check_빈약속(root) == []
+
+
+def test_main_이_위반이_있으면_1_이다(monkeypatch, capsys):
+    # ★ **`main` 을 `return 0` 으로 바꿔도 아무도 안 울던 자리다.** 시험이 속 함수만
+    #   부르고 도구를 통째로 돌려 보는 자리가 없었다 — 「검사를 껐는데 초록」 의 곧은 꼴.
+    monkeypatch.setattr(CP, "check_표깨짐", lambda root: ["가짜 위반 하나"])
+    assert CP.main([]) == 1
+    assert "가짜 위반 하나" in capsys.readouterr().out
+
+
+def test_main_이_깨끗하면_0_이다(capsys):
+    assert CP.main([]) == 0
+    capsys.readouterr()
+
+
+def test_main_이_list_에서는_머리말만_낸다(capsys):
+    assert CP.main(["--list"]) == 0
+    assert "tools/check_prose.py" in capsys.readouterr().out

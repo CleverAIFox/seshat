@@ -1315,7 +1315,7 @@
  "234": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "d950a08447ffed72",
+  "지문": "99076bedfe0bda73",
   "파일": [
    "docs/DECISIONS.md",
    "docs/PLAN.md",
@@ -1394,7 +1394,7 @@
  "241": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "88a0d6b2ecc2b0b0",
+  "지문": "f994b58e4ac02589",
   "파일": [
    "tools/check_numbers.py",
    "docs/DECISIONS.md"
@@ -1537,8 +1537,8 @@
  },
  "255": {
   "날짜": "2026-10-01",
-  "읽음": false,
-  "지문": "85789ed5fb6c762a",
+  "읽음": true,
+  "지문": "bb6c1afe8d46a283",
   "파일": [
    "tools/check_deadchecks.py",
    "tests/test_deadchecks.py",
@@ -1566,8 +1566,8 @@
  },
  "258": {
   "날짜": "2026-10-01",
-  "읽음": false,
-  "지문": "65fc2a50027738a5",
+  "읽음": true,
+  "지문": "0d5522c740155acd",
   "파일": [
    "tools/check_deadchecks.py",
    "tests/test_deadchecks.py",
@@ -1664,8 +1664,8 @@
  },
  "267": {
   "날짜": "2026-10-01",
-  "읽음": false,
-  "지문": "1876263b271a7a45",
+  "읽음": true,
+  "지문": "7590c2244b9b7b19",
   "파일": [
    "tools/check_claims.py",
    "tests/test_claims.py",
@@ -1820,8 +1820,8 @@
  },
  "284": {
   "날짜": "2026-10-03",
-  "읽음": false,
-  "지문": "036d44a0902ff98a",
+  "읽음": true,
+  "지문": "ec557c14446d58b9",
   "파일": [
    "tools/check_prose.py::check_낱말",
    "tools/check_prose.py::사전",
@@ -1832,8 +1832,8 @@
  },
  "286": {
   "날짜": "2026-10-03",
-  "읽음": false,
-  "지문": "559623b79cb7a45b",
+  "읽음": true,
+  "지문": "fa16bd2e1a75ac7a",
   "파일": [
    "tools/check_size.py::견준다",
    "tools/check_size.py::_canary",
@@ -1844,8 +1844,8 @@
  },
  "287": {
   "날짜": "2026-10-04",
-  "읽음": false,
-  "지문": "7555bc925a9547ca",
+  "읽음": true,
+  "지문": "3899bca4fc7ebcc9",
   "파일": [
    "tools/mutate.py::톱니",
    "tools/mutate.py::견준다",
@@ -1871,8 +1871,8 @@
  },
  "289": {
   "날짜": "2026-10-05",
-  "읽음": false,
-  "지문": "41b30d66cfbd2eae",
+  "읽음": true,
+  "지문": "39256205bc875256",
   "파일": [
    "tools/mutate.py",
    "tests/test_mutate.py"
@@ -1885,6 +1885,19 @@
   "파일": [
    "tests/test_compare_runs.py::test_두_팔이_같은_줄에서_깨지면_둘_다로_센다",
    "tests/test_compare_runs.py::test_합쇼체가_한쪽에서만_깨진_줄을_찾는다"
+  ]
+ },
+ "290": {
+  "날짜": "2026-10-05",
+  "읽음": true,
+  "지문": "b63eab816d8caf63",
+  "파일": [
+   "tools/mutate.py",
+   "tests/test_claims.py",
+   "tests/test_deadchecks.py",
+   "tests/test_prose.py",
+   "tests/test_size.py",
+   "tools/verify.sh"
   ]
  },
  "3": {

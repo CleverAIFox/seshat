@@ -86,3 +86,47 @@ def test_카나리아가_예외표를_되돌려_놓는다():
     assert CS._canary() is None
     assert dict(CS.예외) == 원, "카나리아가 예외표를 되돌려 놓지 않았다"
     assert 원, "예외표가 비었다 — 카나리아가 지우고 갔다"
+
+
+# ── 장부 갚기 : `_canary` 와 `main`(DECISIONS §290) ─────────────
+
+def test_canary_가_판별식이_죽으면_2_로_끝낸다(monkeypatch):
+    # ★ **「도구가 고장났나」 를 보는 자가 고장나도 조용하던 자리다.** `_canary` 를
+    #   `return None` 으로 바꾸면 **판별식이 전부 죽어도 통과한다** — 카나리아가
+    #   카나리아의 죽음을 못 보면 그것은 카나리아가 아니다.
+    monkeypatch.setattr(CS, "견준다", lambda 수: [])
+    with pytest.raises(SystemExit) as e:
+        CS._canary()
+    assert e.value.code == 2
+
+
+def test_canary_가_멀쩡하면_안_죽는다():
+    # ★ 음성도 본다. 긍정만 보면 **무엇에든 우는 카나리아**가 통과한다.
+    assert CS._canary() is None
+
+
+def test_main_이_어긋나면_1_이다(monkeypatch, capsys):
+    monkeypatch.setattr(CS, "센다", lambda root: {"a.py": 101})
+    monkeypatch.setattr(CS, "예외", {"a.py": 100})
+    assert CS.main([]) == 1
+    assert "a.py" in capsys.readouterr().out
+
+
+def test_main_이_맞으면_0_이다(monkeypatch, capsys):
+    monkeypatch.setattr(CS, "센다", lambda root: {"a.py": 100})
+    monkeypatch.setattr(CS, "예외", {"a.py": 100})
+    assert CS.main([]) == 0
+    capsys.readouterr()
+
+
+def test_main_이_list_와_update_에서는_0_이다(monkeypatch, capsys):
+    monkeypatch.setattr(CS, "센다", lambda root: {"a.py": 100})
+    monkeypatch.setattr(CS, "예외", {"a.py": 100})
+    assert CS.main(["--list"]) == 0
+    assert CS.main(["--update"]) == 0
+    capsys.readouterr()
+
+
+def test_실제_저장소를_통째로_돌려도_0_이다(capsys):
+    assert CS.main([]) == 0
+    capsys.readouterr()
