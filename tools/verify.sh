@@ -85,6 +85,7 @@ step hypotheses         uv run python tools/check_hypotheses.py
 step ontology           uv run python tools/check_ontology.py
 step ways               uv run python tools/check_ways.py
 step crashes            uv run python tools/check_crashes.py
+step secrets            uv run python tools/check_secrets.py
 step scope              uv run python tools/check_scope.py
 step dead               uv run python tools/check_dead.py
 step deadchecks         uv run python tools/check_deadchecks.py
