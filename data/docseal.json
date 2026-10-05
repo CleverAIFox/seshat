@@ -104,10 +104,9 @@
  "111": {
   "날짜": "2026-09-27",
   "읽음": false,
-  "지문": "572ab03a8d802b40",
+  "지문": "03610b2cfd3d4d58",
   "파일": [
-   "tests/test_catalog.py::test_옮겼는데_기본_자리에_다시_받은_것을_짚는다",
-   "tools/lib/env.sh"
+   "tests/test_catalog.py::test_옮겼는데_기본_자리에_다시_받은_것을_짚는다"
   ]
  },
  "112": {
@@ -334,6 +333,15 @@
    "tests/test_doctor.py::test_레이크를_못_물면_작업대를_못_잰다"
   ]
  },
+ "137": {
+  "날짜": "2026-09-28",
+  "읽음": false,
+  "지문": "4e8158ee71734b9e",
+  "파일": [
+   "tests/test_sweep.py::test_작업대_목록이_한_곳이다",
+   "data/catalog.toml"
+  ]
+ },
  "138": {
   "날짜": "2026-09-28",
   "읽음": false,
@@ -372,8 +380,10 @@
  "141": {
   "날짜": "2026-09-28",
   "읽음": false,
-  "지문": "449d4aa78df91140",
+  "지문": "18733f2a12ff1abf",
   "파일": [
+   "tests/test_gate.py::test_허용치는_잰_값이다",
+   "tests/test_noise.py::test_판이_둘이면_표본_하나라고_적는다",
    "tools/noise.py"
   ]
  },
@@ -1128,7 +1138,7 @@
  "217": {
   "날짜": "2026-09-29",
   "읽음": true,
-  "지문": "3cbe23e953fd7244",
+  "지문": "9ab02d9b01502951",
   "파일": [
    "tools/docseal.py",
    "docs/PLAN.md",
@@ -1316,7 +1326,7 @@
  "234": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "0585d4acb475ab0e",
+  "지문": "8b496fe2c18f3fee",
   "파일": [
    "docs/DECISIONS.md",
    "docs/PLAN.md",
@@ -1395,7 +1405,7 @@
  "241": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "4c8c3fcda78fb696",
+  "지문": "d9f3b38e08490aa9",
   "파일": [
    "tools/check_numbers.py",
    "docs/DECISIONS.md"
@@ -1677,8 +1687,9 @@
  "268": {
   "날짜": "2026-10-01",
   "읽음": false,
-  "지문": "602c3a15859458ad",
+  "지문": "2dc34800588ddf9a",
   "파일": [
+   "tools/check_hypotheses.py",
    "docs/hypotheses.md"
   ]
  },
@@ -1728,6 +1739,14 @@
   "파일": [
    "tools/gemba.py",
    "tests/test_gemba.py"
+  ]
+ },
+ "273": {
+  "날짜": "2026-10-01",
+  "읽음": false,
+  "지문": "81804c6fcc61341e",
+  "파일": [
+   "tests/test_paths_읽는다.py::test_이_시험이_여는_셋이_git_에_있다"
   ]
  },
  "274": {
@@ -1819,6 +1838,34 @@
    "tools/docgen.py"
   ]
  },
+ "282": {
+  "날짜": "2026-10-02",
+  "읽음": false,
+  "지문": "7153555ea11d42fd",
+  "파일": [
+   "tools/check_prose.py",
+   "tools/verify.sh",
+   "tests/test_workflows.py::test_액션을_SHA_로_고정한다",
+   "tests/test_workflows.py::test_고정한_줄에서도_Node20_을_읽는다",
+   "tests/test_workflows.py::test_gitleaks_는_PR_을_읽을_수_있다",
+   "tests/test_workflows.py::test_쓰기_권한은_그것을_쓰는_작업에만_있다",
+   "tests/test_prose.py",
+   "docs/PLAN.md"
+  ]
+ },
+ "283": {
+  "날짜": "2026-10-03",
+  "읽음": false,
+  "지문": "601b42898dd3fee7",
+  "파일": [
+   "tools/check_prose.py::check_정본하나",
+   "tools/check_prose.py::선언된정본",
+   "tests/test_prose.py",
+   "tests/test_workflows.py::test_작업마다_시간_상한이_있다",
+   "tests/test_workflows.py::test_상한_카나리아",
+   "pyproject.toml"
+  ]
+ },
  "284": {
   "날짜": "2026-10-03",
   "읽음": true,
@@ -1829,6 +1876,18 @@
    "tests/test_prose.py",
    "docs/MASTER.md",
    "docs/PLAN.md"
+  ]
+ },
+ "285": {
+  "날짜": "2026-10-03",
+  "읽음": false,
+  "지문": "3962a891b6292740",
+  "파일": [
+   "tools/check_prose.py::check_날짜",
+   "tools/check_prose.py::check_CI밖",
+   "tools/check_prose.py::CI밖",
+   "tests/test_prose.py",
+   "docs/MASTER.md"
   ]
  },
  "286": {
@@ -1932,10 +1991,10 @@
  "294": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "a65205f8e11f0682",
+  "지문": "8aa71463e2099964",
   "파일": [
    "tools/ci_status.py",
-   "tests/test_workflows.py"
+   "tests/test_ci_status.py"
   ]
  },
  "295": {
@@ -1950,8 +2009,12 @@
  "296": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "fae8f87ca6681317",
+  "지문": "d99011dd03a6978f",
   "파일": [
+   "tools/doc_fsck.py",
+   "tools/check_docs.py",
+   "tools/verify.sh",
+   "tests/test_doc_enforcers.py",
    "tools/mutate.py",
    "tests/test_mutate.py",
    "tools/check_size.py"
@@ -1960,10 +2023,28 @@
  "297": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "f1f711953e9d660d",
+  "지문": "f26c05d0a035c39c",
   "파일": [
    "tools/ci_status.py",
    "tests/test_ci_status.py"
+  ]
+ },
+ "298": {
+  "날짜": "2026-10-05",
+  "읽음": true,
+  "지문": "65e08e1d53319af6",
+  "파일": [
+   "tools/docseal.py",
+   "tests/test_docseal.py"
+  ]
+ },
+ "299": {
+  "날짜": "2026-10-05",
+  "읽음": true,
+  "지문": "5e7ceae2a5a488ec",
+  "파일": [
+   "tools/docseal.py",
+   "tests/test_docseal.py"
   ]
  },
  "3": {
@@ -2164,14 +2245,23 @@
    "tests/test_evaluate.py::test_번역인가를_묻는_지표가_있다"
   ]
  },
+ "5": {
+  "날짜": "2026-09-22",
+  "읽음": false,
+  "지문": "4c54ccb47cb8a9c0",
+  "파일": [
+   "tests/test_doc_enforcers.py",
+   "tools/check_docs.py",
+   "tools/doc_fsck.py"
+  ]
+ },
  "50": {
   "날짜": "2026-09-23",
   "읽음": false,
-  "지문": "5ebf0b4c2554b448",
+  "지문": "fc79825ba62feb58",
   "파일": [
    "tests/test_evaluate.py::test_한국어를_인용하는_사고문에_속지_않는다",
-   "tests/test_baselines.py::test_오디션_후보가_대장과_등록부에_함께_있다",
-   "tests/test_evaluate.py"
+   "tests/test_baselines.py::test_오디션_후보가_대장과_등록부에_함께_있다"
   ]
  },
  "51": {
@@ -2347,10 +2437,9 @@
  "75": {
   "날짜": "2026-09-25",
   "읽음": false,
-  "지문": "5a72a148918c5cbd",
+  "지문": "c13201db56a66c8f",
   "파일": [
-   "tests/test_baselines.py::test_자격증명이_만료되면_들어가는_법을_말한다",
-   "tools/fetch_flores.py"
+   "tests/test_baselines.py::test_자격증명이_만료되면_들어가는_법을_말한다"
   ]
  },
  "77": {
@@ -2524,6 +2613,15 @@
   "지문": "635fa4c79a4948f9",
   "파일": [
    "tests/test_labels.py::test_채점표에_팔_이름이_없다"
+  ]
+ },
+ "99": {
+  "날짜": "2026-09-27",
+  "읽음": false,
+  "지문": "0c4ca352bf8a9347",
+  "파일": [
+   "tools/make_patch.sh",
+   "tests/test_make_patch.py::test_판_번호만_바뀐_lock_은_안_잡는다"
   ]
  },
  "M1": {

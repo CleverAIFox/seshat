@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import ast
 import hashlib
+import importlib.util
 import json
 import pathlib
 import re
@@ -48,8 +49,35 @@ DEC = ROOT / "docs/DECISIONS.md"
 _봉인줄 = re.compile(r"^봉인 — .*(?:\n[ \t]+.*)*", re.M)
 
 
+# ★ **강제자 블록 정규식의 정본은 `tools/doc_fsck.py::ENFORCER_LINE` 하나다**(DECISIONS
+#   §283 · §299). 처음에는 여기 제 손으로 적었고 `dupcheck` 가 **그 판에서** 잡았다 —
+#   저쪽이 §159 에서 세운 것과 **글자까지 같았다.** 「줄 머리로 못 박는다」 는 규칙이
+#   두 자에 걸려 있으므로 **규칙도 한 자리에 있어야 한다.**
+# ★ **빌리는 꼴로 적는다 — 짓지 않는다.** `dupcheck` 는 「부름의 결과」 를 짓는 것으로 세고
+#   `남.ATTR` 은 **남이 지은 물건에 이름만 붙인 것**으로 본다(§266). 함수로 감싸 돌려받으면
+#   그 자가 **빌려 온 것까지 사본으로 센다** — 그리고 반환 꼴을 모르는 함수가 하나 늘어
+#   `mutate` 의 **못 잴 자리**가 는다(§287 의 양방향 톱니).
+_정본틀 = importlib.util.spec_from_file_location("doc_fsck", ROOT / "tools/doc_fsck.py")
+_정본 = importlib.util.module_from_spec(_정본틀)
+_정본틀.loader.exec_module(_정본)
+_강제자줄 = _정본.ENFORCER_LINE
+
+
 def _강제자_뒤(본문: str) -> str:
-    return 본문[본문.rfind("강제자"):] if "강제자" in 본문 else ""
+    """절의 강제자 블록. **마지막 블록**을 든다 — 한 절에 둘이면 뒤가 최신이다.
+
+    ★ **종전에는 `rfind("강제자")` 였다**(DECISIONS §299). 그 낱말이 **시험 이름 안에**
+      나오면(`test_지목확장이_사본의_강제자를_다_덮는다`) 창이 그 뒤부터 열려 **파일을
+      하나도 못 집는다** — 그러면 그 절의 도장은 **아무것도 안 보며 영영 유효**하다.
+      반대로 본문에 그 낱말이 먼저 나오면 창이 너무 넓어 **산문이 든 파일까지** 집었다.
+      실측 : 314 절 중 **열다섯**이 틀렸고 그중 **여덟이 빈손**이었다.
+    ★ MASTER 쪽(`_봉인_줄`)은 2026-10-02 에 이미 줄 머리로 못 박았다 — **같은 덫을
+      한쪽에서만 피해 놓고 다른 쪽을 아흐레 뒀다.**
+    """
+    m = None
+    for m in _강제자줄.finditer(본문):
+        pass
+    return m.group(0) if m else ""
 
 
 def _봉인_줄(본문: str) -> str:
@@ -64,7 +92,18 @@ def _봉인_줄(본문: str) -> str:
 절머리 = 문서[0][2]
 날짜 = re.compile(r"\*\*(20\d\d-\d\d-\d\d)\*\*")
 # 강제자 줄이 백틱으로 지목한 자리. `tools/gate.py::_선을_박는다` 의 앞쪽만 본다
-지목 = re.compile(r"`([\w./-]+\.(?:py|sh|md|toml|jsonl|yml))(?:::([^`\s]+))?`")
+#
+# ★ **글로 읽는 산출물만 든다**(thoth DECISIONS §161 의 `글자아님`). `.docx` · `.png` 같은
+#   것을 들면 지문이 **바이트**가 되고, 그러면 **구울 때마다 도장이 전부 찢어진다** —
+#   `docs/proposal.docx` 는 토트에서 강제자가 실제로 한 번 든다.
+# ★ **목록을 적어 둔다 — 정규식 안에 묻어 두지 않는다.** 이 자의 사본이 토트에 살고
+#   (thoth §163) 거기 강제자는 `.js` 33 · `.json` 10 · `.tf` 6 · `.css` 1 을 든다.
+#   목록이 좁으면 **그 줄들이 조용히 안 세어지고, 안 세어진 것은 안 낡는 것처럼 보인다.**
+#   여기서 넓혀도 이 저장소의 도장은 **하나도 안 바뀐다**(재 봤다 — 새로 잡히는 자리 0).
+# ★ `jsonl` · `json` 과 `yaml` · `yml` 은 **긴 것을 앞에** 둔다. 짧은 쪽이 먼저면
+#   `.jsonl` 이 `.json` 으로 맞고 뒤의 `l` 에서 백틱을 못 닫는다.
+지목확장 = ("jsonl", "json", "yaml", "yml", "toml", "py", "sh", "js", "md", "tf", "css")
+지목 = re.compile(r"`([\w./-]+\.(?:%s))(?:::([^`\s]+))?`" % "|".join(지목확장))
 
 
 def _짧게(s: str) -> str:

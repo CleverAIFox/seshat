@@ -172,3 +172,52 @@ def test_봉인한_파일이_바뀌면_MASTER_절이_무효가_된다(tmp_path, 
     finally:
         원.write_text(글, encoding="utf-8")
     assert DS.지문(절) == before, "되돌렸는데 지문이 안 돌아왔다"
+
+
+def test_글로_못_읽는_산출물은_지목에_안_든다():
+    """★ **지문이 바이트가 되면 구울 때마다 도장이 찢어진다**(thoth DECISIONS §161 · §298).
+    `docs/proposal.docx` 는 토트에서 강제자가 실제로 든다 — 사본이 거기 산다."""
+    줄 = "강제자 — `docs/proposal.docx` 와 `tools/a.py` 와 `x/y.png` 와 `z/w.zip`"
+    집은것 = [m[0] for m in DS.지목.findall(줄)]
+    assert 집은것 == ["tools/a.py"], 집은것
+
+
+def test_지목확장이_사본의_강제자를_다_덮는다():
+    """★ **목록이 좁으면 그 줄들이 조용히 안 세어진다**(§298). 안 세어진 것은 **안 낡는
+    것처럼 보인다** — 토트 강제자는 `.js` · `.json` · `.tf` · `.css` 를 든다."""
+    for 확 in ("py", "sh", "js", "json", "jsonl", "md", "yml", "tf", "css", "toml"):
+        assert 확 in DS.지목확장, 확
+    # ★ 긴 것이 앞이다 — 짧은 쪽이 먼저면 `.jsonl` 이 백틱을 못 닫는다
+    assert DS.지목확장.index("jsonl") < DS.지목확장.index("json")
+    assert DS.지목확장.index("yaml") < DS.지목확장.index("yml")
+    assert DS.지목.findall("`a/b.jsonl`")[0][0] == "a/b.jsonl"
+
+
+def test_강제자_블록을_줄_머리로_못_박는다():
+    """★ **`rfind("강제자")` 는 시험 이름에 그 낱말이 있으면 빈손이 된다**(§299).
+    `test_지목확장이_사본의_강제자를_다_덮는다` 가 실제로 그랬다 — 창이 그 뒤부터
+    열리고, 파일을 하나도 못 집은 절의 도장은 **아무것도 안 보며 영영 유효**하다."""
+    본문 = ("## §1. 제목\n\n**2026-01-01**\n\n본문\n\n"
+            "강제자 — `tools/a.py` 의 `무엇` ·\n`tests/test_a.py` 의 `test_강제자를_다_본다`\n")
+    앵 = DS._강제자_뒤(본문)
+    assert 앵.startswith("강제자 — "), 앵
+    집은것 = sorted(m[0] for m in DS.지목.findall(앵))
+    assert 집은것 == ["tests/test_a.py", "tools/a.py"], 집은것
+
+
+def test_산문이_든_파일을_강제자로_안_센다():
+    """★ **창이 너무 넓으면 반대로 틀린다**(§299). 본문에 「강제자」 가 먼저 나오면
+    `rfind` 가 그 자리부터 열어 **산문이 든 파일까지** 집었다 — 실측 세 절."""
+    본문 = ("## §1. 제목\n\n**2026-01-01**\n\n"
+            "강제자가 없던 때 `tools/옛것.py` 를 봤다\n\n"
+            "강제자 — `tools/지금것.py`\n")
+    집은것 = [m[0] for m in DS.지목.findall(DS._강제자_뒤(본문))]
+    assert 집은것 == ["tools/지금것.py"], 집은것
+
+
+def test_강제자_없음도_블록이다():
+    # ★ 「강제자 없음 — 설계 판단이다」 도 절의 끝 블록이다. 파일은 안 들지만 창은 거기 선다
+    본문 = "## §1. 제목\n\n**2026-01-01**\n\n본문 `tools/산문.py`\n\n강제자 없음 — 설계 판단이다\n"
+    앵 = DS._강제자_뒤(본문)
+    assert 앵.startswith("강제자 없음 — ")
+    assert DS.지목.findall(앵) == []
