@@ -23,24 +23,52 @@ import sys
 
 _FIELDS = "conclusion,status,displayTitle,headSha,url,createdAt,workflowName"
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-창 = 30          # **1 은 가장 최근이 아니었다**(§172). 넓게 받아서 이쪽에서 고른다
+창 = 10          # **워크플로마다**의 판 수다(§293). 한 워크플로의 최근 열이면 이 sha 를 찾는다.
+#                  **1 은 가장 최근이 아니었다**(§172) — 넓게 받아서 이쪽에서 고른다
 
 
-def 판들(branch: str = "main", limit: int = 창) -> list[dict] | str:
-    """최근 판 목록(새 것부터) 또는 **왜 못 봤는지**를 적은 글."""
-    if not shutil.which("gh"):
+def _부른다(args: list[str]) -> tuple[int, str, str]:
+    r = subprocess.run(args, capture_output=True, text=True)
+    return r.returncode, r.stdout, r.stderr
+
+
+def 워크플로파일(root: pathlib.Path | None = None) -> list[str]:
+    """물어볼 워크플로 파일 이름들. **묻는 목록도 파일에서 꺼낸다**(DECISIONS §293)."""
+    root = root or ROOT
+    return [f.name for f in sorted((root / ".github/workflows").glob("*.yml"))]
+
+
+def 판들(branch: str = "main", limit: int = 창,
+         부른다=None, 파일들: list[str] | None = None) -> list[dict] | str:
+    """최근 판 목록(새 것부터) 또는 **왜 못 봤는지**를 적은 글.
+
+    ★ **워크플로마다 따로 묻는다**(DECISIONS §293). 종전에는 가지 전체를 **판 30개**로
+      한 번 물었다. 그것은 **판의 수**이고 **워크플로의 수가 아니다** — 자주 도는 것이
+      창을 먹으면 **주 1회짜리가 창 밖으로 밀려난다.** 2026-10-05 에 `papers` 가 그렇게
+      목록에서 사라졌고, **사라진 것은 빨강으로도 초록으로도 안 적힌다.**
+    ★ **GitHub 이 저절로 만드는 판은 안 묻는다.** `Dependabot Updates` ·
+      `Dependency Graph` 는 `.github/workflows/` 에 파일이 없다 — 막을 자격도 없고
+      목록에 적힐 값도 없다. 묻는 쪽에서 빼면 둘 다 사라진다.
+    """
+    부른다 = 부른다 or _부른다
+    if 부른다 is _부른다 and not shutil.which("gh"):
         return "`gh` 가 없다 — `sudo apt install gh && gh auth login`. **못 보는 것은 통과가 아니다**"
-    r = subprocess.run(["gh", "run", "list", "--branch", branch, "-L", str(limit), "--json", _FIELDS],
-                       capture_output=True, text=True)
-    if r.returncode != 0:
-        말 = (r.stderr or "").strip().splitlines()
-        return f"`gh` 가 못 읽었다 — {말[-1] if 말 else '까닭 없음'}"
-    try:
-        판 = json.loads(r.stdout or "[]")
-    except json.JSONDecodeError:
-        return "`gh` 가 JSON 이 아닌 것을 줬다"
+    파일들 = 파일들 if 파일들 is not None else 워크플로파일()
+    if not 파일들:
+        return "`.github/workflows/` 에 워크플로가 없다 — 물을 것이 없다"
+    모은것: list[dict] = []
+    for 이름 in 파일들:
+        rc, out, err = 부른다(["gh", "run", "list", "--workflow", 이름, "--branch", branch,
+                              "-L", str(limit), "--json", _FIELDS])
+        if rc != 0:
+            말 = (err or "").strip().splitlines()
+            return f"`gh` 가 {이름} 을 못 읽었다 — {말[-1] if 말 else '까닭 없음'}"
+        try:
+            모은것 += json.loads(out or "[]")
+        except json.JSONDecodeError:
+            return f"`gh` 가 {이름} 에서 JSON 이 아닌 것을 줬다"
     # ★ **온 순서를 믿지 않는다.** `-L 1` 이 묵은 판을 준 적이 있다 — 여기서 직접 정렬한다
-    return sorted(판, key=lambda d: d.get("createdAt") or "", reverse=True)
+    return sorted(모은것, key=lambda d: d.get("createdAt") or "", reverse=True)
 
 
 def 지금_커밋() -> str:
@@ -150,6 +178,11 @@ def 고른다(판: list[dict], 여기: str) -> tuple[int, str]:
     #   「모른다」 를 「초록」 으로 적으면 밀기 전 HEAD 가 늘 초록이 된다(§172 · §110).
     손말 = (f"\n    손으로만 도는 것이라 안 막는 빨강 : {' · '.join(sorted(손빨강))}"
             if 손빨강 else "")
+    # ★ **파일은 있는데 판이 하나도 없는 워크플로를 적는다**(DECISIONS §293). 안 적으면
+    #   「물었는데 없었다」 와 「안 물었다」 가 같은 침묵이 된다 — §293 이 바로 그 침묵이었다.
+    판없는것 = sorted(이름 for 이름 in 표 if 이름 not in 고름)
+    if 판없는것:
+        손말 += f"\n    판이 하나도 없는 워크플로 : {' · '.join(판없는것)}"
     본것 = [이름 for 이름, x in 고름.items() if x.get("headSha") == 여기]
     도는것 = [이름 for 이름, x in 고름.items() if not (x.get("conclusion") or "")]
     if 본것 and len(본것) == len(고름):

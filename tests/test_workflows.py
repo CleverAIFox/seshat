@@ -1,4 +1,5 @@
 """워크플로가 원격이 거절할 것을 쓰지 않는가(thoth tools/check_static.py 의 Node 20 검사를 옮겼다)."""
+import json
 import pathlib
 import re
 
@@ -505,3 +506,65 @@ def test_판_칸에_워크플로_이름이_들어_있다():
     # ★ **안 받아 오면 전부 한 뭉치가 되고 §292 가 조용히 되살아난다.**
     C = _CI()
     assert "workflowName" in C._FIELDS
+
+
+# ── 묻는 창도 워크플로마다다(DECISIONS §293) ─────────────────────────────────
+#
+# ★ **2026-10-05 에 `papers` 가 목록에서 사라졌다.** 빨간지 초록인지가 아니라 **아예 안
+#   보였다.** `창 = 30` 은 **판의 수**이고 워크플로의 수가 아니다 — `ci` 와 GitHub 이 저절로
+#   만드는 판(`Dependabot Updates` · `Dependency Graph`)이 창을 먹으니 **주 1회짜리가
+#   밀려났다.** §292 가 「판을 하나만 봤다」 를 고쳤는데 **그 판들이 오는 창은 안 고쳤다.**
+
+def test_워크플로마다_따로_묻는다():
+    C = _CI()
+    물은것 = []
+
+    def 가짜(args):
+        물은것.append(args[args.index("--workflow") + 1])
+        return 0, "[]", ""
+
+    C.판들(부른다=가짜, 파일들=["ci.yml", "papers.yml", "gpu-eval.yml"])
+    assert 물은것 == ["ci.yml", "papers.yml", "gpu-eval.yml"], 물은것
+
+
+def test_자주_도는_것이_주_1회짜리의_창을_안_먹는다():
+    """★ **§293 의 실물 꼴이다.** 평평한 창 하나면 `ci` 판 서른이 `papers` 를 밀어낸다."""
+    C = _CI()
+    많음 = [_판("ci", f"c{i}", "success", f"2026-10-05T{i:02d}:00:00Z") for i in range(20)]
+    주1회 = [_판("papers", "옛", "failure", "2026-09-29T00:17:00Z")]
+
+    def 가짜(args):
+        이름 = args[args.index("--workflow") + 1]
+        몫 = 많음 if 이름 == "ci.yml" else 주1회 if 이름 == "papers.yml" else []
+        상한 = int(args[args.index("-L") + 1])
+        return 0, json.dumps(몫[:상한]), ""
+
+    판 = C.판들(부른다=가짜, 파일들=["ci.yml", "papers.yml"])
+    이름들 = {x["workflowName"] for x in 판}
+    assert 이름들 == {"ci", "papers"}, f"창이 하나면 papers 가 사라진다 — {이름들}"
+
+
+def test_묻는_목록을_파일에서_꺼낸다():
+    C = _CI()
+    실물 = C.워크플로파일(ROOT)
+    있는것 = sorted(f.name for f in (ROOT / ".github/workflows").glob("*.yml"))
+    assert 실물 == 있는것 and 실물, "묻는 목록이 손 목록이면 워크플로가 늘 때 늙는다"
+
+
+def test_판을_못_읽으면_초록으로_안_찍는다():
+    C = _CI()
+    assert isinstance(C.판들(부른다=lambda a: (1, "", "죽었다"), 파일들=["ci.yml"]), str)
+    assert isinstance(C.판들(부른다=lambda a: (0, "JSON 아님", ""), 파일들=["ci.yml"]), str)
+    assert isinstance(C.판들(부른다=lambda a: (0, "[]", ""), 파일들=[]), str)
+
+
+def test_판이_하나도_없는_워크플로를_적는다():
+    # ★ 안 적으면 「물었는데 없었다」 와 「안 물었다」 가 같은 침묵이 된다 — §293 이 그 침묵이었다.
+    C = _CI()
+    코드, 말 = C.고른다([_판("ci", "여기", "success", "2026-10-05T09:00:00Z")], "여기")
+    assert 코드 == 0 and "판이 하나도 없는 워크플로" in 말, 말
+
+
+def test_창이_워크플로마다의_수다():
+    C = _CI()
+    assert 1 < C.창 <= 20, f"창 {C.창} — 워크플로마다의 판 수다. 크면 느리고 1 이면 §172 다"

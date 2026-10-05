@@ -647,7 +647,7 @@
  "170": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "c1ab4d9a8225b9b1",
+  "지문": "8534a1ab0a71505d",
   "파일": [
    "tools/ci_status.py",
    "tools/verify.sh",
@@ -674,7 +674,7 @@
  "172": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "06fc9dbad57defbd",
+  "지문": "2c7644958a0acc95",
   "파일": [
    "tools/ci_status.py",
    "tests/test_workflows.py::test_가장_최근_판을_직접_고른다",
@@ -745,7 +745,7 @@
  "18": {
   "날짜": "2026-09-22",
   "읽음": true,
-  "지문": "d6a7404caec21c94",
+  "지문": "2831c9eca1724584",
   "파일": [
    "tools/doc_fsck.py::check_tools",
    "tests/test_workflows.py"
@@ -1315,7 +1315,7 @@
  "234": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "babba4836fa469d0",
+  "지문": "d23ae62f2f9e9dae",
   "파일": [
    "docs/DECISIONS.md",
    "docs/PLAN.md",
@@ -1394,7 +1394,7 @@
  "241": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "9864ee1194d7c044",
+  "지문": "33577b7f138dcfa9",
   "파일": [
    "tools/check_numbers.py",
    "docs/DECISIONS.md"
@@ -1665,7 +1665,7 @@
  "267": {
   "날짜": "2026-10-01",
   "읽음": true,
-  "지문": "5b18ed6f8aaeb49b",
+  "지문": "a24e7a110a384ef7",
   "파일": [
    "tools/check_claims.py",
    "tests/test_claims.py",
@@ -1695,7 +1695,7 @@
  "27": {
   "날짜": "2026-09-23",
   "읽음": true,
-  "지문": "9d21cadbf5501aa0",
+  "지문": "4ce4dd7f23d14df9",
   "파일": [
    "tests/test_baselines.py",
    "tools/check_model_licenses.py",
@@ -1872,7 +1872,7 @@
  "289": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "14d66e4f7b1eec4a",
+  "지문": "26bd08960fcf6da2",
   "파일": [
    "tools/mutate.py",
    "tests/test_mutate.py"
@@ -1890,7 +1890,7 @@
  "290": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "b1262b00b98dd836",
+  "지문": "136595ad877ff4b7",
   "파일": [
    "tools/mutate.py",
    "tests/test_claims.py",
@@ -1903,7 +1903,7 @@
  "291": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "167a98c70fa25ea7",
+  "지문": "ff8c68e5f6809437",
   "파일": [
    "tests/test_workflows.py",
    ".github/workflows/papers.yml"
@@ -1912,11 +1912,20 @@
  "292": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "068ef40556adb0e8",
+  "지문": "e6788319b4c01231",
   "파일": [
    "tools/ci_status.py",
    "tests/test_workflows.py",
    "tools/verify.sh"
+  ]
+ },
+ "293": {
+  "날짜": "2026-10-05",
+  "읽음": true,
+  "지문": "6bb540ae741c4eaa",
+  "파일": [
+   "tools/ci_status.py",
+   "tests/test_workflows.py"
   ]
  },
  "3": {
