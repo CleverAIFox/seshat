@@ -25,6 +25,19 @@ _FIELDS = "conclusion,status,displayTitle,headSha,url,createdAt,workflowName"
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 창 = 10          # **워크플로마다**의 판 수다(§293). 한 워크플로의 최근 열이면 이 sha 를 찾는다.
 #                  **1 은 가장 최근이 아니었다**(§172) — 넓게 받아서 이쪽에서 고른다
+평평창 = 40      # 가지 전체를 한 번 더 묻는 창(§294) — 좁혀 묻는 길의 빈손을 교차로 본다
+
+
+_어긋남: list[str] = []   # 좁혀 물어 0 인데 평평하게는 나온 워크플로 — `고른다` 가 적는다
+
+
+def 어긋남을_센다(좁은것: dict[str, list], 평평: list[dict],
+                  이름표: dict[str, str] | None = None) -> list[str]:
+    """좁혀 물어 **0 인데** 평평하게는 나오는 워크플로. **계기가 반쯤 고장났다는 사실이다.**"""
+    이름표 = 이름표 if 이름표 is not None else 파일별이름()
+    평평이름 = {x.get("workflowName") for x in 평평}
+    return sorted(이름표.get(파일, 파일) for 파일, 것 in 좁은것.items()
+                  if not 것 and 이름표.get(파일, 파일) in 평평이름)
 
 
 def _부른다(args: list[str]) -> tuple[int, str, str]:
@@ -56,19 +69,45 @@ def 판들(branch: str = "main", limit: int = 창,
     파일들 = 파일들 if 파일들 is not None else 워크플로파일()
     if not 파일들:
         return "`.github/workflows/` 에 워크플로가 없다 — 물을 것이 없다"
-    모은것: list[dict] = []
-    for 이름 in 파일들:
-        rc, out, err = 부른다(["gh", "run", "list", "--workflow", 이름, "--branch", branch,
-                              "-L", str(limit), "--json", _FIELDS])
+    def _묻는다(args: list[str], 어디: str):
+        rc, out, err = 부른다(args)
         if rc != 0:
             말 = (err or "").strip().splitlines()
-            return f"`gh` 가 {이름} 을 못 읽었다 — {말[-1] if 말 else '까닭 없음'}"
+            return f"`gh` 가 {어디} 을 못 읽었다 — {말[-1] if 말 else '까닭 없음'}"
         try:
-            모은것 += json.loads(out or "[]")
+            것 = json.loads(out or "[]")
         except json.JSONDecodeError:
-            return f"`gh` 가 {이름} 에서 JSON 이 아닌 것을 줬다"
+            return f"`gh` 가 {어디} 에서 JSON 이 아닌 것을 줬다"
+        return 것 if isinstance(것, list) else f"`gh` 가 {어디} 에서 목록이 아닌 것을 줬다"
+
+    좁은것: dict[str, list] = {}
+    모은것: list[dict] = []
+    for 파일 in 파일들:
+        것 = _묻는다(["gh", "run", "list", "--workflow", 파일, "--branch", branch,
+                     "-L", str(limit), "--json", _FIELDS], 파일)
+        if isinstance(것, str):
+            return 것
+        좁은것[파일] = 것
+        모은것 += 것
+    # ★ **평평하게 한 번 더 묻는다**(DECISIONS §294). 좁혀 묻는 길이 **빈손을 주는 것을 봤다** —
+    #   2026-10-05 에 `--workflow papers.yml` 이 0 건을 줬는데 같은 가지를 평평하게 물으면
+    #   그 판이 나왔다. **「물었는데 없었다」 를 한 길로만 믿지 않는다**(§293 의 침묵과 같은 꼴).
+    평평 = _묻는다(["gh", "run", "list", "--branch", branch, "-L", str(평평창),
+                   "--json", _FIELDS], f"{branch} 전체")
+    if isinstance(평평, str):
+        return 평평
+    모은것 += 평평
+    # ★ **겹치는 판을 한 번만 센다.** 두 길이 같은 판을 준다.
+    # ★ **가름을 `url` 하나로 두지 않는다.** 한 칸으로 가르면 그 칸이 안 오거나 같은 값일 때
+    #   **서로 다른 판이 한 판으로 뭉개진다** — 고정자리에서 실제로 그렇게 됐다(스물한 판이
+    #   하나가 됐다). 식별에 충분한 넷을 함께 쥔다.
+    본것: dict[tuple, dict] = {}
+    for x in 모은것:
+        본것.setdefault((x.get("url"), x.get("workflowName"),
+                        x.get("headSha"), x.get("createdAt")), x)
+    globals()["_어긋남"] = 어긋남을_센다(좁은것, 평평)
     # ★ **온 순서를 믿지 않는다.** `-L 1` 이 묵은 판을 준 적이 있다 — 여기서 직접 정렬한다
-    return sorted(모은것, key=lambda d: d.get("createdAt") or "", reverse=True)
+    return sorted(본것.values(), key=lambda d: d.get("createdAt") or "", reverse=True)
 
 
 def 지금_커밋() -> str:
@@ -91,6 +130,16 @@ def _한줄(판: dict) -> str:
 _이름줄 = re.compile(r"^name:\s*(.+?)\s*$", re.M)
 _온블록 = re.compile(r"^on:\s*\n((?:[ \t]+.*\n|\n)*)", re.M)
 _방아쇠 = re.compile(r"^\s{2}(\w+)\s*:", re.M)
+
+
+def 파일별이름(root: pathlib.Path | None = None) -> dict[str, str]:
+    """워크플로 **파일 이름** → 표시 이름. `gh` 는 표시 이름을 `workflowName` 으로 준다."""
+    root = root or ROOT
+    것: dict[str, str] = {}
+    for f in sorted((root / ".github/workflows").glob("*.yml")):
+        m = _이름줄.search(f.read_text(encoding="utf-8"))
+        것[f.name] = m.group(1) if m else f.stem
+    return 것
 
 
 def 방아쇠(root: pathlib.Path | None = None) -> dict[str, set[str]]:
@@ -159,6 +208,9 @@ def 고른다(판: list[dict], 여기: str) -> tuple[int, str]:
     if not 고름:
         return 0, "  볼 판이 없다"
     표 = 방아쇠()
+    어긋남말 = (f"\n    ※ `gh --workflow` 가 빈손을 준 워크플로 : {' · '.join(_어긋남)}"
+                f" — 평평한 질의로는 나온다. 판정은 **합집합**에서 냈다(DECISIONS §294)"
+                if _어긋남 else "")
     빨강_전부 = [(이름, x) for 이름, x in sorted(고름.items())
                  if (x.get("conclusion") or "").lower() not in ("", "success")]
     빨강 = [(이름, x) for 이름, x in 빨강_전부 if 막을자격(이름, 표)]
@@ -173,7 +225,7 @@ def 고른다(판: list[dict], 여기: str) -> tuple[int, str]:
                 f"\n    본 워크플로 {len(고름)} : {' · '.join(sorted(k or 'CI' for k in 고름))}")
         if 손빨강:
             꼬리 += f"\n    손으로만 도는 것이라 안 막는 빨강 : {' · '.join(sorted(손빨강))}"
-        return 1, "\n".join(줄) + 꼬리
+        return 1, "\n".join(줄) + 꼬리 + 어긋남말
     # ★ **빨강이 없다.** 이 커밋을 본 워크플로와 아직 안 본 워크플로를 **갈라 적는다** —
     #   「모른다」 를 「초록」 으로 적으면 밀기 전 HEAD 가 늘 초록이 된다(§172 · §110).
     손말 = (f"\n    손으로만 도는 것이라 안 막는 빨강 : {' · '.join(sorted(손빨강))}"
@@ -183,6 +235,7 @@ def 고른다(판: list[dict], 여기: str) -> tuple[int, str]:
     판없는것 = sorted(이름 for 이름 in 표 if 이름 not in 고름)
     if 판없는것:
         손말 += f"\n    판이 하나도 없는 워크플로 : {' · '.join(판없는것)}"
+    손말 += 어긋남말
     본것 = [이름 for 이름, x in 고름.items() if x.get("headSha") == 여기]
     도는것 = [이름 for 이름, x in 고름.items() if not (x.get("conclusion") or "")]
     if 본것 and len(본것) == len(고름):
