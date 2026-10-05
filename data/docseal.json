@@ -647,7 +647,7 @@
  "170": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "9aba2c303bdabe6e",
+  "지문": "c1ab4d9a8225b9b1",
   "파일": [
    "tools/ci_status.py",
    "tools/verify.sh",
@@ -673,8 +673,8 @@
  },
  "172": {
   "날짜": "2026-09-28",
-  "읽음": false,
-  "지문": "2b27adfbc8575e9d",
+  "읽음": true,
+  "지문": "06fc9dbad57defbd",
   "파일": [
    "tools/ci_status.py",
    "tests/test_workflows.py::test_가장_최근_판을_직접_고른다",
@@ -745,7 +745,7 @@
  "18": {
   "날짜": "2026-09-22",
   "읽음": true,
-  "지문": "7c8d3ebf459abab5",
+  "지문": "d6a7404caec21c94",
   "파일": [
    "tools/doc_fsck.py::check_tools",
    "tests/test_workflows.py"
@@ -1315,7 +1315,7 @@
  "234": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "78def061f0d3570d",
+  "지문": "babba4836fa469d0",
   "파일": [
    "docs/DECISIONS.md",
    "docs/PLAN.md",
@@ -1394,7 +1394,7 @@
  "241": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "b8759b96805e708f",
+  "지문": "9864ee1194d7c044",
   "파일": [
    "tools/check_numbers.py",
    "docs/DECISIONS.md"
@@ -1665,7 +1665,7 @@
  "267": {
   "날짜": "2026-10-01",
   "읽음": true,
-  "지문": "7590c2244b9b7b19",
+  "지문": "5b18ed6f8aaeb49b",
   "파일": [
    "tools/check_claims.py",
    "tests/test_claims.py",
@@ -1695,7 +1695,7 @@
  "27": {
   "날짜": "2026-09-23",
   "읽음": true,
-  "지문": "5c4b2114556e000b",
+  "지문": "9d21cadbf5501aa0",
   "파일": [
    "tests/test_baselines.py",
    "tools/check_model_licenses.py",
@@ -1872,7 +1872,7 @@
  "289": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "39256205bc875256",
+  "지문": "14d66e4f7b1eec4a",
   "파일": [
    "tools/mutate.py",
    "tests/test_mutate.py"
@@ -1890,7 +1890,7 @@
  "290": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "7de99e349c06039e",
+  "지문": "b1262b00b98dd836",
   "파일": [
    "tools/mutate.py",
    "tests/test_claims.py",
@@ -1903,10 +1903,20 @@
  "291": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "56c0ffd572ff1d87",
+  "지문": "167a98c70fa25ea7",
   "파일": [
    "tests/test_workflows.py",
    ".github/workflows/papers.yml"
+  ]
+ },
+ "292": {
+  "날짜": "2026-10-05",
+  "읽음": true,
+  "지문": "068ef40556adb0e8",
+  "파일": [
+   "tools/ci_status.py",
+   "tests/test_workflows.py",
+   "tools/verify.sh"
   ]
  },
  "3": {
