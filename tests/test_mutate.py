@@ -66,6 +66,20 @@ def test_짝이_없으면_빈_목록이다():
     assert MU.짝시험("tools/없는파일.py") == []
 
 
+def test_시험이_안_든_껍데기는_짝이_아니다(tmp_path):
+    """★ **0 바이트 `tests/test_docs.py` 하나가 이 자를 멈춰 세웠다**(DECISIONS §296).
+    이름만 맞으면 짝으로 세고, pytest 는 5(모은 시험이 0)로 끝난다 — 멈추는 것이 거짓
+    초록보다 낫지만 **옳은 답은 「짝이 아니다」 로 보고 전부로 재는 것**이다.
+    """
+    (tmp_path / "tests").mkdir()
+    (tmp_path / "tests/test_빈것.py").write_text("", encoding="utf-8")
+    (tmp_path / "tests/test_주석만.py").write_text("# 시험을 적으려다 말았다\n", encoding="utf-8")
+    (tmp_path / "tests/test_든것.py").write_text("def test_a():\n    assert True\n", encoding="utf-8")
+    assert MU.짝시험("seshat/빈것.py", tmp_path) == []
+    assert MU.짝시험("seshat/주석만.py", tmp_path) == []
+    assert MU.짝시험("seshat/든것.py", tmp_path) == ["tests/test_든것.py"]
+
+
 def test_없는_시험_파일을_내놓지_않는다():
     import glob
     for f in glob.glob(str(ROOT / "tools/*.py")) + glob.glob(str(ROOT / "seshat/*.py")):

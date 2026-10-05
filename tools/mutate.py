@@ -62,7 +62,7 @@ _뚫린것: dict[pathlib.Path, str] = {}
 # ★ **양방향**(§287). 산 자리는 절대 0 이고, 못 잰 자리는 늘면 울고, **잴 자리는 줄면 운다** —
 #   반환 주석을 떼면 그 함수가 조용히 검사 밖으로 나간다. 2026-10-01 → 10-04 에 못 잰 자리가
 #   41 → 47 로 늘었는데 **아무도 안 셌다.**
-MIN_잴것 = 446
+MIN_잴것 = 450
 MAX_못잴것 = 47
 # ★ **장부**(§287). `verify.sh` 가 보는 범위에서 **지금 붙드는 시험이 없는 자리.** 늘면 막고,
 #   갚으면 `--update` 가 줄인다 — `check_deadchecks` 와 같은 꼴(§255 · §258).
@@ -154,12 +154,23 @@ def 짝시험(파일: str, root: pathlib.Path | None = None) -> list[str]:
 
     `tools/check_docs.py` → `tests/test_docs.py` · `seshat/mbr.py` → `tests/test_mbr.py`.
     `check_` 접두사는 떼고도 본다 — 저장소가 그 꼴을 쓴다.
+
+    ★ **있는 것과 시험이 든 것은 다르다**(DECISIONS §296). 0 바이트 `tests/test_docs.py` 하나가
+      이 자를 **도구 고장으로 멈춰 세웠다** — pytest 가 5(모은 시험이 0)로 끝나고, 위 `돌린다`
+      의 가드가 그것을 옳게 「시험이 운 것이 아니다」 로 읽어 **거기서 그만뒀다.** 멈추는 쪽이
+      거짓 초록보다 낫지만, **옳은 답은 짝이 아니라고 보고 전부로 재는 것**이다. 그래서 `def
+      test` 가 **있는** 파일만 짝으로 센다 — 이름만 맞는 빈 껍데기는 짝이 아니다.
     """
     root = root or ROOT
     밑 = pathlib.Path(파일).stem
     쓸것 = [밑, 밑[6:]] if 밑.startswith("check_") else [밑]
-    return [p for n in 쓸것
-            if (p := f"tests/test_{n}.py") and (root / p).exists()]
+    골랐다 = []
+    for n in 쓸것:
+        p = f"tests/test_{n}.py"
+        f = root / p
+        if f.exists() and "def test" in f.read_text(encoding="utf-8", errors="replace"):
+            골랐다.append(p)
+    return 골랐다
 
 
 def 지운다(글: str, 이름: str, 값: str) -> str:

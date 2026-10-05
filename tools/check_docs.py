@@ -491,6 +491,63 @@ def _canary() -> None:
         sys.exit(2)
 
 
+자동_블록 = [("<!-- 색인 시작 -->", "<!-- 색인 끝 -->")]
+"""기계가 다시 쓰는 자리. **표시로 찾는다** — 저장소 이름으로 가르지 않는다.
+
+★ 이 표시가 없는 저장소에서는 아무 자리도 안 빼므로, 두 사본의 글자가 같다.
+"""
+
+
+def _본문_줄(글: str) -> list[str]:
+    """강제자 블록을 뺀 줄들. **강제자는 표기이므로 본문이 아니다**(thoth DECISIONS §159 · 이 저장소는 §296).
+
+    ★ `자동_블록` 안도 뺀다 — 기계가 다시 쓰는 자리는 사람이 적은 본문이 아니다.
+    ★ 블록은 `강제자 — ` 로 시작해 **빈 줄에서 끊는다** — §292 처럼 여러 줄에 걸친 것이 있다.
+    """
+    out: list[str] = []
+    안 = False
+    자동 = None
+    for line in 글.split("\n"):
+        if 자동 is not None:
+            if 자동 in line:
+                자동 = None
+            continue
+        for 시, 끝 in 자동_블록:
+            if 시 in line:
+                자동 = 끝
+                break
+        if 자동 is not None:
+            continue
+        if ENFORCER.match(line):
+            안 = True
+            continue
+        if 안:
+            if line.strip() == "":
+                안 = False
+            else:
+                continue
+        out.append(line)
+    return out
+
+
+def 본문_수정(옛: str, 새: str) -> list[str]:
+    """DECISIONS 의 **본문**이 고쳐졌는가. 강제자 줄의 변경은 흠이 아니다.
+
+    ★ **종전에는 `git diff | grep -c '^-'` 하나였다**(thoth DECISIONS §159 · 이 저장소는 §296). 그것은 「추가만」 을
+      **그것을 보는 자가 없었다.** 그리고 「추가만」 을 줄 단위로 걸면 **표기와 본문이
+      뭉뚱그려져** 썩은 강제자 인용을 고칠 수 없다 — 2026-10-05 에 §153 · §170 · §172 ·
+      §282 · §292 · §293 · §294 일곱 줄을 고쳐야 했다. 하토르 D-0081 의 가름을 **코드로**
+      옮긴다 — 「표기는 전수 강제하고 내용만 신규에 건다」.
+    """
+    import difflib
+    a, b = _본문_줄(옛), _본문_줄(새)
+    흠: list[str] = []
+    for op, i1, i2, _j1, _j2 in difflib.SequenceMatcher(None, a, b, autojunk=False).get_opcodes():
+        if op in ("delete", "replace"):
+            흠 += [f"본문을 지웠다: {s.strip()[:70]}" for s in a[i1:i2] if s.strip()]
+    return 흠
+
+
 def main(argv=None) -> int:
     args = sys.argv[1:] if argv is None else argv
     _canary()
@@ -504,6 +561,15 @@ def main(argv=None) -> int:
     if "--list" in args:
         print(__doc__)
         return 0
+    if "--추가만" in args:
+        옛 = sys.stdin.read()
+        if not 옛.strip():
+            print("    HEAD 에 DECISIONS 가 없어 대조하지 않았다")
+            return 3
+        흠 = 본문_수정(옛, (ROOT / "docs/DECISIONS.md").read_text(encoding="utf-8"))
+        for f in 흠:
+            print(f"    {f}")
+        return 1 if 흠 else 0
     fails: list[str] = []
     texts = {}
     for rel in DOCS:

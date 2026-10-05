@@ -61,6 +61,19 @@ shellcheck_step() {
 step shellcheck         shellcheck_step
 step pytest             uv run pytest -q
 step check_docs         uv run python tools/check_docs.py
+# ★ **DECISIONS 의 본문은 추가만 한다 — 강제자 줄은 표기라 고칠 수 있다**(§296). PLAN 머리가
+#   「append-only」 를 선언하는데 **보는 자가 없었다.** 줄 단위로 걸면 표기와 본문이 뭉뚱그려져
+#   썩은 강제자 인용을 고칠 수 없다 — 2026-10-05 에 일곱 줄을 고쳐야 했다.
+# ★ **CI 에서는 작업 트리가 HEAD 와 같아 언제나 통과한다.** 훅과 이 자리가 강제자다(§170).
+append_only_step() {  # 이름은 ASCII 다 — shellcheck 과 test_셸의_변수_이름은_ASCII_다
+  local old rc
+  old="$(git show HEAD:docs/DECISIONS.md 2>/dev/null)" || true
+  if [ -z "$old" ]; then echo "  HEAD 에 DECISIONS 가 없어 대조하지 않았다"; return 0; fi
+  printf '%s\n' "$old" | uv run python tools/check_docs.py --추가만; rc=$?
+  [ "$rc" = 3 ] && return 0
+  return "$rc"
+}
+step 추가만             append_only_step
 step check_rules        uv run python tools/check_rules.py
 step check_prose        uv run python tools/check_prose.py
 step check_size         uv run python tools/check_size.py

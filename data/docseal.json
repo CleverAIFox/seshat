@@ -2,7 +2,7 @@
  "1": {
   "날짜": "2026-09-22",
   "읽음": true,
-  "지문": "f83c3103692bb017",
+  "지문": "e4182a07801bcea5",
   "파일": [
    "tools/check_docs.py",
    "tools/doc_fsck.py"
@@ -112,8 +112,8 @@
  },
  "112": {
   "날짜": "2026-09-27",
-  "읽음": false,
-  "지문": "eb608b5859c3e7a6",
+  "읽음": true,
+  "지문": "c13575912a1cfcb8",
   "파일": [
    "tools/check_docs.py::check_plan",
    "tools/doc_fsck.py"
@@ -121,8 +121,8 @@
  },
  "113": {
   "날짜": "2026-09-27",
-  "읽음": false,
-  "지문": "597623e0864b726e",
+  "읽음": true,
+  "지문": "56a4bb0525cb91e8",
   "파일": [
    "tools/check_docs.py::check_plan",
    "tools/doc_fsck.py"
@@ -163,8 +163,8 @@
  },
  "119": {
   "날짜": "2026-09-27",
-  "읽음": false,
-  "지문": "ec359a170bba8b83",
+  "읽음": true,
+  "지문": "e263b012c0fbc303",
   "파일": [
    "tools/check_docs.py::check_plan",
    "tools/doc_fsck.py"
@@ -480,9 +480,10 @@
  "153": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "ac64bb39d965be93",
+  "지문": "690ca5be0db41f2b",
   "파일": [
-   "docs/related.md"
+   "docs/related.md",
+   "tools/check_catalog.py"
   ]
  },
  "154": {
@@ -528,7 +529,7 @@
  "159": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "31b48d474911f07a",
+  "지문": "bfcad78d16e1afff",
   "파일": [
    "tools/check_docs.py",
    "tests/test_doc_enforcers.py"
@@ -556,7 +557,7 @@
  "161": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "30a7cc168323a668",
+  "지문": "3891d2b782876632",
   "파일": [
    "docs/related.md",
    "tools/check_docs.py"
@@ -581,7 +582,7 @@
  "164": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "adf355e7f0a441d0",
+  "지문": "1392b1351b11fdf5",
   "파일": [
    "tools/verify.sh",
    "tests/test_workflows.py::test_셸의_변수_이름은_ASCII_다"
@@ -647,12 +648,12 @@
  "170": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "549fe3531c063d06",
+  "지문": "668e7b20dda05dee",
   "파일": [
    "tools/ci_status.py",
    "tools/verify.sh",
    "tests/test_workflows.py::test_CI_에서_안_도는_단계는_까닭을_적는다",
-   "tests/test_workflows.py::test_verify_가_CI_판정을_본다"
+   "tests/test_ci_status.py::test_verify_가_CI_판정을_본다"
   ]
  },
  "171": {
@@ -674,12 +675,12 @@
  "172": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "3f36e9f7a4c23e08",
+  "지문": "5aaf32397ed7f9df",
   "파일": [
    "tools/ci_status.py",
-   "tests/test_workflows.py::test_가장_최근_판을_직접_고른다",
-   "tests/test_workflows.py::test_아직_안_본_커밋을_초록으로_안_찍는다",
-   "tests/test_workflows.py::test_이_커밋의_판이_있으면_그것으로_판정한다",
+   "tests/test_ci_status.py::test_가장_최근_판을_직접_고른다",
+   "tests/test_ci_status.py::test_아직_안_본_커밋을_초록으로_안_찍는다",
+   "tests/test_ci_status.py::test_이_커밋의_판이_있으면_그것으로_판정한다",
    "tests/test_mined.py"
   ]
  },
@@ -754,7 +755,7 @@
  "180": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "f2235785f2ef0a22",
+  "지문": "44df9b5b1d0c71a8",
   "파일": [
    "tools/bootstrap.py",
    "tests/test_bootstrap.py",
@@ -1315,7 +1316,7 @@
  "234": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "ce18be554696f90a",
+  "지문": "5c9f02b797e2ff2f",
   "파일": [
    "docs/DECISIONS.md",
    "docs/PLAN.md",
@@ -1325,7 +1326,7 @@
  "235": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "91693f7ee6fd35e9",
+  "지문": "075d54daab60e209",
   "파일": [
    "tools/check_numbers.py",
    "tests/test_numbers.py",
@@ -1345,7 +1346,7 @@
  "237": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "cb1957e547c30862",
+  "지문": "2c5a40f2f88391dc",
   "파일": [
    "tools/docgen.py",
    "tests/test_docgen.py",
@@ -1365,7 +1366,7 @@
  "239": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "2f7cc730e7ec5b3f",
+  "지문": "3a29fbc2a58ecaec",
   "파일": [
    "tools/check_scope.py",
    "tests/test_scope.py",
@@ -1384,7 +1385,7 @@
  "240": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "ad60247743193514",
+  "지문": "5f1da373c36c56b0",
   "파일": [
    "tools/check_dead.py",
    "tests/test_dead.py",
@@ -1394,7 +1395,7 @@
  "241": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "e504a47ae1a66f24",
+  "지문": "a21a13d8df0b6a75",
   "파일": [
    "tools/check_numbers.py",
    "docs/DECISIONS.md"
@@ -1538,7 +1539,7 @@
  "255": {
   "날짜": "2026-10-01",
   "읽음": true,
-  "지문": "bb6c1afe8d46a283",
+  "지문": "5b4c26af23b49070",
   "파일": [
    "tools/check_deadchecks.py",
    "tests/test_deadchecks.py",
@@ -1556,8 +1557,8 @@
  },
  "257": {
   "날짜": "2026-10-01",
-  "읽음": false,
-  "지문": "f50140a8e388d7f1",
+  "읽음": true,
+  "지문": "e210749db4c66d59",
   "파일": [
    "tests/test_deps.py",
    "tools/verify.sh",
@@ -1665,7 +1666,7 @@
  "267": {
   "날짜": "2026-10-01",
   "읽음": true,
-  "지문": "a28712c140c6239c",
+  "지문": "f8dadc0b563a7338",
   "파일": [
    "tools/check_claims.py",
    "tests/test_claims.py",
@@ -1845,7 +1846,7 @@
  "287": {
   "날짜": "2026-10-04",
   "읽음": true,
-  "지문": "3899bca4fc7ebcc9",
+  "지문": "e770b94baef558cd",
   "파일": [
    "tools/mutate.py::톱니",
    "tools/mutate.py::견준다",
@@ -1872,7 +1873,7 @@
  "289": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "4a32d1a261890cf5",
+  "지문": "d43d759adb45e416",
   "파일": [
    "tools/mutate.py",
    "tests/test_mutate.py"
@@ -1890,7 +1891,7 @@
  "290": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "c07ddfe7dd05499a",
+  "지문": "2d4638813a5790e2",
   "파일": [
    "tools/mutate.py",
    "tests/test_claims.py",
@@ -1912,20 +1913,20 @@
  "292": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "863465cdad7fe3de",
+  "지문": "7b6dad37d6a37b38",
   "파일": [
    "tools/ci_status.py",
-   "tests/test_workflows.py",
+   "tests/test_ci_status.py",
    "tools/verify.sh"
   ]
  },
  "293": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "7555087254e129c5",
+  "지문": "1db160dfb25efb38",
   "파일": [
    "tools/ci_status.py",
-   "tests/test_workflows.py"
+   "tests/test_ci_status.py"
   ]
  },
  "294": {
@@ -1940,7 +1941,7 @@
  "295": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "e7e10f642cca6e89",
+  "지문": "59f75f078f25bbf5",
   "파일": [
    "tools/ci_status.py",
    "tests/test_ci_status.py"
@@ -2014,7 +2015,7 @@
  "36": {
   "날짜": "2026-09-23",
   "읽음": true,
-  "지문": "277fe6451b6212b2",
+  "지문": "8eae07ce1f0627b6",
   "파일": [
    "tests/test_baselines.py::test_리전이_없으면_먼저_멈춘다",
    "tools/check_docs.py"
@@ -2549,8 +2550,8 @@
  },
  "M5": {
   "날짜": "",
-  "읽음": false,
-  "지문": "6b4f1ac31b2f60d0",
+  "읽음": true,
+  "지문": "15650d013ad0b5b0",
   "파일": [
    "tools/verify.sh"
   ]
