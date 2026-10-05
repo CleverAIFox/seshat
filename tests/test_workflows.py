@@ -317,7 +317,12 @@ def 워크플로경로(글: str) -> list[tuple[int, str]]:
             continue
         for m in _WF경로.finditer(줄):
             q = m.group(1).rstrip(".,)'\"")
-            if "*" in q or "$" in q:
+            # ★ **글롭·변수는 「안에」 가 아니라 「뒤에」 남는다**(DECISIONS §301). 글자 집합이
+            #   `*` 와 `$` 를 안 받으므로 `"*" in q` 는 **영영 거짓**이었다 — thoth 로 옮겨
+            #   적고 돌연변이를 걸자 **그 줄이 아무것도 안 붙든다**고 나왔다(thoth §164).
+            #   진짜 꼴은 `docs/a*b.md` 다 : 정규식이 `docs/a` 까지만 집고 **그 잘린 것이
+            #   없는 파일**이라 거짓 빨강이 된다. 집은 자리 **바로 뒤**를 본다.
+            if 줄[m.end():m.end() + 1] in ("*", "$", "{"):
                 continue
             난것.append((n, q))
     return 난것
@@ -350,6 +355,10 @@ def test_워크플로_경로_카나리아():
     assert 워크플로경로("  # 파이어레인 tools/actionpin.py 와 같다\n") == []
     assert 워크플로경로("  run: ls $HOME/tools/x.py\n") == []
     assert 워크플로경로("  run: git add docs/papers.md\n") == [(1, "docs/papers.md")]
+    # ★ **잘린 글롭이 진짜 구멍이다**(DECISIONS §301). 가운데 글롭은 경로를 **자른다** —
+    #   `"*" in q` 로는 영영 못 잡고, 잘린 것이 없는 파일이라 **거짓 빨강**이 된다
+    assert 워크플로경로("  path: docs/a*b.md\n") == []
+    assert 워크플로경로("  run: python3 tools/${NAME}.py\n") == []
 
 
 def test_실물에서_하나라도_찾는다():

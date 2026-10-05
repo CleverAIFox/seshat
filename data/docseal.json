@@ -756,7 +756,7 @@
  "18": {
   "날짜": "2026-09-22",
   "읽음": true,
-  "지문": "a558e49a55ac20c7",
+  "지문": "e90db37555572524",
   "파일": [
    "tools/doc_fsck.py::check_tools",
    "tests/test_workflows.py"
@@ -1326,7 +1326,7 @@
  "234": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "3f4d170b025e08bd",
+  "지문": "13787301592da705",
   "파일": [
    "docs/DECISIONS.md",
    "docs/PLAN.md",
@@ -1405,7 +1405,7 @@
  "241": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "db28b414818b0c82",
+  "지문": "4228959221003f83",
   "파일": [
    "tools/check_numbers.py",
    "docs/DECISIONS.md"
@@ -1707,7 +1707,7 @@
  "27": {
   "날짜": "2026-09-23",
   "읽음": true,
-  "지문": "a898e7dded244159",
+  "지문": "f1f49d2089f55f6a",
   "파일": [
    "tests/test_baselines.py",
    "tools/check_model_licenses.py",
@@ -1963,7 +1963,7 @@
  "291": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "6b904591eee38dfa",
+  "지문": "89b24f386863fb78",
   "파일": [
    "tests/test_workflows.py",
    ".github/workflows/papers.yml"
@@ -2068,10 +2068,18 @@
  "300": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "b9c734c441f45806",
+  "지문": "c30b1cb693f1ae7a",
   "파일": [
    "tools/docseal.py",
    "tests/test_docseal.py"
+  ]
+ },
+ "301": {
+  "날짜": "2026-10-05",
+  "읽음": true,
+  "지문": "45f04973502241f8",
+  "파일": [
+   "tests/test_workflows.py"
   ]
  },
  "31": {
