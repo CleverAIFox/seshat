@@ -307,3 +307,37 @@ def test_되돌리는_자리마다_캐시를_버린다():
     assert "_바이트코드를_버린다(p)" in 신호, "끊겨 죽을 때 캐시가 남는다"
     본 = 몸[몸.index("        finally:"):]
     assert "_바이트코드를_버린다(f)" in 본, "되돌린 뒤 캐시를 안 버린다"
+
+
+def test_그_파일을_들이는_시험도_짝이다(tmp_path):
+    """★ **이름 규약에 안 기댄다**(DECISIONS §302 · `PLAN #53`). `tests/test_X.py` 꼴은
+    규약이고, 규약은 지켜지는 동안만 참이다 — 그리고 지켜져도 **그 시험이 그 함수를
+    붙든다는 보장이 없다.** 실측으로 99 자리 중 21 이 그랬고, 그때마다 전부로 다시 셌다."""
+    (tmp_path / "tests").mkdir()
+    (tmp_path / "tools").mkdir()
+    (tmp_path / "tools/고른다.py").write_text("x = 1\n", encoding="utf-8")
+    (tmp_path / "tests/test_딴이름.py").write_text(
+        'ROOT = 0\n_s = spec_from_file_location("g", ROOT / "tools/고른다.py")\n'
+        "def test_a():\n    assert True\n", encoding="utf-8")
+    assert MU.짝시험("tools/고른다.py", tmp_path) == ["tests/test_딴이름.py"]
+
+
+def test_입력으로_적은_경로는_짝이_아니다(tmp_path):
+    """★ **「글에 나온다」 와 「들인다」 는 다르다**(§302). 이 파일이 `"seshat/mbr.py"` 를
+    **제 시험의 입력으로** 적는다 — 그것을 짝으로 세면 상관없는 시험이 딸려 돌고, 그
+    시험이 딴 까닭으로 울면 **「붙드는 시험이 있다」 로 잘못 센다.**"""
+    (tmp_path / "tests").mkdir()
+    (tmp_path / "seshat").mkdir()
+    (tmp_path / "seshat/mbr.py").write_text("x = 1\n", encoding="utf-8")
+    (tmp_path / "tests/test_남의것.py").write_text(
+        'def test_a():\n    assert 짝시험("seshat/mbr.py") == []\n', encoding="utf-8")
+    assert MU.짝시험("seshat/mbr.py", tmp_path) == []
+
+
+def test_실제_저장소에서_짝이_엉뚱하지_않다():
+    """★ **넓혔으니 엉뚱한 것이 끼지 않았는지 본다.** 빠른 길은 **긍정만** 결론내므로
+    (울면 붙드는 시험이 있다) 엉뚱한 시험이 끼면 **그 긍정이 거짓**이다."""
+    assert MU.짝시험("tools/check_docs.py") == ["tests/test_doc_enforcers.py"]
+    assert MU.짝시험("seshat/mbr.py") == ["tests/test_mbr.py"]
+    assert "tests/test_evaluate.py" in MU.짝시험("seshat/evaluate.py")
+    assert "tests/test_mutate.py" not in MU.짝시험("seshat/mbr.py")

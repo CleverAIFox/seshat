@@ -48,6 +48,7 @@ import ast
 import hashlib
 import os
 import pathlib
+import re
 import signal
 import subprocess
 import sys
@@ -62,7 +63,7 @@ _뚫린것: dict[pathlib.Path, str] = {}
 # ★ **양방향**(§287). 산 자리는 절대 0 이고, 못 잰 자리는 늘면 울고, **잴 자리는 줄면 운다** —
 #   반환 주석을 떼면 그 함수가 조용히 검사 밖으로 나간다. 2026-10-01 → 10-04 에 못 잰 자리가
 #   41 → 47 로 늘었는데 **아무도 안 셌다.**
-MIN_잴것 = 451
+MIN_잴것 = 452
 MAX_못잴것 = 47
 # ★ **장부**(§287). `verify.sh` 가 보는 범위에서 **지금 붙드는 시험이 없는 자리.** 늘면 막고,
 #   갚으면 `--update` 가 줄인다 — `check_deadchecks` 와 같은 꼴(§255 · §258).
@@ -170,7 +171,45 @@ def 짝시험(파일: str, root: pathlib.Path | None = None) -> list[str]:
         f = root / p
         if f.exists() and "def test" in f.read_text(encoding="utf-8", errors="replace"):
             골랐다.append(p)
+    for p in _들이는시험(파일, root):
+        if p not in 골랐다:
+            골랐다.append(p)
     return 골랐다
+
+
+# ★ **이름 규약에 안 기댄다**(DECISIONS §302 · `PLAN #53`). `tests/test_X.py` 꼴은 **규약**이고,
+#   규약은 지켜지는 동안만 참이다 — 그리고 지켜져도 **그 시험이 그 함수를 붙든다는 보장이 없다.**
+#   실측으로 99 자리 중 21 이 그랬고, 그때마다 **전부(26초)로 다시 세느라** 느렸다.
+# ★ **그 파일을 들이는 시험은 글자로 찾을 수 있다.** 이 저장소의 시험은 모듈을
+#   `spec_from_file_location(…, "tools/X.py")` 나 `from seshat import X` 로 들인다 — 둘 다
+#   **파일에 적혀 있다.** 손 목록이 아니라 파일에서 꺼내므로 시험이 늘면 저절로 따라온다.
+# ★ **넓혀도 답은 안 바뀐다.** 빠른 길은 **긍정만** 결론내고(울면 붙드는 시험이 있다),
+#   조용하면 전부로 다시 센다. 넓히는 것은 **느린 길로 가는 횟수**를 줄일 뿐이다.
+_시험글: dict[str, str] = {}
+
+
+def _들이는시험(파일: str, root: pathlib.Path) -> list[str]:
+    """그 파일을 **들이는** 시험들. 이름이 아니라 글자로 찾는다."""
+    쪽 = pathlib.Path(파일).as_posix()
+    밑 = pathlib.Path(파일).stem
+    꾸러미 = 쪽.split("/")[0]
+    것 = []
+    for f in sorted((root / "tests").glob("test_*.py")):
+        글 = _시험글.get(f.name)
+        if 글 is None:
+            글 = _시험글[f.name] = f.read_text(encoding="utf-8", errors="replace")
+        if "def test" not in 글:
+            continue
+        # ★ **「글에 나온다」 와 「들인다」 는 다르다.** `tests/test_mutate.py` 는 `"seshat/mbr.py"`
+        #   를 **자기 시험의 입력으로** 적는다 — 그것을 짝으로 세면 상관없는 시험이 딸려 돌고,
+        #   그 시험이 딴 까닭으로 울면 **「붙드는 시험이 있다」 로 잘못 센다.** 들이는 꼴만 센다.
+        들인다 = (re.search(rf'ROOT\s*/\s*["\']{re.escape(쪽)}["\']', 글) is not None
+                  or re.search(rf'spec_from_file_location\([^)]*{re.escape(쪽)}', 글) is not None
+                  or (꾸러미 == "seshat"
+                      and re.search(rf"from seshat import [^\n]*\b{re.escape(밑)}\b", 글) is not None))
+        if 들인다:
+            것.append(f"tests/{f.name}")
+    return 것
 
 
 def 지운다(글: str, 이름: str, 값: str) -> str:
