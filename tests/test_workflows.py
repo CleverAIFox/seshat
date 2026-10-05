@@ -334,3 +334,75 @@ def test_상한_카나리아():
     assert 상한없는것(좋) == []
     assert 상한없는것(좋.replace("    timeout-minutes: 5\n", "")) == ["a"]
     assert 상한없는것("jobs:\n  a:\n    uses: ./.github/workflows/x.yml\n") == []
+
+
+# ── 워크플로가 드는 저장소 경로(DECISIONS §291) ──────────────────────────────
+#
+# ★ **2026-10-05 에 이것 때문에 CI 가 빨갰다.** §288 이 `docs/next/papers.md` 를
+#   `docs/papers.md` 로 옮기고 `watch_papers.py` 는 따라 고쳤는데 **`papers.yml` 세 자리를
+#   안 고쳤다.** 예약 작업은 주 1회라 **엿새 동안 아무도 모른다** — 그리고 그 판이 「마지막으로
+#   끝난 CI」 가 되어 **관계없는 밀기를 막았다.**
+# ★ **문서 쪽은 `doc_fsck` 가 이미 본다.** 워크플로는 아무도 안 봤다 — 코드도 문서도 아닌
+#   자리가 검사의 사각이었다.
+# ★ **밖 — 글롭과 변수가 든 경로는 안 본다.** `$GITHUB_WORKSPACE/...` · `docs/*.md` 는
+#   무엇을 가리킬지 돌려 봐야 안다.
+# ★ **밖 — 저장소 이름이 붙은 남의 것은 안 본다.** `파이어레인 tools/actionpin.py` 는
+#   이 저장소의 파일이 아니다(`check_docs` 의 같은 규칙).
+# ★ **밖 — git 이 무시하는 자리는 안 본다.** `data/probes/` 는 **결정적이라 다시 만드는** 것이고
+#   (`make_probes.py`) 저장소에 없는 것이 정상이다. 요구하면 **거짓 빨강**이고, 거짓 빨강이
+#   쌓이면 사람이 검사를 끈다(thoth DECISIONS §158).
+
+_WF앞 = ("tools", "tests", "seshat", "data", "docs", ".github", "site", "web")
+_WF경로 = re.compile(r"(?<![\w./-])((?:%s)/[A-Za-z0-9_./-]*[A-Za-z0-9_])"
+                     % "|".join(re.escape(t) for t in _WF앞))
+_남의것 = ("파이어레인", "하토르", "thoth", "fire-lane", "hathor")
+
+
+def 워크플로경로(글: str) -> list[tuple[int, str]]:
+    """워크플로가 드는 (줄, 저장소 경로). 글롭 · 변수 · 남의 저장소 것은 뺀다."""
+    난것 = []
+    for n, 줄 in enumerate(글.split("\n"), 1):
+        if any(q in 줄 for q in _남의것):
+            continue
+        for m in _WF경로.finditer(줄):
+            q = m.group(1).rstrip(".,)'\"")
+            if "*" in q or "$" in q:
+                continue
+            난것.append((n, q))
+    return 난것
+
+
+def _무시된다(q: str) -> bool:
+    """git 이 무시하는 자리. 없는 디렉터리는 `dir/` 꼴 규칙에 안 걸려 끝에 `/` 를 붙여 한 번 더 묻는다."""
+    import subprocess
+    try:
+        return any(subprocess.run(["git", "-C", str(ROOT), "check-ignore", "-q", x],
+                                  capture_output=True).returncode == 0
+                   for x in (q, q.rstrip("/") + "/"))
+    except OSError:
+        return False
+
+
+def test_워크플로가_드는_경로가_실재한다():
+    흠 = []
+    for p in sorted((ROOT / ".github/workflows").glob("*.yml")):
+        for n, q in 워크플로경로(p.read_text(encoding="utf-8")):
+            if not (ROOT / q).exists() and not _무시된다(q):
+                흠.append(f"{p.name}:{n} {q}")
+    assert 흠 == [], "워크플로가 없는 것을 가리킨다 — " + " · ".join(흠)
+
+
+def test_워크플로_경로_카나리아():
+    # ★ **조용히 0건이 되는 자리다.** 정규식이 늙으면 아무것도 못 찾고 **그래도 초록**이다.
+    assert 워크플로경로("  run: python3 tools/x.py\n") == [(1, "tools/x.py")]
+    assert 워크플로경로("  run: cat docs/*.md\n") == []
+    assert 워크플로경로("  # 파이어레인 tools/actionpin.py 와 같다\n") == []
+    assert 워크플로경로("  run: ls $HOME/tools/x.py\n") == []
+    assert 워크플로경로("  run: git add docs/papers.md\n") == [(1, "docs/papers.md")]
+
+
+def test_실물에서_하나라도_찾는다():
+    # ★ 「없는 것을 안 가리킨다」 만 보면 **아무것도 안 세는 검사**도 통과한다.
+    전부 = [q for p in sorted((ROOT / ".github/workflows").glob("*.yml"))
+            for _, q in 워크플로경로(p.read_text(encoding="utf-8"))]
+    assert len(전부) >= 5, f"워크플로에서 경로를 {len(전부)} 개밖에 못 읽었다 — 정규식이 늙었다"

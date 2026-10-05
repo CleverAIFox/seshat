@@ -745,7 +745,7 @@
  "18": {
   "날짜": "2026-09-22",
   "읽음": true,
-  "지문": "81fe65f559294d99",
+  "지문": "7c8d3ebf459abab5",
   "파일": [
    "tools/doc_fsck.py::check_tools",
    "tests/test_workflows.py"
@@ -1315,7 +1315,7 @@
  "234": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "99076bedfe0bda73",
+  "지문": "78def061f0d3570d",
   "파일": [
    "docs/DECISIONS.md",
    "docs/PLAN.md",
@@ -1394,7 +1394,7 @@
  "241": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "f994b58e4ac02589",
+  "지문": "b8759b96805e708f",
   "파일": [
    "tools/check_numbers.py",
    "docs/DECISIONS.md"
@@ -1695,7 +1695,7 @@
  "27": {
   "날짜": "2026-09-23",
   "읽음": true,
-  "지문": "314b7cbf98d3c95e",
+  "지문": "5c4b2114556e000b",
   "파일": [
    "tests/test_baselines.py",
    "tools/check_model_licenses.py",
@@ -1890,7 +1890,7 @@
  "290": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "b63eab816d8caf63",
+  "지문": "7de99e349c06039e",
   "파일": [
    "tools/mutate.py",
    "tests/test_claims.py",
@@ -1898,6 +1898,15 @@
    "tests/test_prose.py",
    "tests/test_size.py",
    "tools/verify.sh"
+  ]
+ },
+ "291": {
+  "날짜": "2026-10-05",
+  "읽음": true,
+  "지문": "56c0ffd572ff1d87",
+  "파일": [
+   "tests/test_workflows.py",
+   ".github/workflows/papers.yml"
   ]
  },
  "3": {
