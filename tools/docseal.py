@@ -31,6 +31,8 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SEAL = ROOT / "data/docseal.json"
 DEC = ROOT / "docs/DECISIONS.md"
+#: 도장 파일의 저장소 상대 자리. **강제자로 들 수 없는 유일한 파일이다**(DECISIONS §300)
+_도장자리 = SEAL.relative_to(ROOT).as_posix()
 
 # (열쇠앞, 자리, 절머리, 앵커낱말, 표시) — **봉인이 두 문서를 본다**(DECISIONS §281).
 #
@@ -215,6 +217,12 @@ def _한_문서(글: str, 앞: str, 머리: re.Pattern, 뽑는다, 표시: str) 
         파일 = []
         for 곳, 심볼 in 지목.findall(줄):        # `자리` 를 덮어쓰면 바깥 목록이 날아간다
             짚은 = f"{곳}::{심볼}" if 심볼 else 곳
+            # ★ **도장 파일 자신은 안 든다**(DECISIONS §300). 들면 **찍을 수 없는 절**이 된다 —
+            #   찍으면 그 파일이 바뀌고, 바뀌면 그 절이 무효가 되고, 다시 찍으면 또 바뀐다.
+            #   강제자는 **자**이고 도장 파일은 **그 자의 산출물**이다. 토트에서 실제로 그 절을
+            #   적었고 영구 진동으로 들어갔다(thoth §163).
+            if 곳 == _도장자리:
+                continue
             if (ROOT / 곳).is_file() and 곳 in 아는 and 짚은 not in 파일:
                 파일.append(짚은)
         날 = 날짜.search(본문)

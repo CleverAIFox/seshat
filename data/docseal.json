@@ -1138,7 +1138,7 @@
  "217": {
   "날짜": "2026-09-29",
   "읽음": true,
-  "지문": "9ab02d9b01502951",
+  "지문": "2a4672854af53cdc",
   "파일": [
    "tools/docseal.py",
    "docs/PLAN.md",
@@ -1326,7 +1326,7 @@
  "234": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "8b496fe2c18f3fee",
+  "지문": "3f4d170b025e08bd",
   "파일": [
    "docs/DECISIONS.md",
    "docs/PLAN.md",
@@ -1405,7 +1405,7 @@
  "241": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "d9f3b38e08490aa9",
+  "지문": "db28b414818b0c82",
   "파일": [
    "tools/check_numbers.py",
    "docs/DECISIONS.md"
@@ -2032,7 +2032,7 @@
  "298": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "65e08e1d53319af6",
+  "지문": "7f6052c303081522",
   "파일": [
    "tools/docseal.py",
    "tests/test_docseal.py"
@@ -2041,7 +2041,7 @@
  "299": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "5e7ceae2a5a488ec",
+  "지문": "61e30d363091b973",
   "파일": [
    "tools/docseal.py",
    "tests/test_docseal.py"
@@ -2063,6 +2063,15 @@
   "파일": [
    "tests/test_sweep.py::test_상태를_명령줄로도_묻는다",
    "tests/test_sweep.py::test_붙음_겹침_안_붙음_판정_못함"
+  ]
+ },
+ "300": {
+  "날짜": "2026-10-05",
+  "읽음": true,
+  "지문": "b9c734c441f45806",
+  "파일": [
+   "tools/docseal.py",
+   "tests/test_docseal.py"
   ]
  },
  "31": {
