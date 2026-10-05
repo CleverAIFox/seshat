@@ -177,12 +177,11 @@ def test_워크플로마다_따로_묻는다():
     물은것 = []
 
     def 가짜(args):
-        물은것.append(args[args.index("--workflow") + 1] if "--workflow" in args else "평평")
+        물은것.append(args[args.index("--workflow") + 1])
         return 0, "[]", ""
 
     C.판들(부른다=가짜, 파일들=["ci.yml", "papers.yml", "gpu-eval.yml"])
-    # ★ 파일마다 하나씩, 그리고 **평평하게 한 번 더**(DECISIONS §294).
-    assert 물은것 == ["ci.yml", "papers.yml", "gpu-eval.yml", "평평"], 물은것
+    assert 물은것 == ["ci.yml", "papers.yml", "gpu-eval.yml"], 물은것
 
 
 def test_자주_도는_것이_주_1회짜리의_창을_안_먹는다():
@@ -193,9 +192,6 @@ def test_자주_도는_것이_주_1회짜리의_창을_안_먹는다():
 
     def 가짜(args):
         상한 = int(args[args.index("-L") + 1])
-        if "--workflow" not in args:
-            # 평평한 길은 자주 도는 것만 준다 — 그것이 §293 의 꼴이다
-            return 0, json.dumps(많음[:상한]), ""
         이름 = args[args.index("--workflow") + 1]
         몫 = 많음 if 이름 == "ci.yml" else 주1회 if 이름 == "papers.yml" else []
         return 0, json.dumps(몫[:상한]), ""
@@ -231,11 +227,10 @@ def test_창이_워크플로마다의_수다():
     assert 1 < C.창 <= 20, f"창 {C.창} — 워크플로마다의 판 수다. 크면 느리고 1 이면 §172 다"
 
 
-# ── 두 길로 묻고 합친다(DECISIONS §294) ──────────────────────────────────────
+# ── §294 에서 **고정자리가 잡아 준 것**만 남긴다(DECISIONS §295) ──────────────
 #
-# ★ **2026-10-05 에 `--workflow papers.yml` 이 빈손을 줬다.** 같은 가지를 평평하게 물으면
-#   그 판이 나온다 — 좁혀 묻는 길 **하나만** 믿으면 「물었는데 없었다」 가 **거짓 초록**이다.
-#   §293 이 고친 침묵과 같은 꼴이고, 고친 그 자가 새 꼴로 다시 냈다.
+# ★ §294 의 평평한 질의는 **틀린 전제**였고 §295 가 걷어냈다. 다만 그 판에서 `url` 하나로
+#   겹침을 가르다 **스물한 판이 한 판으로 뭉개진** 것은 실물 결함이었다 — 그 가름은 남긴다.
 
 def _판u(wf, sha, 끝, 때, url):
     것 = _판(wf, sha, 끝, 때)
@@ -243,52 +238,11 @@ def _판u(wf, sha, 끝, 때, url):
     return 것
 
 
-def _두길(좁은: dict[str, list], 평평: list):
+def _좁게(좁은: dict[str, list]):
     def 가짜(args):
         상한 = int(args[args.index("-L") + 1])
-        if "--workflow" not in args:
-            return 0, json.dumps(평평[:상한]), ""
         return 0, json.dumps(좁은.get(args[args.index("--workflow") + 1], [])[:상한]), ""
     return 가짜
-
-
-def test_좁혀_물어_빈손이면_평평한_길이_메운다():
-    C = _CI()
-    빨강 = _판u("papers", "c950d4d", "failure", "2026-10-05T00:17:00Z", "u2")
-    초록 = _판u("ci", "a", "success", "2026-10-05T09:00:00Z", "u1")
-    판 = C.판들(부른다=_두길({"ci.yml": [초록], "papers.yml": []}, [초록, 빨강]),
-                파일들=["ci.yml", "papers.yml"])
-    assert {x["workflowName"] for x in 판} == {"ci", "papers"}, 판
-    assert C.고른다(판, "bb01ca4")[0] == 1, "메운 빨강이 판정에 들어야 한다"
-
-
-def test_두_길이_어긋나면_적는다():
-    C = _CI()
-    초록 = _판u("ci", "a", "success", "2026-10-05T09:00:00Z", "u1")
-    빨강 = _판u("papers", "c950d4d", "failure", "2026-10-05T00:17:00Z", "u2")
-    판 = C.판들(부른다=_두길({"ci.yml": [초록], "papers.yml": []}, [초록, 빨강]),
-                파일들=["ci.yml", "papers.yml"])
-    assert C._어긋남 == ["papers"], C._어긋남
-    말 = C.고른다(판, "bb01ca4")[1]
-    assert "빈손을 준 워크플로" in 말 and "papers" in 말, 말
-
-
-def test_어긋남은_평평한_길에_있을_때만_센다():
-    # ★ 한 번도 안 돈 워크플로는 **어긋남이 아니다.** 양쪽 다 0 이면 그냥 판이 없는 것이다.
-    C = _CI()
-    이름표 = {"ci.yml": "ci", "papers.yml": "papers"}
-    assert C.어긋남을_센다({"papers.yml": []}, [], 이름표) == []
-    평평 = [_판u("papers", "x", "failure", "2026-10-05T00:00:00Z", "u")]
-    assert C.어긋남을_센다({"papers.yml": []}, 평평, 이름표) == ["papers"]
-    좁음 = [_판u("papers", "x", "failure", "2026-10-05T00:00:00Z", "u")]
-    assert C.어긋남을_센다({"papers.yml": 좁음}, 평평, 이름표) == []
-
-
-def test_겹치는_판을_한_번만_센다():
-    C = _CI()
-    같은것 = _판u("ci", "a", "success", "2026-10-05T09:00:00Z", "u1")
-    판 = C.판들(부른다=_두길({"ci.yml": [같은것]}, [같은것]), 파일들=["ci.yml"])
-    assert len(판) == 1, 판
 
 
 def test_가름이_한_칸이_아니다():
@@ -297,10 +251,18 @@ def test_가름이_한_칸이_아니다():
     C = _CI()
     많음 = [_판u("ci", f"c{i}", "success", f"2026-10-05T{i:02d}:00:00Z", "같은url")
             for i in range(5)]
-    판 = C.판들(부른다=_두길({"ci.yml": 많음}, 많음), 파일들=["ci.yml"])
+    판 = C.판들(부른다=_좁게({"ci.yml": 많음}), 파일들=["ci.yml"])
     assert len(판) == 5, f"url 하나로 가르면 {len(판)} 이 된다"
 
 
-def test_평평창이_워크플로창보다_넓다():
+def test_파일에_없는_워크플로는_빨갈_때만_든다():
+    """★ **§293 이 치운 것을 §294 가 도로 끌어왔다**(DECISIONS §295). GitHub 이 저절로
+    만드는 초록 판이 「아직 안 본 워크플로」 를 소음으로 만든다. 빨강은 남긴다."""
     C = _CI()
-    assert C.평평창 > C.창, "평평한 길은 모든 워크플로를 같이 담는다 — 더 넓어야 한다"
+    초록 = _판("Dependency Graph", "여기", "success", "2026-10-05T09:00:00Z")
+    내것 = _판("ci", "여기", "success", "2026-10-05T08:00:00Z")
+    코드, 말 = C.고른다([초록, 내것], "여기")
+    assert 코드 == 0 and "Dependency Graph" not in 말, 말
+    빨강 = _판("지운워크플로", "여기", "failure", "2026-10-05T09:00:00Z")
+    코드2, 말2 = C.고른다([빨강, 내것], "여기")
+    assert "지운워크플로" in 말2, "지워진 워크플로의 빨강은 적어야 한다"
