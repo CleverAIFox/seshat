@@ -648,7 +648,7 @@
  "170": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "668e7b20dda05dee",
+  "지문": "9b3909a731168c3f",
   "파일": [
    "tools/ci_status.py",
    "tools/verify.sh",
@@ -675,7 +675,7 @@
  "172": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "5aaf32397ed7f9df",
+  "지문": "50b7d87d94e2ad3d",
   "파일": [
    "tools/ci_status.py",
    "tests/test_ci_status.py::test_가장_최근_판을_직접_고른다",
@@ -1316,7 +1316,7 @@
  "234": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "5c9f02b797e2ff2f",
+  "지문": "0585d4acb475ab0e",
   "파일": [
    "docs/DECISIONS.md",
    "docs/PLAN.md",
@@ -1395,7 +1395,7 @@
  "241": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "a21a13d8df0b6a75",
+  "지문": "4c8c3fcda78fb696",
   "파일": [
    "tools/check_numbers.py",
    "docs/DECISIONS.md"
@@ -1666,7 +1666,7 @@
  "267": {
   "날짜": "2026-10-01",
   "읽음": true,
-  "지문": "f8dadc0b563a7338",
+  "지문": "7dafd6e137abd9f4",
   "파일": [
    "tools/check_claims.py",
    "tests/test_claims.py",
@@ -1873,7 +1873,7 @@
  "289": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "d43d759adb45e416",
+  "지문": "d3f85e05d97b819f",
   "파일": [
    "tools/mutate.py",
    "tests/test_mutate.py"
@@ -1891,7 +1891,7 @@
  "290": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "2d4638813a5790e2",
+  "지문": "297b50759ab14b7c",
   "파일": [
    "tools/mutate.py",
    "tests/test_claims.py",
@@ -1913,7 +1913,7 @@
  "292": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "7b6dad37d6a37b38",
+  "지문": "ba3868ee3827959b",
   "파일": [
    "tools/ci_status.py",
    "tests/test_ci_status.py",
@@ -1923,7 +1923,7 @@
  "293": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "1db160dfb25efb38",
+  "지문": "992c4a5ad68cc666",
   "파일": [
    "tools/ci_status.py",
    "tests/test_ci_status.py"
@@ -1941,7 +1941,26 @@
  "295": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "59f75f078f25bbf5",
+  "지문": "e1a1c1486c995a28",
+  "파일": [
+   "tools/ci_status.py",
+   "tests/test_ci_status.py"
+  ]
+ },
+ "296": {
+  "날짜": "2026-10-05",
+  "읽음": true,
+  "지문": "fae8f87ca6681317",
+  "파일": [
+   "tools/mutate.py",
+   "tests/test_mutate.py",
+   "tools/check_size.py"
+  ]
+ },
+ "297": {
+  "날짜": "2026-10-05",
+  "읽음": true,
+  "지문": "f1f711953e9d660d",
   "파일": [
    "tools/ci_status.py",
    "tests/test_ci_status.py"

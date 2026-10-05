@@ -266,3 +266,21 @@ def test_파일에_없는_워크플로는_빨갈_때만_든다():
     빨강 = _판("지운워크플로", "여기", "failure", "2026-10-05T09:00:00Z")
     코드2, 말2 = C.고른다([빨강, 내것], "여기")
     assert "지운워크플로" in 말2, "지워진 워크플로의 빨강은 적어야 한다"
+
+def test_카나리아가_살아_있다():
+    """★ **0 건이 목표인 검사는 0 건을 성공으로만 읽으면 안 된다**(MASTER §0-8 · DECISIONS §297).
+    `_이름줄` 이 죽으면 `방아쇠` 가 파일 이름을 표시 이름으로 주고, 그러면 실물 워크플로
+    전부가 「파일을 못 찾은 것」 이 되어 **빨강이 하나도 막지 않는다.**"""
+    C = _CI()
+    assert C.main(["--selftest"]) == 0
+
+
+def test_카나리아가_정규식의_죽음을_본다(monkeypatch):
+    """★ **카나리아가 제 죽음을 못 보면 카나리아가 아니다**(DECISIONS §255)."""
+    import re as _re
+    import pytest
+    C = _CI()
+    monkeypatch.setattr(C, "_이름줄", _re.compile(r"^안맞는것:\s*(.+?)\s*$", _re.M))
+    with pytest.raises(SystemExit) as e:
+        C._canary()
+    assert e.value.code == 2

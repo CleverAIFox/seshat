@@ -236,10 +236,56 @@ def 고른다(판: list[dict], 여기: str) -> tuple[int, str]:
     return 0, f"  이 커밋({여기[:7]})을 CI 가 아직 안 봤다 — 밀기 전이면 정상이다\n    {끝말}" + 손말
 
 
+def _canary() -> None:
+    """**판별식이 사나**(MASTER §0-8 · DECISIONS §297). 이 자의 판정은 정규식 셋에 걸려
+    있다 — `_이름줄` 이 죽으면 `방아쇠` 가 **파일 이름**을 표시 이름으로 돌려주고, 그러면
+    실물 워크플로 전부가 「파일을 못 찾은 것」 이 되어 **빨강이 하나도 막지 않는다.**
+
+    ★ **0건이 목표인 검사는 0건을 성공으로만 읽으면 안 된다.** 깨끗해서 0 인지 정규식이
+      죽어서 0 인지 가를 수 없다. 합성 워크플로 둘로 묻는다 — 저절로 도는 것과
+      손으로만 도는 것.
+    ★ **시험이 이미 묻는다**(`tests/test_ci_status.py`). 그래도 여기 둔다 — **시험은
+      CI 에서 돌고 이 자는 사람 기계에서 돈다.** 정규식이 늙는 자리는 실물 워크플로의
+      문법이 바뀔 때이고, 그때 먼저 도는 것은 이 자다.
+    """
+    import tempfile
+    with tempfile.TemporaryDirectory() as d:
+        뿌리 = pathlib.Path(d)
+        (뿌리 / ".github/workflows").mkdir(parents=True)
+        (뿌리 / ".github/workflows/저절로.yml").write_text(
+            "name: 저절로 도는 것\non:\n  push:\n    branches: [main]\n  schedule:\n"
+            "    - cron: '0 0 * * 0'\njobs: {}\n", encoding="utf-8")
+        (뿌리 / ".github/workflows/손으로.yml").write_text(
+            "name: 손으로 도는 것\non:\n  workflow_dispatch:\njobs: {}\n", encoding="utf-8")
+        표 = 방아쇠(뿌리)
+        if set(표) != {"저절로 도는 것", "손으로 도는 것"}:
+            print(f"    ★ 카나리아가 죽었다 — `name:` 을 못 읽는다 : {sorted(표)}")
+            sys.exit(2)
+        if 표["저절로 도는 것"] != {"push", "schedule"}:
+            print(f"    ★ 카나리아가 죽었다 — 방아쇠를 못 읽는다 : {표['저절로 도는 것']}")
+            sys.exit(2)
+        if not 막을자격("저절로 도는 것", 표) or 막을자격("손으로 도는 것", 표):
+            print("    ★ 카나리아가 죽었다 — 막을 자격을 안 가른다")
+            sys.exit(2)
+        if 워크플로파일(뿌리) != ["손으로.yml", "저절로.yml"]:
+            print("    ★ 카나리아가 죽었다 — 묻는 목록을 파일에서 못 꺼낸다")
+            sys.exit(2)
+    빨강 = [{"workflowName": "", "headSha": "x", "conclusion": "failure",
+             "createdAt": "2026-01-01T00:00:00Z"}]
+    if 고른다(빨강, "x")[0] != 1:
+        print("    ★ 카나리아가 죽었다 — 빨강을 빨강으로 안 읽는다")
+        sys.exit(2)
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--branch", default="main")
+    ap.add_argument("--selftest", action="store_true", help="판별식이 살아 있나")
     a = ap.parse_args(argv)
+    _canary()
+    if a.selftest:
+        print("  프로브 살아 있다 — `name:` 읽기 · 방아쇠 읽기 · 막을 자격 가르기 · 빨강 읽기")
+        return 0
 
     판 = 판들(a.branch)
     if isinstance(판, str):
