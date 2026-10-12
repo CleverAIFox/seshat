@@ -1717,17 +1717,19 @@
  "270": {
   "날짜": "2026-10-01",
   "읽음": false,
-  "지문": "62550ae42081e1e1",
+  "지문": "9c35e306b7266e23",
   "파일": [
-   "seshat/paths.py"
+   "seshat/paths.py",
+   "tests/test_paths_읽는다.py"
   ]
  },
  "271": {
   "날짜": "2026-10-01",
   "읽음": false,
-  "지문": "9755b3db08bb75e0",
+  "지문": "f3bed5cf1fc78a02",
   "파일": [
-   "tools/slice.py"
+   "tools/slice.py",
+   "tests/test_paths_읽는다.py"
   ]
  },
  "272": {
