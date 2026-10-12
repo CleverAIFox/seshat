@@ -34,7 +34,8 @@ jobs:
           # 움직인 채로 그렇게 돌아, 없는 파일을 `git add` 하다 죽었다(DECISIONS §291).
           # ★ **`--` 로 경로임을 못 박는다.** 없으면 git 이 「revision 인가 path 인가」 를
           # 묻고, 2026-10-05 로그의 첫 줄이 그 `fatal: ambiguous argument` 였다.
-          git diff --quiet -- docs/papers.md; RC=$?
+          RC=0
+          git diff --quiet -- docs/papers.md || RC=$?
           case "$RC" in
             0) echo "  붙일 후보가 없다"; exit 0 ;;
             1) ;;
