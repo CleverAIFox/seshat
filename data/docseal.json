@@ -756,7 +756,7 @@
  "18": {
   "날짜": "2026-09-22",
   "읽음": true,
-  "지문": "e90db37555572524",
+  "지문": "50cafeb623f2fa15",
   "파일": [
    "tools/doc_fsck.py::check_tools",
    "tests/test_workflows.py"
@@ -1326,7 +1326,7 @@
  "234": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "63cdb71228f6f3a9",
+  "지문": "11a8fd34feb8b03a",
   "파일": [
    "docs/DECISIONS.md",
    "docs/PLAN.md",
@@ -1405,7 +1405,7 @@
  "241": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "47975a2cc8f3c74b",
+  "지문": "3cafc0733e3704e3",
   "파일": [
    "tools/check_numbers.py",
    "docs/DECISIONS.md"
@@ -1707,7 +1707,7 @@
  "27": {
   "날짜": "2026-09-23",
   "읽음": true,
-  "지문": "f1f49d2089f55f6a",
+  "지문": "df1d55e358984820",
   "파일": [
    "tests/test_baselines.py",
    "tools/check_model_licenses.py",
@@ -1717,19 +1717,17 @@
  "270": {
   "날짜": "2026-10-01",
   "읽음": false,
-  "지문": "9c35e306b7266e23",
+  "지문": "62550ae42081e1e1",
   "파일": [
-   "seshat/paths.py",
-   "tests/test_paths_읽는다.py"
+   "seshat/paths.py"
   ]
  },
  "271": {
   "날짜": "2026-10-01",
   "읽음": false,
-  "지문": "f3bed5cf1fc78a02",
+  "지문": "9755b3db08bb75e0",
   "파일": [
-   "tools/slice.py",
-   "tests/test_paths_읽는다.py"
+   "tools/slice.py"
   ]
  },
  "272": {
@@ -1963,7 +1961,7 @@
  "291": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "89b24f386863fb78",
+  "지문": "0c3550e2e22283fd",
   "파일": [
    "tests/test_workflows.py",
    ".github/workflows/papers.yml"
@@ -2077,7 +2075,7 @@
  "301": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "11c9c588251e6acb",
+  "지문": "3cc72a69a545e7b2",
   "파일": [
    "tests/test_workflows.py"
   ]
@@ -2094,11 +2092,21 @@
  "304": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "57c11a02040ac500",
+  "지문": "012cd99a131dac30",
   "파일": [
    "tools/check_secrets.py",
    "tools/verify.sh",
    "tests/test_secrets.py"
+  ]
+ },
+ "305": {
+  "날짜": "2026-10-12",
+  "읽음": false,
+  "지문": "528981ea69d0c9bb",
+  "파일": [
+   ".github/workflows/papers.yml",
+   "tests/test_workflows.py",
+   "tools/verify.sh"
   ]
  },
  "31": {

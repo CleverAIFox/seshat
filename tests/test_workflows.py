@@ -366,3 +366,60 @@ def test_실물에서_하나라도_찾는다():
     전부 = [q for p in sorted((ROOT / ".github/workflows").glob("*.yml"))
             for _, q in 워크플로경로(p.read_text(encoding="utf-8"))]
     assert len(전부) >= 5, f"워크플로에서 경로를 {len(전부)} 개밖에 못 읽었다 — 정규식이 늙었다"
+
+
+# ── `run:` 안에서 종료 코드를 받는 꼴 (DECISIONS §305) ──────────────────────
+# ★ **이 저장소의 쉘 규약에는 `-e` 가 없다** — `tools/verify.sh` 가 `set -uo pipefail` 로 돌고
+#   머리말이 「실패해도 끝까지 돈다」 고 적는다. 그 아래에서는 `cmd; rc=$?` 가 **맞는 관용구**고
+#   실제로 `verify.sh` 의 `append_only_step` 이 그렇게 쓴다.
+# ★ **그런데 워크플로의 `run:` 은 GitHub 이 `bash --noprofile --norc -e -o pipefail` 로 돌린다.**
+#   같은 줄이 거기서는 **실패한 명령에서 즉사**하고 `rc=$?` 는 실행조차 안 된다.
+#   **집 규약이 경계를 못 넘었다** — 손버릇만 건너가고 쉘 옵션은 안 건너갔다.
+# ★ 2026-10-12 `papers.yml` 이 그랬다. `git diff --quiet` 가 **1(변경 있음)** 을 돌려주자 그 줄에서
+#   죽었다 — **도구가 제 일을 해낸 순간에만 죽는** 구조라 앞의 두 판은 초록이었다(§305).
+# ★ **shellcheck 은 이것을 못 잡는다.** Actions 가 `-e` 를 켠다는 것을 모른다 — 그래서 여기서 본다.
+_코드받기 = re.compile(r";\s*[A-Za-z_][A-Za-z0-9_]*=\$\?")
+
+
+def 맨몸으로_코드를_받는_줄(text: str) -> list[tuple[int, str]]:
+    """`;` 뒤에 종료 코드를 받는 줄. **주석은 센 데서 뺀다.**
+
+    ★ 주석을 안 지우면 **이 꼴을 설명하는 주석이 제 검사에 걸린다**(§301 집안).
+    """
+    bad = []
+    for n, line in enumerate(text.split("\n"), 1):
+        if line.lstrip().startswith("#"):
+            continue
+        if _코드받기.search(line):
+            bad.append((n, line.strip()))
+    return bad
+
+
+def test_워크플로가_종료_코드를_맨몸으로_안_받는다():
+    난것 = [(p.name, n, l) for p in sorted((ROOT / ".github/workflows").glob("*.yml"))
+            for n, l in 맨몸으로_코드를_받는_줄(p.read_text(encoding="utf-8"))]
+    assert 난것 == [], ("`run:` 은 `-e` 아래서 돈다 — `cmd; rc=$?` 는 실패한 명령에서 즉사한다. "
+                        f"`RC=0` 과 `|| RC=$?` 로 받는다 : {난것}")
+
+
+def test_코드받기_카나리아():
+    # ★ **조용히 0건이 되는 자리다.** 정규식이 늙으면 아무것도 못 찾고 **그래도 초록**이다.
+    assert 맨몸으로_코드를_받는_줄("          git diff --quiet -- x; RC=$?\n") == [
+        (1, "git diff --quiet -- x; RC=$?")]
+    assert 맨몸으로_코드를_받는_줄("  foo; rc=$?\n") == [(1, "foo; rc=$?")]
+    # 고친 꼴은 통과한다 — 음성 대조가 없으면 **전부 빨강인 검사**도 통과한다
+    assert 맨몸으로_코드를_받는_줄("  RC=0\n  git diff --quiet -- x || RC=$?\n") == []
+    assert 맨몸으로_코드를_받는_줄("  if git diff --quiet; then RC=0; else RC=$?; fi\n") == []
+    # 주석은 안 센다 — 이 꼴을 설명하는 주석이 제 검사에 걸리면 안 된다
+    assert 맨몸으로_코드를_받는_줄("  # 전에는 `foo; RC=$?` 였다\n") == []
+    # `$?` 를 안 받는 세미콜론은 평범한 쉘이다
+    assert 맨몸으로_코드를_받는_줄("  cd x; ls\n") == []
+
+
+def test_집_규약과_워크플로_규약이_다르다는_것을_적어_둔다():
+    """★ **`verify.sh` 는 `-e` 를 일부러 뺐다** — 그 까닭이 사라지면 이 검사의 뜻도 사라진다.
+    둘이 다르다는 사실 자체가 §305 의 전건이라 여기서 붙들어 둔다."""
+    sh = (ROOT / "tools/verify.sh").read_text(encoding="utf-8")
+    옵션 = [l for l in sh.split("\n") if l.startswith("set -")]
+    assert 옵션 == ["set -uo pipefail"], f"쉘 규약이 바뀌었다 : {옵션}"
+    assert "실패해도 끝까지 돈다" in sh, "`-e` 를 뺀 까닭이 머리말에서 사라졌다"
