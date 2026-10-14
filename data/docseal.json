@@ -1326,7 +1326,7 @@
  "234": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "11a8fd34feb8b03a",
+  "지문": "34732db94bdb48f9",
   "파일": [
    "docs/DECISIONS.md",
    "docs/PLAN.md",
@@ -1405,7 +1405,7 @@
  "241": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "3cafc0733e3704e3",
+  "지문": "d621f315adce7f10",
   "파일": [
    "tools/check_numbers.py",
    "docs/DECISIONS.md"
@@ -2104,7 +2104,7 @@
  "305": {
   "날짜": "2026-10-12",
   "읽음": false,
-  "지문": "528981ea69d0c9bb",
+  "지문": "58477a4af2027078",
   "파일": [
    ".github/workflows/papers.yml",
    "tests/test_workflows.py",

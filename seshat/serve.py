@@ -20,6 +20,7 @@ import argparse
 import hmac
 import json
 import sys
+import traceback
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from . import backends
@@ -74,7 +75,26 @@ def make_handler(fn: backends.Backend, model: str, token: str):
             terms = {} if terms is None else terms     # `[]` 를 `or` 로 삼키지 않는다
             if not isinstance(terms, dict):
                 return self._send(400, {"error": "terms_not_object"})
-            out = fn(texts, terms)
+            # ★ **여기가 유일하게 터질 수 있는 줄이다 — 그리고 안 싸여 있었다**(§306).
+            #   백엔드는 모델을 부른다. ollama 가 꺼져 있거나 가중치가 없거나 메모리가
+            #   모자라면 여기서 예외가 난다. 안 싸면 `socketserver` 가 그 요청만 조용히
+            #   버리고 **응답 없이 연결을 끊는다** — 재서 확인했다 :
+            #       >> 응답 자체가 없다 : RemoteDisconnected
+            #   thoth 워커는 그것을 「서버가 틀렸다」 가 아니라 **「연결이 끊겼다」** 로 받는다.
+            #   까닭은 이쪽 stderr 에만 남고 부른 쪽은 아무것도 모른다.
+            # ★ **502 다 — 500 이 아니다.** 위의 `backend_length_mismatch` 는 백엔드가
+            #   **계약을 어긴** 것이고(이쪽 잘못), 이건 백엔드가 **못 한** 것이다.
+            #   둘을 같은 코드로 내면 로그에서 「고칠 코드가 있다」 와 「켜면 된다」 가 섞인다.
+            # ★ **몸통에는 예외 이름만 싣는다.** 메시지에는 경로 · 모델 인자 · 드물게는
+            #   자격증명까지 들어온다. 부른 쪽에 필요한 것은 **갈래**이고, 자세한 것은
+            #   역추적으로 이쪽 로그에 남긴다.
+            try:
+                out = fn(texts, terms)
+            except Exception as e:                       # 갈래를 안 가린다 — 무엇이든 응답으로 바꾼다
+                traceback.print_exc(file=sys.stderr)
+                self.log_message("백엔드가 터졌다 — %s", type(e).__name__)
+                return self._send(502, {"error": "backend_failed",
+                                        "kind": type(e).__name__})
             if len(out) != len(texts):
                 return self._send(500, {"error": "backend_length_mismatch"})
             self._send(200, {"translations": out, "model": model})

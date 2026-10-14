@@ -51,3 +51,17 @@ def bad_backend(monkeypatch):
     """길이를 어기는 백엔드를 잠시 등록한다."""
     monkeypatch.setitem(backends.REGISTRY, "short", (lambda ts, terms: ts[:-1], "seshat-short"))
     return "short"
+
+
+@pytest.fixture
+def 터지는_백엔드(monkeypatch):
+    """**부르면 예외를 던지는** 백엔드를 잠시 등록한다(DECISIONS §306).
+
+    ★ 메시지에 비밀처럼 보이는 글자를 일부러 넣는다 — 응답 몸통에 **안 새는지**까지
+      같은 자리에서 재려는 것이다. 터지는 것만 재면 그 절반만 본다.
+    """
+    def 터진다(texts, terms):
+        raise RuntimeError("모델을 못 열었다 — token=비밀값123 /home/fox/.ollama")
+
+    monkeypatch.setitem(backends.REGISTRY, "boom", (터진다, "seshat-boom"))
+    return "boom"
