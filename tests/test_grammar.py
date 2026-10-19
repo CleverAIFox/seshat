@@ -120,3 +120,41 @@ def test_판정이_없으면_0_이_아니라_못_읽은_것이다(tmp_path):
     p.write_text('{"meta": true}\n', encoding="utf-8")
     with pytest.raises(SystemExit, match="못 읽은 것이다"):
         _slice().read_labels(str(p))
+
+
+# ── 깊이 — **시험이 하나도 없던 자리**(DECISIONS §307) ──────────────────────
+
+
+def test_연쇄가_없으면_깊이가_0_이다():
+    """★ `depth` 는 `chains` 위에 서는데 **붙드는 시험이 0건이었다.** `tools/mutate.py` 가
+    몸통을 `return 0` 으로 바꿔도 통과해서 드러났다 — **`chains` 를 재면 `depth` 도 잰다**
+    고 믿은 자리다. 「쓰는 것을 재면 쓰이는 것도 재진다」 는 참이 아니다."""
+    assert grammar.depth("Send the records to Amazon Kinesis Data Streams now.") == 0
+
+
+def test_명사_줄의_낱말_수를_낸다():
+    # ★ **`return 0` 을 무는 자리다.** 0 만 묻는 시험은 그 돌연변이를 못 잡는다 —
+    #   §152 의 양방향과 같은 결이다.
+    src = "You can set the custom endpoint override option."
+    assert grammar.chains(src) == ["custom endpoint override option"]
+    assert grammar.depth(src) == 4
+
+
+def test_가장_깊은_줄을_고른다():
+    """★ 이름이 「가장 깊은」 이다 — **둘 중 긴 쪽**을 내는지 묻는다. `max` 를 `min` 으로
+    바꾸거나 첫 줄을 내도 `chains` 시험은 조용하다."""
+    # ★ 길이가 **다른** 둘을 고른다(3 · 5). 같은 길이면 `max` 를 `min` 으로 바꿔도
+    #   조용하고, 첫 줄을 내도 조용하다 — **가르지 못하는 입력은 아무것도 안 묻는다.**
+    src = "The data retention period and the custom endpoint override option differ here."
+    줄들 = grammar.chains(src)
+    assert sorted(len(c.split()) for c in 줄들) == [3, 5], 줄들
+    assert grammar.depth(src) == 5
+
+
+def test_표시된_식별자를_빼면_깊이도_준다():
+    """★ `skip` 이 `depth` 까지 닿는지 묻는다 — `chains` 에만 닿고 `depth` 가 제 손으로
+    다시 세면 §122 의 표시가 **깊이에서만** 무시된다."""
+    src = "Your account can operate on the arn:aws:s3:::my-bucket resource today."
+    row = {"id": "a", "src": src, "lit": [["arn:aws:s3:::my-bucket", src.index("arn")]]}
+    assert grammar.depth(src) > 0
+    assert grammar.depth(src, evaluate.marked(row)) == 0

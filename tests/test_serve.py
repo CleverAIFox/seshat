@@ -5,6 +5,7 @@ import urllib.request
 
 import pytest
 
+from seshat import serve
 from tests import thoth_conformance as conf
 
 
@@ -81,3 +82,49 @@ def test_길이_위반과_터짐을_다른_코드로_가른다(server, bad_backe
     터 = _post(server(터지는_백엔드), {"texts": ["a"]})
     assert 짧[0] == 500 and 짧[1]["error"] == "backend_length_mismatch"
     assert 터[0] == 502 and 터[1]["error"] == "backend_failed"
+
+
+# ── 들머리 — **도구를 통째로 돌려 보는 자리가 없었다**(DECISIONS §307) ──────
+
+
+def test_들머리가_인자를_서버로_넘긴다(monkeypatch):
+    """★ `main` 의 몸통을 `return 0` 으로 바꿔도 **아무도 안 울었다.** 시험이 `serve()` 를
+    바로 부르고 **도구를 통째로 돌려 보는 자리가 없어서**다 — `tools/mutate.py` 머리말이
+    「`main` 이 넷이다 … 「검사를 껐는데 초록」 의 가장 곧은 꼴」 로 적어 둔 그 자리.
+
+    ★ **서버를 진짜로 띄우지 않는다.** `serve_forever` 가 `KeyboardInterrupt` 를 내도록
+      바꿔 **들머리가 그것을 잡고 0 으로 끝나는지**까지 같이 묻는다.
+    """
+    받은것 = {}
+
+    class _가짜:
+        def serve_forever(self):
+            받은것["돌았다"] = True
+            raise KeyboardInterrupt
+
+    def _가짜serve(backend, host, port, token):
+        받은것.update(backend=backend, host=host, port=port, token=token)
+        return _가짜()
+
+    monkeypatch.setattr(serve, "serve", _가짜serve)
+    rc = serve.main(["--backend", "echo", "--host", "127.0.0.2",
+                     "--port", "8123", "--token", "비밀"])
+    assert rc == 0
+    assert 받은것 == {"backend": "echo", "host": "127.0.0.2", "port": 8123,
+                      "token": "비밀", "돌았다": True}, 받은것
+
+
+def test_들머리의_기본값이_선언과_같다(monkeypatch):
+    # ★ **기본값은 계약이다.** `--port` 기본이 바뀌면 `thoth` 쪽 설정이 조용히 어긋난다.
+    #   인자를 하나도 안 주고 불러 **무엇이 서버로 가는지**를 본다.
+    받은것 = {}
+
+    class _가짜:
+        def serve_forever(self):
+            raise KeyboardInterrupt
+
+    monkeypatch.setattr(serve, "serve",
+                        lambda *a: (받은것.update(zip(("backend", "host", "port", "token"), a)),
+                                    _가짜())[1])
+    assert serve.main([]) == 0
+    assert 받은것 == {"backend": "echo", "host": "127.0.0.1", "port": 8100, "token": ""}

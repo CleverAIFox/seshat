@@ -341,3 +341,29 @@ def test_실제_저장소에서_짝이_엉뚱하지_않다():
     assert MU.짝시험("seshat/mbr.py") == ["tests/test_mbr.py"]
     assert "tests/test_evaluate.py" in MU.짝시험("seshat/evaluate.py")
     assert "tests/test_mutate.py" not in MU.짝시험("seshat/mbr.py")
+
+
+def test_무늬를_여럿_받는다():
+    """★ **값 하나짜리면 뒤엣것만 먹는다**(2026-10-19 · DECISIONS §307). 사슬이
+    `tools/check_*.py` 와 `seshat/*.py` 둘을 보게 됐는데, `--only` 가 쌓이지 않으면
+    **앞엣것이 조용히 범위 밖**이 된다 — 「좁혔는데 좁힌 줄 모른다」 는 꼴이다."""
+    둘 = ["tools/check_*.py", "seshat/*.py"]
+    assert MU.범위안("tools/check_prose.py", 둘) is True
+    assert MU.범위안("seshat/mbr.py", 둘) is True
+    assert MU.범위안("tools/sweep.py", 둘) is False
+    assert MU.범위안("seshat/mbr.py", []) is True, "무늬가 없으면 전부가 범위다"
+    # ★ 글자 하나를 받던 옛 꼴도 그대로 산다 — 부르는 자리를 한꺼번에 안 고친다.
+    assert MU.범위안("tools/check_prose.py", "tools/check_*.py") is True
+    assert MU.범위안("seshat/mbr.py", "tools/check_*.py") is False
+
+
+def test_사슬이_제품_쪽을_본다():
+    """★ **재는 쪽만 재면 제품이 빈다**(§307). 2026-10-19 에 `seshat/*.py` 를 재니
+    **붙드는 시험이 없는 자리가 둘**이었다 — `grammar.py::depth` · `serve.py::main`.
+    사슬이 `tools/check_*` 만 보는 동안 거기가 비어 있었다."""
+    import pathlib
+    글 = (pathlib.Path(__file__).resolve().parents[1] / "tools/verify.sh").read_text(encoding="utf-8")
+    줄 = [l for l in 글.splitlines() if "tools/mutate.py" in l and not l.lstrip().startswith("#")]
+    assert 줄, "사슬에 mutate 단계가 없다"
+    assert "seshat/*.py" in 줄[0], "사슬이 제품 쪽을 안 본다"
+    assert "tools/check_*.py" in 줄[0], "사슬이 검사 술어를 안 본다"

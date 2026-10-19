@@ -93,9 +93,16 @@ step deadchecks         uv run python tools/check_deadchecks.py
 #   있었는데 **어느 사슬에도 없었고** MASTER 가 그 까닭을 적어 뒀다 — 「한 판에 수십 분」.
 #   짝 시험으로 좁혀 **2.1시간 → 7분**이 됐고, 그래서 여기 들어온다.
 # ★ **범위는 검사 술어다.** 2026-10-01 에 터진 다섯 중 셋이 `tools/` 였다 — **재는 쪽을 안
-#   재면 검사가 거짓이어도 조용하다.** `seshat/` 쪽 335자리는 아직 손으로 돈다(PLAN).
+#   재면 검사가 거짓이어도 조용하다.**
+# ★ **제품 쪽도 넣는다**(2026-10-19 · DECISIONS §307). `seshat/*.py` 101자리를 재니 **5분 52초**
+#   였고 **붙드는 시험이 없는 자리가 둘** 나왔다 — `grammar.py::depth` 와 `serve.py::main`.
+#   둘 다 `seshat/` 안이다 : 사슬이 `tools/check_*` 만 보는 동안 **제품 쪽이 비어 있었다.**
+#   값이 6분이고 찾은 것이 둘이면 넣는 것이 맞다.
+# ★ **아직 밖인 것** : 나머지 `tools/*.py` 250자리(개발 유틸). 안 쟀다 — PLAN #53 이 든다.
+#   종전 주석은 「`seshat/` 쪽 335자리」 라고 적었는데 **335 는 사슬 밖 전체(351)와 헷갈린
+#   수**다. `seshat/` 은 101 이고 `tools/` 가 357 이다.
 # ★ 좁혀 뚫어도 **장부는 저장소 전체로 센다** — 안 그러면 사슬에서 톱니가 영원히 안 운다.
-step mutate             uv run python tools/mutate.py --only 'tools/check_*.py'
+step mutate             uv run python tools/mutate.py --only 'tools/check_*.py' --only 'seshat/*.py'
 step claims             uv run python tools/check_claims.py
 step docseal            uv run python tools/docseal.py
 step bootstrap          uv run python tools/bootstrap.py --selftest

@@ -68,9 +68,11 @@ MAX_못잴것 = 47
 # ★ **장부**(§287). `verify.sh` 가 보는 범위에서 **지금 붙드는 시험이 없는 자리.** 늘면 막고,
 #   갚으면 `--update` 가 줄인다 — `check_deadchecks` 와 같은 꼴(§255 · §258).
 #
-# ★ **`main` 이 넷이다.** 관문의 `main` 을 `return 0` 으로 바꿔도 아무도 안 운다 — 시험이
-#   속 함수만 부르고 **도구를 통째로 돌려 보는 자리가 없다.** 「검사를 껐는데 초록」 의 가장
-#   곧은 꼴이다.
+# ★ **`main` 이 넷이었다 — 하나 갚았다**(2026-10-19 · §307). 관문의 `main` 을 `return 0`
+#   으로 바꿔도 아무도 안 운다 — 시험이 속 함수만 부르고 **도구를 통째로 돌려 보는 자리가
+#   없다.** 「검사를 껐는데 초록」 의 가장 곧은 꼴이다. `seshat/serve.py::main` 은
+#   `tests/test_serve.py` 가 **가짜 `serve` 로 들머리를 통째로 불러** 막았다. 남은 셋은
+#   `tools/` 에 있고 아직 사슬 밖이다(PLAN #53).
 # ★ **`check_prose` 술어 셋은 저장소가 깨끗해서 산다.** 지금 위반이 0 이라 `[]` 를 돌려줘도
 #   맞는 답이다 — **가짜 입력으로 물어야** 문다(§287 · thoth §150 과 같은 자리).
 # ★ **`check_size::_canary` 가 산다.** 카나리아를 붙드는 것이 없다 — 「도구가 고장났나」 를
@@ -115,11 +117,18 @@ def 잴것(root: pathlib.Path | None = None) -> tuple[list[tuple[str, str, int, 
     return 잰다, 못잰다
 
 
-def 범위안(파일: str, 무늬: str) -> bool:
+def 범위안(파일: str, 무늬: str | list[str]) -> bool:
     """`--only` 무늬에 드는가. **뚫을 자리와 장부를 같은 자로 거른다** — 두 곳이 각각
-    거르면 갈린다(§287 · thoth §132)."""
+    거르면 갈린다(§287 · thoth §132).
+
+    ★ **무늬가 여럿일 수 있다**(2026-10-19 · DECISIONS §307). 사슬이 `tools/check_*.py` 와
+      `seshat/*.py` 둘을 보게 되면서 `--only` 가 **쌓이는 인자**가 됐다. 글자 하나를 받던
+      옛 꼴도 그대로 받는다 — 시험과 부르는 자리가 둘 다 산다.
+    """
     import fnmatch
-    return not 무늬 or fnmatch.fnmatch(파일, 무늬)
+    무늬들 = [무늬] if isinstance(무늬, str) else list(무늬)
+    무늬들 = [x for x in 무늬들 if x]
+    return not 무늬들 or any(fnmatch.fnmatch(파일, x) for x in 무늬들)
 
 
 def 견준다(산것: list[str], 장부: frozenset[str]) -> tuple[list[str], list[str]]:
@@ -325,7 +334,10 @@ def main(argv: list[str] | None = None) -> int:
     for _sig in (signal.SIGINT, signal.SIGTERM):
         signal.signal(_sig, _되돌리고_죽는다)
     ap = argparse.ArgumentParser()
-    ap.add_argument("--only", default="", help="이 파일만 — 비우면 전부")
+    # ★ **쌓인다**(§307). 사슬이 `tools/check_*.py` 와 `seshat/*.py` 둘을 본다 —
+    #   값 하나짜리면 뒤엣것만 먹고 **앞엣것이 조용히 범위 밖**이 된다.
+    ap.add_argument("--only", action="append", default=[],
+                    help="이 무늬만 — 여러 번 줄 수 있다. 비우면 전부")
     ap.add_argument("--list", action="store_true")
     ap.add_argument("--selftest", action="store_true")
     ap.add_argument("--tests", default="tests", help="돌릴 시험")
