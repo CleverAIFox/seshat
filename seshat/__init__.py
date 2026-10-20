@@ -6,4 +6,22 @@
 """
 from . import paths as _paths  # noqa: F401  — 불러 오는 것이 곧 `.env` 를 얹는 일이다
 
-__version__ = "0.0.2"
+# ★ **판 번호는 `pyproject.toml` 하나다**(DECISIONS §311). 여기 글자로 적어 뒀더니
+#   `0.0.2` 와 `0.3.6` 이 **두 곳에서 따로 늙었다** — `/health` 와 기록 머리줄이 어느
+#   쪽을 들지가 부르는 자리에 달렸다. 깔려 있으면 메타데이터가, 아니면 `pyproject` 를
+#   직접 읽는다. **못 읽으면 터진다** — 조용히 `0.0.0` 을 내면 그 수가 기록에 박힌다.
+def _판() -> str:
+    from importlib.metadata import PackageNotFoundError, version
+    try:
+        return version("seshat")
+    except PackageNotFoundError:
+        import pathlib
+        import re
+        글 = (pathlib.Path(__file__).resolve().parent.parent / "pyproject.toml").read_text(encoding="utf-8")
+        m = re.search(r'^version\s*=\s*"([^"]+)"', 글, re.M)
+        if not m:
+            raise RuntimeError("pyproject.toml 에서 version 을 못 읽었다") from None
+        return m.group(1)
+
+
+__version__ = _판()

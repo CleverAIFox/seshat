@@ -88,8 +88,31 @@ def 견준다(지금: dict[str, int], 장부: dict[str, int]) -> list[str]:
     return 말
 
 
+def _canary() -> None:
+    """★ **판별식이 살아 있나**(DECISIONS §311). 이 자는 「막는 자리에 넘는 길이 있나」 를
+    묻는데, **길표가 늙거나 `_막는자리` 가 비면 길 없는 자리가 0 으로 보인다** — 그리고
+    0 은 「깨끗하다」 와 글자가 같다.
+
+    ★ **이 파일에는 카나리아가 아예 없었다.** `check_scope` 가 **글자로** 찾고 있어서
+      `안보는함수` 안의 `"_canary"` 에 걸려 **있는 것으로 세어졌다**(§311). 「모든 관문은
+      카나리아를 가진다」 가 그 자리에서 거짓 초록이었다.
+    """
+    막음 = ast.parse('raise SystemExit("안 된다")')
+    if not _막는자리(막음):
+        raise SystemExit("2: 카나리아 — 막는 자리를 못 찾는다. 판별식이 죽었다")
+    길있음 = ast.parse('raise SystemExit("안 된다 — python3 tools/doctor.sh 로 본다")')
+    자리 = _막는자리(길있음)
+    if not 자리:
+        raise SystemExit("2: 카나리아 — 길이 있어도 막는 자리는 막는 자리다")
+    if not 길표.search(ast.unparse(자리[0])):
+        raise SystemExit("2: 카나리아 — 길표가 늙었다. 넘는 길을 적은 글을 못 알아본다")
+    if 길표.search('raise SystemExit("안 된다")'):
+        raise SystemExit("2: 카나리아 — 길표가 아무 글에나 걸린다. 그러면 전부 통과다")
+
+
 def main(argv: list[str] | None = None) -> int:
     args = sys.argv[1:] if argv is None else argv
+    _canary()
     자리 = 길없는자리()
     지금 = 센다(자리)
     if "--list" in args:

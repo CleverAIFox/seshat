@@ -55,12 +55,28 @@ def 안한것(root: pathlib.Path | None = None) -> list[tuple[str, str]]:
         #   지운다. **손 목록이 아니라 파일이 스스로 말한다** — 머리 세 줄의 「사본이다」 를 본다
         if "사본이다" in "\n".join(글.splitlines()[:3]):
             continue
-        독 = ast.get_docstring(ast.parse(글)) or ""
+        나무 = ast.parse(글)
+        독 = ast.get_docstring(나무) or ""
         if not any(w in 독 for w in 밖말):
             out.append((n, "머리말이 **안 보는 것**을 안 적는다 — 「… 는 안 본다」 를 한 줄 넣는다"))
-        if not any(w in 글 for w in 시험말):
+        # ★ **글자가 아니라 정의를 본다**(DECISIONS §311). 종전에는 `"_canary" in 글` 이라
+        #   **그 이름이 어디에 있든** 통과했다 — `check_ways.py` 는 `_canary` 를 **정의하지
+        #   않는데** 파일 안에 그 글자가 있어서 초록이었다. 「모든 관문은 카나리아를 가진다」
+        #   가 거짓 초록이었다. `ast` 로 **정의가 있나**를 묻는다.
+        if not _정의가있나(나무, 시험말):
             out.append((n, "자가시험이 없다 — `_canary()` 로 판별식이 살아 있는지 스스로 묻는다"))
     return out
+
+
+def _정의가있나(나무: ast.Module, 이름들) -> bool:
+    """맨 위에 그 이름의 **함수 정의**가 있나. **글자가 있는 것과 다르다.**"""
+    있는것 = {n.name for n in _맨위함수(나무)}
+    return any(w.strip("`()") in 있는것 for w in 이름들)
+
+
+def _맨위함수(나무: ast.Module) -> list[ast.FunctionDef | ast.AsyncFunctionDef]:
+    """맨 위 함수 정의들. 속 함수는 안 센다 — 관문은 **제 몸에** 카나리아를 둔다."""
+    return [n for n in 나무.body if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))]
 
 
 def _canary(root: pathlib.Path | None = None) -> None:

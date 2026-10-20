@@ -65,12 +65,22 @@ step check_docs         uv run python tools/check_docs.py
 #   「append-only」 를 선언하는데 **보는 자가 없었다.** 줄 단위로 걸면 표기와 본문이 뭉뚱그려져
 #   썩은 강제자 인용을 고칠 수 없다 — 2026-10-05 에 일곱 줄을 고쳐야 했다.
 # ★ **CI 에서는 작업 트리가 HEAD 와 같아 언제나 통과한다.** 훅과 이 자리가 강제자다(§170).
+# ★ **못 쟀다를 통과로 세지 않는다**(DECISIONS §59 · §311). 종전에는 `rc 3`(「HEAD 에
+#   DECISIONS 가 없어 대조 안 함」)을 **0 으로 바꿔** 돌려줬다 — 그러면 **대조를 한 번도
+#   안 한 판이 초록**으로 보인다. 0 과 3 은 **다른 말**이고, 가르는 쪽이 `ONLY` 와 같은
+#   「부분 실행」 자리다. 여기서도 같은 꼴로 찍는다.
 append_only_step() {  # 이름은 ASCII 다 — shellcheck 과 test_셸의_변수_이름은_ASCII_다
   local old rc
   old="$(git show HEAD:docs/DECISIONS.md 2>/dev/null)" || true
-  if [ -z "$old" ]; then echo "  HEAD 에 DECISIONS 가 없어 대조하지 않았다"; return 0; fi
+  if [ -z "$old" ]; then
+    echo "  HEAD 에 DECISIONS 가 없어 대조하지 않았다 — **통과가 아니다**"
+    SKIPPED=1; return 0
+  fi
   printf '%s\n' "$old" | uv run python tools/check_docs.py --추가만; rc=$?
-  [ "$rc" = 3 ] && return 0
+  if [ "$rc" = 3 ]; then
+    echo "  대조하지 않았다(rc 3) — **통과가 아니다**"
+    SKIPPED=1; return 0
+  fi
   return "$rc"
 }
 step 추가만             append_only_step

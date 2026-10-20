@@ -592,7 +592,7 @@
  "164": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "3bb47d49f46f8a34",
+  "지문": "242bce7a59362b12",
   "파일": [
    "tools/verify.sh",
    "tests/test_workflows.py::test_셸의_변수_이름은_ASCII_다"
@@ -658,7 +658,7 @@
  "170": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "6321d80031b1c5d9",
+  "지문": "b95ae76ab8a7fc03",
   "파일": [
    "tools/ci_status.py",
    "tools/verify.sh",
@@ -765,7 +765,7 @@
  "180": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "3e7f4c89ed67b194",
+  "지문": "4cd03df1902dd29f",
   "파일": [
    "tools/bootstrap.py",
    "tests/test_bootstrap.py",
@@ -1073,7 +1073,7 @@
  "210": {
   "날짜": "2026-09-29",
   "읽음": false,
-  "지문": "aa8e5b433a06ce0f",
+  "지문": "dd625c681fdb8b8d",
   "파일": [
    "tools/check_ways.py",
    "tests/test_ways.py::test_저장소가_장부와_맞는다"
@@ -1100,7 +1100,7 @@
  "213": {
   "날짜": "2026-09-29",
   "읽음": false,
-  "지문": "d72a0797eb22a8d4",
+  "지문": "97865834f1811516",
   "파일": [
    "tools/check_ways.py",
    "tests/test_ways.py::test_저장소가_장부와_맞는다"
@@ -1316,7 +1316,7 @@
  "233": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "77bfe9ab8fceb3e4",
+  "지문": "f5f79fc590dfeb2e",
   "파일": [
    "tools/check_crashes.py",
    "tests/test_crashes.py::test_저장소가_장부와_맞는다",
@@ -1326,7 +1326,7 @@
  "234": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "9247e2fdfafd6422",
+  "지문": "bce79e41ef38af98",
   "파일": [
    "docs/DECISIONS.md",
    "docs/PLAN.md",
@@ -1336,7 +1336,7 @@
  "235": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "ad57724516598361",
+  "지문": "4c18878607ea3992",
   "파일": [
    "tools/check_numbers.py",
    "tests/test_numbers.py",
@@ -1356,7 +1356,7 @@
  "237": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "75367f6992fd9410",
+  "지문": "77ca9d46e3da9d22",
   "파일": [
    "tools/docgen.py",
    "tests/test_docgen.py",
@@ -1376,7 +1376,7 @@
  "239": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "0f202b1496e38fed",
+  "지문": "43e0ffd489126b0a",
   "파일": [
    "tools/check_scope.py",
    "tests/test_scope.py",
@@ -1395,7 +1395,7 @@
  "240": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "b542e5cabb283752",
+  "지문": "5ade52ee93cf0887",
   "파일": [
    "tools/check_dead.py",
    "tests/test_dead.py",
@@ -1405,7 +1405,7 @@
  "241": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "7cf8482135b351b1",
+  "지문": "c4680e8e5b80b965",
   "파일": [
    "tools/check_numbers.py",
    "docs/DECISIONS.md"
@@ -1549,7 +1549,7 @@
  "255": {
   "날짜": "2026-10-01",
   "읽음": true,
-  "지문": "aeb7a31e75a4e1a6",
+  "지문": "00bafbbf4dfd417d",
   "파일": [
    "tools/check_deadchecks.py",
    "tests/test_deadchecks.py",
@@ -1568,7 +1568,7 @@
  "257": {
   "날짜": "2026-10-01",
   "읽음": true,
-  "지문": "0c041b0272fd0af6",
+  "지문": "ede467524d17075d",
   "파일": [
    "tests/test_deps.py",
    "tools/verify.sh",
@@ -1676,7 +1676,7 @@
  "267": {
   "날짜": "2026-10-01",
   "읽음": true,
-  "지문": "857a9c31615e107b",
+  "지문": "f566cdf3b67b681a",
   "파일": [
    "tools/check_claims.py",
    "tests/test_claims.py",
@@ -1841,7 +1841,7 @@
  "282": {
   "날짜": "2026-10-02",
   "읽음": true,
-  "지문": "30b8f6123547fa34",
+  "지문": "217290ef28ba0f60",
   "파일": [
    "tools/check_prose.py",
    "tools/verify.sh",
@@ -1905,7 +1905,7 @@
  "287": {
   "날짜": "2026-10-04",
   "읽음": true,
-  "지문": "e870cda20bda3ab4",
+  "지문": "c0ea497dba676853",
   "파일": [
    "tools/mutate.py::톱니",
    "tools/mutate.py::견준다",
@@ -1932,7 +1932,7 @@
  "289": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "716aee8892d5ce73",
+  "지문": "d21c06625de150ac",
   "파일": [
    "tools/mutate.py",
    "tests/test_mutate.py"
@@ -1950,7 +1950,7 @@
  "290": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "e72b7d0f6f1549e1",
+  "지문": "2522d8fc918aa6cd",
   "파일": [
    "tools/mutate.py",
    "tests/test_claims.py",
@@ -1972,7 +1972,7 @@
  "292": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "2cc98103eb49853e",
+  "지문": "adadfdf114f494e5",
   "파일": [
    "tools/ci_status.py",
    "tests/test_ci_status.py",
@@ -2009,7 +2009,7 @@
  "296": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "72bf870e5af5fda0",
+  "지문": "f039e942a6b571eb",
   "파일": [
    "tools/doc_fsck.py",
    "tools/check_docs.py",
@@ -2085,7 +2085,7 @@
  "302": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "8c6eac05cb5ac636",
+  "지문": "66d0c001d9eab3a9",
   "파일": [
    "tools/mutate.py",
    "tests/test_mutate.py"
@@ -2094,7 +2094,7 @@
  "304": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "6fbd816c0f4ae6e6",
+  "지문": "9dc9df3f0b5147d5",
   "파일": [
    "tools/check_secrets.py",
    "tools/verify.sh",
@@ -2104,7 +2104,7 @@
  "305": {
   "날짜": "2026-10-12",
   "읽음": false,
-  "지문": "8b8f43b79a26ada1",
+  "지문": "d276bf6e5a904567",
   "파일": [
    ".github/workflows/papers.yml",
    "tests/test_workflows.py",
@@ -2114,7 +2114,7 @@
  "307": {
   "날짜": "2026-10-19",
   "읽음": true,
-  "지문": "8a1cf1486d8f0c46",
+  "지문": "576efb692ec40dd7",
   "파일": [
    "tools/verify.sh",
    "tools/mutate.py"
@@ -2123,7 +2123,7 @@
  "308": {
   "날짜": "2026-10-20",
   "읽음": true,
-  "지문": "9f6a18aadca4c955",
+  "지문": "fd13fb1bfc916f3e",
   "파일": [
    "tools/check_speech.py",
    "tools/verify.sh"
@@ -2151,10 +2151,21 @@
  "310": {
   "날짜": "2026-10-20",
   "읽음": true,
-  "지문": "be0c5a1b54f6c8ce",
+  "지문": "e0fa19fb9fc83690",
   "파일": [
    "docs/DECISIONS.md",
    "docs/related.md"
+  ]
+ },
+ "311": {
+  "날짜": "2026-10-20",
+  "읽음": true,
+  "지문": "1d56501156726b53",
+  "파일": [
+   "tools/check_scope.py",
+   "tools/check_ways.py",
+   "seshat/__init__.py",
+   "tools/verify.sh"
   ]
  },
  "32": {
@@ -2750,7 +2761,7 @@
  "M5": {
   "날짜": "",
   "읽음": true,
-  "지문": "54be30fe87e76399",
+  "지문": "6c692bcdc0154ac4",
   "파일": [
    "tools/verify.sh"
   ]
