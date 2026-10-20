@@ -65,3 +65,20 @@ def 터지는_백엔드(monkeypatch):
 
     monkeypatch.setitem(backends.REGISTRY, "boom", (터진다, "seshat-boom"))
     return "boom"
+
+
+@pytest.fixture
+def 죽는_백엔드(monkeypatch):
+    """**부르면 `SystemExit` 을 던지는** 백엔드를 잠시 등록한다(DECISIONS §312).
+
+    ★ **이것이 흔한 쪽이다.** `backends.py` 의 실패 열셋이 전부 `SystemExit` 이다 —
+      ollama 가 꺼졌거나, 거절했거나, 연결이 끊겼거나, 늦었거나, AWS 가 거절한 자리.
+      `터지는_백엔드` 의 `RuntimeError` 는 **드문 쪽**이고, 그것만 재면 **흔한 쪽이
+      안 재진다.** 2026-10-20 감사가 그 구멍을 재현했다.
+    ★ 여기도 비밀처럼 보이는 글자를 넣는다 — 안 새는지 같은 자리에서 본다.
+    """
+    def 죽는다(texts, terms):
+        raise SystemExit("ollama 에 닿지 못한다 — token=비밀값456 /home/fox/.ollama")
+
+    monkeypatch.setitem(backends.REGISTRY, "dead", (죽는다, "seshat-dead"))
+    return "dead"

@@ -284,7 +284,7 @@
  "131": {
   "날짜": "2026-09-27",
   "읽음": true,
-  "지문": "fc16d9e358cd5df4",
+  "지문": "ec48e5cdb9a3bfab",
   "파일": [
    "tests/test_gate.py",
    ".github/workflows/gpu-eval.yml"
@@ -627,7 +627,7 @@
  "168": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "e53dea11b193895b",
+  "지문": "ba30154c38390c42",
   "파일": [
    "seshat/evaluate.py",
    "tools/mine_terms.py",
@@ -669,7 +669,7 @@
  "171": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "1ab0774379bc1e61",
+  "지문": "011dae146d4c72cb",
   "파일": [
    "seshat/ontology.py",
    "seshat/evaluate.py",
@@ -709,7 +709,7 @@
  "174": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "ce335664acb47c40",
+  "지문": "e75d9c9311f7f7bf",
   "파일": [
    "seshat/evaluate.py",
    "tests/test_evaluate.py::test_문이_막을_때_열린_가설을_같이_찍는다"
@@ -889,7 +889,7 @@
  "192": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "fd64cdbaaee20c5d",
+  "지문": "dd66e17b555d0c25",
   "파일": [
    "docs/related.md",
    "seshat/evaluate.py"
@@ -1253,7 +1253,7 @@
  "228": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "e1fecb2a3a1f5b7a",
+  "지문": "788c8fa00b0ae593",
   "파일": [
    "tools/labels.py",
    "tests/test_labels.py::test_머리줄이_없는_답은_첫_줄을_안_먹는다",
@@ -1294,7 +1294,7 @@
  "231": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "d999b9b98b9cb9ea",
+  "지문": "f3c071de28ab04b3",
   "파일": [
    "docs/related.md",
    "docs/hypotheses.md",
@@ -1326,7 +1326,7 @@
  "234": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "bce79e41ef38af98",
+  "지문": "0865db7359a93ca1",
   "파일": [
    "docs/DECISIONS.md",
    "docs/PLAN.md",
@@ -1405,7 +1405,7 @@
  "241": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "c4680e8e5b80b965",
+  "지문": "3cd6d73efa15133b",
   "파일": [
    "tools/check_numbers.py",
    "docs/DECISIONS.md"
@@ -1818,7 +1818,7 @@
  "280": {
   "날짜": "2026-10-02",
   "읽음": false,
-  "지문": "1d23a3ab88a7b3db",
+  "지문": "1983d5b83493e69f",
   "파일": [
    "tests/test_workflows.py::test_워크플로가_가설_번호를_안_박는다",
    "tests/test_workflows.py::test_GPU_작업은_한_인터프리터로_돈다",
@@ -2111,6 +2111,17 @@
    "tools/verify.sh"
   ]
  },
+ "306": {
+  "날짜": "2026-10-14",
+  "읽음": false,
+  "지문": "42c831a24ba2b0a2",
+  "파일": [
+   "seshat/serve.py",
+   "tests/conftest.py",
+   "tests/test_serve.py",
+   "tools/check_crashes.py"
+  ]
+ },
  "307": {
   "날짜": "2026-10-19",
   "읽음": true,
@@ -2151,7 +2162,7 @@
  "310": {
   "날짜": "2026-10-20",
   "읽음": true,
-  "지문": "e0fa19fb9fc83690",
+  "지문": "94131fdbf6c2a4a0",
   "파일": [
    "docs/DECISIONS.md",
    "docs/related.md"
@@ -2160,12 +2171,32 @@
  "311": {
   "날짜": "2026-10-20",
   "읽음": true,
-  "지문": "1d56501156726b53",
+  "지문": "b54ba93d1f0bb0a3",
   "파일": [
    "tools/check_scope.py",
    "tools/check_ways.py",
    "seshat/__init__.py",
    "tools/verify.sh"
+  ]
+ },
+ "312": {
+  "날짜": "2026-10-20",
+  "읽음": false,
+  "지문": "943c2c349cbfc1b4",
+  "파일": [
+   "seshat/serve.py",
+   "tests/conftest.py",
+   "tests/test_serve.py"
+  ]
+ },
+ "313": {
+  "날짜": "2026-10-20",
+  "읽음": false,
+  "지문": "f2f6a4183988184b",
+  "파일": [
+   "SECURITY.md",
+   ".github/workflows/gpu-eval.yml",
+   "seshat/evaluate.py"
   ]
  },
  "32": {
@@ -2728,7 +2759,7 @@
  "M10": {
   "날짜": "",
   "읽음": false,
-  "지문": "467b216f3d4454b5",
+  "지문": "a15844df09e947eb",
   "파일": [
    ".github/workflows/gpu-eval.yml"
   ]
@@ -2753,7 +2784,7 @@
  "M3": {
   "날짜": "",
   "읽음": false,
-  "지문": "9e821cd57eac0a6e",
+  "지문": "5f18950f2967e478",
   "파일": [
    "seshat/evaluate.py"
   ]

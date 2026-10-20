@@ -128,3 +128,31 @@ def test_들머리의_기본값이_선언과_같다(monkeypatch):
                                     _가짜())[1])
     assert serve.main([]) == 0
     assert 받은것 == {"backend": "echo", "host": "127.0.0.1", "port": 8100, "token": ""}
+
+
+# ── 백엔드가 `SystemExit` 으로 죽는 자리 (DECISIONS §312) ──────────────────
+# ★ **§306 이 고쳤다는 것이 흔한 실패를 안 덮고 있었다.** `serve.py` 가 `except
+#   Exception` 이었고 `backends.py` 의 실패 열셋은 전부 `SystemExit` 이다 —
+#   `BaseException` 이라 그 그물을 **그냥 지나간다.** 주석은 「갈래를 안 가린다」
+#   고 적혀 있었다. **주석이 거짓이면 다음 사람이 그 자리를 안 본다.**
+
+def test_백엔드가_죽어도_연결을_끊지_않고_502_를_낸다(server, 죽는_백엔드):
+    st, out = _post(server(죽는_백엔드), {"texts": ["a"]})
+    assert st == 502, "SystemExit 이 그물을 지나가 응답이 없었다"
+    assert out["error"] == "backend_failed"
+    assert out["kind"] == "SystemExit"
+
+
+def test_죽은_뒤에도_서버가_산다(server, 죽는_백엔드):
+    url = server(죽는_백엔드)
+    assert _post(url, {"texts": ["a"]})[0] == 502
+    with urllib.request.urlopen(url + "/health", timeout=5) as r:
+        assert r.status == 200 and json.loads(r.read())["status"] == "ok"
+
+
+def test_죽을_때도_메시지를_안_싣는다(server, 죽는_백엔드):
+    # ★ `SystemExit` 의 메시지는 **사람에게 고치는 법을 알려 주려고** 길다 —
+    #   경로 · 모델 인자 · 드물게 자격증명이 거기 산다. 그래서 더 새면 안 된다.
+    st, out = _post(server(죽는_백엔드), {"texts": ["a"]})
+    글 = json.dumps(out, ensure_ascii=False)
+    assert st == 502 and "비밀값456" not in 글 and ".ollama" not in 글, 글

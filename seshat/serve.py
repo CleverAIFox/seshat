@@ -88,9 +88,20 @@ def make_handler(fn: backends.Backend, model: str, token: str):
             # ★ **몸통에는 예외 이름만 싣는다.** 메시지에는 경로 · 모델 인자 · 드물게는
             #   자격증명까지 들어온다. 부른 쪽에 필요한 것은 **갈래**이고, 자세한 것은
             #   역추적으로 이쪽 로그에 남긴다.
+            # ★ **`SystemExit` 을 같이 잡는다**(DECISIONS §312). `backends.py` 의 실패
+            #   열셋은 **전부 `SystemExit`** 이다 — ollama 가 꺼졌거나 · 거절했거나 ·
+            #   연결이 끊겼거나 · 늦었거나 · AWS 가 거절한 자리. 그것은 `BaseException`
+            #   이라 `except Exception` 을 **그냥 지나간다.** §306 이 고쳤다고 적은 뒤에도
+            #   **흔한 실패는 그대로 연결을 끊고 있었다.**
+            # ★ **`SystemExit` 을 버리지 않는다 — 번역한다.** 그 예외는 사람에게 고치는
+            #   법을 알려 주려고 도구 쪽에서 쓰는 것이고(「ollama 를 켠다」), 도구에서는
+            #   그대로 두는 것이 옳다. **서버는 죽으면 안 되는 경계**라 여기서만 응답으로
+            #   바꾼다 — 고치는 글은 역추적과 함께 이쪽 로그에 남는다.
+            # ★ **`BaseException` 으로 넓히지 않는다.** `KeyboardInterrupt` 까지 먹으면
+            #   Ctrl-C 가 요청 하나로 삼켜진다. 넓히는 것과 맞게 넓히는 것은 다르다.
             try:
                 out = fn(texts, terms)
-            except Exception as e:                       # 갈래를 안 가린다 — 무엇이든 응답으로 바꾼다
+            except (Exception, SystemExit) as e:         # 갈래를 안 가린다 — 무엇이든 응답으로 바꾼다
                 traceback.print_exc(file=sys.stderr)
                 self.log_message("백엔드가 터졌다 — %s", type(e).__name__)
                 return self._send(502, {"error": "backend_failed",

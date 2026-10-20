@@ -602,8 +602,8 @@ def conditions(a, rows: list[dict], 코드: dict | None = None) -> dict:
            "backend": a.backend or None,
            "weights": backends.WEIGHTS.get(a.backend or ""),
            "decoding": backends.DECODING_OF.get(a.backend or "")}
-    if a.backend == "aws-translate":
-        out["cost_usd"] = round(chars * 15 / 1_000_000, 4)   # 100만 자에 USD 15 — 인용(2026-09)
+    if (단가 := backends.PRICE_PER_MCHAR.get(a.backend or "")) is not None:  # 값표가 정본(§313)
+        out["cost_usd"] = round(chars * 단가 / 1_000_000, 4)   # 이름 하나로 거르면 합성 팔이 샌다
     if (a.backend or "") in backends.OLLAMA_OF:      # 이름으로 짐작하지 않는다(DECISIONS §45)
         out["ollama"] = ollama_placement()
     if (a.backend or "") in backends.REPAIR_ARMS:   # 처치가 일했는지를 결과가 말한다(DECISIONS §60)
