@@ -533,6 +533,7 @@ thoth 의 sweep · doctor(`OLLAMA_KEEP_ALSO`)가 본다. 두 저장소가 같은
 | `tools/check_rules.py` | **MASTER 의 ★ 규칙 번호**(`§11-3`) — 유일 · 오름차순 · 가리킨 번호가 실재하나(DECISIONS §230) |
 | `tools/check_size.py` | **파일이 배치마다 조금씩 늘지 않나** — 상한 600 · 넘는 여섯은 예외표에 수로 적는다. **늘어도 줄어도 운다**(파이어레인 `sizecheck.py` · DECISIONS §286) |
 | `tools/check_prose.py` | **문서명 없는 `§N` 이 풀리나** · 빈 줄 뒤에 홀로 선 표 줄 · `PLAN #N` 없는 빈 약속(DECISIONS §282) |
+| `tools/check_speech.py` | **결정 기록이 사람 말을 그대로 담았나** — 인용 **덩어리**를 꺼내 **말투**(해체 종결 · 해체 의문 · 채팅 기호)로 가른다. **욕설 사전은 주축이 아니라 받침**이다 : 실측으로 말투가 15 중 14 를 물고 사전은 **1**(`?` 없는 해체 의문)을 더 문다 — 사전을 주축에 두면 **1 만 잡는다**(DECISIONS §308). **발화 동사로는 안 잡는다** — 하토르 실측 50 중 25 가 오탐이다. 탈출구는 `<!--말-ok-->`(발화가 자료인 자리). **소급 바닥 없음 — 전수 0** |
 | `tools/check_docs.py` | 문서 ↔ 문서 — 문체 · 절 · PLAN 표 · 참조 · DECISIONS · **문서 지도** · **도구 목록**. `--fix-index` 가 DECISIONS 색인을 다시 쓴다 |
 | `tools/doc_fsck.py` | 문서 ↔ 실물 — 경로 · 테스트 · 아무도 안 부르는 도구 |
 | `tools/check_hypotheses.py` | 가설 대장 — 실험의 문 |

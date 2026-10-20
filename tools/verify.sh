@@ -76,6 +76,10 @@ append_only_step() {  # 이름은 ASCII 다 — shellcheck 과 test_셸의_변�
 step 추가만             append_only_step
 step check_rules        uv run python tools/check_rules.py
 step check_prose        uv run python tools/check_prose.py
+# ★ **결정 기록은 사람 말을 그대로 담지 않는다**(DECISIONS §199). 축은 **말투** 하나다 —
+#   욕설 사전을 주축에 두면 실측 15 중 **1** 만 잡는다. 사전은 말투가 못 가르는
+#   잔여(`?` 없는 해체 의문)를 받치는 그물로만 쓴다. **소급 바닥이 없다 — 전수 0 이다.**
+step speech              uv run python tools/check_speech.py
 step check_size         uv run python tools/check_size.py
 step numbers            uv run python tools/check_numbers.py
 step docgen             uv run python tools/docgen.py
