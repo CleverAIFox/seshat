@@ -2,7 +2,7 @@
 
   python3 tools/slice.py runs/H-045-4b-d001-*.jsonl --set data/domain/d001.jsonl
   python3 tools/slice.py A.jsonl B.jsonl --set …            두 팔을 축마다 나란히
-  python3 tools/slice.py --labels labels/d001-60.claude.jsonl --set …   사람 판정을 축으로
+  python3 tools/slice.py --labels labels/d001-60.claude.jsonl --set …   외부 LLM 판정을 축으로
 
 ★ **새로 재지 않는다.** 이미 있는 결과 파일을 다시 셀 뿐이라 모델도 돈도 안 든다. 가설의 문을
   안 지나가는 까닭이다 — 이 도구는 잰 것을 보는 도구이지 재는 도구가 아니다.

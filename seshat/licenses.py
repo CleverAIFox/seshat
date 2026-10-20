@@ -46,7 +46,7 @@ LEDGER: dict[str, tuple[str, str, str, str]] = {
     # ★ Apache-2.0 · 문 없음. mT5 기반이고 참조 있는 쪽과 **참조 없는 쪽(QE)을 한 모델이 한다** —
     #   `d002` 에는 정답이 없으므로 이 저장소가 쓸 수 있는 것은 QE 쪽뿐이다.
     #   ⚠ **영→한으로 맞춰진 자가 아니다** — WMT'15–22 의 DA · MQM 으로 미세조정했고 논문이 든
-    #   평가는 en-de · en-es · ja-zh 다. **그래서 H-084 가 사람 라벨에 대고 잰다**(2026-09-30)
+    #   평가는 en-de · en-es · ja-zh 다. **그래서 H-084 가 외부 LLM 라벨에 대고 잰다**(2026-09-30)
     "google/metricx-24-hybrid-large-v2p6": ("Apache-2.0", "yes", "yes",
                                             "huggingface.co/google/metricx-24-hybrid-large-v2p6 · "
                                             "github.com/google-research/metricx · 2026-09-30"),

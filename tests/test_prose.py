@@ -382,6 +382,31 @@ def test_check_빈약속이_행을_든_약속에는_조용하다(tmp_path):
     assert CP.check_빈약속(root) == []
 
 
+# ★ **표지를 글자로 안 적는다** — 이 시험 파일이 제 관문에 걸린다(§309 와 같은 자리).
+_옛 = "사람 " + "판정"
+_표지 = "<!--" + "옛이름-ok" + "-->"
+
+
+def test_check_옛이름이_표지_없는_옛_이름을_문다(tmp_path):
+    root = _문서나무(tmp_path, extra={"docs/x.md": f"자가 {_옛}과 ρ 0.57 이다" + NL})
+    난것 = CP.check_옛이름(root)
+    assert len(난것) == 1, 난것
+    assert "docs/x.md:1" in 난것[0]
+
+
+def test_check_옛이름이_표지_붙은_줄은_넘긴다(tmp_path):
+    # ★ **그 낱말이 뜻을 갖는 자리가 있다** — 「그 말에 갇혔다」 를 적은 절이 그렇다.
+    root = _문서나무(tmp_path, extra={"docs/x.md": f"{_옛} 이라는 말에 갇혔다  {_표지}" + NL})
+    assert CP.check_옛이름(root) == []
+
+
+def test_check_옛이름이_빈_표지를_문다(tmp_path):
+    # ★ **양방향이다**(§255). 갚은 자리에 표지가 남으면 다음 사람이 아직 있는 줄 안다.
+    root = _문서나무(tmp_path, extra={"docs/x.md": f"이제 외부 LLM 판정이라 적는다  {_표지}" + NL})
+    난것 = CP.check_옛이름(root)
+    assert len(난것) == 1 and "표지가 비었다" in 난것[0], 난것
+
+
 def test_main_이_위반이_있으면_1_이다(monkeypatch, capsys):
     # ★ **`main` 을 `return 0` 으로 바꿔도 아무도 안 울던 자리다.** 시험이 속 함수만
     #   부르고 도구를 통째로 돌려 보는 자리가 없었다 — 「검사를 껐는데 초록」 의 곧은 꼴.

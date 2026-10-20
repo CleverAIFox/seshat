@@ -380,6 +380,47 @@ def 날짜만있는줄(글: str) -> list[int]:
     return 난것
 
 
+# ★ **판정자는 사람이 아니다**(DECISIONS §309). `labels.py` 가 받는 것은
+#   `--judges gpt,gemini,pplx` · `--judge claude` — **넷 다 LLM** 이고, 사람이 하는 일은
+#   **눈가림 표를 붙이고 받아 적는 것**이다. 그런데 문서가 **서른한 곳**에서 그것을
+#   사람이 내린 판정이라고 적고 있었다. **범주를 틀린 말**이라 밖에서 읽으면 무너진다.
+# ★ **낱말을 돌 때 만든다.** 글자로 적으면 **이 파일이 제 관문에 걸린다** — 자기 참조는
+#   thoth 에서 두 번 겪은 꼴이다.
+# ★ **장부를 줄 번호로 들지 않는다.** 첫 판이 그랬는데 **위에 한 줄만 더해도 어긋나고**,
+#   합성 나무에서는 그 줄이 아예 없어 **양방향 쪽이 헛돈다**(시험 셋이 그 자리에서 터졌다).
+#   `check_speech` 와 같은 **표지**를 쓴다 — 자리를 안 세고 **그 줄에 달린 표지**를 본다.
+옛이름 = tuple("사람 " + x for x in ("판정", "라벨"))
+옛이름OK = "<!--" + "옛이름-ok" + "-->"   # 글자로 적으면 이 파일이 제 관문에 걸린다
+"""표지. 그 낱말이 **뜻을 갖는 자리**에만 단다 — 발견을 적은 절과 빚 기록, 닫힌 행 이름."""
+
+
+def check_옛이름(root: Path) -> list[str]:
+    """옛 이름이 표지 없이 쓰였나. **빈 목록이 통과다.**
+
+    ★ **양방향이다**(§255). 표지만 남고 그 낱말이 없으면 **다음 사람이 아직 있는 줄 안다.**
+    """
+    난것 = []
+    for p in _대상(root):
+        rel = p.relative_to(root).as_posix()
+        try:
+            줄들 = p.read_text(encoding="utf-8").split("\n")
+        except (OSError, UnicodeDecodeError) as e:
+            # ★ **건너뛰되 말을 한다**(§255). 조용히 넘기면 **고장이 자국을 안 남기고**,
+            #   그러면 이 검사의 초록이 「깨끗하다」 인지 「안 봤다」 인지 모른다.
+            난것.append(f"{rel} 를 못 읽어 안 봤다 — {type(e).__name__}")
+            continue
+        for i, 줄 in enumerate(줄들, 1):
+            있다 = any(w in 줄 for w in 옛이름)
+            표지 = 옛이름OK in 줄
+            if 있다 and not 표지:
+                난것.append(f"{rel}:{i} 가 옛 이름을 쓴다 — "
+                            f"판정자는 외부 LLM 넷이다(DECISIONS §309). "
+                            f"그 낱말이 뜻을 갖는 자리면 {옛이름OK} 를 단다")
+            elif 표지 and not 있다:
+                난것.append(f"{rel}:{i} 의 표지가 비었다 — 그 줄에 옛 이름이 없다. 표지를 뗀다")
+    return 난것
+
+
 def check_날짜(root: Path) -> list[str]:
     글 = (root / "docs/MASTER.md").read_text(encoding="utf-8")
     return [f"docs/MASTER.md:{n} 날짜를 적고 **그 경위가 어디 사는지**는 안 적었다 — "
@@ -498,7 +539,7 @@ def main(argv: list[str] | None = None) -> int:
         print(__doc__)
         return 0
     fails = (check_맨절(ROOT) + check_표깨짐(ROOT)
-             + check_정본하나(ROOT) + check_낱말(ROOT)
+             + check_정본하나(ROOT) + check_낱말(ROOT) + check_옛이름(ROOT)
              + check_날짜(ROOT)
              + check_CI밖(ROOT) + check_빈약속(ROOT))
     for f in fails:
