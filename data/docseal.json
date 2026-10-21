@@ -414,7 +414,7 @@
  "145": {
   "날짜": "2026-09-28",
   "읽음": false,
-  "지문": "fa9a4a74f3a9d17c",
+  "지문": "c6c7d1c5de305fe7",
   "파일": [
    "tests/test_gate.py::test_자가_바뀌면_막는다",
    "tests/test_rescore.py::test_자_판은_물려받지_않고_지금_것을_적는다",
@@ -1326,7 +1326,7 @@
  "234": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "0865db7359a93ca1",
+  "지문": "22e69bc6e9115586",
   "파일": [
    "docs/DECISIONS.md",
    "docs/PLAN.md",
@@ -1405,7 +1405,7 @@
  "241": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "3cd6d73efa15133b",
+  "지문": "a70dcc182810f39c",
   "파일": [
    "tools/check_numbers.py",
    "docs/DECISIONS.md"
@@ -1789,7 +1789,7 @@
  "278": {
   "날짜": "2026-10-01",
   "읽음": false,
-  "지문": "e525c94223563411",
+  "지문": "fc43eabcaac604f4",
   "파일": [
    "docs/colab.md"
   ]
@@ -1869,7 +1869,7 @@
  "284": {
   "날짜": "2026-10-03",
   "읽음": true,
-  "지문": "f89da4ebc2addcad",
+  "지문": "e4ed49b4d572a0ef",
   "파일": [
    "tools/check_prose.py::check_낱말",
    "tools/check_prose.py::사전",
@@ -1881,7 +1881,7 @@
  "285": {
   "날짜": "2026-10-03",
   "읽음": true,
-  "지문": "c390f876d4218089",
+  "지문": "007e4eeba330f30e",
   "파일": [
    "tools/check_prose.py::check_날짜",
    "tools/check_prose.py::check_CI밖",
@@ -2009,7 +2009,7 @@
  "296": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "f039e942a6b571eb",
+  "지문": "066df58b2491775c",
   "파일": [
    "tools/doc_fsck.py",
    "tools/check_docs.py",
@@ -2162,7 +2162,7 @@
  "310": {
   "날짜": "2026-10-20",
   "읽음": true,
-  "지문": "94131fdbf6c2a4a0",
+  "지문": "3d373c241d081a56",
   "파일": [
    "docs/DECISIONS.md",
    "docs/related.md"
@@ -2192,11 +2192,24 @@
  "313": {
   "날짜": "2026-10-20",
   "읽음": false,
-  "지문": "f2f6a4183988184b",
+  "지문": "eae7baef5654dc11",
   "파일": [
    "SECURITY.md",
    ".github/workflows/gpu-eval.yml",
    "seshat/evaluate.py"
+  ]
+ },
+ "314": {
+  "날짜": "2026-10-21",
+  "읽음": false,
+  "지문": "99a64248f8be5b75",
+  "파일": [
+   "tests/test_evaluate.py",
+   "tools/mine_terms.py",
+   "tools/check_secrets.py",
+   "docs/colab.md",
+   "docs/MASTER.md",
+   "tools/mutate.py"
   ]
  },
  "32": {

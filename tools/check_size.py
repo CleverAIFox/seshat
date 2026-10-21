@@ -65,7 +65,7 @@ ROOT = Path(__file__).resolve().parent.parent
     "seshat/evaluate.py": 828,
     "tests/test_gate.py": 823,
     "seshat/backends.py": 740,
-    "tests/test_evaluate.py": 668,
+    "tests/test_evaluate.py": 695,
 }
 
 
