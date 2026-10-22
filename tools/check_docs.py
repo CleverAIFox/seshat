@@ -1,9 +1,12 @@
-# ★ **thoth 의 `tools/check_docs.py` 사본이다**(DECISIONS §5). 고칠 것이 있으면 thoth 에서 고치고
-#   다시 복사한다. 이 저장소에 맞춘 차이는 `# seshat:` 표시 줄뿐이다.
+# ★ **thoth `tools/check_docs.py` 에서 갈라진 가지다 — 사본이 아니다**(DECISIONS §318).  # seshat:
+#   재 보니 여기에만 있는 함수 7(84줄) · 길이가 갈린 함수 5 이고, `# seshat:` 표시는 7줄뿐이었다.  # seshat:
 """문서 규약 검사 — 2판(DECISIONS §111).
 
   python3 tools/check_docs.py          검사한다. 위반이면 1, 도구 고장이면 2
   python3 tools/check_docs.py --list   무엇을 보는지 찍는다
+
+★ **밖 — 글이 참인지도, 지도가 든 자리가 실재하는지도 안 본다.** 꼴 · 번호 · 이름만 본다 —
+  `check_map` 은 **이름으로만** 견주고 자리는 `check_prose::지도의_자리` 가 본다(DECISIONS §317).
 
 ★ 단독 작업이라 강제자가 불필요하다는 초기 판단은 틀렸다. 세션이 바뀌면
   문맥이 초기화되므로 실제로는 여러 손이 같은 문서를 업서트하는 상황이고,
@@ -391,9 +394,6 @@ def check_map(root: Path, fails: list) -> None:
             fails.append(f"{MAP} 에 `docs/{자리}` 가 없다 — 지도에 없는 문서는 아무도 안 연다")
     for 유령 in sorted(적힌 - set(실물)):
         fails.append(f"{MAP} 이 없는 `{유령}` 을 든다")
-    for 축 in ("now", "next", "why"):
-        if f"{축}/" not in 글:
-            fails.append(f"{MAP} 에 축 `{축}/` 이 없다")
 
 
 def check_tools_listed(root: Path, master: str, fails: list) -> None:
@@ -415,7 +415,7 @@ def check_tools_listed(root: Path, master: str, fails: list) -> None:
 def check_plan_closed(root: Path, plan: str, dec: str, fails: list) -> None:
     """**닫은 행의 번호가 DECISIONS 어딘가에 남아 있나**(DECISIONS §221).
 
-    ★ PLAN 은 닫힌 행을 **지운다** — 닫힘 표식을 만들면 표가 무덤이 된다(§0 의 어휘 규칙).
+    ★ PLAN 은 닫힌 행을 **지운다** — 닫힘 표식을 만들면 표가 무덤이 된다(PLAN §0 의 어휘 규칙).
       그러면 그 빚의 기록은 **DECISIONS 한 벌**뿐이고, 그 한 벌이 없으면 **영 벌**이 된다.
     ★ 2026-09-29 `#46` 이 그렇게 샜다. 갚는 절을 쓰며 본문의 「(PLAN #46)」 을 「§213」 으로
       **고쳐** 버렸고, 행은 지워졌는데 번호는 아무 데도 안 남았다. **옮기는 것과 지우는 것은 다르다.**

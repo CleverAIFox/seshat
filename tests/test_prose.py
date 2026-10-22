@@ -423,3 +423,36 @@ def test_main_이_깨끗하면_0_이다(capsys):
 def test_main_이_list_에서는_머리말만_낸다(capsys):
     assert CP.main(["--list"]) == 0
     assert "tools/check_prose.py" in capsys.readouterr().out
+
+
+# ───────────── 지도가 든 자리(DECISIONS §317) ─────────────
+
+def test_없어진_폴더를_가리키면_걸린다():
+    """★ **관문이 정반대를 우기고 있었다**(DECISIONS §317).
+
+    `check_docs.check_map` 이 「지도에 `now/` · `next/` · `why/` 가 **있어야** 한다」 고
+    셌다. §288 이 2026-10-04 에 그 폴더를 없앤 뒤로 **지도를 고치려는 사람이 빨강을
+    봤다** — 관문이 버려진 상태를 열여드레 붙잡았다.
+    """
+    assert any("now/" in x for x in CP.지도의_자리("`now/MASTER.md` 를 본다", ROOT))
+
+
+def test_이름은_맞고_자리가_틀린_것을_잡는다():
+    """★ **이름으로만 견주면 `now/MASTER.md` 가 통과한다** — 자리를 적는 것이 지도의 일이다."""
+    난것 = CP.지도의_자리("`옛자리/MASTER.md` 의 절", ROOT)
+    assert any("옛자리/MASTER.md" in x for x in 난것), 난것
+
+
+def test_실재하는_자리는_안_걸린다():
+    """★ **다 우는 검사는 꺼진다.**"""
+    assert CP.지도의_자리("`docs/MASTER.md` 의 절 · `docs/PLAN.md` 의 행", ROOT) == []
+
+
+def test_디렉터리가_없는_이름은_안_본다():
+    """맨 `papers.md` 는 자리가 아니라 이름이다 — 지도의 그림 칸이 그 꼴이다."""
+    assert CP.지도의_자리("`papers.md` 논문 대장", ROOT) == []
+
+
+def test_저장소의_지도가_실재하는_자리만_든다():
+    """★ **합성만 물으면 실물이 또 달아난다** — 진짜 지도로 센다."""
+    assert CP.check_지도자리(ROOT) == []

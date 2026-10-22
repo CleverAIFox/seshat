@@ -288,15 +288,17 @@ def test_빨간_행은_막는_문장을_든다():
 
 # ---------- 지도 · 색인 · 도구 목록(DECISIONS §199) ----------
 
-지도 = ("# 문서 지도\n\n```\ndocs/\n  now/    MASTER.md       지금\n"
-        "          related.md      결과\n  next/   PLAN.md         앞으로\n"
-        "  why/    DECISIONS.md    왜\n```\n")
+# ★ **이 고정자리가 없어진 폴더를 짓고 있었다**(DECISIONS §317). §288 이 2026-10-04 에
+#   `now/` · `next/` · `why/` 를 폈는데 **시험이 그 꼴을 계속 만들었고**, 관문은 그 꼴을
+#   **요구**하고 있었다. 셋이 서로를 붙들어 열여드레를 살았다. 평평하게 짓는다.
+지도 = ("# 문서 지도\n\n```\ndocs/\n  MASTER.md       지금\n"
+        "  related.md      결과\n  PLAN.md         앞으로\n"
+        "  DECISIONS.md    왜\n```\n")
 
 
 def _축(tmp_path, 지도글=지도, 더=()):
-    for 축 in ("now", "next", "why"):
-        (tmp_path / "docs" / 축).mkdir(parents=True)
-    for 자리 in ("now/MASTER.md", "now/related.md", "next/PLAN.md", "why/DECISIONS.md", *더):
+    (tmp_path / "docs").mkdir(parents=True, exist_ok=True)
+    for 자리 in ("MASTER.md", "related.md", "PLAN.md", "DECISIONS.md", *더):
         (tmp_path / "docs" / 자리).write_text("x\n", encoding="utf-8")
     (tmp_path / "docs/README.md").write_text(지도글, encoding="utf-8")
     return tmp_path
@@ -311,7 +313,7 @@ def test_지도가_실물과_맞으면_조용하다(tmp_path):
 def test_지도에_없는_문서가_걸린다(tmp_path):
     """★ 지도에 없는 문서는 아무도 안 연다 — 흩어짐은 파일이 아니라 **안 적힌 파일**이다."""
     f = []
-    cd.check_map(_축(tmp_path, 더=("now/grammar.md",)), f)
+    cd.check_map(_축(tmp_path, 더=("grammar.md",)), f)
     assert any("grammar.md" in x for x in f)
 
 

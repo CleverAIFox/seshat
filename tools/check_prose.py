@@ -504,6 +504,35 @@ def _대상(root: Path) -> list[Path]:
     return out
 
 
+# ── 9. 지도가 든 자리(DECISIONS §317) ───────────────────────────────────────
+#: 지도가 백틱으로 든 **디렉터리가 있는** `.md` 자리. 맨 `papers.md` 는 이름이지 자리가 아니다
+_지도자리 = re.compile(r"`([\w가-힣./-]+/[\w가-힣-]+\.md)`")
+#: §288 이 편 폴더. **지도에 있으면 운다** — 종전 관문은 **있어야 한다**고 우겼다(§317)
+_유령축 = ("now/", "next/", "why/")
+지도 = "docs/README.md"
+
+
+def 지도의_자리(글: str, root: Path) -> list[str]:
+    """지도가 든 자리 중 **실재하지 않는 것**(DECISIONS §317).
+
+    ★ **이름만 견주면 `now/MASTER.md` 가 통과한다.** 이름은 맞고 자리가 틀렸다 — **자리를
+      적는 것이 지도의 일**인데 그 자리를 아무도 안 봤다(§288 이 편 폴더를 열여드레 가리켰다).
+    ★ **밖 — `docs/` 를 붙여도 되고 안 붙여도 된다.** 지도가 `docs/` 안에 사니 둘 다 맞다.
+    ★ **밖 — 디렉터리가 없는 이름은 안 본다.** 맨 `papers.md` 는 자리가 아니다.
+    """
+    흠 = [f"{지도} 이 없는 폴더 `{x}` 를 가리킨다 — §288 이 폈다. `docs/` 밑 평평하게 적는다"
+          for x in _유령축 if x in 글]
+    return 흠 + [f"{지도} 이 없는 자리 `{x}` 를 가리킨다"
+                 for x in sorted(set(_지도자리.findall(글)))
+                 if not (root / x).is_file() and not (root / "docs" / x).is_file()]
+
+
+def check_지도자리(root: Path) -> list[str]:
+    p = root / 지도
+    return (지도의_자리(p.read_text(encoding="utf-8"), root) if p.is_file()
+            else [f"{지도} 가 없다 — 지도가 없으면 새 문서가 아무 데나 생긴다"])
+
+
 def _canary() -> None:
     """정규식이 살아 있는가. **양성 대조다.** 죽었으면 2 로 끝난다 — 위반(1)과 가른다."""
     probes = {
@@ -525,6 +554,10 @@ def _canary() -> None:
         "울안명령 — 울 안만 센다": 울밖명령("```bash\npython3 tools/x.py\n```\n산문의 `tools/y.py`\n") == [2],
         "빈약속 — 행이 있으면 통과": 빈약속("이 항목은 열려 있고 PLAN #47 가 그 자리다\n") == [],
         "빈약속 — 행이 없으면 잡는다": 빈약속("이 항목은 열려 있다.\n") == [(1, "열려 있다")],
+        # ★ **종전 관문은 정반대를 우겼다**(DECISIONS §317) — 없어진 폴더가 지도에
+        #   **있어야** 한다고 셌고, 그래서 지도를 고치면 빨개졌다. 둘을 같이 묻는다.
+        "지도자리 — 없는 자리를 잡는다": bool(지도의_자리("`now/MASTER.md` 를 본다", ROOT)),
+        "지도자리 — 있는 자리는 통과": 지도의_자리("`docs/MASTER.md` 를 본다", ROOT) == [],
     }
     죽은 = [k for k, ok in probes.items() if not ok]
     if 죽은:
@@ -541,13 +574,13 @@ def main(argv: list[str] | None = None) -> int:
     fails = (check_맨절(ROOT) + check_표깨짐(ROOT)
              + check_정본하나(ROOT) + check_낱말(ROOT) + check_옛이름(ROOT)
              + check_날짜(ROOT)
-             + check_CI밖(ROOT) + check_빈약속(ROOT))
+             + check_CI밖(ROOT) + check_빈약속(ROOT) + check_지도자리(ROOT))
     for f in fails:
         print(f"    {f}")
     if not fails:
         print("  맨 절 참조가 전부 풀린다 · 떨어진 표 줄 없음 · 명령의 정본이 한 곳"
               " · 사전에 죽은 낱말 없음 · 날짜마다 가리킨 자리 있음"
-              " · CI 밖이 전부 적혔다 · 빈 약속 없음")
+              " · CI 밖이 전부 적혔다 · 빈 약속 없음 · 지도가 든 자리가 전부 실재한다")
     return 1 if fails else 0
 
 
