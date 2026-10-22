@@ -309,7 +309,9 @@ def test_강제자_줄이_적어_둔_걸음_이름을_읽는다():
     assert DS._셸걸음("강제자 — `tools/verify.sh` 의 `scope` 단계") == {"tools/verify.sh": ["scope"]}
     assert DS._셸걸음("`tools/verify.sh` 의 `shellcheck_step` 과 `check_prose` 단계") == \
         {"tools/verify.sh": ["shellcheck_step", "check_prose"]}
-    assert DS._셸걸음("`tools/verify.sh` 의 `deadchecks`") == {"tools/verify.sh": ["deadchecks"]}
+    assert DS._셸걸음("`tools/verify.sh` 의 `deadchecks` 단계") == {"tools/verify.sh": ["deadchecks"]}
+    # ★ **「단계」 가 표식이다**(DECISIONS §322) — 없으면 걸음으로 안 읽는다.
+    assert DS._셸걸음("`tools/doctor.sh` 의 `PKG_N`") == {}
 
 
 def test_이름을_안_댄_줄에서는_걸음을_안_지어낸다():
@@ -372,9 +374,14 @@ def test_없는_걸음은_파일_전체에_묶인다(tmp_path):
     없는 이름에 묶으면 지문이 `"없다"` 로 **굳고**, 그 뒤로 그 파일을 아무리 고쳐도
     영영 안 운다. 사본(토트)의 강제자 줄이 「`tools/doctor.sh` 의 `PKG_N`」 처럼 적는데
     그 파일에 `step PKG_N` 이 없다 — 그대로 옮겼으면 그쪽 절들이 통째로 잠들었다.
+
+    ★ **합성으로 묻는다**(DECISIONS §322) — 제 저장소의 파일을 읽으면 **사본에서 거짓으로
+      죽는다.** 카나리아가 실제로 그렇게 죽었다.
     """
-    assert not DS._걸음이있나(ROOT / "tools/verify.sh", "없는걸음이다")
-    assert DS._걸음이있나(ROOT / "tools/verify.sh", "docseal")
+    샘 = tmp_path / "x.sh"
+    샘.write_text("step docseal  uv run python tools/docseal.py\n", encoding="utf-8")
+    assert not DS._걸음이있나(샘, "없는걸음이다")
+    assert DS._걸음이있나(샘, "docseal")
 
 
 def test_못_읽는_파일은_없다로_센다(tmp_path):

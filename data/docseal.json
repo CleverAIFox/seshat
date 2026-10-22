@@ -1141,7 +1141,7 @@
  "217": {
   "날짜": "2026-09-29",
   "읽음": true,
-  "지문": "2354d4a4fdf8b608",
+  "지문": "5a2a7b9c6ec2583e",
   "파일": [
    "tools/docseal.py",
    "docs/PLAN.md",
@@ -1329,7 +1329,7 @@
  "234": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "20fbf93da8b1bfd5",
+  "지문": "da1566371f4e630d",
   "파일": [
    "docs/DECISIONS.md",
    "docs/PLAN.md",
@@ -1408,7 +1408,7 @@
  "241": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "42bef823f6eb6678",
+  "지문": "ae4cb587d52a2fba",
   "파일": [
    "tools/check_numbers.py",
    "docs/DECISIONS.md"
@@ -1552,7 +1552,7 @@
  "255": {
   "날짜": "2026-10-01",
   "읽음": true,
-  "지문": "eac930653f0c4a3e",
+  "지문": "3f9541348a710df1",
   "파일": [
    "tools/check_deadchecks.py",
    "tests/test_deadchecks.py",
@@ -2013,7 +2013,7 @@
  "296": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "be8c6465f66af0bb",
+  "지문": "d6bb7f1fea4da558",
   "파일": [
    "tools/doc_fsck.py",
    "tools/check_docs.py",
@@ -2036,7 +2036,7 @@
  "298": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "fb6b335e41d6020c",
+  "지문": "3bb6052a1cd60d04",
   "파일": [
    "tools/docseal.py",
    "tests/test_docseal.py"
@@ -2045,7 +2045,7 @@
  "299": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "2decc92d8972d2a1",
+  "지문": "7d5d01a31be2d0ba",
   "파일": [
    "tools/docseal.py",
    "tests/test_docseal.py"
@@ -2072,7 +2072,7 @@
  "300": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "bf3c8697543f3664",
+  "지문": "1fb5897610a64944",
   "파일": [
    "tools/docseal.py",
    "tests/test_docseal.py"
@@ -2166,7 +2166,7 @@
  "310": {
   "날짜": "2026-10-20",
   "읽음": true,
-  "지문": "5cb4cbac7e428d3a",
+  "지문": "39ed380eac5183ff",
   "파일": [
    "docs/DECISIONS.md",
    "docs/related.md"
@@ -2175,7 +2175,7 @@
  "311": {
   "날짜": "2026-10-20",
   "읽음": true,
-  "지문": "79a50aa5f26bb5f3",
+  "지문": "4cb4d162fe94e02d",
   "파일": [
    "tools/check_scope.py",
    "tools/check_ways.py",
@@ -2228,7 +2228,7 @@
  "316": {
   "날짜": "2026-10-22",
   "읽음": false,
-  "지문": "8205ae5ee38ddfa1",
+  "지문": "121ac5dd73510efe",
   "파일": [
    "tools/docseal.py::_셸_지문",
    "tools/docseal.py::_셸_몸",
@@ -2253,7 +2253,7 @@
  "318": {
   "날짜": "2026-10-22",
   "읽음": false,
-  "지문": "a283249dc068e354",
+  "지문": "3102ac76dd74b966",
   "파일": [
    "tools/check_docs.py",
    "tools/check_size.py",
@@ -2286,7 +2286,7 @@
  "320": {
   "날짜": "2026-10-22",
   "읽음": false,
-  "지문": "d98e579148e6c549",
+  "지문": "099a04750e428f5e",
   "파일": [
    "tools/docseal.py::_셸_지문",
    "tools/docseal.py::로직_지문",
@@ -2297,13 +2297,24 @@
  "321": {
   "날짜": "2026-10-22",
   "읽음": false,
-  "지문": "197164f253d2ed49",
+  "지문": "71a25a306c232db1",
   "파일": [
    "tools/docseal.py::_걸음이있나",
    "tools/docseal.py::안풀리는_걸음",
    "tools/docseal.py::_셸걸음",
    "tools/docseal.py::_canary",
    "tests/test_docseal.py"
+  ]
+ },
+ "322": {
+  "날짜": "2026-10-23",
+  "읽음": false,
+  "지문": "9c71aff92bbe0ef8",
+  "파일": [
+   "tools/docseal.py::_canary",
+   "tools/docseal.py::_셸걸음",
+   "tests/test_docseal.py",
+   "docs/DECISIONS.md"
   ]
  },
  "33": {

@@ -150,7 +150,11 @@ def 로직_지문(p: pathlib.Path, 이름: str = "") -> str:
 
 #: 「`tools/verify.sh` 의 `scope` 단계」 · 「… 의 `shellcheck_step` 과 `check_prose` 단계」 —
 #: **사람이 이미 걸음 이름을 적어 뒀다**(DECISIONS §316). 기계가 그 줄을 안 읽고 있었다.
-_걸음말 = re.compile(r"`([\w./-]+\.sh)`\s*의\s+((?:`[^`\s]+`(?:\s*(?:와|과|·|,)\s*)?)+)(?:\s*단계)?")
+#: ★ **「단계」 라는 낱말이 표식이다**(DECISIONS §322). 그것을 없어도 되게 풀었더니 사본에서
+#:   「`tools/doctor.sh` 의 `PKG_N`」 처럼 **걸음이 아닌 이름**을 스물 줄 집었다 — 거기는
+#:   검사가 산문처럼 이어져 걸음이라는 것이 없다. **표식을 요구하면 그 저장소는 저절로
+#:   안 걸린다.** 좁히려면 사람이 그 낱말을 적는다 — 말하지 않은 것을 짐작하지 않는다.
+_걸음말 = re.compile(r"`([\w./-]+\.sh)`\s*의\s+((?:`[^`\s]+`(?:\s*(?:와|과|·|,)\s*)?)+)\s*단계")
 
 
 def _셸걸음(줄: str) -> dict[str, list[str]]:
@@ -534,12 +538,23 @@ def _canary() -> None:
         sys.exit(2)
     # ★ **좁히려다 꺼 버리는 자리**(DECISIONS §321). 없는 이름에 묶으면 지문이 `"없다"` 로
     #   굳어 그 파일을 아무리 고쳐도 영영 안 운다. 셋을 묻는다.
-    if _걸음이있나(ROOT / "tools/verify.sh", "없는걸음이다"):
-        print("    ★ 카나리아가 죽었다 — 없는 걸음을 있다고 한다(지문이 「없다」 로 굳는다)")
-        sys.exit(2)
-    if not _걸음이있나(ROOT / "tools/verify.sh", "docseal"):
-        print("    ★ 카나리아가 죽었다 — 있는 걸음을 없다고 한다(좁히기가 통째로 꺼진다)")
-        sys.exit(2)
+    # ★ **합성으로 묻는다 — 제 저장소의 파일을 읽지 않는다**(DECISIONS §322). 종전에는
+    #   `ROOT / "tools/verify.sh"` 를 읽었는데 **사본(토트)에는 그 파일이 없다** — 거기로
+    #   옮기면 카나리아가 죽고 `docseal` 이 통째로 2 로 끝난다. **정본의 시험이 제 집
+    #   모양에 묶이면 사본에서 거짓으로 죽는다**(§321 이 적은 「사본이 정본의 시험이다」).
+    import tempfile
+    with tempfile.TemporaryDirectory() as _d:
+        샘 = pathlib.Path(_d) / "x.sh"
+        샘.write_text("step docseal  uv run python tools/docseal.py\n", encoding="utf-8")
+        if _걸음이있나(샘, "없는걸음이다"):
+            print("    ★ 카나리아가 죽었다 — 없는 걸음을 있다고 한다(지문이 「없다」 로 굳는다)")
+            sys.exit(2)
+        if not _걸음이있나(샘, "docseal"):
+            print("    ★ 카나리아가 죽었다 — 있는 걸음을 없다고 한다(좁히기가 통째로 꺼진다)")
+            sys.exit(2)
+        if _걸음이있나(샘.with_name("없는파일.sh"), "docseal"):
+            print("    ★ 카나리아가 죽었다 — 없는 파일에서 걸음을 찾았다고 한다")
+            sys.exit(2)
     if _셸걸음("강제자 — `tools/make_patch.sh` 의 `mined.jsonl` 예외"):
         print("    ★ 카나리아가 죽었다 — 파일 이름을 걸음으로 읽는다")
         sys.exit(2)
