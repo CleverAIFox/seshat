@@ -132,8 +132,8 @@ def 로직_지문(p: pathlib.Path, 이름: str = "") -> str:
     ★ 반대로 **`.md` · `.toml` 은 글자 그대로** 잰다 — 거기서는 글자가 곧 내용이다.
     """
     글 = p.read_text(encoding="utf-8")
-    if p.suffix in 셸붙이:
-        return _셸_지문(글, 이름 if p.suffix == ".sh" else "")
+    if p.suffix in 주석머리:
+        return _셸_지문(글, 이름 if p.suffix == ".sh" else "", 주석머리[p.suffix])
     if p.suffix != ".py":
         return _짧게(글)
     나무: ast.AST = ast.parse(글)
@@ -163,13 +163,21 @@ def _셸걸음(줄: str) -> dict[str, list[str]]:
     """
     것: dict[str, list[str]] = {}
     for m in _걸음말.finditer(줄):
-        것.setdefault(m.group(1), []).extend(re.findall(r"`([^`\s]+)`", m.group(2)))
-    return 것
+        # ★ **파일 이름은 걸음이 아니다**(DECISIONS §321). 「`tools/make_patch.sh` 의
+        #   `mined.jsonl` 예외」 처럼 뒤에 **자리**가 오는 줄이 있다 — 점이나 빗금이 들면 뺀다.
+        것.setdefault(m.group(1), []).extend(
+            x for x in re.findall(r"`([^`\s]+)`", m.group(2)) if "." not in x and "/" not in x)
+    return {k: v for k, v in 것.items() if v}
 
 
-#: **줄 맨 앞 `#` 가 주석인 것.** 셸과 워크플로다. `.md` · `.toml` 은 **글자가 곧 내용**이라
-#: 여기 안 든다 — 거기서 주석을 떼면 뜻이 준다(DECISIONS §316)
-셸붙이 = (".sh", ".yml", ".yaml")
+#: **온줄 주석이 뜻이 아닌 것 → 그 주석 머리.** `.md` · `.toml` · `.json` 은 **글자가 곧
+#: 내용**이라 여기 안 든다 — 거기서 주석을 떼면 뜻이 준다(DECISIONS §316).
+#: ★ **`.js` · `.tf` 는 이 저장소에 없다 — 사본이 쓴다**(DECISIONS §320 · thoth §163).
+#:   토트에서 재니 `extension/src/broker.js` 에 **주석 한 줄**이 절 **8** 을 무효로 만들고,
+#:   `tools/doctor.sh` 는 **64** 였다(1,244줄 중 34%가 온줄 주석). 세샤트의 20 보다 세 배다.
+#:   **목록이 좁으면 그 줄들이 조용히 안 세어진다** — `지목확장` 을 넓힌 것과 같은 까닭이고,
+#:   **여기서 넓혀도 이 저장소의 도장은 하나도 안 바뀐다**(재 봤다 — `.js` · `.tf` 가 0개).
+주석머리 = {".sh": "#", ".yml": "#", ".yaml": "#", ".js": "//", ".tf": "#"}
 
 #: `verify.sh` 의 걸음을 여는 자리. **줄 맨 앞만이 아니다** — `else step …; fi` 도 걸음이다.
 #: `tools/check_scope.py::_뽑는다` 와 **같은 무늬**다(DECISIONS §315 가 거기서 같은 실수를 했다)
@@ -199,7 +207,22 @@ def _셸_몸(글: str, 이름: str) -> str | None:
     return "\n".join(줄들[시작:끝 + 1])
 
 
-def _셸_지문(글: str, 이름: str = "") -> str:
+def _걸음이있나(자리: pathlib.Path, 이름: str) -> bool:
+    """그 파일에 그 걸음(또는 함수)이 **실제로 있나**(DECISIONS §321).
+
+    ★ **없는 이름에 묶으면 지문이 `"없다"` 로 굳는다.** 한 번 울고 그 뒤로는 그 파일을
+      아무리 고쳐도 **영영 안 운다** — 좁히려다 **꺼 버리는** 꼴이다. 사본(토트)의 강제자
+      줄은 「`tools/doctor.sh` 의 `PKG_N`」 처럼 적는데 그 파일에 `step PKG_N` 이 없다.
+    ★ **못 찾으면 파일 전체에 묶는다** — 넓은 쪽이 안전하다. 그 줄이 틀렸다는 것은
+      `tools/check_prose.py::check_걸음이름` 이 따로 적는다.
+    """
+    try:
+        return _셸_몸(자리.read_text(encoding="utf-8"), 이름) is not None
+    except (OSError, UnicodeDecodeError):
+        return False
+
+
+def _셸_지문(글: str, 이름: str = "", 머리: str = "#") -> str:
     """셸 · 워크플로의 **로직** 지문. **온줄 주석과 빈 줄은 안 센다**(DECISIONS §316).
 
     ★ **파이썬에만 먹인 약이었다.** `로직_지문` 은 주석 한 줄에 도장이 찢어지는 것을 막으려고
@@ -207,8 +230,10 @@ def _셸_지문(글: str, 이름: str = "") -> str:
       줄**을 더하면 절 **스물**이 무효가 되고, `check_docs.py` 에 같은 것을 더하면 **0** 이다.
       이 저장소의 `verify.sh` 는 **절반이 주석**이고 걸음은 늘 붙는다 — **가장 자주 흔들리는
       파일에 가장 둔한 자가 붙어 있었다.**
-    ★ **밖 — 줄 안쪽의 `#` 는 안 건드린다.** `${X#...}` 와 조각 주소가 거기 산다. 온줄 주석만
-      뗀다.
+    ★ **밖 — 줄 안쪽의 주석 머리는 안 건드린다.** `${X#...}` 와 `https://` 가 거기 산다.
+      온줄만 뗀다 — 줄 끝에 붙인 주석을 고치면 **여전히 운다.**
+    ★ **밖 — `/* */` 묶음 주석은 안 본다**(`.js`). 그 안을 고치면 지문이 갈린다 — 좁히지
+      못한 것은 **넓게 두는 쪽이 안전하다**(DECISIONS §320).
     ★ **밖 — 그래서 `#` 로 시작하는 「내용」 줄은 안 센다.** 워크플로의 글 뭉치 안에 그런 줄이
       생기면 그 줄이 바뀌어도 도장이 안 운다. 지금 저장소에는 없다(실측).
     ★ **밖 — 들여쓰기는 센다.** 파이썬 쪽과 다르다 — 셸에서는 들여쓰기가 뜻을 안 지지만,
@@ -220,7 +245,7 @@ def _셸_지문(글: str, 이름: str = "") -> str:
             return "없다"            # 짚은 이름이 사라졌다 — 그 자체가 다시 볼 까닭이다
         글 = 조각
     줄 = [x.rstrip() for x in 글.splitlines()]
-    return _짧게("\n".join(x for x in 줄 if x.strip() and not x.lstrip().startswith("#")))
+    return _짧게("\n".join(x for x in 줄 if x.strip() and not x.lstrip().startswith(머리)))
 
 
 def _독스트링_줄(나무: ast.AST) -> set[int]:
@@ -291,11 +316,15 @@ def _한_문서(글: str, 앞: str, 머리: re.Pattern, 뽑는다, 표시: str) 
         끝 = 자리[i + 1][0] if i + 1 < len(자리) else len(글)
         본문 = 글[s:끝]
         줄 = 뽑는다(본문)
-        파일 = []
+        파일: list[str] = []
+        안풀린것: list[str] = []
         걸음표 = _셸걸음(줄)
         for 곳, 심볼 in 지목.findall(줄):        # `자리` 를 덮어쓰면 바깥 목록이 날아간다
-            짚은들 = [f"{곳}::{심볼}"] if 심볼 else (
-                [f"{곳}::{x}" for x in 걸음표.get(곳, [])] or [곳])
+            # ★ **풀리는 이름에만 묶는다**(DECISIONS §321). 없는 이름에 묶으면 지문이
+            #   `"없다"` 로 굳어 **그 파일을 아무리 고쳐도 영영 안 운다.**
+            이름들 = [x for x in 걸음표.get(곳, []) if _걸음이있나(ROOT / 곳, x)]
+            안풀린것 += [f"{곳} 의 `{x}`" for x in 걸음표.get(곳, []) if x not in 이름들]
+            짚은들 = [f"{곳}::{심볼}"] if 심볼 else ([f"{곳}::{x}" for x in 이름들] or [곳])
             # ★ **도장 파일 자신은 안 든다**(DECISIONS §300). 들면 **찍을 수 없는 절**이 된다 —
             #   찍으면 그 파일이 바뀌고, 바뀌면 그 절이 무효가 되고, 다시 찍으면 또 바뀐다.
             #   강제자는 **자**이고 도장 파일은 **그 자의 산출물**이다. 토트에서 실제로 그 절을
@@ -307,7 +336,8 @@ def _한_문서(글: str, 앞: str, 머리: re.Pattern, 뽑는다, 표시: str) 
                     파일.append(짚은)
         날 = 날짜.search(본문)
         out.append({"번호": f"{앞}{번호}", "제목": 제목, "날짜": 날.group(1) if 날 else "",
-                    "본문": 본문, "파일": 파일, "표시": f"{표시}{번호}"})
+                    "본문": 본문, "파일": 파일, "표시": f"{표시}{번호}",
+                    "안풀린걸음": 안풀린것})
     return out
 
 
@@ -366,6 +396,19 @@ def 지문(절: dict) -> str:
             continue                      # 이름으로 안 부른 대장은 안 문다
         조각.append(f"{f}\0{로직_지문(ROOT / 자리, 심볼)}")
     return _짧게("\n".join(조각))
+
+
+def 안풀리는_걸음(절목록: list[dict] | None = None) -> list[str]:
+    """강제자 줄이 적은 걸음 이름 중 **그 파일에 없는 것**(DECISIONS §321).
+
+    ★ **이것이 없으면 §321 의 고침이 조용한 넓힘이 된다.** 못 푸는 이름은 파일 전체에
+      묶여 **안전하긴 하지만**, 그 줄이 거짓이라는 사실은 아무 데도 안 적힌다 —
+      이름을 바꾸고 문서를 안 고친 자리가 그렇게 쌓인다.
+    ★ **밖 — 이름이 맞는지는 못 본다.** 그 파일에 그 걸음이 **있나**만 본다.
+    """
+    return [f"§{절['번호']} 의 강제자 줄이 없는 걸음을 짚는다 — {x}"
+            for 절 in (절목록 if 절목록 is not None else 절들())
+            for x in 절.get("안풀린걸음", [])]
 
 
 def 다시_봐야_할_절(찍힌: dict | None = None) -> list[tuple[dict, list[str]]]:
@@ -478,6 +521,28 @@ def _canary() -> None:
     if _셸걸음("강제자 — `tools/verify.sh` 의 두 갈래"):
         print("    ★ 카나리아가 죽었다 — 이름을 안 댄 줄에서 걸음을 지어낸다")
         sys.exit(2)
+    # ★ **주석 머리가 꼴마다 다르다**(DECISIONS §320). `.js` 를 `#` 로 떼면 **아무것도 안 떼고**
+    #   초록이 된다 — 사본(토트)에서만 도는 길이라 여기서 안 물으면 **영영 안 물린다.**
+    if _셸_지문("// 설명\nconst a = 1;\n", 머리="//") != _셸_지문("const a = 1;\n", 머리="//"):
+        print("    ★ 카나리아가 죽었다 — `//` 주석을 안 뗀다(사본의 .js 가 전부 소음이 된다)")
+        sys.exit(2)
+    if _셸_지문("// 설명\nconst a = 1;\n") == _셸_지문("const a = 1;\n"):
+        print("    ★ 카나리아가 죽었다 — `#` 로 `//` 를 뗀다(꼴을 안 가른다)")
+        sys.exit(2)
+    if set(주석머리) < {".sh", ".yml", ".js"}:
+        print(f"    ★ 카나리아가 죽었다 — 주석 머리 표가 좁다 : {sorted(주석머리)}")
+        sys.exit(2)
+    # ★ **좁히려다 꺼 버리는 자리**(DECISIONS §321). 없는 이름에 묶으면 지문이 `"없다"` 로
+    #   굳어 그 파일을 아무리 고쳐도 영영 안 운다. 셋을 묻는다.
+    if _걸음이있나(ROOT / "tools/verify.sh", "없는걸음이다"):
+        print("    ★ 카나리아가 죽었다 — 없는 걸음을 있다고 한다(지문이 「없다」 로 굳는다)")
+        sys.exit(2)
+    if not _걸음이있나(ROOT / "tools/verify.sh", "docseal"):
+        print("    ★ 카나리아가 죽었다 — 있는 걸음을 없다고 한다(좁히기가 통째로 꺼진다)")
+        sys.exit(2)
+    if _셸걸음("강제자 — `tools/make_patch.sh` 의 `mined.jsonl` 예외"):
+        print("    ★ 카나리아가 죽었다 — 파일 이름을 걸음으로 읽는다")
+        sys.exit(2)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -531,7 +596,16 @@ def main(argv: list[str] | None = None) -> int:
               f"        읽고 지금도 참이면 : python3 tools/docseal.py stamp --only {절['번호']}")
     if 무효:
         print(f"\n  **무효는 「틀렸다」 가 아니라 「다시 봐야 한다」 다**(DECISIONS §211). {len(무효)} 절")
-    return 1 if 무효 else 0
+    # ★ **못 푸는 이름은 넓게 묶이고 조용하다**(DECISIONS §321). 그 줄이 거짓이라는 사실은
+    #   어디에도 안 적히므로 여기서 적는다 — 실측으로 둘이 `tools/` 를 빠뜨려 **강제자로
+    #   아예 안 묶여 있었다.**
+    안풀림 = 안풀리는_걸음()
+    for x in 안풀림:
+        print(f"    ✗ {x}", file=sys.stderr)
+    if 안풀림:
+        print(f"      **그 줄이 적은 자리가 도장에 안 묶인다** — 이름이나 자리를 고친다. {len(안풀림)} 줄",
+              file=sys.stderr)
+    return 1 if (무효 or 안풀림) else 0
 
 
 if __name__ == "__main__":

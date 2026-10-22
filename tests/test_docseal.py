@@ -329,3 +329,76 @@ def test_저장소의_절이_실제로_걸음으로_좁혀졌다():
 
 def test_카나리아가_산다():
     assert DS._canary() is None, "카나리아는 말없이 돌아온다 — 죽으면 SystemExit 다"
+
+
+# ───────── 주석 머리가 꼴마다 다르다(DECISIONS §320) ─────────
+
+def test_js_는_슬래시_둘로_뗀다():
+    """★ **이 저장소에 `.js` 가 없다 — 사본(토트)이 쓴다**(thoth §163).
+
+    토트에서 재니 `extension/src/broker.js` 에 **주석 한 줄**이 절 **8** 을 무효로 만들었다.
+    여기서 안 물으면 그 길은 **영영 안 물린다.**
+    """
+    assert DS._셸_지문("// 설명\nconst a = 1;\n", 머리="//") == DS._셸_지문("const a = 1;\n", 머리="//")
+
+
+def test_꼴을_안_가르면_안_뗀다():
+    """★ **`#` 로 `//` 를 떼면 아무것도 안 떼고 초록이 된다** — 가르는 것이 값이다."""
+    assert DS._셸_지문("// 설명\nconst a = 1;\n") != DS._셸_지문("const a = 1;\n")
+
+
+def test_js_의_뜻이_바뀌면_운다():
+    assert DS._셸_지문("const a = 1;\n", 머리="//") != DS._셸_지문("const a = 2;\n", 머리="//")
+
+
+def test_주소의_슬래시_둘은_안_건드린다():
+    """★ `https://` 가 거기 산다 — **온줄만** 뗀다."""
+    assert DS._셸_지문('const u = "https://a.b";\n', 머리="//") != DS._셸_지문("\n", 머리="//")
+
+
+def test_표가_꼴마다_머리를_든다():
+    """★ **목록이 좁으면 그 줄들이 조용히 안 세어진다**(`지목확장` 과 같은 까닭)."""
+    assert DS.주석머리[".sh"] == "#" and DS.주석머리[".js"] == "//"
+    assert {".sh", ".yml", ".yaml", ".js", ".tf"} <= set(DS.주석머리)
+    assert ".md" not in DS.주석머리 and ".json" not in DS.주석머리, \
+        "글자가 곧 내용인 꼴은 들면 안 된다 — 주석을 떼면 뜻이 준다"
+
+
+# ───────── 못 푸는 걸음 이름(DECISIONS §321) ─────────
+
+def test_없는_걸음은_파일_전체에_묶인다(tmp_path):
+    """★ **좁히려다 꺼 버리는 자리다**(DECISIONS §321).
+
+    없는 이름에 묶으면 지문이 `"없다"` 로 **굳고**, 그 뒤로 그 파일을 아무리 고쳐도
+    영영 안 운다. 사본(토트)의 강제자 줄이 「`tools/doctor.sh` 의 `PKG_N`」 처럼 적는데
+    그 파일에 `step PKG_N` 이 없다 — 그대로 옮겼으면 그쪽 절들이 통째로 잠들었다.
+    """
+    assert not DS._걸음이있나(ROOT / "tools/verify.sh", "없는걸음이다")
+    assert DS._걸음이있나(ROOT / "tools/verify.sh", "docseal")
+
+
+def test_못_읽는_파일은_없다로_센다(tmp_path):
+    """읽기가 실패한 것과 **걸음이 없는 것**은 같은 처리다 — 둘 다 넓게 묶는다."""
+    assert not DS._걸음이있나(tmp_path / "없는파일.sh", "x")
+
+
+def test_파일_이름은_걸음으로_안_읽는다():
+    """★ 「`tools/make_patch.sh` 의 `mined.jsonl` 예외」 는 **자리**이지 걸음이 아니다."""
+    assert DS._셸걸음("강제자 — `tools/make_patch.sh` 의 `mined.jsonl` 예외") == {}
+    assert DS._셸걸음("강제자 — `tools/verify.sh` 의 `docseal` 단계") == {"tools/verify.sh": ["docseal"]}
+
+
+def test_저장소에_못_푸는_걸음이_없다():
+    """★ **실측으로 둘이 `tools/` 를 빠뜨려 강제자로 아예 안 묶여 있었다**(§210 · §211).
+
+    그 줄들은 「verify.sh 가 지킨다」 고 적어 두고 도장은 그것을 안 물고 있었다.
+    """
+    난것 = DS.안풀리는_걸음()
+    assert 난것 == [], 난것
+
+
+def test_그_둘이_이제_묶인다():
+    """★ **고친 것이 실물에 닿았나** — 합성만 물으면 실물이 또 달아난다."""
+    표 = {절["번호"]: 절["파일"] for 절 in DS.절들()}
+    assert "tools/verify.sh::ways" in 표["210"], 표["210"]
+    assert "tools/verify.sh::docseal" in 표["211"], 표["211"]
