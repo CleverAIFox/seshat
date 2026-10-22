@@ -184,8 +184,31 @@ def test_못_읽으면_역추적이_아니라_말을_한다(tmp_path, monkeypatc
 def test_못_읽은_것은_고장이라_2_로_끝난다(tmp_path, monkeypatch, capsys):
     """★ **위반은 1 이고 고장은 2 다**(§21). 1 을 내면 「레이크가 깨졌다」 로 읽힌다."""
     monkeypatch.setattr(lake.paths, "require_lake", lambda: tmp_path)
+    # ★ **카나리아를 재운다**(DECISIONS §315). `_canary` 도 `check` 를 부르므로 아래 흉내가
+    #   거기서 먼저 터진다 — 그러면 이 시험이 보려는 **`check` 의 실패 길**을 못 본다.
+    #   둘 다 2 로 끝나지만 **같은 2 가 아니다** : 하나는 레이크가, 하나는 판별식이 죽은 것이다.
+    monkeypatch.setattr(lake, "_canary", lambda: None)
     monkeypatch.setattr(lake, "check", lambda *a, **k: (_ for _ in ()).throw(lake.못읽음("x — 메모리")))
     assert lake.main(["check"]) == 2
     err = capsys.readouterr().err
     assert "레이크를 못 읽었다" in err
     assert "ollama stop" in err and "못 보는 것은 통과가 아니다" in err
+
+
+def test_카나리아가_산다():
+    """★ **아무것도 못 찾는 자와 고장 난 자는 구별되지 않는다**(DECISIONS §239 · §315).
+
+    이 자는 2026-10-22 까지 `check_scope` 의 눈 밖이라 **카나리아가 없었다.**
+    """
+    assert lake._canary() is None, "카나리아는 말없이 돌아온다 — 죽으면 SystemExit 다"
+
+
+def test_main_이_판별식을_먼저_묻는다(tmp_path, monkeypatch):
+    """★ **안 부르는 카나리아는 없는 카나리아다.** 위 시험이 그것을 재우므로 여기서 센다."""
+    monkeypatch.setattr(lake.paths, "require_lake", lambda: tmp_path)
+    불렸나: list[int] = []
+    monkeypatch.setattr(lake, "_canary", lambda: 불렸나.append(1))
+    monkeypatch.setattr(lake, "check", lambda *a, **k: [])
+    lake.init(tmp_path)
+    lake.main(["check"])
+    assert 불렸나 == [1]

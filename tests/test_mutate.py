@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import importlib.util
 import pathlib
+import re
 
 ROOT = next(p for p in pathlib.Path(__file__).resolve().parents
             if (p / "tools/mutate.py").exists())
@@ -367,3 +368,16 @@ def test_사슬이_제품_쪽을_본다():
     assert 줄, "사슬에 mutate 단계가 없다"
     assert "seshat/*.py" in 줄[0], "사슬이 제품 쪽을 안 본다"
     assert "tools/check_*.py" in 줄[0], "사슬이 검사 술어를 안 본다"
+
+def test_톱니_수를_문서에_또_적지_않는다():
+    """★ **같은 수를 두 곳에 적으면 한쪽만 늙는다**(DECISIONS §57 · §315).
+
+    MASTER §14 의 `mutate` 줄이 **458** 을 들고 코드가 **468** 이었다 — 그리고 PLAN #53 이
+    같은 자리를 두고 **「손으로 적은 수만 갈렸다」** 고 적어 둔 다음이었다. 수를 지우고
+    **상수 이름**을 가리키게 했다. 이 시험이 그 자리를 다시 못 적게 막는다.
+    """
+    줄 = next(x for x in (ROOT / "docs/MASTER.md").read_text(encoding="utf-8").splitlines()
+              if x.startswith("| `tools/mutate.py` |"))
+    톱니 = 줄[줄.index("톱니 셋"):]
+    assert "MIN_잴것" in 톱니 and "MAX_못잴것" in 톱니, "상수 이름을 가리켜야 한다"
+    assert not re.search(r"잴 자리[^·]{0,8}\d", 톱니), f"톱니 수를 문서에 또 적었다 : {톱니[:120]}"

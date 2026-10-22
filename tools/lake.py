@@ -14,6 +14,13 @@
   `check` 는 세 층 전부에서 카탈로그 밖 파일을 짚는다 — cache 도 무엇인지는 적혀 있어야 한다.
 ★ `cache` 층은 해시 대장 밖이다. 다시 받을 수 있는 것에 해시를 적으면 받을 때마다 대장이 운다.
 ★ 결과 파일의 원래 자리(`runs/` · `/tmp/h001` · 아티팩트 압축)는 작업대다. 거기가 사라져도 레이크가 남는다.
+★ **밖 — 레이크 밖은 안 본다.** 저장소의 `data/` 는 `tools/check_catalog.py` 의 몫이고,
+  작업대(`runs/` · `/tmp`)는 아무도 안 지킨다 — 거기 것이 사라지는 것은 설계다.
+★ **밖 — 내용이 옳은지는 안 본다.** 넣을 때의 해시와 같은가만 본다. 잘못 잰 판이 들어가면
+  대장은 **끝까지 초록**이다 — 그 판정은 `docs/hypotheses.md` 를 읽는 사람의 몫이다.
+★ **이 자는 2026-10-22 까지 `tools/check_scope.py` 의 눈 밖에 있었다**(DECISIONS §315).
+  `verify.sh` 의 걸음이 `if/else` 안이라 **뽑히지 않았고**, 그래서 위 두 줄도 카나리아도
+  없는 채였다. 관문이 **제 한계를 선언하는지 보는 자**가 이 자를 안 보고 있었다.
 """
 from __future__ import annotations
 
@@ -181,7 +188,43 @@ def 찾는다(lake: Path, 무늬: str, tier: str = "runs") -> list[Path]:
     return sorted((lake / tier).glob(무늬))
 
 
+def _죽었다(왜: str) -> None:
+    print(f"    ★ 카나리아가 죽었다 — {왜}", file=sys.stderr)
+    sys.exit(2)
+
+
+def _canary() -> None:
+    """**아무것도 못 찾는 자와 고장 난 자는 구별되지 않는다**(DECISIONS §239 · §211).
+
+    합성 레이크로 셋을 묻는다 — **빈 레이크를 안 잡나** · 대장에 있고 디스크에 **없는 것**을
+    잡나 · 대장 **밖의 파일**을 잡나. 첫째가 눈금이다 : 다 우는 검사는 꺼진다.
+
+    ★ **카탈로그는 비워서 준다.** 이 자의 판별식은 **대장과 디스크의 어긋남**이고,
+      카탈로그 대조는 `tools/check_catalog.py` 가 따로 본다 — 여기서 섞으면 둘 중
+      무엇이 죽었는지 못 가른다.
+    """
+    import tempfile
+    with tempfile.TemporaryDirectory() as d:
+        호수 = Path(d)
+        for t in paths.TIERS:
+            (호수 / t).mkdir(parents=True, exist_ok=True)
+        없는대장 = 호수 / "없는대장.md"
+        빈대장 = HEADER + "\n"
+        (호수 / "MANIFEST.tsv").write_text(빈대장, encoding="utf-8")
+        if check(호수, 없는대장, []):
+            _죽었다("빈 레이크를 잡는다 — 다 우는 검사는 꺼진다")
+        (호수 / "MANIFEST.tsv").write_text(
+            f"{빈대장}00\truns/없는판.jsonl\t1\t2026-01-01\t합성\n", encoding="utf-8")
+        if not any(x.startswith("없다") for x in check(호수, 없는대장, [])):
+            _죽었다("대장에 있고 디스크에 없는 것을 안 잡는다")
+        (호수 / "MANIFEST.tsv").write_text(빈대장, encoding="utf-8")
+        (호수 / MANAGED[0] / "떠돌이.jsonl").write_text("{}\n", encoding="utf-8")
+        if not any(x.startswith("대장 밖") for x in check(호수, 없는대장, [])):
+            _죽었다("대장 밖의 파일을 안 잡는다")
+
+
 def main(argv: list[str] | None = None) -> int:
+    _canary()
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("init")

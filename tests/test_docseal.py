@@ -238,3 +238,94 @@ def test_도장_자리를_손으로_안_적는다():
     """★ **같은 것이 두 곳에 살면 한쪽만 늙는다**(§283). `SEAL` 하나에서 끌어낸다 —
     사본은 그 자리가 다르다(토트는 `tools/docseal.json`)."""
     assert DS._도장자리 == DS.SEAL.relative_to(DS.ROOT).as_posix()
+
+
+# ───────────────── 셸 · 워크플로 지문(DECISIONS §316) ─────────────────
+
+_셸 = ("step scope   uv run python tools/check_scope.py\n"
+       "step dead    uv run python tools/check_dead.py\n")
+
+
+def test_셸_주석_한_줄에_지문이_안_갈린다():
+    """★ **약을 `.py` 에만 먹이고 있었다**(DECISIONS §316).
+
+    실측 : `verify.sh` 에 주석 한 줄을 더하면 절 **스물**이 무효가 됐고, `check_docs.py` 에
+    같은 것을 더하면 **0** 이었다. `verify.sh` 는 절반이 주석인 파일이다.
+    """
+    assert DS._셸_지문(_셸) == DS._셸_지문("# 설명을 고쳤다\n" + _셸 + "\n   \n")
+
+
+def test_셸의_뜻이_바뀌면_지문이_갈린다():
+    """★ **다 같게 만들면 도장이 아니다.** 안 가르는 쪽이 더 나쁘다."""
+    assert DS._셸_지문(_셸) != DS._셸_지문(_셸.replace("check_scope", "check_dead"))
+
+
+def test_줄_안쪽의_우물정은_안_건드린다():
+    """★ `${X#...}` 와 조각 주소가 거기 산다 — **온줄 주석만** 뗀다."""
+    a = 'echo "${BR#papers/}"\n'
+    assert DS._셸_지문(a) != DS._셸_지문('echo "${BR}"\n')
+
+
+def test_들여쓰기는_센다():
+    """★ **셸에서는 안 지지만 YAML 에서는 진다** — 떼면 거짓 초록이다."""
+    assert DS._셸_지문("a: 1\n  b: 2\n") != DS._셸_지문("a: 1\nb: 2\n")
+
+
+def test_옆_걸음이_늘어도_내_걸음은_그대로다():
+    """★ **이것이 §316 의 전부다.** 걸음 하나가 붙었다고 스무 절을 다시 읽을 까닭이 없다."""
+    늘린것 = _셸 + "step 새것   uv run python tools/새것.py\n"
+    assert DS._셸_지문(_셸, "scope") == DS._셸_지문(늘린것, "scope")
+
+
+def test_내_걸음이_바뀌면_운다():
+    """★ **좁히는 것과 꺼 두는 것은 다르다.** 제 걸음은 여전히 문다."""
+    바뀐것 = _셸.replace("step scope   uv run python tools/check_scope.py",
+                       "step scope   uv run python tools/check_scope.py --list")
+    assert DS._셸_지문(_셸, "scope") != DS._셸_지문(바뀐것, "scope")
+
+
+def test_걸음이_사라지면_없다다():
+    """★ **짚은 이름이 사라진 것 자체가 다시 볼 까닭이다**(파이썬 쪽과 같은 규칙)."""
+    assert DS._셸_지문(_셸, "없는걸음") == "없다"
+
+
+def test_if_else_안의_걸음도_찾는다():
+    """★ **§315 가 바로 이 무늬에서 넘어졌다** — 여기서 되풀이하지 않는다."""
+    글 = ('if [ "${CI:-}" = "true" ]; then NAMES+=("ci")\n'
+          "else step ci   uv run python tools/ci_status.py; fi\n")
+    assert DS._셸_몸(글, "ci") is not None
+    assert "ci_status.py" in DS._셸_몸(글, "ci")
+
+
+def test_함수도_찾는다():
+    글 = 'shellcheck_step() {\n  local X=1\n  echo "$X"\n}\nstep a  b\n'
+    몸 = DS._셸_몸(글, "shellcheck_step")
+    assert 몸 is not None and 몸.startswith("shellcheck_step() {") and 몸.endswith("}")
+    assert "step a" not in 몸, "함수 밖까지 먹으면 좁힌 뜻이 없다"
+
+
+def test_강제자_줄이_적어_둔_걸음_이름을_읽는다():
+    """★ **스물한 절을 고쳐 적지 않았다** — 뜻은 이미 그 줄에 있었고 읽는 쪽이 빠져 있었다."""
+    assert DS._셸걸음("강제자 — `tools/verify.sh` 의 `scope` 단계") == {"tools/verify.sh": ["scope"]}
+    assert DS._셸걸음("`tools/verify.sh` 의 `shellcheck_step` 과 `check_prose` 단계") == \
+        {"tools/verify.sh": ["shellcheck_step", "check_prose"]}
+    assert DS._셸걸음("`tools/verify.sh` 의 `deadchecks`") == {"tools/verify.sh": ["deadchecks"]}
+
+
+def test_이름을_안_댄_줄에서는_걸음을_안_지어낸다():
+    """★ **좁히지 못한 것은 넓게 둔다** — 지어내면 안 무는 자리가 생긴다."""
+    assert DS._셸걸음("강제자 — `tools/verify.sh` 의 두 갈래") == {}
+    assert DS._셸걸음("강제자 — `tools/verify.sh`") == {}
+
+
+def test_저장소의_절이_실제로_걸음으로_좁혀졌다():
+    """★ **합성만 물으면 실물이 또 달아난다**(DECISIONS §315 가 적은 그것)."""
+    전체 = [절["번호"] for 절 in DS.절들() if "tools/verify.sh" in 절["파일"]]
+    좁힌것 = [절["번호"] for 절 in DS.절들()
+             if any(f.startswith("tools/verify.sh::") for f in 절["파일"])]
+    assert len(좁힌것) >= 15, 좁힌것
+    assert len(전체) <= 4, f"파일 전체로 무는 절이 너무 많다 : {전체}"
+
+
+def test_카나리아가_산다():
+    assert DS._canary() is None, "카나리아는 말없이 돌아온다 — 죽으면 SystemExit 다"

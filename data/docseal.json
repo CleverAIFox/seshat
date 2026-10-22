@@ -284,7 +284,7 @@
  "131": {
   "날짜": "2026-09-27",
   "읽음": true,
-  "지문": "ec48e5cdb9a3bfab",
+  "지문": "43ea657ebeb7a1aa",
   "파일": [
    "tests/test_gate.py",
    ".github/workflows/gpu-eval.yml"
@@ -592,9 +592,9 @@
  "164": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "242bce7a59362b12",
+  "지문": "752ae76c6a9394bb",
   "파일": [
-   "tools/verify.sh",
+   "tools/verify.sh::훅",
    "tests/test_workflows.py::test_셸의_변수_이름은_ASCII_다"
   ]
  },
@@ -658,10 +658,11 @@
  "170": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "b95ae76ab8a7fc03",
+  "지문": "7a1586cc9ed2f334",
   "파일": [
    "tools/ci_status.py",
-   "tools/verify.sh",
+   "tools/verify.sh::훅",
+   "tools/verify.sh::ci",
    "tests/test_workflows.py::test_CI_에서_안_도는_단계는_까닭을_적는다",
    "tests/test_ci_status.py::test_verify_가_CI_판정을_본다"
   ]
@@ -765,11 +766,11 @@
  "180": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "4cd03df1902dd29f",
+  "지문": "884fb88ce9825d10",
   "파일": [
    "tools/bootstrap.py",
    "tests/test_bootstrap.py",
-   "tools/verify.sh",
+   "tools/verify.sh::bootstrap",
    "docs/related.md"
   ]
  },
@@ -898,9 +899,9 @@
  "193": {
   "날짜": "2026-09-28",
   "읽음": false,
-  "지문": "531e80ca64bf0ddb",
+  "지문": "49dd469d0a50fe93",
   "파일": [
-   "tools/make_patch.sh"
+   "tools/make_patch.sh::mined.jsonl"
   ]
  },
  "194": {
@@ -1015,7 +1016,7 @@
  "205": {
   "날짜": "2026-09-29",
   "읽음": false,
-  "지문": "21ac665b8f7276e4",
+  "지문": "d4d57b9a85856686",
   "파일": [
    "tools/apply_patch.sh",
    "tests/test_sweep.py::test_자리가_안_맞는_패치가_뒤엣것을_안_막는다"
@@ -1138,7 +1139,7 @@
  "217": {
   "날짜": "2026-09-29",
   "읽음": true,
-  "지문": "323bd2b94f42cb37",
+  "지문": "8f22c37f05274dcd",
   "파일": [
    "tools/docseal.py",
    "docs/PLAN.md",
@@ -1214,7 +1215,7 @@
  "224": {
   "날짜": "2026-09-29",
   "읽음": false,
-  "지문": "d7382ec2184b2f2c",
+  "지문": "3c137a12db1bcf89",
   "파일": [
    ".github/workflows/ci.yml",
    "tools/plan_closed.py::얕은가",
@@ -1326,7 +1327,7 @@
  "234": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "22e69bc6e9115586",
+  "지문": "10313d616d6463d3",
   "파일": [
    "docs/DECISIONS.md",
    "docs/PLAN.md",
@@ -1336,11 +1337,11 @@
  "235": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "4c18878607ea3992",
+  "지문": "dc8feb7268b9c6e1",
   "파일": [
    "tools/check_numbers.py",
    "tests/test_numbers.py",
-   "tools/verify.sh"
+   "tools/verify.sh::numbers"
   ]
  },
  "236": {
@@ -1356,12 +1357,12 @@
  "237": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "77ca9d46e3da9d22",
+  "지문": "d52c542098c35e7d",
   "파일": [
    "tools/docgen.py",
    "tests/test_docgen.py",
    "tools/docseal.py::다시_봐야_할_절",
-   "tools/verify.sh"
+   "tools/verify.sh::docgen"
   ]
  },
  "238": {
@@ -1376,11 +1377,11 @@
  "239": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "43e0ffd489126b0a",
+  "지문": "511a98177ead8729",
   "파일": [
    "tools/check_scope.py",
    "tests/test_scope.py",
-   "tools/verify.sh"
+   "tools/verify.sh::scope"
   ]
  },
  "24": {
@@ -1395,17 +1396,17 @@
  "240": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "5ade52ee93cf0887",
+  "지문": "77597b43270785fe",
   "파일": [
    "tools/check_dead.py",
    "tests/test_dead.py",
-   "tools/verify.sh"
+   "tools/verify.sh::dead"
   ]
  },
  "241": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "a70dcc182810f39c",
+  "지문": "678daef31c621c55",
   "파일": [
    "tools/check_numbers.py",
    "docs/DECISIONS.md"
@@ -1549,11 +1550,11 @@
  "255": {
   "날짜": "2026-10-01",
   "읽음": true,
-  "지문": "00bafbbf4dfd417d",
+  "지문": "eac930653f0c4a3e",
   "파일": [
    "tools/check_deadchecks.py",
    "tests/test_deadchecks.py",
-   "tools/verify.sh"
+   "tools/verify.sh::deadchecks"
   ]
  },
  "256": {
@@ -1568,10 +1569,10 @@
  "257": {
   "날짜": "2026-10-01",
   "읽음": true,
-  "지문": "ede467524d17075d",
+  "지문": "04d0ee6e89cb04df",
   "파일": [
    "tests/test_deps.py",
-   "tools/verify.sh",
+   "tools/verify.sh::lock",
    "pyproject.toml"
   ]
  },
@@ -1676,11 +1677,11 @@
  "267": {
   "날짜": "2026-10-01",
   "읽음": true,
-  "지문": "f566cdf3b67b681a",
+  "지문": "b4ee67f3d0d21553",
   "파일": [
    "tools/check_claims.py",
    "tests/test_claims.py",
-   "tools/verify.sh",
+   "tools/verify.sh::claims",
    "tools/mutate.py"
   ]
  },
@@ -1818,7 +1819,7 @@
  "280": {
   "날짜": "2026-10-02",
   "읽음": false,
-  "지문": "1983d5b83493e69f",
+  "지문": "49dc0112d9e6e862",
   "파일": [
    "tests/test_workflows.py::test_워크플로가_가설_번호를_안_박는다",
    "tests/test_workflows.py::test_GPU_작업은_한_인터프리터로_돈다",
@@ -1841,10 +1842,11 @@
  "282": {
   "날짜": "2026-10-02",
   "읽음": true,
-  "지문": "217290ef28ba0f60",
+  "지문": "c5f03dc14b4fc16e",
   "파일": [
    "tools/check_prose.py",
-   "tools/verify.sh",
+   "tools/verify.sh::shellcheck_step",
+   "tools/verify.sh::check_prose",
    "tests/test_workflows.py::test_액션을_SHA_로_고정한다",
    "tests/test_workflows.py::test_고정한_줄에서도_Node20_을_읽는다",
    "tests/test_workflows.py::test_gitleaks_는_PR_을_읽을_수_있다",
@@ -1869,7 +1871,7 @@
  "284": {
   "날짜": "2026-10-03",
   "읽음": true,
-  "지문": "e4ed49b4d572a0ef",
+  "지문": "ac16c166aaeba829",
   "파일": [
    "tools/check_prose.py::check_낱말",
    "tools/check_prose.py::사전",
@@ -1881,7 +1883,7 @@
  "285": {
   "날짜": "2026-10-03",
   "읽음": true,
-  "지문": "007e4eeba330f30e",
+  "지문": "f986d58ab8c8a3f1",
   "파일": [
    "tools/check_prose.py::check_날짜",
    "tools/check_prose.py::check_CI밖",
@@ -1905,7 +1907,7 @@
  "287": {
   "날짜": "2026-10-04",
   "읽음": true,
-  "지문": "c0ea497dba676853",
+  "지문": "f7e2e02ecddafa4e",
   "파일": [
    "tools/mutate.py::톱니",
    "tools/mutate.py::견준다",
@@ -1932,7 +1934,7 @@
  "289": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "d21c06625de150ac",
+  "지문": "8879614cc21c25a5",
   "파일": [
    "tools/mutate.py",
    "tests/test_mutate.py"
@@ -1950,20 +1952,20 @@
  "290": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "2522d8fc918aa6cd",
+  "지문": "f58f3bec87e09639",
   "파일": [
    "tools/mutate.py",
    "tests/test_claims.py",
    "tests/test_deadchecks.py",
    "tests/test_prose.py",
    "tests/test_size.py",
-   "tools/verify.sh"
+   "tools/verify.sh::mutate"
   ]
  },
  "291": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "0c3550e2e22283fd",
+  "지문": "8f3ed6bc6e9b46fc",
   "파일": [
    "tests/test_workflows.py",
    ".github/workflows/papers.yml"
@@ -1972,11 +1974,11 @@
  "292": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "adadfdf114f494e5",
+  "지문": "d3e2704eb17ff511",
   "파일": [
    "tools/ci_status.py",
    "tests/test_ci_status.py",
-   "tools/verify.sh"
+   "tools/verify.sh::ci"
   ]
  },
  "293": {
@@ -2009,11 +2011,11 @@
  "296": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "066df58b2491775c",
+  "지문": "f07f50279e69a952",
   "파일": [
    "tools/doc_fsck.py",
    "tools/check_docs.py",
-   "tools/verify.sh",
+   "tools/verify.sh::추가만",
    "tests/test_doc_enforcers.py",
    "tools/mutate.py",
    "tests/test_mutate.py",
@@ -2032,7 +2034,7 @@
  "298": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "7f6052c303081522",
+  "지문": "242c4d1ade779540",
   "파일": [
    "tools/docseal.py",
    "tests/test_docseal.py"
@@ -2041,7 +2043,7 @@
  "299": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "61e30d363091b973",
+  "지문": "08621daf1b3da500",
   "파일": [
    "tools/docseal.py",
    "tests/test_docseal.py"
@@ -2068,7 +2070,7 @@
  "300": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "c30b1cb693f1ae7a",
+  "지문": "0bf45fb3d124bd3e",
   "파일": [
    "tools/docseal.py",
    "tests/test_docseal.py"
@@ -2085,7 +2087,7 @@
  "302": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "66d0c001d9eab3a9",
+  "지문": "9eb6338bdc0b270e",
   "파일": [
    "tools/mutate.py",
    "tests/test_mutate.py"
@@ -2094,17 +2096,17 @@
  "304": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "9dc9df3f0b5147d5",
+  "지문": "e6d9cd621a2a2a3f",
   "파일": [
    "tools/check_secrets.py",
-   "tools/verify.sh",
+   "tools/verify.sh::secrets",
    "tests/test_secrets.py"
   ]
  },
  "305": {
   "날짜": "2026-10-12",
   "읽음": false,
-  "지문": "d276bf6e5a904567",
+  "지문": "3b943e40b3f04a4d",
   "파일": [
    ".github/workflows/papers.yml",
    "tests/test_workflows.py",
@@ -2125,19 +2127,19 @@
  "307": {
   "날짜": "2026-10-19",
   "읽음": true,
-  "지문": "576efb692ec40dd7",
+  "지문": "d7f4cb037e3b18fb",
   "파일": [
-   "tools/verify.sh",
+   "tools/verify.sh::mutate",
    "tools/mutate.py"
   ]
  },
  "308": {
   "날짜": "2026-10-20",
   "읽음": true,
-  "지문": "fd13fb1bfc916f3e",
+  "지문": "022f482aca70c205",
   "파일": [
    "tools/check_speech.py",
-   "tools/verify.sh"
+   "tools/verify.sh::speech"
   ]
  },
  "309": {
@@ -2162,7 +2164,7 @@
  "310": {
   "날짜": "2026-10-20",
   "읽음": true,
-  "지문": "3d373c241d081a56",
+  "지문": "4ac582e42b7aff54",
   "파일": [
    "docs/DECISIONS.md",
    "docs/related.md"
@@ -2171,12 +2173,12 @@
  "311": {
   "날짜": "2026-10-20",
   "읽음": true,
-  "지문": "b54ba93d1f0bb0a3",
+  "지문": "79a50aa5f26bb5f3",
   "파일": [
    "tools/check_scope.py",
    "tools/check_ways.py",
    "seshat/__init__.py",
-   "tools/verify.sh"
+   "tools/verify.sh::append_only_step"
   ]
  },
  "312": {
@@ -2192,7 +2194,7 @@
  "313": {
   "날짜": "2026-10-20",
   "읽음": false,
-  "지문": "eae7baef5654dc11",
+  "지문": "45c3a1411a973fe0",
   "파일": [
    "SECURITY.md",
    ".github/workflows/gpu-eval.yml",
@@ -2202,7 +2204,7 @@
  "314": {
   "날짜": "2026-10-21",
   "읽음": false,
-  "지문": "99a64248f8be5b75",
+  "지문": "8ea146586a5c0ee0",
   "파일": [
    "tests/test_evaluate.py",
    "tools/mine_terms.py",
@@ -2210,6 +2212,27 @@
    "docs/colab.md",
    "docs/MASTER.md",
    "tools/mutate.py"
+  ]
+ },
+ "315": {
+  "날짜": "2026-10-22",
+  "읽음": false,
+  "지문": "c4d02423424a36e5",
+  "파일": [
+   "tests/test_mutate.py",
+   "docs/MASTER.md"
+  ]
+ },
+ "316": {
+  "날짜": "2026-10-22",
+  "읽음": false,
+  "지문": "e7e1474b38a89cef",
+  "파일": [
+   "tools/docseal.py::_셸_지문",
+   "tools/docseal.py::_셸_몸",
+   "tools/docseal.py::_셸걸음",
+   "tools/docseal.py::_canary",
+   "tests/test_docseal.py"
   ]
  },
  "32": {
@@ -2606,7 +2629,7 @@
  "8": {
   "날짜": "2026-09-22",
   "읽음": true,
-  "지문": "ee37d18628a5dac4",
+  "지문": "9abbe8db82c0d890",
   "파일": [
    ".github/workflows/ci.yml"
   ]
@@ -2731,7 +2754,7 @@
  "96": {
   "날짜": "2026-09-27",
   "읽음": false,
-  "지문": "9bde19c39972be70",
+  "지문": "3267d366ebb4a8a0",
   "파일": [
    "tools/make_patch.sh"
   ]
@@ -2755,7 +2778,7 @@
  "99": {
   "날짜": "2026-09-27",
   "읽음": false,
-  "지문": "0c4ca352bf8a9347",
+  "지문": "4169c3085ad6b9ef",
   "파일": [
    "tools/make_patch.sh",
    "tests/test_make_patch.py::test_판_번호만_바뀐_lock_은_안_잡는다"
@@ -2772,7 +2795,7 @@
  "M10": {
   "날짜": "",
   "읽음": false,
-  "지문": "a15844df09e947eb",
+  "지문": "0efa3c498c1518b9",
   "파일": [
    ".github/workflows/gpu-eval.yml"
   ]
@@ -2780,7 +2803,7 @@
  "M11": {
   "날짜": "",
   "읽음": false,
-  "지문": "42ad19b6ceb0f19e",
+  "지문": "c31b16e6582f92fa",
   "파일": [
    "data/catalog.toml",
    "tools/lake.py"
@@ -2805,7 +2828,7 @@
  "M5": {
   "날짜": "",
   "읽음": true,
-  "지문": "6c692bcdc0154ac4",
+  "지문": "34b68220161545b4",
   "파일": [
    "tools/verify.sh"
   ]

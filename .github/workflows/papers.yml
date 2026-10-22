@@ -7,9 +7,13 @@ on:
 
 # ★ **권한을 적는다**(DECISIONS §20). 비공개 저장소의 GITHUB_TOKEN 은 적지 않은 권한이 없다.
 #   가지를 밀고 PR 을 열려면 쓰기와 PR 쓰기가 둘 다 든다.
+#   ★ **`actions: read` 는 마지막 걸음이 든다**(DECISIONS §315). `branch_status.py` 가
+#     `gh run list` 로 PR 가지의 판을 묻는데, 안 적으면 거기서 403 이다 — 그리고 403 은
+#     **「이상 없음」 이 아니라 「못 봤다」** 라 그 걸음이 2 로 끝난다.
 permissions:
   contents: write
   pull-requests: write
+  actions: read
 
 jobs:
   watch:
@@ -48,9 +52,33 @@ jobs:
           git add -- docs/papers.md
           git commit -m "논문 대장: $(date -u +%Y-%m-%d) 에 훑은 후보"
           git push -u origin "$BR"
-          gh pr create --base main --head "$BR" \
+          # ★ **PR 을 못 열면 민 가지를 되돌린다**(DECISIONS §315). 2026-10-19 에 여기서
+          #   `gh pr create` 가 실패했고, **가지는 남고 PR 은 없는 반쪽**이 사흘을 앉아
+          #   있었다. 둘은 한 거래다 — 뒤가 깨지면 앞을 무른다.
+          # ★ **지우기도 실패하면 이름을 대고 죽는다.** 조용히 넘기면 그 반쪽이 또 남고,
+          #   다음 주에 **같은 이름으로 못 민다.**
+          if gh pr create --base main --head "$BR" \
             --title "논문 대장 — $(date -u +%Y-%m-%d) 후보" \
             --body '`tools/watch_papers.py` 가 훑은 후보다. **요약이 아니라 후보다** — 표 본문의
           「무엇을 했나 · 가져올 것」 은 읽은 사람이 쓴다(DECISIONS §126).
 
           합치면 `main` 이 움직인다. **보내 둔 패치가 있으면 합친 뒤 다시 받는다**(DECISIONS §30).'
+          then
+            exit 0
+          fi
+          echo "  PR 을 못 열었다 — 민 가지 $BR 을 되돌린다(반쪽을 안 남긴다)" >&2
+          if git push origin --delete "$BR"; then
+            echo "  가지를 지웠다. 다음 판이 처음부터 다시 한다" >&2
+          else
+            echo "  **가지도 못 지웠다** — 손으로 지운다 : git push origin --delete $BR" >&2
+          fi
+          exit 1
+
+      # ★ **제 끝에서 제 반쪽을 센다**(DECISIONS §315). 위가 죽어도 돈다(`always`) — 그때가
+      #   바로 반쪽이 남는 자리다. 이 기계의 `verify.sh` 도 같은 자를 부른다 : **한 구현,
+      #   두 부르는 곳**이다(§57 — 같은 규칙을 두 곳에 적으면 한쪽만 늙는다).
+      - name: 떠 있는 반쪽이 없나
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 tools/branch_status.py

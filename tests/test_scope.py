@@ -110,6 +110,38 @@ def test_자기_자신도_대상이다():
     assert "check_scope.py" in CS.관문들()
 
 
+def test_if_else_안의_걸음도_뽑는다():
+    """★ **뽑는 무늬가 선언보다 좁으면 관문이 조용히 검사 밖에 앉는다**(DECISIONS §315).
+
+    종전 무늬는 `startswith("step ")` 하나라 `else step …; fi` 꼴 셋을 못 봤다 —
+    `lake.py` 와 `ci_status.py` 가 **「관문은 제 범위를 선언한다」 의 밖**에 있었다.
+    """
+    글 = ('if [ "${CI:-}" = "true" ]; then NAMES+=("ci")\n'
+          "else step ci   uv run python tools/ci_status.py; fi\n")
+    assert CS._뽑는다(글) == ["ci_status.py"]
+
+
+def test_맨_앞의_걸음도_아직_뽑는다():
+    """넓히다 **옛 꼴을 잃으면** 반대쪽 반을 놓친다."""
+    assert CS._뽑는다("step docseal  uv run python tools/docseal.py\n") == ["docseal.py"]
+
+
+def test_주석의_흉내는_안_뽑는다():
+    """★ **없는 관문을 세면 「파일이 없다」 로 영원히 빨갛다.**"""
+    assert CS._뽑는다("  # step 흉내  uv run python tools/없는것.py\n") == []
+
+
+def test_걸음을_만드는_함수는_안_뽑는다():
+    """`step() {` 은 걸음이 아니라 **걸음을 만드는 자**다."""
+    assert CS._뽑는다("step() {  # step 이름 tools/없는것.py\n") == []
+
+
+def test_숨어_있던_관문이_실물에서_보인다():
+    """★ **합성만 물으면 실물이 또 달아난다** — 진짜 `verify.sh` 로 센다."""
+    난것 = set(CS.관문들())
+    assert {"lake.py", "ci_status.py", "branch_status.py"} <= 난것, sorted(난것)
+
+
 @pytest.mark.parametrize("긍정", [
     "문서가 가리킨 것이 실재하는지 본다",
     "이 도구는 꼴과 겹침과 빈칸을 전부 검사한다",

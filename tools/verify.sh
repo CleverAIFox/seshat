@@ -127,6 +127,13 @@ else step lake          uv run python tools/lake.py check; fi
 #   진짜 강제자를 안 보게 됐다 — 네 판을 빨간 채로 밀었다
 if [ "${CI:-}" = "true" ]; then NAMES+=("ci"); MARKS+=("CI 안 — 이 판이 그 판이다")
 else step ci            uv run python tools/ci_status.py; fi
+# ★ **밀린 가지가 PR 없이 떠 있으면 아무도 안 아프다**(DECISIONS §315). 2026-10-19 에
+#   `papers` 가 가지를 밀고 PR 을 못 열었고, 그 반쪽이 **사흘을 앉아 있었다** — CI 판정은
+#   `main` 만 묻는다. 가지는 그 창 밖이다. **까닭을 몰라도 되는 고침**이다 : 남은 꼴만 본다.
+# ★ **CI 에서는 안 돈다.** 러너 토큰은 `gh auth` 로그인이 아니다. 거기서는 `papers` 가
+#   제 끝에서 같은 자를 부른다(`.github/workflows/papers.yml`) — 그 꼴이 나는 자리가 거기다.
+if [ "${CI:-}" = "true" ]; then NAMES+=("branches"); MARKS+=("CI 밖 — papers 가 제 끝에서 본다")
+else step branches      uv run python tools/branch_status.py; fi
 
 echo
 for i in "${!NAMES[@]}"; do printf '  %-16s %s\n' "${NAMES[$i]}" "${MARKS[$i]}"; done

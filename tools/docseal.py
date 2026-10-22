@@ -132,6 +132,8 @@ def 로직_지문(p: pathlib.Path, 이름: str = "") -> str:
     ★ 반대로 **`.md` · `.toml` 은 글자 그대로** 잰다 — 거기서는 글자가 곧 내용이다.
     """
     글 = p.read_text(encoding="utf-8")
+    if p.suffix in 셸붙이:
+        return _셸_지문(글, 이름 if p.suffix == ".sh" else "")
     if p.suffix != ".py":
         return _짧게(글)
     나무: ast.AST = ast.parse(글)
@@ -144,6 +146,81 @@ def 로직_지문(p: pathlib.Path, 이름: str = "") -> str:
         조각 = ast.get_source_segment(글, 몸) or ""
         return _낱말지문(조각, 몸.lineno - 1)
     return _낱말지문(글, 0)
+
+
+#: 「`tools/verify.sh` 의 `scope` 단계」 · 「… 의 `shellcheck_step` 과 `check_prose` 단계」 —
+#: **사람이 이미 걸음 이름을 적어 뒀다**(DECISIONS §316). 기계가 그 줄을 안 읽고 있었다.
+_걸음말 = re.compile(r"`([\w./-]+\.sh)`\s*의\s+((?:`[^`\s]+`(?:\s*(?:와|과|·|,)\s*)?)+)(?:\s*단계)?")
+
+
+def _셸걸음(줄: str) -> dict[str, list[str]]:
+    """강제자 줄이 **한글로 적어 둔** 걸음 이름. `{자리: [걸음…]}`.
+
+    ★ **쓰여 있는 것을 읽는다 — 스물한 절을 고쳐 적지 않는다.** 뜻은 이미 그 줄에 있었고
+      빠진 것은 **읽는 쪽**이었다(§206 · §315 와 같은 집안).
+    ★ **밖 — 「두 갈래」 처럼 이름을 안 댄 줄은 못 읽는다.** 그런 절은 파일 전체를 문다 —
+      좁히지 못한 것은 **넓게 두는 쪽이 안전하다.**
+    """
+    것: dict[str, list[str]] = {}
+    for m in _걸음말.finditer(줄):
+        것.setdefault(m.group(1), []).extend(re.findall(r"`([^`\s]+)`", m.group(2)))
+    return 것
+
+
+#: **줄 맨 앞 `#` 가 주석인 것.** 셸과 워크플로다. `.md` · `.toml` 은 **글자가 곧 내용**이라
+#: 여기 안 든다 — 거기서 주석을 떼면 뜻이 준다(DECISIONS §316)
+셸붙이 = (".sh", ".yml", ".yaml")
+
+#: `verify.sh` 의 걸음을 여는 자리. **줄 맨 앞만이 아니다** — `else step …; fi` 도 걸음이다.
+#: `tools/check_scope.py::_뽑는다` 와 **같은 무늬**다(DECISIONS §315 가 거기서 같은 실수를 했다)
+_걸음무늬 = r"(?:\A|[;&|]|\b(?:else|then|do)\b)\s*step\s+%s(?:\s|$)"
+
+
+def _셸_몸(글: str, 이름: str) -> str | None:
+    """`tools/verify.sh::scope` 가 가리키는 **걸음 줄** 또는 **함수 몸**. 없으면 None.
+
+    ★ **걸음이 먼저다.** `verify.sh` 를 짚은 절은 거의 다 「내 관문이 사슬에 걸렸나」 를
+      말하고, 그 뜻을 지는 것은 **그 걸음 한 줄**이다. 옆 걸음이 늘어도 그 말은 안 변한다.
+    ★ **함수는 맨 앞 `}` 까지 본다.** 중괄호를 세지 않는다 — `${CI:-}` 가 전부 걸린다.
+      이 저장소의 셸 함수는 0칸의 `}` 로 닫는다.
+    """
+    줄들 = 글.splitlines()
+    무늬 = re.compile(_걸음무늬 % re.escape(이름))
+    걸음 = [x for x in 줄들
+            if not x.lstrip().startswith(("#", "step()")) and 무늬.search(x)]
+    if 걸음:
+        return "\n".join(걸음)
+    여는 = re.compile(rf"^\s*(?:function\s+)?{re.escape(이름)}\s*\(\)\s*\{{")
+    시작 = next((n for n, x in enumerate(줄들) if 여는.match(x)), None)
+    if 시작 is None:
+        return None
+    끝 = next((n for n, x in enumerate(줄들[시작 + 1:], 시작 + 1) if x.startswith("}")),
+              len(줄들) - 1)
+    return "\n".join(줄들[시작:끝 + 1])
+
+
+def _셸_지문(글: str, 이름: str = "") -> str:
+    """셸 · 워크플로의 **로직** 지문. **온줄 주석과 빈 줄은 안 센다**(DECISIONS §316).
+
+    ★ **파이썬에만 먹인 약이었다.** `로직_지문` 은 주석 한 줄에 도장이 찢어지는 것을 막으려고
+      낱말 지문을 쓰는데, 그 갈림이 `.py` 에만 걸려 있었다. 실측 : `verify.sh` 에 **주석 한
+      줄**을 더하면 절 **스물**이 무효가 되고, `check_docs.py` 에 같은 것을 더하면 **0** 이다.
+      이 저장소의 `verify.sh` 는 **절반이 주석**이고 걸음은 늘 붙는다 — **가장 자주 흔들리는
+      파일에 가장 둔한 자가 붙어 있었다.**
+    ★ **밖 — 줄 안쪽의 `#` 는 안 건드린다.** `${X#...}` 와 조각 주소가 거기 산다. 온줄 주석만
+      뗀다.
+    ★ **밖 — 그래서 `#` 로 시작하는 「내용」 줄은 안 센다.** 워크플로의 글 뭉치 안에 그런 줄이
+      생기면 그 줄이 바뀌어도 도장이 안 운다. 지금 저장소에는 없다(실측).
+    ★ **밖 — 들여쓰기는 센다.** 파이썬 쪽과 다르다 — 셸에서는 들여쓰기가 뜻을 안 지지만,
+      YAML 에서는 **지므로** 떼면 거짓 초록이 된다.
+    """
+    if 이름:
+        조각 = _셸_몸(글, 이름)
+        if 조각 is None:
+            return "없다"            # 짚은 이름이 사라졌다 — 그 자체가 다시 볼 까닭이다
+        글 = 조각
+    줄 = [x.rstrip() for x in 글.splitlines()]
+    return _짧게("\n".join(x for x in 줄 if x.strip() and not x.lstrip().startswith("#")))
 
 
 def _독스트링_줄(나무: ast.AST) -> set[int]:
@@ -215,16 +292,19 @@ def _한_문서(글: str, 앞: str, 머리: re.Pattern, 뽑는다, 표시: str) 
         본문 = 글[s:끝]
         줄 = 뽑는다(본문)
         파일 = []
+        걸음표 = _셸걸음(줄)
         for 곳, 심볼 in 지목.findall(줄):        # `자리` 를 덮어쓰면 바깥 목록이 날아간다
-            짚은 = f"{곳}::{심볼}" if 심볼 else 곳
+            짚은들 = [f"{곳}::{심볼}"] if 심볼 else (
+                [f"{곳}::{x}" for x in 걸음표.get(곳, [])] or [곳])
             # ★ **도장 파일 자신은 안 든다**(DECISIONS §300). 들면 **찍을 수 없는 절**이 된다 —
             #   찍으면 그 파일이 바뀌고, 바뀌면 그 절이 무효가 되고, 다시 찍으면 또 바뀐다.
             #   강제자는 **자**이고 도장 파일은 **그 자의 산출물**이다. 토트에서 실제로 그 절을
             #   적었고 영구 진동으로 들어갔다(thoth §163).
             if 곳 == _도장자리:
                 continue
-            if (ROOT / 곳).is_file() and 곳 in 아는 and 짚은 not in 파일:
-                파일.append(짚은)
+            for 짚은 in 짚은들:
+                if (ROOT / 곳).is_file() and 곳 in 아는 and 짚은 not in 파일:
+                    파일.append(짚은)
         날 = 날짜.search(본문)
         out.append({"번호": f"{앞}{번호}", "제목": 제목, "날짜": 날.group(1) if 날 else "",
                     "본문": 본문, "파일": 파일, "표시": f"{표시}{번호}"})
@@ -374,6 +454,29 @@ def _canary() -> None:
         sys.exit(2)
     if not _봉인_줄("## 5. 점검\n봉인 — `tools/verify.sh`\n  까닭.\n"):
         print("    ★ 카나리아가 죽었다 — 진짜 봉인 줄을 못 읽는다")
+        sys.exit(2)
+    # ★ **셸도 주석으로 안 찢어져야 한다**(DECISIONS §316). 실측으로 `verify.sh` 에 **주석 한
+    #   줄**을 더하면 절 **스물**이 무효가 됐고 `check_docs.py` 에 같은 것을 더하면 **0** 이었다 —
+    #   약을 `.py` 에만 먹인 자리였다. 넷을 한 번에 묻는다.
+    셸 = 'step scope   uv run python tools/check_scope.py\nstep dead    uv run python tools/check_dead.py\n'
+    if _셸_지문(셸) != _셸_지문("# 주석을 더한다\n" + 셸 + "\n"):
+        print("    ★ 카나리아가 죽었다 — 셸 주석 한 줄에 지문이 갈린다(무효가 소음이 된다)")
+        sys.exit(2)
+    if _셸_지문(셸) == _셸_지문(셸.replace("check_scope", "check_dead")):
+        print("    ★ 카나리아가 죽었다 — 셸의 뜻이 바뀌었는데 지문이 같다")
+        sys.exit(2)
+    if _셸_지문(셸, "scope") != _셸_지문(셸 + "step 새것  uv run python tools/새것.py\n", "scope"):
+        print("    ★ 카나리아가 죽었다 — 옆 걸음이 늘었는데 내 걸음의 지문이 갈린다")
+        sys.exit(2)
+    if _셸_몸('if [ x ]; then NAMES+=(a)\nelse step ci  uv run python tools/ci_status.py; fi\n',
+              "ci") is None:
+        print("    ★ 카나리아가 죽었다 — `if/else` 안의 걸음을 못 찾는다(DECISIONS §315 가 그 꼴이다)")
+        sys.exit(2)
+    if _셸걸음("강제자 — `tools/verify.sh` 의 `scope` 단계") != {"tools/verify.sh": ["scope"]}:
+        print("    ★ 카나리아가 죽었다 — 강제자 줄이 적어 둔 걸음 이름을 못 읽는다")
+        sys.exit(2)
+    if _셸걸음("강제자 — `tools/verify.sh` 의 두 갈래"):
+        print("    ★ 카나리아가 죽었다 — 이름을 안 댄 줄에서 걸음을 지어낸다")
         sys.exit(2)
 
 

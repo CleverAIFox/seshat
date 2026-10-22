@@ -33,12 +33,36 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 시험말 = ("_canary", "_selftest", "_프로브", "--selftest")
 
 
+#: 걸음을 여는 자리. **줄 맨 앞만이 아니다** — `else step …; fi` 도 걸음이다(DECISIONS §315)
+_걸음 = re.compile(r"(?:\A|[;&|]|\b(?:else|then|do)\b)\s*step\s+\S")
+
+
+def _뽑는다(글: str) -> list[str]:
+    """`verify.sh` 의 글에서 걸음이 부르는 `tools/*.py`. **순수 함수다** — 합성으로 물을 수 있다.
+
+    ★ **줄 맨 앞만 보면 몇을 놓친다**(DECISIONS §315). 종전 무늬는 `startswith("step ")`
+      하나였는데 걸음 셋이 `if …; else step lake …; fi` 꼴이라 **안 뽑혔다** —
+      `lake.py` 와 `ci_status.py` 가 **선언 검사 밖에 앉아 있었다.** 대 보니 둘 다 밖
+      선언이 없었고 `lake.py` 는 카나리아도 없었다. 곧 **「모든 관문이 제 범위를
+      선언한다」 가 거짓 초록**이었다 — §311 과 같은 집안이고, 이번엔 **뽑는 무늬가
+      선언보다 좁았다.**
+    ★ **주석은 뺀다.** 셸 주석에 걸음을 적어 둔 줄이 섞이면 **없는 관문**이 뽑힌다.
+    ★ **함수 정의(`step() {`)는 뺀다** — 그것은 걸음이 아니라 걸음을 만드는 자다.
+    """
+    걸음 = []
+    for x in 글.splitlines():
+        s = x.lstrip()
+        if s.startswith("#") or s.startswith("step()"):
+            continue
+        if _걸음.search(x):
+            걸음.append(x)
+    return sorted(set(re.findall(r"tools/(\w+\.py)", "\n".join(걸음))))
+
+
 def 관문들(root: pathlib.Path | None = None) -> list[str]:
     """`verify.sh` 가 `step` 으로 부르는 `tools/*.py`. **손 목록을 안 만든다** — 실물에서 뽑는다."""
     root = root or ROOT
-    글 = (root / "tools/verify.sh").read_text(encoding="utf-8")
-    걸음 = "\n".join(x for x in 글.splitlines() if x.startswith("step "))
-    return sorted(set(re.findall(r"tools/(\w+\.py)", 걸음)))
+    return _뽑는다((root / "tools/verify.sh").read_text(encoding="utf-8"))
 
 
 def 안한것(root: pathlib.Path | None = None) -> list[tuple[str, str]]:
@@ -89,6 +113,17 @@ def _canary(root: pathlib.Path | None = None) -> None:
         sys.exit(2)
     if not any(w in "def _canary():" for w in 시험말):
         print("    ★ 카나리아가 죽었다 — 자가시험이 있는 글을 없는 것으로 셌다")
+        sys.exit(2)
+    # ★ **뽑는 무늬가 좁으면 관문이 조용히 검사 밖에 앉는다**(DECISIONS §315). 셋을 한 번에
+    #   묻는다 — `if/else` 안의 걸음을 **잡나** · 맨 앞의 걸음을 **아직 잡나** · 주석의
+    #   흉내를 **안 잡나.** 넷째 줄이 뽑히면 **없는 관문**을 세는 것이다.
+    합성 = ('if [ "${CI:-}" = "true" ]; then NAMES+=("ci")\n'
+            "else step ci       uv run python tools/ci_status.py; fi\n"
+            "step docseal       uv run python tools/docseal.py\n"
+            "  # step 흉내      uv run python tools/없는것.py\n")
+    뽑힌것 = _뽑는다(합성)
+    if 뽑힌것 != ["ci_status.py", "docseal.py"]:
+        print(f"    ★ 카나리아가 죽었다 — 걸음 뽑기가 틀렸다 : {뽑힌것}")
         sys.exit(2)
 
 
