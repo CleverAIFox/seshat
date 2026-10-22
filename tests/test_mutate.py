@@ -11,6 +11,7 @@
 """
 from __future__ import annotations
 
+import json
 import importlib.util
 import pathlib
 import re
@@ -381,3 +382,88 @@ def test_톱니_수를_문서에_또_적지_않는다():
     톱니 = 줄[줄.index("톱니 셋"):]
     assert "MIN_잴것" in 톱니 and "MAX_못잴것" in 톱니, "상수 이름을 가리켜야 한다"
     assert not re.search(r"잴 자리[^·]{0,8}\d", 톱니), f"톱니 수를 문서에 또 적었다 : {톱니[:120]}"
+
+
+# ───────── 끊긴 판이 남긴 돌연변이(DECISIONS §319) ─────────
+
+def test_자국이_없으면_조용하다(tmp_path):
+    assert MU.지난판이_남긴것(tmp_path / "없다.json") == {}
+
+
+def test_자국을_읽는다(tmp_path):
+    자국 = tmp_path / "자국.json"
+    자국.write_text('{"tools/x.py": "원본\\n"}', encoding="utf-8")
+    assert MU.지난판이_남긴것(자국) == {"tools/x.py": "원본\n"}
+
+
+def test_깨진_자국을_자국으로_안_센다(tmp_path):
+    """★ **「못 읽었다」 를 「없다」 로 적는 것이 §59 의 그 자리다** — 다만 여기서는
+    없는 것으로 세는 쪽이 맞다. 깨진 자국으로 파일을 덮으면 **원본을 잃는다.**"""
+    자국 = tmp_path / "자국.json"
+    자국.write_text("{깨진", encoding="utf-8")
+    assert MU.지난판이_남긴것(자국) == {}
+
+
+def test_지난판을_되돌리면_자국이_사라진다(tmp_path, monkeypatch):
+    """★ **이것이 §319 의 전부다.** 재부팅은 손잡이를 안 태운다 — 자국이 그 자리를 든다."""
+    대상 = tmp_path / "뚫린것.py"
+    대상.write_text("def main() -> int:\n    return 0\n", encoding="utf-8")
+    원본 = "def main() -> int:\n    '''진짜 몸통.'''\n    return 1\n"
+    자국 = tmp_path / "자국.json"
+    자국.write_text(json.dumps({str(대상): 원본}, ensure_ascii=False), encoding="utf-8")
+    monkeypatch.setattr(MU, "남은자국", 자국)
+    난것 = MU.지난판을_되돌린다()
+    assert 난것 and 대상.read_text(encoding="utf-8") == 원본
+    assert not 자국.exists(), "되돌린 뒤에 자국이 남으면 다음 판이 또 되돌린다"
+
+
+def test_이미_같으면_되돌린_것으로_안_센다(tmp_path, monkeypatch):
+    """★ **다 우는 검사는 꺼진다** — 멀쩡한 파일을 「되돌렸다」 로 적으면 안 된다."""
+    대상 = tmp_path / "멀쩡.py"
+    원본 = "x = 1\n"
+    대상.write_text(원본, encoding="utf-8")
+    자국 = tmp_path / "자국.json"
+    자국.write_text(json.dumps({str(대상): 원본}, ensure_ascii=False), encoding="utf-8")
+    monkeypatch.setattr(MU, "남은자국", 자국)
+    assert MU.지난판을_되돌린다() == []
+
+
+def test_SIGHUP_을_막는다():
+    """★ **창을 닫으면 그것이 온다.** 1판은 INT 와 TERM 만 막았다."""
+    import signal
+    assert signal.SIGHUP in MU._막을신호()
+    assert signal.SIGINT in MU._막을신호() and signal.SIGTERM in MU._막을신호()
+
+
+def test_훅이_남은것을_본다():
+    """★ **뚫린 파일을 커밋하면 관문이 열린 채 역사에 박힌다.**"""
+    훅 = (ROOT / ".githooks/pre-commit").read_text(encoding="utf-8")
+    assert "--남은것" in 훅
+
+
+def test_자국이_깃에서_빠져_있다():
+    """자국은 **기계마다**다 — 커밋되면 남의 나무를 되돌린다."""
+    assert ".mutate-남은것.json" in (ROOT / ".gitignore").read_text(encoding="utf-8")
+
+
+def test_남은것_은_묻기만_하고_안_되돌린다(tmp_path, monkeypatch):
+    """★ **고치는 일과 막는 일을 한 호출에 섞지 않는다**(DECISIONS §319).
+
+    1판은 되돌린 **뒤에** 물어서 늘 0 이었다 — 그러면 훅이 못 막고, **인덱스에 이미
+    올라간 돌연변이는 그대로 커밋된다.**
+    """
+    대상 = tmp_path / "뚫린것.py"
+    대상.write_text("def main() -> int:\n    return 0\n", encoding="utf-8")
+    원본 = "def main() -> int:\n    return 1\n"
+    자국 = tmp_path / "자국.json"
+    자국.write_text(json.dumps({str(대상): 원본}, ensure_ascii=False), encoding="utf-8")
+    monkeypatch.setattr(MU, "남은자국", 자국)
+    assert MU.main(["--남은것"]) == 1, "남은 것이 있으면 막는다"
+    assert 대상.read_text(encoding="utf-8") == "def main() -> int:\n    return 0\n", \
+        "묻기만 해야 한다 — 되돌리면 인덱스와 나무가 갈린다"
+    assert 자국.exists(), "자국도 그대로 둔다"
+
+
+def test_남은것_이_없으면_조용히_0_이다(tmp_path, monkeypatch):
+    monkeypatch.setattr(MU, "남은자국", tmp_path / "없다.json")
+    assert MU.main(["--남은것"]) == 0

@@ -30,6 +30,10 @@ bad=0
 for chk in check_docs.py doc_fsck.py check_hypotheses.py; do
   $P "tools/$chk" || bad=1
 done
+# ★ **뚫린 파일을 커밋하면 관문이 열린 채 역사에 박힌다**(DECISIONS §319). 2026-10-22 에
+#   기계가 재부팅되며 `tools/check_scope.py` 가 `main` 이 `return 0` 인 채 남았고,
+#   `git status` 말고는 아무도 그것을 안 봤다. 파일 하나 보는 검사라 값이 0 초다.
+$P tools/mutate.py --남은것 || bad=1
 command -v uv >/dev/null 2>&1 && { uv run ruff check . || bad=1; }
 
 if [ "$bad" != 0 ]; then

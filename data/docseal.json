@@ -1327,7 +1327,7 @@
  "234": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "f98a6514fff216e6",
+  "지문": "ab68a8c978fe96cf",
   "파일": [
    "docs/DECISIONS.md",
    "docs/PLAN.md",
@@ -1406,7 +1406,7 @@
  "241": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "1fd5e4f5b6184878",
+  "지문": "f9c7b3e9cf420ee8",
   "파일": [
    "tools/check_numbers.py",
    "docs/DECISIONS.md"
@@ -1677,7 +1677,7 @@
  "267": {
   "날짜": "2026-10-01",
   "읽음": true,
-  "지문": "3a0a0aa57d7038b6",
+  "지문": "863f74af8f0101ea",
   "파일": [
    "tools/check_claims.py",
    "tests/test_claims.py",
@@ -1907,7 +1907,7 @@
  "287": {
   "날짜": "2026-10-04",
   "읽음": true,
-  "지문": "f7e2e02ecddafa4e",
+  "지문": "47a42d4fadacf751",
   "파일": [
    "tools/mutate.py::톱니",
    "tools/mutate.py::견준다",
@@ -1934,7 +1934,7 @@
  "289": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "a8399ed9b476da63",
+  "지문": "42bed110c72c18a2",
   "파일": [
    "tools/mutate.py",
    "tests/test_mutate.py"
@@ -1952,7 +1952,7 @@
  "290": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "db0cb2ecfd476268",
+  "지문": "b604cf394d220239",
   "파일": [
    "tools/mutate.py",
    "tests/test_claims.py",
@@ -2011,7 +2011,7 @@
  "296": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "a164b798c0dbc959",
+  "지문": "911694e39d42d368",
   "파일": [
    "tools/doc_fsck.py",
    "tools/check_docs.py",
@@ -2087,7 +2087,7 @@
  "302": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "3ece362b41e3a799",
+  "지문": "84a7ecd42e1adc61",
   "파일": [
    "tools/mutate.py",
    "tests/test_mutate.py"
@@ -2127,7 +2127,7 @@
  "307": {
   "날짜": "2026-10-19",
   "읽음": true,
-  "지문": "c021852cd9d45830",
+  "지문": "d30b5fdbe62724a8",
   "파일": [
    "tools/verify.sh::mutate",
    "tools/mutate.py"
@@ -2164,7 +2164,7 @@
  "310": {
   "날짜": "2026-10-20",
   "읽음": true,
-  "지문": "37b3a1f6d1c47d2e",
+  "지문": "0ec194a22979adc9",
   "파일": [
    "docs/DECISIONS.md",
    "docs/related.md"
@@ -2204,7 +2204,7 @@
  "314": {
   "날짜": "2026-10-21",
   "읽음": false,
-  "지문": "5c6ca19cbea7186f",
+  "지문": "bba078a9a0d0de7a",
   "파일": [
    "tests/test_evaluate.py",
    "tools/mine_terms.py",
@@ -2217,7 +2217,7 @@
  "315": {
   "날짜": "2026-10-22",
   "읽음": false,
-  "지문": "c4d02423424a36e5",
+  "지문": "59888e70fba5e56e",
   "파일": [
    "tests/test_mutate.py",
    "docs/MASTER.md"
@@ -2251,12 +2251,25 @@
  "318": {
   "날짜": "2026-10-22",
   "읽음": false,
-  "지문": "0f9a8890551f563a",
+  "지문": "54cf9727f8d37888",
   "파일": [
    "tools/check_docs.py",
    "tools/check_size.py",
    "tools/check_prose.py::check_맨절",
    "tools/check_scope.py::안한것"
+  ]
+ },
+ "319": {
+  "날짜": "2026-10-22",
+  "읽음": false,
+  "지문": "20dd555d720b293e",
+  "파일": [
+   "tools/mutate.py::지난판이_남긴것",
+   "tools/mutate.py::지난판을_되돌린다",
+   "tools/mutate.py::_막을신호",
+   "tools/mutate.py::_자국을_남긴다",
+   "tools/mutate.py::_canary",
+   "tests/test_mutate.py"
   ]
  },
  "32": {

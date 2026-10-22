@@ -47,6 +47,7 @@ from __future__ import annotations
 import argparse
 import ast
 import hashlib
+import json
 import os
 import pathlib
 import re
@@ -58,13 +59,19 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 # ★ **신호를 받아도 되돌린다**(§287). 지금 뚫어 놓은 파일과 그 원본을 들고 있다가
 #   `SIGINT`/`SIGTERM` 에 되돌려 놓고 죽는다. 비어 있으면 뚫린 파일이 없다는 뜻이다.
 _뚫린것: dict[pathlib.Path, str] = {}
+# ★ **손잡이로는 모자랐다**(DECISIONS §319). 2026-10-22 에 `check_scope.py` 가 **`main` 의 몸이
+#   `return 0` 으로 바뀐 채** 디스크에 남아 있었다 — 관문이 활짝 열린 채다. 까닭이 셋이다 :
+#   막는 신호에 **`SIGHUP` 이 없었고**(창을 닫으면 그것이다), **되돌리는 손잡이 자체가 또
+#   끊기며**, 남은 뒤에 **그것을 보는 자가 없었다.** 손잡이는 `SIGKILL` 도 못 막는다.
+#   그래서 **디스크에 자국을 남긴다** — 다음 판이 그것을 보고 되돌린다.
+남은자국 = ROOT / ".mutate-남은것.json"
 # ★ **검사 술어가 `tools/` 에 산다.** 2026-10-01 터진 다섯 중 셋이 거기였다 — seshat/ 만 재면
 #   **재는 쪽을 안 재는 것**이다(§172 와 같은 꼴)
 볼곳 = ("seshat/*.py", "tools/*.py")
 # ★ **양방향**(§287). 산 자리는 절대 0 이고, 못 잰 자리는 늘면 울고, **잴 자리는 줄면 운다** —
 #   반환 주석을 떼면 그 함수가 조용히 검사 밖으로 나간다. 2026-10-01 → 10-04 에 못 잰 자리가
 #   41 → 47 로 늘었는데 **아무도 안 셌다.**
-MIN_잴것 = 485
+MIN_잴것 = 490
 MAX_못잴것 = 47
 # ★ **장부**(§287). `verify.sh` 가 보는 범위에서 **지금 붙드는 시험이 없는 자리.** 늘면 막고,
 #   갚으면 `--update` 가 줄인다 — `check_deadchecks` 와 같은 꼴(§255 · §258).
@@ -289,6 +296,22 @@ def _canary() -> None:
     if _중립값(ast.parse("def f() -> list[str]: ...").body[0].returns) != "[]":
         print("    ★ 카나리아가 죽었다 — 꼴을 못 읽는다")
         sys.exit(2)
+    # ★ **자국이 안 읽히면 지난 판의 뚫린 파일을 영영 못 찾는다**(DECISIONS §319).
+    #   합성으로 셋을 묻는다 — 없을 때 조용한가 · 있을 때 읽는가 · 신호 목록에 HUP 이 드는가.
+    import tempfile
+    with tempfile.TemporaryDirectory() as d:
+        자국 = pathlib.Path(d) / "자국.json"
+        if 지난판이_남긴것(자국):
+            print("    ★ 카나리아가 죽었다 — 자국이 없는데 있다고 한다"); sys.exit(2)
+        자국.write_text('{"a.py": "원본"}', encoding="utf-8")
+        if 지난판이_남긴것(자국) != {"a.py": "원본"}:
+            print("    ★ 카나리아가 죽었다 — 자국을 못 읽는다"); sys.exit(2)
+        자국.write_text("깨진 글", encoding="utf-8")
+        if 지난판이_남긴것(자국):
+            print("    ★ 카나리아가 죽었다 — 깨진 자국을 자국으로 센다"); sys.exit(2)
+    if hasattr(signal, "SIGHUP") and signal.SIGHUP not in _막을신호():
+        print("    ★ 카나리아가 죽었다 — SIGHUP 을 안 막는다(창을 닫으면 그것이다)")
+        sys.exit(2)
 
 
 def _바이트코드를_버린다(파일: pathlib.Path) -> None:
@@ -315,12 +338,80 @@ def _이름(p: pathlib.Path) -> str:
         return str(p)
 
 
+def _막을신호() -> list[int]:
+    """되돌릴 틈을 주는 신호들. **`SIGHUP` 이 빠져 있었다**(DECISIONS §319) — 창을 닫으면
+    그것이고, 그때는 아무도 안 되돌렸다. 윈도에 없는 것은 조용히 뺀다."""
+    것 = []
+    for 이름 in ("SIGINT", "SIGTERM", "SIGHUP", "SIGQUIT"):
+        s = getattr(signal, 이름, None)
+        if s is not None:
+            것.append(s)
+    return 것
+
+
+def _자국을_남긴다() -> None:
+    """지금 뚫어 둔 것을 디스크에 적는다. **`SIGKILL` 도 이것은 못 지운다.**"""
+    try:
+        남은자국.write_text(json.dumps({str(k): v for k, v in _뚫린것.items()},
+                                     ensure_ascii=False), encoding="utf-8")
+    except OSError as e:                      # 자국을 못 남겨도 본일은 돈다
+        print(f"    ※ 자국을 못 남겼다({e}) — 끊기면 손으로 되돌린다", file=sys.stderr)
+
+
+def _자국을_치운다() -> None:
+    남은자국.unlink(missing_ok=True)
+
+
+def 지난판이_남긴것(자국: pathlib.Path | None = None) -> dict[str, str]:
+    """지난 판이 **안 끝났으면** 그때 뚫린 파일과 원본. 없으면 빈 것.
+
+    ★ **밖 — 자국이 없으면 「없다」 가 아니라 「모른다」 다.** 자국을 못 남긴 채 죽었으면
+      이 자도 못 본다. 그때 남는 길은 `git status` 뿐이다(2026-10-22 에 그랬다).
+    ★ **밖 — 원본이 맞는지는 못 본다.** 자국이 든 글을 그대로 되돌린다.
+    """
+    자국 = 자국 or 남은자국
+    if not 자국.is_file():
+        return {}
+    try:
+        것 = json.loads(자국.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    return 것 if isinstance(것, dict) else {}
+
+
+def 지난판을_되돌린다() -> list[str]:
+    """지난 판이 남긴 것을 되돌린다. **되돌린 이름들** — 비면 남은 것이 없었다."""
+    것 = 지난판이_남긴것()
+    되돌린것 = []
+    for 자리, 원 in 것.items():
+        p = pathlib.Path(자리)
+        try:
+            if p.is_file() and p.read_text(encoding="utf-8") != 원:
+                p.write_text(원, encoding="utf-8")
+                _바이트코드를_버린다(p)
+                되돌린것.append(_이름(p))
+        except OSError as e:
+            print(f"    ★ **{자리} 를 못 되돌렸다**({e}) : git checkout -- {자리}", file=sys.stderr)
+    if 것:
+        _자국을_치운다()
+    return 되돌린것
+
+
 def _되돌리고_죽는다(signum: int, _frame: object) -> None:
     """★ **끊겨도 소스를 남기지 않는다.** `finally` 는 신호에 안 돈다.
 
     ★ **한 파일이 실패해도 나머지를 끝까지 되돌린다.** 되돌리는 길에서 예외가 새면
       그 뒤의 파일이 뚫린 채로 남는다 — 이 함수가 막으려던 바로 그 상태다.
     """
+    # ★ **되돌리는 동안에는 더 안 끊긴다**(DECISIONS §319). 2026-10-22 에 이 손잡이가
+    #   **제가 돌다가 또 끊겼다** — Ctrl-C 를 한 번 더 누르면 그 자리에서 죽고 남은 파일이
+    #   뚫린 채 남는다. 되돌리기는 **끝까지 돈다.**
+    for _sig in _막을신호():
+        try:
+            signal.signal(_sig, signal.SIG_IGN)
+        except (OSError, ValueError) as e:
+            print(f"\n    ※ 신호 {_sig} 를 못 막았다({e}) — 되돌리는 중에 또 끊길 수 있다",
+                  file=sys.stderr)
     for p, 원 in list(_뚫린것.items()):
         try:
             p.write_text(원, encoding="utf-8")
@@ -329,12 +420,17 @@ def _되돌리고_죽는다(signum: int, _frame: object) -> None:
         except Exception as e:
             print(f"\n    ★ 신호 {signum} — **{_이름(p)} 을 못 되돌렸다**({e}) : "
                   f"git checkout -- {_이름(p)}", file=sys.stderr)
+    _자국을_치운다()
     sys.exit(130)
 
 
 def main(argv: list[str] | None = None) -> int:
-    for _sig in (signal.SIGINT, signal.SIGTERM):
-        signal.signal(_sig, _되돌리고_죽는다)
+    for _sig in _막을신호():
+        try:
+            signal.signal(_sig, _되돌리고_죽는다)
+        except (OSError, ValueError) as e:
+            print(f"    ※ 신호 {_sig} 에 손잡이를 못 걸었다({e}) — 그 신호로 끊기면 "
+                  f"뚫린 채 남는다. 자국이 다음 판에 그것을 든다", file=sys.stderr)
     ap = argparse.ArgumentParser()
     # ★ **쌓인다**(§307). 사슬이 `tools/check_*.py` 와 `seshat/*.py` 둘을 본다 —
     #   값 하나짜리면 뒤엣것만 먹고 **앞엣것이 조용히 범위 밖**이 된다.
@@ -342,10 +438,35 @@ def main(argv: list[str] | None = None) -> int:
                     help="이 무늬만 — 여러 번 줄 수 있다. 비우면 전부")
     ap.add_argument("--list", action="store_true")
     ap.add_argument("--selftest", action="store_true")
+    # ★ **훅이 쓴다**(DECISIONS §319). 뚫린 파일을 커밋하면 **관문이 열린 채 역사에 박힌다.**
+    ap.add_argument("--남은것", action="store_true",
+                    help="지난 판이 남긴 것이 있으면 이름을 대고 1 로 끝난다 (안 되돌린다)")
     ap.add_argument("--tests", default="tests", help="돌릴 시험")
     ap.add_argument("--full", action="store_true",
                     help="짝 시험을 안 쓰고 언제나 전부 돌린다 (느리다 — 짝짓기를 의심할 때)")
     a = ap.parse_args(sys.argv[1:] if argv is None else argv)
+    # ★ **되돌리기보다 먼저 묻는다**(DECISIONS §319). 1판은 되돌린 **뒤에** 물어서 늘 0
+    #   이었다 — 그러면 훅이 못 막고, **인덱스에 이미 올라간 돌연변이는 그대로 커밋된다.**
+    #   이 깃발은 **안 되돌린다** : 고치는 일과 막는 일을 한 호출에 섞지 않는다.
+    if a.남은것:
+        것 = 지난판이_남긴것()
+        if not 것:
+            return 0
+        print(f"    ✗ **지난 돌연변이 판이 안 끝났다** — {len(것)} 파일이 뚫린 채일 수 있다:",
+              file=sys.stderr)
+        for 자리 in 것:
+            print(f"      {자리}", file=sys.stderr)
+        print("      되돌린다 : python3 tools/mutate.py --list >/dev/null\n"
+              "      또는     : git checkout -- <위 파일들>\n"
+              "      **되돌린 뒤에 `git add` 를 다시 한다** — 인덱스에는 뚫린 것이 올라가 있다",
+              file=sys.stderr)
+        return 1
+    # ★ 손잡이가 못 막은 지난 판을 여기서 되찾는다(DECISIONS §319).
+    되돌린것 = 지난판을_되돌린다()
+    if 되돌린것:
+        print(f"    ★ **지난 판이 안 끝났다** — {' · '.join(되돌린것)} 을 되돌렸다.\n"
+              f"      그 사이에 그 파일(들)은 **뚫린 채**였다 — 커밋했으면 git 으로 본다 :\n"
+              f"        git log -p -1 -- {' '.join(되돌린것)}", file=sys.stderr)
     _canary()
     if a.selftest:
         print("  프로브 살아 있다 — 몸통을 지우고 머리말을 남기고 꼴을 읽는다")
@@ -372,6 +493,7 @@ def main(argv: list[str] | None = None) -> int:
         앞해시 = hashlib.sha256(원.encode()).hexdigest()
         짝 = [] if a.full else 짝시험(파일)
         _뚫린것[f] = 원
+        _자국을_남긴다()
         try:
             f.write_text(지운다(원, 이름, v), encoding="utf-8")
             # ★ **빠른 길은 긍정만 낸다.** 짝이 울면 붙드는 시험이 있는 것이 확실하다.
@@ -391,6 +513,7 @@ def main(argv: list[str] | None = None) -> int:
             f.write_text(원, encoding="utf-8")
             _바이트코드를_버린다(f)
             _뚫린것.pop(f, None)
+            _자국을_치운다()
         if hashlib.sha256(f.read_text(encoding="utf-8").encode()).hexdigest() != 앞해시:
             print(f"    ★ **{파일} 을 못 되돌렸다** — git 으로 되돌린다 : git checkout -- {파일}",
                   file=sys.stderr)
