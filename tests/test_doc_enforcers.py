@@ -280,7 +280,7 @@ def test_빨간_행은_막는_문장을_든다():
     cd.check_plan(나쁜, got)
     assert any("어느 문장을 막는지" in x for x in got), "카나리아가 죽었다"
 
-    좋은 = 나쁜.replace("측정을 더럽힌다.**", "측정을 더럽힌다.** `docs/related.md` §3 의 「무엇」 을 막는다")
+    좋은 = 나쁜.replace("측정을 더럽힌다.**", "측정을 더럽힌다.** `docs/MASTER.md` §19 의 「무엇」 을 막는다")
     got2 = []
     cd.check_plan(좋은, got2)
     assert not any("어느 문장을 막는지" in x for x in got2)

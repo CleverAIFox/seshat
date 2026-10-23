@@ -236,9 +236,9 @@ def check_plan(text: str, fails: list) -> None:
         #   「측정을 더럽힌다」 만으로는 끝이 없다. 재는 것은 늘 조금씩 더럽고, 그러면 모든 행이
         #   🔴 이 될 수 있다. **막는 문장이 있어야 🔴 다** — 그러면 🔴 의 수가
         #   **말하려는 문장의 수로 위가 막힌다.** 막는 문장이 없으면 그것은 넓히는 일(🟡)이다
-        if "🔴" in marks and "related.md" not in item:
+        if "🔴" in marks and "MASTER.md" not in item:
             fails.append(f"PLAN #{n} 이 🔴 인데 **어느 문장을 막는지** 안 적었다 — "
-                         f"`docs/related.md` §3 의 줄을 든다(DECISIONS §187). "
+                         f"`docs/MASTER.md` §19 의 줄을 든다(DECISIONS §187 · §324). "
                          f"막는 문장이 없으면 🔴 가 아니라 🟡 다")
         for tok in PLAN_REF.findall(deps):
             if int(tok) not in known:

@@ -15,9 +15,13 @@ _spec.loader.exec_module(CN)
 
 
 def _나무(tmp_path: pathlib.Path, 결과: str, 근거글: str = "") -> pathlib.Path:
-    for d in ("docs/now", "docs/why", "docs/next", "data"):
+    # ★ 2026-10-23 에 결과 문서가 **MASTER §19 로 접혔다**(DECISIONS §324) — 절로 짓는다.
+    #   그리고 종전 고정자리는 `docs/now` · `why` · `next` 를 지었다. **§288 이 2026-10-04 에
+    #   없앤 폴더**인데 시험이 계속 만들고 있었다(§317 이 같은 꼴을 지도에서 잡았다).
+    for d in ("docs", "data"):
         (tmp_path / d).mkdir(parents=True, exist_ok=True)
-    (tmp_path / CN.문서).write_text(결과, encoding="utf-8")
+    자리, 번호 = CN.문서
+    (tmp_path / 자리).write_text(f"# 머리\n\n## {번호}. 결과\n{결과}\n", encoding="utf-8")
     (tmp_path / "docs/DECISIONS.md").write_text(근거글, encoding="utf-8")
     return tmp_path
 
@@ -45,7 +49,9 @@ def test_근거에_없는_수가_걸린다(tmp_path):
     t = _나무(tmp_path, "차 **+0.0793** 이다\n", "그 판에서 +0.0739 가 났다\n")
     got = CN.근거없는수(t)
     assert [x[1] for x in got] == ["0.0793"], got
-    assert got[0][0] == 1                                  # 줄 번호를 든다
+    # ★ **파일 기준 줄 번호다**(DECISIONS §324) — 고정자리의 절 본문은 넷째 줄에서 시작한다.
+    #   절 안 기준으로 세면 그 수를 들고 MASTER 를 열었을 때 엉뚱한 줄이 나온다.
+    assert got[0][0] == 4                                  # 줄 번호를 든다
 
 
 def test_arXiv_번호는_수가_아니다(tmp_path):

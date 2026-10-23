@@ -380,8 +380,14 @@ def 절들(글: str | None = None) -> list[dict]:
 #: ★ **무늬를 좁게 둔다.** 처음엔 열 글자를 건너뛰게 했더니 §314 가 「MASTER … (DECISIONS
 #:   §287)」 에서 **287** 을 MASTER 절로 집었다. `§` 는 이름 **바로 뒤**여야 한다.
 #: ★ **안 대면 통째로 문다.** 넷이 그렇고, 그것이 맞다 — 그 절들은 문서 전체를 말한다.
-문서대장 = {"docs/related.md": r"related\.md`?\s*§(\d+)",
-            "docs/MASTER.md": r"(?<![\w가-힣])MASTER(?:\.md)?`?\s*§([\w.-]+)"}
+문서대장 = {"docs/MASTER.md": r"(?<![\w가-힣])MASTER(?:\.md)?`?\s*§([\w.-]+)"}
+
+#: **접힌 문서 → 그 글이 들어간 MASTER 절**(DECISIONS §324). 2026-10-23 에 위성 넷을
+#: MASTER 로 접었다. 옛 절의 **본문은 못 고친다**(추가만 · §296) — 거기 적힌
+#: 「`docs/related.md` §3」 은 그대로 남는다. 그래서 **옛 이름을 읽어 새 절로 되짚는다.**
+#: ★ **안 되짚으면 §323 이 푼 것이 도로 풀린다.** 스무 절이 MASTER 를 **통째로** 물게 되고,
+#:   MASTER 는 절 쓸 때마다 바뀐다 — **접기가 도장을 넓히는** 바로 그 자리다.
+접힌문서 = {"escape.md": "16", "colab.md": "17", "grammar.md": "18", "related.md": "19"}
 
 # ★ **맨 뒤 절은 다음 절이 붙는 순간 한 번 무효가 된다 — 그리고 안 고친다**(DECISIONS §306).
 #   본문을 「다음 `## §` 앞까지」 로 뽑으므로, 파일 끝이던 절에 뒤가 생기면 **끝 줄바꿈 하나**가
@@ -450,8 +456,10 @@ def 지문(절: dict) -> str:
             # ★ **절을 댔으면 그 절만 문다**(DECISIONS §323). 안 댔으면 아래로 내려가
             #   **통째로** 문다 — 좁히지 못한 것은 넓게 두는 쪽이 안전하다(§321).
             글 = (ROOT / 자리).read_text(encoding="utf-8")
-            몫 = [x for n in sorted(set(re.findall(문서대장[자리], 절["본문"])))
-                  if (x := _문서절(글, n)) is not None]
+            번호 = set(re.findall(문서대장[자리], 절["본문"]))
+            if 자리 == "docs/MASTER.md":
+                번호 |= {n for 옛, n in 접힌문서.items() if 옛 in 절["본문"]}
+            몫 = [x for n in sorted(번호) if (x := _문서절(글, n)) is not None]
             if 몫:
                 조각.append(f"{f}\0{_짧게(chr(0).join(몫))}")
                 continue
@@ -492,7 +500,10 @@ def 안풀리는_문서절(절목록: list[dict] | None = None) -> list[str]:
                 print(f"    ※ {자리} 를 못 읽었다({e.__class__.__name__}) — "
                       f"**이 문서의 절은 안 봤다**", file=sys.stderr)
                 continue
-            for n in sorted(set(re.findall(문서대장[자리], 절["본문"]))):
+            번호 = set(re.findall(문서대장[자리], 절["본문"]))
+            if 자리 == "docs/MASTER.md":
+                번호 |= {n for 옛, n in 접힌문서.items() if 옛 in 절["본문"]}
+            for n in sorted(번호):
                 if _문서절(글, n) is None:
                     난것.append(f"§{절['번호']} 가 없는 절을 부른다 — {자리} §{n}")
     return 난것

@@ -3,7 +3,7 @@ r"""**결과 문서가 든 수에 근거가 있는가**(DECISIONS §235).
   python3 tools/check_numbers.py            # 근거 없는 수가 있으면 1
   python3 tools/check_numbers.py --list     # 어느 줄의 어느 수인지 찍는다
 
-★ `docs/related.md` 는 **결과를 요약하는 문서**다 — 수를 **만들지 않고 옮겨 적는다.** 그런데
+★ `docs/MASTER.md` §19 는 **결과를 요약하는 절**이다(2026-10-23 에 `docs/related.md` 를 접었다 · §324) — 수를 **만들지 않고 옮겨 적는다.** 그런데
   옮겨 적는 일에는 강제자가 없었다. `+0.0739` 를 `+0.0793` 으로 잘못 치면 **아무도 안 운다.**
 ★ **파이어레인의 `docnum_check` 를 여기 맞춘 것이다**(파이어레인 MASTER 의 「문서 숫자 대조」).
   거기는 산출물에서 **다시 세어** 대조하는데, 이 저장소의 수는 레이크의 판에서 나므로 **clone 직후에
@@ -24,17 +24,40 @@ import re
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-문서 = "docs/related.md"
+#: 결과를 요약하는 자리. 2026-10-23 에 `docs/related.md` 를 **MASTER §19 로 접었다**
+#: (DECISIONS §324). **절만 뽑아 본다** — 파일 전체를 보면 아래 `근거` 와 겹친다.
+문서 = ("docs/MASTER.md", "19")
 # 근거가 사는 자리. **늘리는 것이지 줄이는 것이 아니다**
-근거 = ("docs/DECISIONS.md", "docs/hypotheses.md", "docs/MASTER.md",
-        "data/scoreboard.toml")
+# ★ **MASTER 는 §19 를 뺀 나머지만 근거다**(DECISIONS §324). 안 빼면 **제가 제 근거**가
+#   되어 이 검사가 통째로 공짜가 된다 — 접기가 검사를 끄는 자리였다.
+근거 = ("docs/DECISIONS.md", "docs/hypotheses.md", "data/scoreboard.toml")
+_절머리 = re.compile(r"^## +§?([\w.-]+)\.", re.M)
+
+
+def _절(글: str, 번호: str) -> str:
+    """`## N.` 절 하나의 본문. 없으면 빈 글."""
+    머리 = [(m.start(), m.group(1)) for m in _절머리.finditer(글)]
+    for i, (s, n) in enumerate(머리):
+        if n == 번호:
+            return 글[s:머리[i + 1][0] if i + 1 < len(머리) else len(글)]
+    return ""
+
+
+def _절밖(글: str, 번호: str) -> str:
+    """그 절을 **뺀** 나머지. 근거로 쓴다."""
+    조각 = _절(글, 번호)
+    return 글.replace(조각, "") if 조각 else 글
 수꼴 = re.compile(r"\d+\.\d{3,5}")
 # ★ arXiv 번호는 수가 아니라 이름이다 — `2310.0582` 를 지표로 읽으면 논문 표가 전부 걸린다
 아닌것 = re.compile(r"arXiv[\s:]*\d+\.\d+|\d{4}\.\d{4,5}\)")
 
 
 def _근거글(root: pathlib.Path) -> str:
-    return "\n".join((root / f).read_text(encoding="utf-8") for f in 근거 if (root / f).is_file())
+    조각 = [(root / f).read_text(encoding="utf-8") for f in 근거 if (root / f).is_file()]
+    자리, 번호 = 문서
+    if (root / 자리).is_file():            # MASTER 는 **그 절을 뺀** 나머지가 근거다(§324)
+        조각.append(_절밖((root / 자리).read_text(encoding="utf-8"), 번호))
+    return "\n".join(조각)
 
 
 def 근거없는수(root: pathlib.Path | None = None) -> list[tuple[int, str, str]]:
@@ -42,7 +65,13 @@ def 근거없는수(root: pathlib.Path | None = None) -> list[tuple[int, str, st
     root = root or ROOT
     글 = _근거글(root)
     out = []
-    for n, 줄 in enumerate((root / 문서).read_text(encoding="utf-8").splitlines(), 1):
+    자리, 번호 = 문서
+    # ★ **줄 번호는 파일 기준이다**(DECISIONS §324). 절 안 기준으로 세면 그 수를 들고
+    #   MASTER 를 열었을 때 **엉뚱한 줄**이 나온다 — 고치라고 주는 자리가 틀리면 안 고친다.
+    온글 = (root / 자리).read_text(encoding="utf-8")
+    조각 = _절(온글, 번호)
+    밀림 = 온글[:온글.index(조각)].count("\n") if 조각 else 0
+    for n, 줄 in enumerate(조각.splitlines(), 1 + 밀림):
         가린 = 아닌것.sub(" ", 줄)
         for m in 수꼴.finditer(가린):
             if m.group(0) not in 글:
@@ -53,7 +82,8 @@ def 근거없는수(root: pathlib.Path | None = None) -> list[tuple[int, str, st
 def _canary(root: pathlib.Path | None = None) -> None:
     """★ **아무것도 못 찾는 자와 고장 난 자는 구별되지 않는다.** 판별식이 살아 있는지 묻는다."""
     글 = _근거글(root or ROOT)
-    if len(수꼴.findall((root or ROOT).joinpath(문서).read_text(encoding="utf-8"))) < 20:
+    자리, 번호 = 문서
+    if len(수꼴.findall(_절((root or ROOT).joinpath(자리).read_text(encoding="utf-8"), 번호))) < 20:
         print("    ★ 카나리아가 죽었다 — 결과 문서에 수가 스무 개도 없다")
         sys.exit(2)
     if "0.9543" not in 글:                 # 기록판의 수가 근거 글에 안 잡히면 대장을 못 읽은 것이다
@@ -71,10 +101,11 @@ def main(argv: list[str] | None = None) -> int:
     if 없:
         print(f"    ✗ 근거 없는 수 {len(없)} — **결과 문서는 수를 만들지 않는다**(DECISIONS §235)\n"
               f"      그 수를 낸 판의 절에 적는다 : docs/DECISIONS.md\n"
-              f"      옮겨 적기가 틀렸으면 고친다 : {문서}\n"
+              f"      옮겨 적기가 틀렸으면 고친다 : {문서[0]} §{문서[1]}\n"
               f"      무엇을 보는지 다시 본다 : python3 tools/check_numbers.py --list", file=sys.stderr)
         return 1
-    print(f"  결과 문서의 수 {len(수꼴.findall((ROOT / 문서).read_text(encoding='utf-8')))} — 전부 근거가 있다")
+    _글 = _절((ROOT / 문서[0]).read_text(encoding="utf-8"), 문서[1])
+    print(f"  결과 문서의 수 {len(수꼴.findall(_글))} — 전부 근거가 있다")
     return 0
 
 

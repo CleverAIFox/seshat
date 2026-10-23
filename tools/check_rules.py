@@ -23,7 +23,9 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 MASTER = ROOT / "docs/MASTER.md"
 # 규칙 번호를 가리킬 수 있는 문서. 늘리는 것이지 줄이는 것이 아니다
-DOCS = ("docs/README.md", "docs/MASTER.md", "docs/related.md", "docs/grammar.md",
+# ★ `related.md` · `grammar.md` 는 2026-10-23 에 **MASTER 로 접혔다**(DECISIONS §324) —
+#   그 글은 이제 `docs/MASTER.md` 안에 있고 이 목록이 이미 그것을 든다.
+DOCS = ("docs/README.md", "docs/MASTER.md",
         "docs/PLAN.md", "docs/hypotheses.md", "docs/papers.md",
         "docs/DECISIONS.md")
 

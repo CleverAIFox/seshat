@@ -469,7 +469,8 @@ def test_절을_댄_절은_그_절만_문다():
     실측 : `§1` 을 고치면 4(통째로 문 것들) · `§3` 을 고치면 19 · 머리말은 4.
     """
     표 = {x["번호"]: x for x in DS.절들()}
-    import re
     본문 = 표["161"]["본문"]
-    assert set(re.findall(DS.문서대장["docs/related.md"], 본문)) == {"3"}, "§161 은 §3 만 댄다"
-    assert "docs/related.md" in 표["161"]["파일"]
+    # ★ 2026-10-23 에 `related.md` 가 **MASTER §19 로 접혔다**(DECISIONS §324).
+    #   옛 본문은 못 고치니(추가만) **옛 이름을 읽어 새 절로 되짚는다.**
+    assert "related.md" in 본문 and DS.접힌문서["related.md"] == "19"
+    assert "docs/MASTER.md" in 표["161"]["파일"]
