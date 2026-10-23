@@ -42,7 +42,33 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-LEDGER = ROOT / "docs/hypotheses.md"
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from docseal_refs import 절을_뜬다
+
+#: **대장은 MASTER 의 한 절이다**(DECISIONS §327). 2026-10-23 에 접었다.
+MASTER = ROOT / "docs/MASTER.md"
+대장절번호 = "20"
+
+
+def 대장글() -> str | None:
+    """MASTER §20 의 글. 그 절이 없으면 None — **「못 읽었다」 와 「비었다」 를 가른다**(§59)."""
+    if not MASTER.exists():
+        return None
+    return 절을_뜬다(MASTER.read_text(encoding="utf-8"), 대장절번호)
+
+
+def 대장글_아니면_죽는다() -> str:
+    """대장글, 없으면 **막는다**(DECISIONS §327).
+
+    ★ **「못 읽었다」 를 「열린 가설이 없다」 로 읽으면 문이 조용히 열린다**(§59). 부르는
+      쪽마다 이 가름을 다시 적으면 한 곳이 빠진다 — 그래서 여기 한 번만 적는다(§57).
+    """
+    글 = 대장글()
+    if 글 is None:
+        raise SystemExit("가설 대장(docs/MASTER.md §20)을 못 찾았다 — "
+                         "절이 지워졌거나 번호가 바뀌었다")
+    return 글
 STATES = {"제안", "실험", "채택", "기각"}
 TRACKS = {f"R{i}" for i in range(1, 8)}
 ROW = re.compile(r"^\| (H-\d{3}) \|(.*)\|\s*$")
@@ -87,7 +113,7 @@ def check(text: str, 대장: str = "") -> list[str]:
     if not rs:
         return ["가설이 한 줄도 없다"]
     for n, h, cells in rs:
-        where = f"hypotheses.md:{n} {h}"
+        where = f"MASTER §20:{n} {h}"
         if len(cells) != 6:
             fails.append(f"{where} 열이 {len(cells) + 1} 개다 — H · 상태 · 트랙 · 직관 · 검증 · 상한 · 근거 일곱")
             continue
@@ -142,10 +168,13 @@ def _canary() -> None:
 
 def main() -> int:
     _canary()
-    대장 = ROOT / "docs/DECISIONS.md"
-    fails = (check(LEDGER.read_text(encoding="utf-8"),
-                   대장.read_text(encoding="utf-8") if 대장.exists() else "")
-             if LEDGER.exists() else ["docs/hypotheses.md 가 없다"])
+    결정 = ROOT / "docs/DECISIONS.md"
+    글 = 대장글()
+    # ★ **「못 읽었다」 는 0 건이 아니다**(DECISIONS §59). 절이 사라지면 이 검사는
+    #   조용히 통과할 것이 아니라 **운다** — 대장이 없는 저장소는 이 저장소가 아니다.
+    fails = (["docs/MASTER.md §20(가설 대장)을 못 찾았다 — 절이 지워졌거나 번호가 바뀌었다"]
+             if 글 is None else
+             check(글, 결정.read_text(encoding="utf-8") if 결정.exists() else ""))
     for f in fails:
         print(f"    {f}")
     return 1 if fails else 0

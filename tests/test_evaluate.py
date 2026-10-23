@@ -575,7 +575,7 @@ def test_문이_막을_때_열린_가설을_같이_찍는다():
     spec = importlib.util.spec_from_file_location("ch", ROOT / "tools/check_hypotheses.py")
     ch = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(ch)
-    rows = {hid: cells for _, hid, cells in ch.rows(ch.LEDGER.read_text(encoding="utf-8"))}
+    rows = {hid: cells for _, hid, cells in ch.rows(ch.대장글_아니면_죽는다())}
     닫힌 = next(h for h, c in rows.items() if c[0] != "실험")
     열린 = [h for h, c in rows.items() if c[0] == "실험"]
     with pytest.raises(SystemExit) as e:

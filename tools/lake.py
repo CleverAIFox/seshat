@@ -17,7 +17,7 @@
 ★ **밖 — 레이크 밖은 안 본다.** 저장소의 `data/` 는 `tools/check_catalog.py` 의 몫이고,
   작업대(`runs/` · `/tmp`)는 아무도 안 지킨다 — 거기 것이 사라지는 것은 설계다.
 ★ **밖 — 내용이 옳은지는 안 본다.** 넣을 때의 해시와 같은가만 본다. 잘못 잰 판이 들어가면
-  대장은 **끝까지 초록**이다 — 그 판정은 `docs/hypotheses.md` 를 읽는 사람의 몫이다.
+  대장은 **끝까지 초록**이다 — 그 판정은 `docs/MASTER.md` §20 을 읽는 사람의 몫이다.
 ★ **이 자는 2026-10-22 까지 `tools/check_scope.py` 의 눈 밖에 있었다**(DECISIONS §315).
   `verify.sh` 의 걸음이 `if/else` 안이라 **뽑히지 않았고**, 그래서 위 두 줄도 카나리아도
   없는 채였다. 관문이 **제 한계를 선언하는지 보는 자**가 이 자를 안 보고 있었다.
@@ -33,6 +33,9 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from docseal_refs import 절을_뜬다
 sys.path.insert(0, str(ROOT))
 from seshat import catalog, paths
 
@@ -169,9 +172,14 @@ def check(lake: Path, ledger: Path | None = None, entries: list[dict] | None = N
             rel = p.relative_to(lake).as_posix()
             if p.is_file() and catalog.match(entries, "lake", rel) is None:
                 fails.append(f"카탈로그 밖 {rel} — data/catalog.toml 에 자리를 적거나 치운다")
-    ledger = ledger or ROOT / "docs/hypotheses.md"
+    # ★ **대장은 MASTER 의 한 절이다**(DECISIONS §327). 절을 뜨는 법은 한 곳에만 적는다(§57).
+    ledger = ledger or ROOT / "docs/MASTER.md"
+    글 = ""
     if ledger.exists():
-        for name in sorted(set(EVIDENCE.findall(ledger.read_text(encoding="utf-8")))):
+        온글 = ledger.read_text(encoding="utf-8")
+        글 = (절을_뜬다(온글, "20") or "") if ledger.name == "MASTER.md" else 온글
+    if 글:
+        for name in sorted(set(EVIDENCE.findall(글))):
             if f"runs/{name}" not in have:
                 fails.append(f"근거 없음 runs/{name} — 가설 대장이 드는데 레이크에 없다")
     return fails

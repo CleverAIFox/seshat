@@ -27,7 +27,10 @@ def test_카나리아가_산다():
 
 
 def test_실제_대장이_통과한다():
-    assert ch.check(ch.LEDGER.read_text(encoding="utf-8")) == []
+    # ★ 대장이 MASTER §20 으로 접혔다(DECISIONS §327).
+    글 = ch.대장글()
+    assert 글, "MASTER §20(가설 대장)을 못 찾았다 — 절이 지워졌거나 번호가 바뀌었다"
+    assert ch.check(글) == []
 
 
 def test_깨끗한_대장은_통과한다():

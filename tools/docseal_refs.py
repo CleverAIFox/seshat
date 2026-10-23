@@ -90,8 +90,7 @@ def _걸음이있나(자리: pathlib.Path, 이름: str) -> bool:
 #   여덟이 「내가 안 건드린 남의 행」 때문이다. **소음이 된 무효는 안 읽힌다**(§211 과 같은 규율).
 # ★ **PLAN 도 줄 대장이다**(DECISIONS §219). `hypotheses.md` 만 좁혀 놓고 PLAN 은 파일째 물었더니,
 #   행 하나의 수를 고치자 그 문서를 짚은 절이 또 무효가 됐다 — §215 를 한쪽에만 적용한 것이다.
-대장 = {"docs/hypotheses.md": (r"^\| (H-\d+) \|", r"H-\d+"),
-        "docs/PLAN.md": (r"^\| (\d+) \|", r"(?<![\w§-])#(\d+)(?!\d)")}
+대장 = {"docs/PLAN.md": (r"^\| (\d+) \|", r"(?<![\w§-])#(\d+)(?!\d)")}
 
 #: `.md` 중 **절을 이름으로 부르는** 문서 → 그 부름꼴(DECISIONS §323).
 #: ★ **`.md` 만 통째였다.** `.py` 는 이름 단위, `.sh` 는 걸음 단위인데 여기만 바이트
@@ -111,14 +110,15 @@ def _걸음이있나(자리: pathlib.Path, 이름: str) -> bool:
 #:   **주마다 거짓이면 사람이 도장을 끈다**(hathor GR-0.8).
 #: ★ **밖 — 대장 절의 산문 머리말도 같이 빠진다.** 표와 설명을 안 갈랐다 — 그 경계를
 #:   기계가 못 읽는다. 넓게 빼는 쪽은 거짓 초록이고, 반대쪽은 **도장 자체를 죽인다.**
-대장절: dict[str, tuple[str, str]] = {}
+대장절: dict[str, tuple[str, str]] = {"20": (r"^\| (H-\d+) \|", r"H-\d+")}
 
 #: **접힌 문서 → 그 글이 들어간 MASTER 절**(DECISIONS §324). 2026-10-23 에 위성 넷을
 #: MASTER 로 접었다. 옛 절의 **본문은 못 고친다**(추가만 · §296) — 거기 적힌
 #: 「`docs/related.md` §3」 은 그대로 남는다. 그래서 **옛 이름을 읽어 새 절로 되짚는다.**
 #: ★ **안 되짚으면 §323 이 푼 것이 도로 풀린다.** 스무 절이 MASTER 를 **통째로** 물게 되고,
 #:   MASTER 는 절 쓸 때마다 바뀐다 — **접기가 도장을 넓히는** 바로 그 자리다.
-접힌문서 = {"escape.md": "16", "colab.md": "17", "grammar.md": "18", "related.md": "19"}
+접힌문서 = {"escape.md": "16", "colab.md": "17", "grammar.md": "18", "related.md": "19",
+            "hypotheses.md": "20"}
 #: `.md` 의 **절 머리**. `## 7. 제목` · `## §7. 제목` · `## 제목` 을 다 받는다
 _절머리 = re.compile(r"^## +(?:§?([\w.-]+)\.\s*)?(.*)$")
 
@@ -163,6 +163,31 @@ def _행조각(행꼴: str, 부름꼴: str, 본문: str, 글: str) -> str:
     줄 = [x for x in 글.splitlines()
           if (m := re.match(행꼴, x)) and m.group(1) in 번호]
     return _짧게("\n".join(줄)) if 줄 else ""
+
+
+#: **공개 이름** — 다른 도구가 문서의 절 하나를 떠 갈 때 쓴다(DECISIONS §327).
+#: ★ `check_hypotheses` · `lake` 가 대장을 MASTER §20 에서 떠 온다. 자르는 법을 **두 번
+#:   적지 않는다** — 같은 것을 두 곳에 적으면 한쪽만 늙는다(§57).
+절을_뜬다 = _문서절
+
+
+def _대장절을_비운다(글: str) -> str:
+    """대장 절의 본문 줄을 **빈 줄로 바꾼다**(DECISIONS §327). **줄 번호는 그대로다.**
+
+    `check_docs` 의 참조 검사가 쓴다 — 대장 절은 과거를 적어 지금의 지도로 재지 않는다.
+    ★ **지우지 않고 비운다.** 지우면 줄 번호가 밀려 **다른 줄을 가리킨다.**
+    """
+    if not 대장절:
+        return 글
+    줄 = 글.splitlines()
+    머리 = [(n, m) for n, x in enumerate(줄) if (m := _절머리.match(x))]
+    for i, (n, mm) in enumerate(머리):
+        if (mm.group(1) or "").strip() not in 대장절:
+            continue
+        끝 = 머리[i + 1][0] if i + 1 < len(머리) else len(줄)
+        for k in range(n + 1, 끝):
+            줄[k] = ""
+    return "\n".join(줄)
 
 
 def _대장_조각(자리: str, 본문: str, 글: str) -> str:

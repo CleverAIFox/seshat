@@ -30,7 +30,7 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 # 근거가 사는 자리. **늘리는 것이지 줄이는 것이 아니다**
 # ★ **MASTER 는 §19 를 뺀 나머지만 근거다**(DECISIONS §324). 안 빼면 **제가 제 근거**가
 #   되어 이 검사가 통째로 공짜가 된다 — 접기가 검사를 끄는 자리였다.
-근거 = ("docs/DECISIONS.md", "docs/hypotheses.md", "data/scoreboard.toml")
+근거 = ("docs/DECISIONS.md", "data/scoreboard.toml")
 _절머리 = re.compile(r"^## +§?([\w.-]+)\.", re.M)
 
 

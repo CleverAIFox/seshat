@@ -39,6 +39,10 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from docindex import DATE, _색인을_박는다, _절들, check_index
+from docseal_refs import _대장절을_비운다
 # ★ README 는 서술 규약에서 뺀다. 나머지 셋은 미래의 나를 향하고 README 는
 #   처음 읽는 사람을 향한다. 대상이 다르면 문체도 다르다. 빠진 것이 아니라
 #   뺀 것이다. **참조 검사는 README 도 본다** — 처음 읽는 사람이 죽은 링크를 만난다.
@@ -77,7 +81,6 @@ REF_MASTER = re.compile(r"MASTER(?:\.md)?\s*((?:§\s*\d+(?:-\d+[a-z]?)*(?:\s*[·
 SEC_NUM = re.compile(r"§\s*(\d+(?:-\d+[a-z]?)*)")
 REF_PLAN_ROW = re.compile(r"PLAN(?:\.md)?\s*(?:§\s*[\d-]+\s*)?#\s*(\d+)")
 REF_PLAN_SEC = re.compile(r"PLAN(?:\.md)?\s*§\s*(\d+)(?![\d-]*\s*#)")
-DATE = re.compile(r"^\*\*20\d\d-\d\d-\d\d\*\*", re.M)
 ENFORCER = re.compile(r"^강제자( 없음)? — ", re.M)
 
 # ★ **강제자 줄은 §108 부터 요구한다.** 옛 절에 지금 강제자를 적으면 그때 하지 않은
@@ -256,6 +259,8 @@ def check_plan(text: str, fails: list) -> None:
                 fails.append(f"PLAN.md:{ln} 가 없는 #{m.group(1)} 을 가리킨다")
 
 
+
+
 def _targets(root: Path) -> list[Path]:
     out = [root / "README.md", root / MAP,        # ★ 지도의 참조도 검사한다(§199)
            root / "docs/MASTER.md", root / "docs/PLAN.md"]
@@ -303,6 +308,11 @@ def check_refs(root: Path, fails: list) -> None:
         if "사본이다" in "\n".join(text.splitlines()[:3]):
             continue
         rel = p.relative_to(root)
+        # ★ **대장 절은 과거를 적는다 — 참조를 안 본다**(DECISIONS §327). `DECISIONS.md` 가
+        #   `_targets` 밖인 것과 같은 까닭이다 : 닫힌 `PLAN #3` 을 든 행은 **그때 열려
+        #   있던 것**이고, 고치면 기록이 거짓이 된다.
+        if rel.as_posix() == "docs/MASTER.md":
+            text = _대장절을_비운다(text)
         for n, line in enumerate(text.splitlines(), 1):
             for m in REF_DEC.finditer(line):
                 if _foreign(line, m.start()):
@@ -334,45 +344,14 @@ def check_refs(root: Path, fails: list) -> None:
 # ★ **문서 지도와 색인은 손으로 안 맞춘다**(DECISIONS §199). 지도는 늘 실물보다 늦게 고쳐지고,
 #   늦은 지도는 없는 지도보다 나쁘다 — 읽는 쪽이 그것을 믿기 때문이다.
 MAP = "docs/README.md"
-색인_시작, 색인_끝 = "<!-- 색인 시작 -->", "<!-- 색인 끝 -->"
 
 
-def _절들(text: str) -> list[tuple[int, str, str]]:
-    """DECISIONS 의 (번호, 제목, 날짜)."""
-    out = []
-    for m in re.finditer(r"^## §(\d+)\. (.+)$", text, re.M):
-        뒤 = text[m.end():m.end() + 400]
-        날 = DATE.search(뒤)
-        out.append((int(m.group(1)), m.group(2).strip(), 날.group(0).strip("*") if 날 else ""))
-    return out
 
 
-def 색인_글(절들: list[tuple[int, str, str]]) -> str:
-    줄 = [f"{색인_시작}",
-          f"<details><summary><b>절 색인</b> — {len(절들)} 절. "
-          f"<code>python3 tools/check_docs.py --fix-index</code> 가 다시 쓴다</summary>",
-          "", "| § | 날짜 | 무엇 |", "|---|---|---|"]
-    줄 += [f"| {n} | {d} | {제} |" for n, 제, d in 절들]
-    줄 += ["", "</details>", 색인_끝]
-    return "\n".join(줄)
 
 
-def _색인을_박는다(text: str) -> str:
-    새 = 색인_글(_절들(text))
-    if 색인_시작 in text and 색인_끝 in text:
-        앞, 뒤 = text.split(색인_시작, 1)
-        return 앞 + 새 + 뒤.split(색인_끝, 1)[1]
-    첫 = text.index("## §1.")
-    return text[:첫] + 새 + "\n\n" + text[첫:]
 
 
-def check_index(text: str, fails: list) -> None:
-    """색인이 절과 맞나. **자동으로 다시 쓸 수 있는 것은 손으로 고치라고 하지 않는다.**"""
-    if 색인_시작 not in text:
-        fails.append("DECISIONS 에 절 색인이 없다 — `python3 tools/check_docs.py --fix-index`")
-        return
-    if _색인을_박는다(text) != text:
-        fails.append("DECISIONS 색인이 절과 어긋난다 — `python3 tools/check_docs.py --fix-index`")
 
 
 def check_map(root: Path, fails: list) -> None:

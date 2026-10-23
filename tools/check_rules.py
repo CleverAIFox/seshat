@@ -26,7 +26,7 @@ MASTER = ROOT / "docs/MASTER.md"
 # ★ `related.md` · `grammar.md` 는 2026-10-23 에 **MASTER 로 접혔다**(DECISIONS §324) —
 #   그 글은 이제 `docs/MASTER.md` 안에 있고 이 목록이 이미 그것을 든다.
 DOCS = ("docs/README.md", "docs/MASTER.md",
-        "docs/PLAN.md", "docs/hypotheses.md", "docs/papers.md",
+        "docs/PLAN.md", "docs/papers.md",
         "docs/DECISIONS.md")
 
 
