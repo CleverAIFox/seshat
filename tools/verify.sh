@@ -48,7 +48,9 @@ step ruff               uv run ruff check .
 #   적고 건너뛰는데, **그러면 강제자는 CI 하나다** — 훅과 CI 를 가르는 것과 같은 꼴이다(§170).
 shellcheck_step() {
   # ★ 변수 이름은 ASCII 다 — 배시는 한글 이름을 못 받는다(DECISIONS §164).
-  local SH_FILES; mapfile -t SH_FILES < <(git ls-files '*.sh' '.githooks/*')
+  # ★ **안 담긴 `.sh` 도 본다**(DECISIONS §326). `git add` 는 이 자 뒤에 오므로
+  #   새 셸 파일은 **제 커밋에서 한 번도 안 보인다.** `-z` 는 한글 이름 때문이다(§247).
+  local SH_FILES; mapfile -d '' -t SH_FILES < <(git ls-files -z --cached --others --exclude-standard '*.sh' '.githooks/*')
   if ! command -v shellcheck >/dev/null 2>&1; then
     if [ "${CI:-}" = "true" ]; then
       echo "shellcheck 가 CI 에 없다 — 러너 이미지가 바뀌었다" >&2; return 1

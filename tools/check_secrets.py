@@ -64,9 +64,22 @@ _짠것 = {이름: re.compile(정규) for 이름, 정규 in 꼴.items()}
 
 
 def 추적된파일(root: Path | None = None) -> list[str]:
-    """git 이 아는 파일. **추적 안 된 것은 안 본다** — 기계마다 있고 없다(§212)."""
+    """**이 저장소의 파일**. 아직 안 담긴 것도 센다 — 무시 목록에 든 것만 뺀다.
+
+    ★ **2026-10-23 여기가 뚫려 있었다**(DECISIONS §326). `verify.sh` → `git add -A` →
+      `commit` 순서라 **새 파일은 검사 시점에 늘 추적 밖**이다. 새 파일에 비밀값을 적으면
+      그 자가 초록을 내고 **그것을 들이는 바로 그 커밋에 박힌다.** 다음 판이 그제서야
+      우는데, 그때는 이미 역사다. 실측했다 — 안 담긴 채 0, `git add` 뒤 1.
+    ★ **묻는 것은 「git 이 이미 아는가」 가 아니라 「이 저장소의 파일인가」 다**(§247 이
+      `docseal` 에서 같은 병을 같은 말로 고쳤다). 「기계마다 있고 없다」 는 걱정은
+      `--exclude-standard` 가 받는다 — 무시 목록에 든 것은 안 센다.
+    ★ **`-z` 다**(§247). 이 저장소는 판 이름에 한글을 쓰고, git 은 기본으로 따옴표를
+      씌워 내놓는다 — 그러면 그 파일이 **이름이 안 맞아 조용히 검사 밖**이 된다.
+    """
     root = root or ROOT
-    r = subprocess.run(["git", "-C", str(root), "ls-files", "-z"], capture_output=True, text=True)
+    r = subprocess.run(["git", "-C", str(root), "ls-files", "-z",
+                        "--cached", "--others", "--exclude-standard"],
+                       capture_output=True, text=True)
     if r.returncode != 0:
         raise SystemExit(f"git ls-files 가 실패했다 — {r.stderr.strip()[:200]}")
     return [x for x in r.stdout.split("\0") if x]

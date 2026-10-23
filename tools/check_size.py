@@ -81,12 +81,17 @@ ROOT = Path(__file__).resolve().parent.parent
 
 
 def 센다(root: Path) -> dict[str, int]:
-    """git 이 아는 `.py` · `.sh` 의 줄 수. **추적된 것만** 센다.
+    """**이 저장소의** `.py` · `.sh` 줄 수. 아직 안 담긴 것도 센다(DECISIONS §326).
 
-    ★ 추적 안 된 파일은 **기계마다 있고 없다**(파이어레인 `readmecheck.py` 의 실기).
-      그것을 세면 관문이 기계마다 다르게 옳다.
+    ★ **새 파일이 제 커밋에서 안 세어졌다.** 2026-10-23 `docseal_refs.py` **192줄**이
+      들어온 판에서 이 자가 「파일 129」 라고 적었다 — 그 파일은 추적 밖이었고,
+      **900줄짜리를 들였어도 초록이었다.** 라쳇은 **다음 판부터** 걸렸다.
+    ★ 「추적 안 된 파일은 기계마다 있고 없다」 가 옛 까닭이었다. 그 걱정은
+      `--exclude-standard` 가 받는다 — 무시 목록에 든 것은 안 센다. 묻는 것은
+      **「이 저장소의 파일인가」** 다(§247 과 같은 답).
     """
-    r = subprocess.run(["git", "-C", str(root), "ls-files", "-z", "*.py", "*.sh"],
+    r = subprocess.run(["git", "-C", str(root), "ls-files", "-z",
+                        "--cached", "--others", "--exclude-standard", "*.py", "*.sh"],
                        capture_output=True, text=True)
     if r.returncode != 0:
         raise SystemExit(f"git ls-files 가 실패했다 — {r.stderr.strip()[:200]}")

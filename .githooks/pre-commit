@@ -27,7 +27,9 @@ P="uv run python"; command -v uv >/dev/null 2>&1 || P="python3"
 # ★ **변수 이름은 ASCII 다.** 배시는 한글 이름을 못 받는다(DECISIONS §164)
 RED=$'\033[31m'; Z=$'\033[0m'; [ -t 2 ] || { RED=""; Z=""; }
 bad=0
-for chk in check_docs.py doc_fsck.py check_hypotheses.py; do
+# ★ **비밀값은 여기서도 본다**(DECISIONS §326). `verify.sh` 가 한 번 보지만 그것은
+#   `git add` **전**이다 — 여기는 **담긴 뒤**라 둘이 서로 다른 순간을 지킨다(§170 과 같은 꼴).
+for chk in check_docs.py doc_fsck.py check_hypotheses.py check_secrets.py; do
   $P "tools/$chk" || bad=1
 done
 # ★ **뚫린 파일을 커밋하면 관문이 열린 채 역사에 박힌다**(DECISIONS §319). 2026-10-22 에

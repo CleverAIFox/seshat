@@ -73,3 +73,36 @@ def test_글로_못_읽는_것은_안_본다():
 def test_장부가_비어_있다():
     """★ **줄지 않는 장부는 영구 면제가 된다**(§290). 지금은 예외가 없다 — 그대로 둔다."""
     assert CS.장부 == frozenset()
+
+
+def test_아직_안_담긴_파일도_본다(tmp_path):
+    """★ **새 파일은 제 커밋에서 검사 밖이었다**(DECISIONS §326).
+
+    흐름이 `verify.sh` → `git add -A` → `commit` 이라 **새 파일은 검사 시점에 늘 추적
+    밖**이다. 그래서 새 파일에 비밀값을 적으면 이 자가 초록을 내고 **그것을 들이는 바로
+    그 커밋에 박힌다.** 다음 판이 그제서야 우는데 그때는 이미 역사다.
+
+    ★ **무시 목록에 든 것은 그대로 안 본다** — 그것이 「기계마다 있고 없다」 걱정의 답이다.
+    ★ **합성 값을 글자 그대로 안 적는다**(§304) — 적으면 이 파일이 제 검사에 걸린다.
+    """
+    import subprocess
+    저장소 = tmp_path / "저장소"
+    저장소.mkdir()
+    for 줄 in (["init", "-q"], ["config", "user.email", "t@t"], ["config", "user.name", "t"]):
+        subprocess.run(["git", "-C", str(저장소), *줄], check=True, capture_output=True)
+    (저장소 / ".gitignore").write_text("무시/\n", encoding="utf-8")
+    (저장소 / "담긴.py").write_text("x = 1\n", encoding="utf-8")
+    subprocess.run(["git", "-C", str(저장소), "add", "-A"], check=True, capture_output=True)
+    subprocess.run(["git", "-C", str(저장소), "commit", "-qm", "base"], check=True, capture_output=True)
+
+    들 = CS.추적된파일(저장소)
+    assert "담긴.py" in 들
+
+    # 아직 `git add` 안 한 새 파일 — 여기가 뚫려 있던 자리다
+    (저장소 / "새것.py").write_text('key = "' + "z" * 12 + '"\n', encoding="utf-8")
+    assert "새것.py" in CS.추적된파일(저장소), "**안 담긴 새 파일이 검사 밖이다**"
+
+    # 무시 목록에 든 것은 여전히 안 본다
+    (저장소 / "무시").mkdir()
+    (저장소 / "무시/숨은.py").write_text("x = 1\n", encoding="utf-8")
+    assert not any("무시/" in x for x in CS.추적된파일(저장소))
