@@ -134,6 +134,11 @@ def 로직_지문(p: pathlib.Path, 이름: str = "") -> str:
     글 = p.read_text(encoding="utf-8")
     if p.suffix in 주석머리:
         return _셸_지문(글, 이름 if p.suffix == ".sh" else "", 주석머리[p.suffix])
+    # ★ **`.md` 도 절 하나만 물 수 있다**(DECISIONS §323). 글자가 곧 내용이라 주석은 못
+    #   떼지만, **절은 가를 수 있다** — 그게 이 꼴의 이름 단위다.
+    if p.suffix == ".md" and 이름:
+        조각 = _문서절(글, 이름)
+        return _짧게(조각) if 조각 is not None else "없다"
     if p.suffix != ".py":
         return _짧게(글)
     나무: ast.AST = ast.parse(글)
@@ -367,6 +372,17 @@ def 절들(글: str | None = None) -> list[dict]:
 대장 = {"docs/hypotheses.md": (r"^\| (H-\d+) \|", r"H-\d+"),
         "docs/PLAN.md": (r"^\| (\d+) \|", r"(?<![\w§-])#(\d+)(?!\d)")}
 
+#: `.md` 중 **절을 이름으로 부르는** 문서 → 그 부름꼴(DECISIONS §323).
+#: ★ **`.md` 만 통째였다.** `.py` 는 이름 단위, `.sh` 는 걸음 단위인데 여기만 바이트
+#:   전체라 `docs/related.md` 한 줄이 절 **20** 을 무효로 만들었다. 재 보니 그중 **16** 이
+#:   제 본문에 **`related.md §3`** 이라고 **어느 절인지 적고 있었다** — §317 과 같은 자리다 :
+#:   **뜻은 이미 거기 있었고 빠진 것은 읽는 쪽**이다.
+#: ★ **무늬를 좁게 둔다.** 처음엔 열 글자를 건너뛰게 했더니 §314 가 「MASTER … (DECISIONS
+#:   §287)」 에서 **287** 을 MASTER 절로 집었다. `§` 는 이름 **바로 뒤**여야 한다.
+#: ★ **안 대면 통째로 문다.** 넷이 그렇고, 그것이 맞다 — 그 절들은 문서 전체를 말한다.
+문서대장 = {"docs/related.md": r"related\.md`?\s*§(\d+)",
+            "docs/MASTER.md": r"(?<![\w가-힣])MASTER(?:\.md)?`?\s*§([\w.-]+)"}
+
 # ★ **맨 뒤 절은 다음 절이 붙는 순간 한 번 무효가 된다 — 그리고 안 고친다**(DECISIONS §306).
 #   본문을 「다음 `## §` 앞까지」 로 뽑으므로, 파일 끝이던 절에 뒤가 생기면 **끝 줄바꿈 하나**가
 #   더 붙는다. 뜻은 한 글자도 안 바뀌었는데 지문이 바뀐다 — §215 가 「소음이 된 무효는 안
@@ -375,6 +391,38 @@ def 절들(글: str | None = None) -> list[dict]:
 #   320 의 지문이 바뀐다** — 한 판에 전부 무효가 되고, 그것을 무더기로 다시 찍으면 「사람이
 #   읽었다」 는 표시(§217)가 통째로 날아간다. **버그 값은 패치당 한 절이고, 고침 값은 320 절이다.**
 #   그래서 **안 고치고 적어 둔다** — 모르고 당하는 것과 알고 두는 것은 다르다(§59).
+
+
+#: `.md` 의 **절 머리**. `## 7. 제목` · `## §7. 제목` · `## 제목` 을 다 받는다
+_절머리 = re.compile(r"^## +(?:§?([\w.-]+)\.\s*)?(.*)$")
+
+
+def _문서절(글: str, 이름: str) -> str | None:
+    """`docs/MASTER.md::7` 이 가리키는 **절 하나의 본문**. 없으면 None(DECISIONS §323).
+
+    ★ **`.md` 만 통째였다.** `.py` 는 이름 단위, `.sh` 는 걸음 단위인데 `.md` 는 바이트
+      전체였다 — `docs/related.md` 한 줄이 절 **20** 을 무효로 만든다. 그 문서에 절이
+      넷인데 그중 하나만 보는 절들이 전부 운다.
+    ★ **번호로도 제목으로도 부른다.** `::7` 과 `::데이터 관리` 가 같은 절을 가리킨다 —
+      사람이 적는 쪽을 기계가 맞춘다.
+    ★ **밖 — 절 밖(머리말 · 표)은 안 본다.** 그 자리를 고치면 **절을 짚은 자는 안 운다.**
+      통째로 짚은 자가 그 자리를 든다 — 좁히지 않은 쪽이 넓게 문다.
+    """
+    줄 = 글.splitlines()
+    머리 = [(n, m) for n, x in enumerate(줄) if (m := _절머리.match(x))]
+    찾 = 이름.strip().lstrip("§")
+    # ★ **규칙 번호는 제 절에 묶는다**(DECISIONS §323). `MASTER §0-1` 은 절이 아니라
+    #   **절 0 안의 ★ 줄**이다 — 그 저장소 규약이 그렇다. 그대로 찾으면 못 찾고,
+    #   못 찾으면 **문서 전체**로 넓어진다. 앞마디로 되짚어 그 절을 문다.
+    if 찾 and "-" in 찾 and not any((m.group(1) or "") == 찾 for _, m in 머리):
+        찾 = 찾.split("-", 1)[0]
+    for i, (n, m) in enumerate(머리):
+        번호, 제목 = (m.group(1) or "").strip(), (m.group(2) or "").strip()
+        if 찾 != 번호 and 찾 not in 제목:
+            continue
+        끝 = 머리[i + 1][0] if i + 1 < len(머리) else len(줄)
+        return "\n".join(줄[n:끝])
+    return None
 
 
 def _대장_조각(자리: str, 본문: str, 글: str) -> str:
@@ -398,6 +446,15 @@ def 지문(절: dict) -> str:
             if 몫:
                 조각.append(f"{f}\0{몫}")
             continue                      # 이름으로 안 부른 대장은 안 문다
+        if 자리 in 문서대장 and not 심볼:
+            # ★ **절을 댔으면 그 절만 문다**(DECISIONS §323). 안 댔으면 아래로 내려가
+            #   **통째로** 문다 — 좁히지 못한 것은 넓게 두는 쪽이 안전하다(§321).
+            글 = (ROOT / 자리).read_text(encoding="utf-8")
+            몫 = [x for n in sorted(set(re.findall(문서대장[자리], 절["본문"])))
+                  if (x := _문서절(글, n)) is not None]
+            if 몫:
+                조각.append(f"{f}\0{_짧게(chr(0).join(몫))}")
+                continue
         조각.append(f"{f}\0{로직_지문(ROOT / 자리, 심볼)}")
     return _짧게("\n".join(조각))
 
@@ -413,6 +470,32 @@ def 안풀리는_걸음(절목록: list[dict] | None = None) -> list[str]:
     return [f"§{절['번호']} 의 강제자 줄이 없는 걸음을 짚는다 — {x}"
             for 절 in (절목록 if 절목록 is not None else 절들())
             for x in 절.get("안풀린걸음", [])]
+
+
+def 안풀리는_문서절(절목록: list[dict] | None = None) -> list[str]:
+    """절이 이름으로 부른 `.md` 절 중 **그 문서에 없는 것**(DECISIONS §323).
+
+    ★ **§321 과 같은 까닭이다.** 못 푸는 이름은 **통째로 묶여 안전하지만**, 그 줄이
+      거짓이라는 사실은 어디에도 안 적힌다 — 절 번호를 바꾸고 인용을 안 고친 자리가
+      그렇게 쌓인다.
+    ★ **밖 — 그 절이 맞는 절인지는 못 본다.** 있나만 본다.
+    """
+    난것 = []
+    for 절 in (절목록 if 절목록 is not None else 절들()):
+        for f in 절["파일"]:
+            자리, _, 심볼 = f.partition("::")
+            if 심볼 or 자리 not in 문서대장:
+                continue
+            try:
+                글 = (ROOT / 자리).read_text(encoding="utf-8")
+            except (OSError, UnicodeDecodeError) as e:
+                print(f"    ※ {자리} 를 못 읽었다({e.__class__.__name__}) — "
+                      f"**이 문서의 절은 안 봤다**", file=sys.stderr)
+                continue
+            for n in sorted(set(re.findall(문서대장[자리], 절["본문"]))):
+                if _문서절(글, n) is None:
+                    난것.append(f"§{절['번호']} 가 없는 절을 부른다 — {자리} §{n}")
+    return 난것
 
 
 def 다시_봐야_할_절(찍힌: dict | None = None) -> list[tuple[dict, list[str]]]:
@@ -558,6 +641,24 @@ def _canary() -> None:
     if _셸걸음("강제자 — `tools/make_patch.sh` 의 `mined.jsonl` 예외"):
         print("    ★ 카나리아가 죽었다 — 파일 이름을 걸음으로 읽는다")
         sys.exit(2)
+    # ★ **`.md` 절 단위**(DECISIONS §323). 넷을 묻는다 — 번호로 찾나 · 제목으로 찾나 ·
+    #   없는 절을 없다고 하나 · **규칙 번호를 제 절로 되짚나**(`§0-1` → 절 `0`).
+    _문 = "# 머리\n머리말\n\n## 0. 가\n가 본문\n\n## 7. 나\n나 본문\n"
+    if (_문서절(_문, "7") or "").splitlines()[:1] != ["## 7. 나"]:
+        print("    ★ 카나리아가 죽었다 — 번호로 절을 못 찾는다"); sys.exit(2)
+    if (_문서절(_문, "나") or "").splitlines()[:1] != ["## 7. 나"]:
+        print("    ★ 카나리아가 죽었다 — 제목으로 절을 못 찾는다"); sys.exit(2)
+    if _문서절(_문, "없는절") is not None:
+        print("    ★ 카나리아가 죽었다 — 없는 절을 찾았다고 한다"); sys.exit(2)
+    if (_문서절(_문, "0-1") or "").splitlines()[:1] != ["## 0. 가"]:
+        print("    ★ 카나리아가 죽었다 — 규칙 번호를 제 절로 안 되짚는다"); sys.exit(2)
+    if _문서절(_문, "0") == _문서절(_문, "7"):
+        print("    ★ 카나리아가 죽었다 — 절을 안 가른다"); sys.exit(2)
+    # ★ **무늬가 넓으면 딴 문서의 번호를 집는다** — §314 가 실제로 그랬다(§287 을 MASTER 절로)
+    if re.findall(문서대장["docs/MASTER.md"], "MASTER 가 적은 그것(DECISIONS §287)"):
+        print("    ★ 카나리아가 죽었다 — 다른 문서의 절 번호를 MASTER 것으로 읽는다"); sys.exit(2)
+    if re.findall(문서대장["docs/MASTER.md"], "`MASTER §14` 하나다") != ["14"]:
+        print("    ★ 카나리아가 죽었다 — 진짜 MASTER 절 부름을 못 읽는다"); sys.exit(2)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -614,7 +715,7 @@ def main(argv: list[str] | None = None) -> int:
     # ★ **못 푸는 이름은 넓게 묶이고 조용하다**(DECISIONS §321). 그 줄이 거짓이라는 사실은
     #   어디에도 안 적히므로 여기서 적는다 — 실측으로 둘이 `tools/` 를 빠뜨려 **강제자로
     #   아예 안 묶여 있었다.**
-    안풀림 = 안풀리는_걸음()
+    안풀림 = 안풀리는_걸음() + 안풀리는_문서절()
     for x in 안풀림:
         print(f"    ✗ {x}", file=sys.stderr)
     if 안풀림:
