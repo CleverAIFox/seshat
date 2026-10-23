@@ -66,7 +66,10 @@ ROOT = Path(__file__).resolve().parent.parent
     #   로직 지문과 걸음 좁히기가 들어왔다 — 그 값으로 `verify.sh` 주석 한 줄의 무효가
     #   20 → 0 이 됐고 토트의 64 도 0 이 된다. **적는 순간 라쳇이다** — 더 늘면 운다.
     #   쪼갤지는 `PLAN #51` 이 든다 : 도장 기계와 **강제자 줄 해석**이 다른 일이다.
-    "tools/docseal.py": 750,
+    # ★ **2026-10-23 쪼갰다**(DECISIONS §325). 대장 절이 들어와 804 가 됐고 이 라쳇이 울었다.
+    #   수를 올리는 것은 **이 표의 목적을 뒤집는 짓**이라 `PLAN #51` 이 적어 둔 선으로 갈랐다 —
+    #   **가리킴 푸는 쪽**(`docseal_refs.py` · 상한 아래라 여기 안 든다)과 도장 기계.
+    "tools/docseal.py": 648,
     "tools/check_docs.py": 608,
     "tools/labels.py": 1064,
     "tests/test_labels.py": 925,
