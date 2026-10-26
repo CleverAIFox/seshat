@@ -101,7 +101,7 @@ def make_handler(fn: backends.Backend, model: str, token: str):
             #   Ctrl-C 가 요청 하나로 삼켜진다. 넓히는 것과 맞게 넓히는 것은 다르다.
             try:
                 out = fn(texts, terms)
-            except (Exception, SystemExit) as e:         # 갈래를 안 가린다 — 무엇이든 응답으로 바꾼다
+            except (Exception, SystemExit) as e:         # 응답으로 바꾸는 것은 이 둘뿐 · Ctrl-C 는 통과
                 traceback.print_exc(file=sys.stderr)
                 self.log_message("백엔드가 터졌다 — %s", type(e).__name__)
                 return self._send(502, {"error": "backend_failed",
