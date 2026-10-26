@@ -86,8 +86,92 @@ def _workflows():
     return sorted((ROOT / ".github/workflows").glob("*.yml"))
 
 
+# 남이 연 PR · 남이 단 댓글이 이 기계에서 도는 사건. `pull_request_target` 은 포크 PR 에서도 비밀값을 든 채 돈다.
+위험한_사건 = {"pull_request", "pull_request_target", "issue_comment"}
+
+
+def 사건들(text: str) -> set[str]:
+    """`on:` 아래 사건 이름들. 워크플로를 깨우는 사건의 집합이다.
+
+    꼴 셋을 읽는다 — 블록(`on:` 다음 줄들) · 한 줄 목록(`on: [a, b]`) · 한 줄 낱말(`on: a`) · 한 줄 사전(`on: {a: {}}`).
+    ★ **읽는 법이 늙으면 빈 집합이 나온다.** 허용 목록은 그때 빨갛게 닫히지만 금지 목록은 조용히
+    통과하므로, 부르는 쪽이 「빈 집합이면 실패」 를 따로 건다(`test_셀프_호스티드_러너는_손으로만_깨운다`).
+    """
+    줄들 = [re.sub(r"\s+#.*$", "", x) for x in text.splitlines()]
+    for n, 줄 in enumerate(줄들):
+        m = re.match(r"""^["']?on["']?:\s*(.*)$""", 줄)
+        if not m:
+            continue
+        나머지 = m.group(1).strip()
+        if 나머지:
+            # 한 줄 꼴 — 괄호를 벗기고 사전이면 최상위 키만 뜬다
+            깊이, 이름들, 현재 = 0, [], ""
+            for ch in 나머지.strip("[]{} ") if not 나머지.startswith("{") else 나머지[1:-1]:
+                if ch in "{[":
+                    깊이 += 1
+                elif ch in "}]":
+                    깊이 -= 1
+                if ch == "," and 깊이 == 0:
+                    이름들.append(현재); 현재 = ""
+                else:
+                    현재 += ch
+            이름들.append(현재)
+            return {re.split(r":", x.strip(), 1)[0].strip(" '\"") for x in 이름들 if x.strip()}
+        # 블록 꼴 — 첫 자식 줄의 들여쓰기에서 이름을 모은다
+        out, 들여 = set(), None
+        for 줄2 in 줄들[n + 1:]:
+            if not 줄2.strip():
+                continue
+            if not 줄2.startswith(" "):
+                break
+            d = len(줄2) - len(줄2.lstrip())
+            들여 = d if 들여 is None else 들여
+            if d == 들여 and (k := re.match(r"^\s+([\w_-]+):", 줄2)):
+                out.add(k.group(1))
+        return out
+    return set()
+
+
+def test_사건들이_사건을_읽는다():
+    t = "name: x\non:\n  workflow_dispatch:\n    inputs:\n      a:\n  pull_request:\njobs:\n  j:\n"
+    assert 사건들(t) == {"workflow_dispatch", "pull_request"}
+    assert 사건들("on:\n  push:\njobs:\n  push:\n") == {"push"}
+
+
+def test_사건들이_한_줄_꼴도_읽는다():
+    """★ **파서가 눈멀면 금지 목록은 조용히 통과한다.** 허용 목록(`== {workflow_dispatch}`)은 빈 집합이
+    나와도 빨갛게 닫히지만, 「위험한 사건이 없다」 는 빈 집합에서 **참**이다. 비대칭이다(DECISIONS §329)."""
+    assert 사건들("on: [push, pull_request]\njobs:\n") == {"push", "pull_request"}
+    assert 사건들("on: pull_request\njobs:\n") == {"pull_request"}
+    assert 사건들("on: { push: {}, issue_comment: {types: [created]} }\njobs:\n") == {"push", "issue_comment"}
+    assert 사건들('"on":\n  pull_request_target:\njobs:\n') == {"pull_request_target"}
+    assert 사건들("on:\n    pull_request:\n    workflow_dispatch:\njobs:\n") == {"pull_request", "workflow_dispatch"}
+    assert 사건들("on: [push] # pull_request 는 주석\njobs:\n") == {"push"}
+
+
+def test_위험한_사건_집합이_합성_입력에서_걸린다():
+    """한 줄 꼴로 `pull_request` 를 넣어도 걸린다 — 금지 목록이 파서에 기대므로 입력으로 직접 묻는다."""
+    for t in ("on: [workflow_dispatch, pull_request]\n", "on: issue_comment\n",
+              "on: { pull_request_target: {} }\n", "on:\n  workflow_dispatch:\n  pull_request:\n"):
+        assert 사건들(t) & 위험한_사건, t
+    assert not 사건들("on: [workflow_dispatch]\n") & 위험한_사건
+
+
+def test_셀프_호스티드_러너는_손으로만_깨운다():
+    """★ 공개 저장소(DECISIONS §329)에서 `pull_request` 로 깨는 셀프 호스티드 작업은 **남의 PR 이
+    이 기계에서 도는 문**이다. 글자 `push:` 가 없다는 것만으로는 그 문이 닫혔다고 못 한다."""
+    셋 = {p.name: 사건들(p.read_text(encoding="utf-8")) for p in _workflows()
+          if "self-hosted" in p.read_text(encoding="utf-8")}
+    assert 셋, "셀프 호스티드 작업이 하나도 안 잡혔다 — 읽는 법이 늙었다"
+    # ★ 파서가 눈멀면(빈 집합) 아래 금지 목록이 **조용히 통과**한다 — 그래서 빈 집합을 먼저 막는다
+    assert {k for k, v in 셋.items() if not v} == set(), "사건을 못 읽은 워크플로가 있다 — 읽는 법이 늙었다"
+    # 금지 목록 — 남의 코드가 이 기계에서 도는 문. 허용 목록보다 먼저 두어 이름이 실패 메시지에 뜬다
+    assert {k: v & 위험한_사건 for k, v in 셋.items() if v & 위험한_사건} == {}
+    assert {k: v for k, v in 셋.items() if v != {"workflow_dispatch"}} == {}
+
+
 def test_워크플로마다_권한을_적는다():
-    """비공개 저장소는 적지 않은 권한이 없다. 기본값에 기대면 저장소 설정이 바뀔 때 조용히 달라진다(DECISIONS §20)."""
+    """기본값에 기대면 저장소 설정이 바뀔 때 조용히 달라진다(DECISIONS §20)."""
     assert [p.name for p in _workflows() if not re.search(r"^permissions:", p.read_text(encoding="utf-8"), re.M)] == []
 
 

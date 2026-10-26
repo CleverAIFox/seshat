@@ -757,7 +757,7 @@
  "18": {
   "날짜": "2026-09-22",
   "읽음": true,
-  "지문": "50cafeb623f2fa15",
+  "지문": "a4726cf0a6be53b8",
   "파일": [
    "tools/doc_fsck.py::check_tools",
    "tests/test_workflows.py"
@@ -766,7 +766,7 @@
  "180": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "3be85147c6c1839d",
+  "지문": "8e5590633df0c694",
   "파일": [
    "tools/bootstrap.py",
    "tests/test_bootstrap.py",
@@ -814,7 +814,7 @@
  "185": {
   "날짜": "2026-09-28",
   "읽음": true,
-  "지문": "f24c74c9dd008e07",
+  "지문": "c166cc82a56b5b3f",
   "파일": [
    "tools/bootstrap.py",
    "docs/MASTER.md"
@@ -1326,7 +1326,7 @@
  "234": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "794e6fd5cd4741fb",
+  "지문": "3be541f302c324d9",
   "파일": [
    "docs/DECISIONS.md",
    "docs/PLAN.md",
@@ -1405,7 +1405,7 @@
  "241": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "9d0b07a93471b0bf",
+  "지문": "ec6f0ed9190826f1",
   "파일": [
    "tools/check_numbers.py",
    "docs/DECISIONS.md"
@@ -1501,7 +1501,7 @@
  "250": {
   "날짜": "2026-10-01",
   "읽음": false,
-  "지문": "9191b6da24ca1e60",
+  "지문": "dd709b7cec4af913",
   "파일": [
    "README.md",
    "docs/PLAN.md"
@@ -1675,7 +1675,7 @@
  "267": {
   "날짜": "2026-10-01",
   "읽음": true,
-  "지문": "8a8669e8c30061e2",
+  "지문": "89ece7283bf06913",
   "파일": [
    "tools/check_claims.py",
    "tests/test_claims.py",
@@ -1706,7 +1706,7 @@
  "27": {
   "날짜": "2026-09-23",
   "읽음": true,
-  "지문": "df1d55e358984820",
+  "지문": "f032814ba5950c55",
   "파일": [
    "tests/test_baselines.py",
    "tools/check_model_licenses.py",
@@ -1788,7 +1788,7 @@
  "278": {
   "날짜": "2026-10-01",
   "읽음": false,
-  "지문": "208d6f6862a3d062",
+  "지문": "0a985e7fe0adc7a5",
   "파일": [
    "docs/MASTER.md"
   ]
@@ -1796,7 +1796,7 @@
  "279": {
   "날짜": "2026-10-02",
   "읽음": false,
-  "지문": "98c37f47ddd56864",
+  "지문": "0e4c1a01226bda76",
   "파일": [
    "tools/escape.py::이탈",
    "tools/distill.py",
@@ -1905,7 +1905,7 @@
  "287": {
   "날짜": "2026-10-04",
   "읽음": true,
-  "지문": "2e3432e83b980910",
+  "지문": "5985021cc9d58eae",
   "파일": [
    "tools/mutate.py::톱니",
    "tools/mutate.py::견준다",
@@ -1932,7 +1932,7 @@
  "289": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "1e8e548f3b7ef4c1",
+  "지문": "905dda8b4b053ac1",
   "파일": [
    "tools/mutate.py",
    "tests/test_mutate.py"
@@ -1950,7 +1950,7 @@
  "290": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "fd6181e734c06f02",
+  "지문": "b89cade5e50c6ed9",
   "파일": [
    "tools/mutate.py",
    "tests/test_claims.py",
@@ -1963,7 +1963,7 @@
  "291": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "8f3ed6bc6e9b46fc",
+  "지문": "3b4e6b15cba3c5e0",
   "파일": [
    "tests/test_workflows.py",
    ".github/workflows/papers.yml"
@@ -2009,7 +2009,7 @@
  "296": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "107d024896aaae74",
+  "지문": "4f91ef24f365886e",
   "파일": [
    "tools/doc_fsck.py",
    "tools/check_docs.py",
@@ -2077,7 +2077,7 @@
  "301": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "3cc72a69a545e7b2",
+  "지문": "9613b58c681de1b3",
   "파일": [
    "tests/test_workflows.py"
   ]
@@ -2085,7 +2085,7 @@
  "302": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "744714733338d66c",
+  "지문": "2a3c86e976eb38da",
   "파일": [
    "tools/mutate.py",
    "tests/test_mutate.py"
@@ -2104,7 +2104,7 @@
  "305": {
   "날짜": "2026-10-12",
   "읽음": false,
-  "지문": "bfadda9d54889470",
+  "지문": "c51d03d56f296ead",
   "파일": [
    ".github/workflows/papers.yml",
    "tests/test_workflows.py",
@@ -2125,7 +2125,7 @@
  "307": {
   "날짜": "2026-10-19",
   "읽음": true,
-  "지문": "c672189fe1101595",
+  "지문": "be25377da5d8b00e",
   "파일": [
    "tools/verify.sh::mutate",
    "tools/mutate.py"
@@ -2162,7 +2162,7 @@
  "310": {
   "날짜": "2026-10-20",
   "읽음": true,
-  "지문": "229fcb2c9f92a8a7",
+  "지문": "bdc2ed8d787046a0",
   "파일": [
    "docs/DECISIONS.md",
    "docs/MASTER.md"
@@ -2192,7 +2192,7 @@
  "313": {
   "날짜": "2026-10-20",
   "읽음": false,
-  "지문": "6072f0a008c6b445",
+  "지문": "87eca2642a518655",
   "파일": [
    "SECURITY.md",
    ".github/workflows/gpu-eval.yml",
@@ -2202,7 +2202,7 @@
  "314": {
   "날짜": "2026-10-21",
   "읽음": false,
-  "지문": "1595f1192902e303",
+  "지문": "76cf8417c6c08632",
   "파일": [
    "tests/test_evaluate.py",
    "tools/mine_terms.py",
@@ -2214,7 +2214,7 @@
  "315": {
   "날짜": "2026-10-22",
   "읽음": false,
-  "지문": "9ff165d3fa35dc4c",
+  "지문": "1c68b8f0504aa1f1",
   "파일": [
    "tests/test_mutate.py",
    "docs/MASTER.md"
@@ -2304,7 +2304,7 @@
  "322": {
   "날짜": "2026-10-23",
   "읽음": false,
-  "지문": "9f8c8334e4d0250b",
+  "지문": "d48b37c0f6b7edef",
   "파일": [
    "tools/docseal.py::_canary",
    "tools/docseal_refs.py::_셸걸음",
@@ -2928,7 +2928,7 @@
  "M10": {
   "날짜": "",
   "읽음": false,
-  "지문": "0efa3c498c1518b9",
+  "지문": "c60bcd6626f7b43c",
   "파일": [
    ".github/workflows/gpu-eval.yml"
   ]
@@ -2961,7 +2961,7 @@
  "M5": {
   "날짜": "",
   "읽음": true,
-  "지문": "a0a90fd7b9822ccc",
+  "지문": "2270407d10f51ee5",
   "파일": [
    "tools/verify.sh"
   ]

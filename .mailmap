@@ -1,0 +1,8 @@
+# 가짜 주소였던 본인 커밋의 작성자를 커밋 메일 하나로 모아 보인다 — `git log` · `git shortlog` 의 표시만 바뀐다.
+# ★ 깃허브 화면과 이력 자체(커밋 해시)는 그대로다. 이력은 다시 쓰지 않는다(DECISIONS §329).
+# ★ 개인 메일(`fox` 8 커밋)은 일부러 **넣지 않았다** — 이 파일은 공개라, 거기서 커밋 메일과 잇는 것이
+#   `SECURITY.md` 에서 개인 메일을 걷은 조치를 되돌린다(DECISIONS §329).
+# ★ 앞으로 가짜 주소가 안 생기게 `.githooks/pre-commit` 이 `tools/check_author.py` 를 돌린다.
+CleverAIFox <CleverAIFox@gmail.com> c <c@x>
+CleverAIFox <CleverAIFox@gmail.com> c <a@b>
+CleverAIFox <CleverAIFox@gmail.com> t <t@t>

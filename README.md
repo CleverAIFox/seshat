@@ -1,6 +1,6 @@
 # seshat
 
-[thoth](https://github.com/CleverAIFox/thoth) 에 끼울 **영한 번역 모델**을 만드는 저장소. **비공개다.**
+[thoth](https://github.com/CleverAIFox/thoth) 에 끼울 **영한 번역 모델**을 만드는 저장소. **공개다.**
 
 thoth 는 영어 자격증 문제 화면에 한글 번역을 겹쳐 보여주는 크롬 확장과 워커다.
 지금은 Bedrock Nova Lite 가 번역하고, 이 저장소의 모델이 **그 자리를 넘겨받는 것이 목표다.**
@@ -67,7 +67,7 @@ bash tools/verify.sh     # 점검 전부 — CI 도 이것만 부른다
 
 ## 데이터
 
-**학습 데이터 · 모델 가중치 · 실행 결과는 저장소에 들어오지 않는다.** 비공개 저장소여도 같다. 쌍 로그의 원문은
+**학습 데이터 · 모델 가중치 · 실행 결과는 저장소에 들어오지 않는다.** 공개 저장소이므로 더 그렇다. 쌍 로그의 원문은
 사이트의 저작물이다. `data/private/` · `runs/` · `models/` 를 git 이 무시한다.
 저장소에 있는 평가셋은 이 저장소가 직접 쓴 문장뿐이다(`data/eval/README.md`).
 

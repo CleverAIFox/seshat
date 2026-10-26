@@ -102,6 +102,8 @@ step ontology           uv run python tools/check_ontology.py
 step ways               uv run python tools/check_ways.py
 step crashes            uv run python tools/check_crashes.py
 step secrets            uv run python tools/check_secrets.py
+# ★ 실제 작성자는 커밋 직전 훅이 본다 — CI 에는 git 신원이 없을 수 있어 여기서는 판별식만 잰다(DECISIONS §329)
+step author             uv run python tools/check_author.py --selftest
 step scope              uv run python tools/check_scope.py
 step dead               uv run python tools/check_dead.py
 step deadchecks         uv run python tools/check_deadchecks.py

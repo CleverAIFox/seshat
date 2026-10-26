@@ -5,7 +5,7 @@ on:
     - cron: "17 0 * * 1"        # 월요일 09:17 KST. 정각을 피한다 — 그 분에 세상의 작업이 몰린다
   workflow_dispatch:
 
-# ★ **권한을 적는다**(DECISIONS §20). 비공개 저장소의 GITHUB_TOKEN 은 적지 않은 권한이 없다.
+# ★ **권한을 적는다**(DECISIONS §20). 기본 권한은 저장소 설정을 따른다 — 적지 않으면 설정이 바뀔 때 조용히 달라진다.
 #   가지를 밀고 PR 을 열려면 쓰기와 PR 쓰기가 둘 다 든다.
 #   ★ **`actions: read` 는 마지막 걸음이 든다**(DECISIONS §315). `branch_status.py` 가
 #     `gh run list` 로 PR 가지의 판을 묻는데, 안 적으면 거기서 403 이다 — 그리고 403 은

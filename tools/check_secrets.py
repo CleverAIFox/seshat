@@ -5,8 +5,8 @@
   python3 tools/check_secrets.py --list     무엇을 보는지 찍는다
   python3 tools/check_secrets.py --selftest 판별식이 살아 있나
 
-★ **이 저장소는 개인 비공개라 깃허브의 비밀값 스캔이 안 붙는다**(`SECURITY.md`) — 조직 유료
-  요금제에서만 열린다. 그리고 **저장소 안에도 없었다** : `.gitignore` 의 `.env` 한 줄이 전부다.
+★ **깃허브의 비밀값 스캔이 켜져 있는지는 이 저장소에서 볼 수 없다**(`SECURITY.md`) — 설정은 계정에서만
+  보인다. 켜져 있어도 이 자는 필요하다. 그리고 **저장소 안에도 없었다** : `.gitignore` 의 `.env` 한 줄이 전부다.
 ★ **이 자는 `gitleaks` 에 기대지 않는다.** 깔아야 도는 자는 **안 깔린 기계에서 조용히
   건너뛴다**(§59). 꼴 여덟을 제 손으로 들면 **의존이 0** 이고 어느 기계에서든 같이 돈다.
   ★ **CI 는 `gitleaks` 액션을 따로 돈다**(`.github/workflows/ci.yml` · DECISIONS §314).
