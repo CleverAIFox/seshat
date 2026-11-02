@@ -124,3 +124,14 @@ def test_package_json_이_아닌_json_은_글자_그대로_문다(tmp_path):
 
 def test_깨진_package_json_은_글자_그대로_문다(tmp_path):
     assert _pj(tmp_path, "{깨진") != _pj(tmp_path, "{깨진2")
+
+
+def test_대체된_옛_절은_무효_목록에서_대체한_절을_말한다(monkeypatch, capsys):
+    """★ §8 의 제목 「저장소는 비공개다」 는 기록이라 못 고친다 — CI 로그가 그것을 혼자 세우지 않게 한다(§336)."""
+    절 = {"번호": "8", "표시": "§8", "제목": "저장소는 비공개다", "파일": ["a.py"]}
+    monkeypatch.setattr(DS, "도장들", lambda: {})
+    monkeypatch.setattr(DS, "가른다", lambda 찍힌: ([], [절], []))
+    monkeypatch.setattr(DS, "안풀리는_걸음", lambda *a: [])
+    monkeypatch.setattr(DS, "안풀리는_문서절", lambda *a: [])
+    DS.main([])
+    assert "§329 가 대체했다" in capsys.readouterr().out

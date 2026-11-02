@@ -606,7 +606,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"    미날인 {절['표시']} {절['제목'][:50]}")
         return 0
     for 절 in 무효:
-        print(f"    ✗ {절['표시']} {절['제목'][:50]} — 찍은 뒤로 본문이나 봉인이 바뀌었다\n"
+        print(f"    ✗ {절['표시']} {절['제목'][:50]}{가리킴.대체됨.get(절['번호'], '')} — 찍은 뒤로 본문이나 봉인이 바뀌었다\n"
               f"        {' · '.join(절['파일'])}\n"
               f"        읽고 지금도 참이면 : python3 tools/docseal.py stamp --only {절['번호']}")
     if 무효:
