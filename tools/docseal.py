@@ -142,14 +142,14 @@ def 로직_지문(p: pathlib.Path, 이름: str = "") -> str:
     """
     글 = p.read_text(encoding="utf-8")
     if p.suffix in 주석머리:
-        return _셸_지문(낟알.접는다(글, p.suffix), 이름 if p.suffix == ".sh" else "", 주석머리[p.suffix])
+        return _셸_지문(낟알.접는다(글, p.name), 이름 if p.suffix == ".sh" else "", 주석머리[p.suffix])
     # ★ **`.md` 도 절 하나만 물 수 있다**(DECISIONS §323). 글자가 곧 내용이라 주석은 못
     #   떼지만, **절은 가를 수 있다** — 그게 이 꼴의 이름 단위다.
     if p.suffix == ".md" and 이름:
         조각 = _문서절(글, 이름)
         return _짧게(조각) if 조각 is not None else "없다"
     if p.suffix != ".py":
-        return _짧게(글)
+        return _짧게(낟알.접는다(글, p.name))
     나무: ast.AST = ast.parse(글)
     if 이름:
         # ★ **강제자가 이름을 짚으면 그 몸만 잰다**(DECISIONS §211). 파일로 재면 `check_docs.py` 를

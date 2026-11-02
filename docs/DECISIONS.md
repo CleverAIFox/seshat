@@ -8,7 +8,7 @@
 ---
 
 <!-- 색인 시작 -->
-<details><summary><b>절 색인</b> — 334 절. <code>python3 tools/check_docs.py --fix-index</code> 가 다시 쓴다</summary>
+<details><summary><b>절 색인</b> — 335 절. <code>python3 tools/check_docs.py --fix-index</code> 가 다시 쓴다</summary>
 
 | § | 날짜 | 무엇 |
 |---|---|---|
@@ -346,6 +346,7 @@
 | 332 | 2026-11-02 | papers 를 깬 설정 — 무엇을 조였고, 왜 안 쟀나, 왜 PAT 를 안 쓰나 |
 | 333 | 2026-11-02 | §8 「저장소는 비공개다」 는 거짓이다 — 도장이 참을 안 봐서 살아 있었다 |
 | 334 | 2026-11-02 | §332 · §333 이 가리킨 PLAN 번호는 닫힌 번호였다 — 그리고 N7 의 결말 |
+| 335 | 2026-11-02 | `package.json` 의 의존 범위도 봇이 올린다 — 입자를 하나 더 고쳤다 |
 
 </details>
 <!-- 색인 끝 -->
@@ -15463,3 +15464,24 @@ papers 는 가지를 되돌리고 `exit 1` 로 끝난다. 되돌린 것은 옳�
 ★ **같은 판에서 정정 절을 또 쓴다면 처음 쓸 때 번호를 이력으로 확인하는 값이 이 한 줄이다.**
 
 강제자 — `docs/PLAN.md` · `tools/docseal.py` · `tools/docseal_grain.py`.
+
+## §335. `package.json` 의 의존 범위도 봇이 올린다 — 입자를 하나 더 고쳤다
+
+**2026-11-02** — thoth PR #7(jsdom)은 지시문이 적은 「`package-lock.json` 하나」 가 아니었다. `gh pr view 7 --json files` 로 재니 **`extension/package.json` 도 한 줄(`^30.1.1` → `^30.1.3`)** 바꿨다.
+§330 은 잠금 파일을 봉인 밖으로 뺐고 thoth §194 의 강제자를 `package.json` 으로 옮겼는데, `.json` 은 글자가 곧 내용이라 **통째로 물려서 같은 PR 이 같은 절을 다시 깼을 것이다.**
+옮기기만 하고 그 파일이 같은 봇의 표적인지는 안 쟀다 — 「잠금은 봇이 바꾸고 매니페스트는 사람이 바꾼다」 는 절반만 참이었다. 범위는 봇이 올린다.
+
+### 고친 것
+
+- `tools/docseal_grain.py::_package_json_입자` — `package.json` 의 `dependencies` · `devDependencies` · `peerDependencies` · `optionalDependencies` 를 **이름만** 남기고 범위를 접는다.
+  그 밖(스크립트 · 이름 · 판본 · 설정)은 그대로 문다. JSON 이 아니면 글자 그대로. `.json` 이어도 `package.json` 이 아니면 안 건드린다.
+- `접는다(글, 이름)` 의 둘째 인자가 확장자에서 **파일 이름**으로 바뀌었다 — `docseal.py::로직_지문` 의 두 부름(주석 걷는 꼴 · 그 밖)이 `p.name` 을 넘긴다. 줄 수는 그대로(638).
+- 긍정으로 문다 : 범위만 바뀌면 **안 깨진다** · 키를 지우거나 더하면 **깨진다** · 스크립트가 바뀌면 **깨진다**(전부 접는 과잉 제거 방지) · 다른 `.json` 은 그대로 문다 · 깨진 JSON 은 글자째.
+  카나리아가 같은 셋을 묻는다. `MIN_잴것` 519 → **520**.
+- ★ **밖** : `package.json` 이 `dependencies` 칸에 **같은 이름을 다른 칸으로 옮기는 것**(dev → prod)은 이름 집합이 같아 칸 안에서 접히지 않는다 — 칸 이름은 키라서 지문에 남는다. 즉 옮기면 깨진다.
+
+### 배운 것
+
+★ **옮긴 자리가 같은 병의 표적인지 재 본다.** 잠금에서 매니페스트로 옮기면서 「매니페스트는 사람 것」 이라고 가정했다. PR 파일 목록 한 줄이 그 가정을 깼다.
+
+강제자 — `tools/docseal_grain.py::_package_json_입자` · `tools/docseal_grain.py::접는다` · `tools/docseal.py::로직_지문` · `tests/test_docseal_grain.py`.

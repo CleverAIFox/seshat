@@ -86,3 +86,41 @@ def test_잠금_목록을_비우면_카나리아가_운다(monkeypatch, capsys):
 def test_매니페스트는_강제자로_든다():
     글 = "## §9. 가\n\n**2026-10-01**\n\n강제자 — `tools/docseal.py`\n"
     assert DS.절들(글)[0]["파일"] == ["tools/docseal.py"]
+
+
+# ───────── package.json 은 이름은 문다 · 범위는 접는다(DECISIONS §335) ─────────
+
+_PJ = '{"name": "t", "scripts": {"test": "node --test"}, "devDependencies": {"jsdom": "^30.1.1"}}\n'
+
+
+def _pj(tmp_path, 글):
+    p = tmp_path / "package.json"
+    p.write_text(글, encoding="utf-8")
+    return DS.로직_지문(p)
+
+
+def test_package_json_범위만_바뀌면_안_깨진다(tmp_path):
+    """★ Dependabot PR 은 잠금뿐 아니라 `package.json` 의 범위(`^30.1.1` → `^30.1.3`)도 올린다."""
+    assert _pj(tmp_path, _PJ) == _pj(tmp_path, _PJ.replace("^30.1.1", "^30.1.3"))
+
+
+def test_package_json_의존성_키를_지우거나_더하면_깨진다(tmp_path):
+    assert _pj(tmp_path, _PJ) != _pj(tmp_path, _PJ.replace('"jsdom": "^30.1.1"', '"zz": "^1"'))
+    assert _pj(tmp_path, _PJ) != _pj(tmp_path, _PJ.replace(', "devDependencies": {"jsdom": "^30.1.1"}', ""))
+
+
+def test_package_json_의존성_밖이_바뀌면_깨진다(tmp_path):
+    """과잉 제거를 못 잡는 부정 단언 대신 — 스크립트가 바뀌면 깨져야 한다."""
+    assert _pj(tmp_path, _PJ) != _pj(tmp_path, _PJ.replace("node --test", "node --check"))
+
+
+def test_package_json_이_아닌_json_은_글자_그대로_문다(tmp_path):
+    p = tmp_path / "other.json"
+    p.write_text('{"devDependencies": {"a": "^1"}}\n', encoding="utf-8")
+    앞 = DS.로직_지문(p)
+    p.write_text('{"devDependencies": {"a": "^2"}}\n', encoding="utf-8")
+    assert DS.로직_지문(p) != 앞
+
+
+def test_깨진_package_json_은_글자_그대로_문다(tmp_path):
+    assert _pj(tmp_path, "{깨진") != _pj(tmp_path, "{깨진2")

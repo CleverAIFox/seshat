@@ -7,6 +7,7 @@
 """
 from __future__ import annotations
 
+import json
 import re
 import sys
 
@@ -65,16 +66,35 @@ def 잠금이면_죽는다(줄: str, 지목: re.Pattern, 표시: str) -> None:
         sys.exit(2)
 
 
-def 접는다(글: str, 확장자: str) -> str:
-    """워크플로(`.yml` · `.yaml`)의 `uses:` 를 입자로 접는다. 다른 꼴은 그대로."""
-    return _uses_입자(글) if 확장자 in (".yml", ".yaml") else 글
+#: 의존성 칸 — 판본 **범위**는 봇이 바꾸고(`^30.1.1` → `^30.1.3`) 이름은 사람이 정한다.
+_의존칸 = ("dependencies", "devDependencies", "peerDependencies", "optionalDependencies")
 
 
+def _package_json_입자(글: str) -> str:
+    """`package.json` 의 의존성은 **이름만** 문다. 범위 숫자는 접는다(DECISIONS §335).
+
+    ★ 2026-11-02 Dependabot PR #7 이 잠금뿐 아니라 `package.json` 의 `jsdom` 범위도 올렸다 — 통째로 물면
+      잠금을 봉인 밖으로 뺀 보람이 없다. 키를 지우거나 더하면 지문이 갈린다(이름은 주장이다).
+    ★ 못 읽으면(JSON 이 아니면) 글자 그대로 돌려준다 — 넓게 두는 쪽이 안전하다.
+    """
+    try:
+        데이터 = json.loads(글)
+    except ValueError:
+        return 글
+    if not isinstance(데이터, dict):
+        return 글
+    for 칸 in _의존칸:
+        if isinstance(데이터.get(칸), dict):
+            데이터[칸] = {이름: "" for 이름 in 데이터[칸]}
+    return json.dumps(데이터, ensure_ascii=False, sort_keys=True)
 
 
-
-
-
+def 접는다(글: str, 이름: str) -> str:
+    """파일 이름에 맞는 입자로 접는다 — 워크플로(`.yml` · `.yaml`)는 `uses:`, `package.json` 은 의존 범위.
+    다른 꼴은 그대로."""
+    if 이름.endswith((".yml", ".yaml")):
+        return _uses_입자(글)
+    return _package_json_입자(글) if 이름 == "package.json" else 글
 
 
 def _canary(지목: re.Pattern) -> None:
@@ -93,6 +113,17 @@ def _canary(지목: re.Pattern) -> None:
         sys.exit(2)
     if _uses_입자(_줄 + _줄) == _uses_입자(_줄):
         print("    ★ 카나리아가 죽었다 — `uses:` 줄이 하나 사라졌는데 지문이 같다(조용히 전부 지운다)")
+        sys.exit(2)
+    # ★ **`package.json` 은 이름은 문다 · 범위는 접는다**(DECISIONS §335).
+    _pj = '{"devDependencies": {"jsdom": "^30.1.1", "x": "^1"}, "scripts": {"test": "a"}}'
+    if _package_json_입자(_pj) != _package_json_입자(_pj.replace("^30.1.1", "^30.1.3")):
+        print("    ★ 카나리아가 죽었다 — 범위만 바뀌었는데 package.json 지문이 갈린다(봇 PR 마다 도장이 깨진다)")
+        sys.exit(2)
+    if _package_json_입자(_pj) == _package_json_입자(_pj.replace('"x": "^1"', '"y": "^1"')):
+        print("    ★ 카나리아가 죽었다 — 의존성 이름이 바뀌었는데 package.json 지문이 같다")
+        sys.exit(2)
+    if _package_json_입자(_pj) == _package_json_입자(_pj.replace('"a"', '"b"')):
+        print("    ★ 카나리아가 죽었다 — 스크립트가 바뀌었는데 package.json 지문이 같다(조용히 다 접는다)")
         sys.exit(2)
     # ★ **잠금 파일은 봉인 밖이다**(DECISIONS §330). 목록이 비면 아래가 울어야 한다.
     if not _잠금을_든_곳("강제자 — `extension/package-lock.json` · `tools/x.py`", 지목) or \

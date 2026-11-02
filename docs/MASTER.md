@@ -544,7 +544,7 @@ thoth 의 sweep · doctor(`OLLAMA_KEEP_ALSO`)가 본다. 두 저장소가 같은
 | `tools/plan_closed.py` | **닫힌 PLAN 행을 이력에서 되살려 보여준다** — 번호 · 마지막 본문 · 사라진 판 · 그 번호를 든 절(DECISIONS §222) |
 | `tools/docseal.py` | **절과 그 절이 짚은 코드의 정합 도장** — 찍은 뒤로 바뀌었으면 「다시 봐야 한다」(`audit` · `stamp --only N` · DECISIONS §211). **주석으로는 안 찢어진다** — 파이썬은 낱말 지문, 셸·워크플로는 온줄 주석을 뺀 지문이다(DECISIONS §316). 강제자가 `파일::이름` 으로 짚으면 **그 몸만** 물고, `tools/verify.sh` 는 **걸음 하나**까지 좁힌다 — 강제자 줄이 「… 의 `scope` 단계」 라고 적어 두면 그대로 읽는다 |
 | `tools/docseal_refs.py` | **강제자 줄이 가리킨 자리를 푸는 쪽** — 셸의 걸음 · 문서의 절 · 대장의 행을 **찾는다**. 찾은 조각을 엮어 지문을 만드는 일은 `docseal` 이 한다 (DECISIONS §325 · `PLAN #51` 이 적어 둔 선으로 갈랐다) |
-| `tools/docseal_grain.py` | **지문의 입자** — 워크플로의 `uses:` 를 「소유자/저장소@메이저」 까지만 문다(해시 · 마이너 · 패치는 봇이 주마다 바꾸는 값이다). 잠금 파일(`package-lock.json` …)을 강제자로 들면 도구 고장(rc 2)으로 죽는다 (DECISIONS §330) |
+| `tools/docseal_grain.py` | **지문의 입자** — 워크플로의 `uses:` 를 「소유자/저장소@메이저」 까지만 문다(해시 · 마이너 · 패치는 봇이 주마다 바꾸는 값이다). 잠금 파일(`package-lock.json` …)을 강제자로 들면 도구 고장(rc 2)으로 죽는다 (DECISIONS §330). `package.json` 은 의존성 **이름**은 물고 판본 범위는 접는다 (DECISIONS §335) |
 | `tools/docindex.py` | **문서 색인을 박고 지킨다** — 절 제목·번호·날짜가 본문과 같은가. `check_docs` 에서 갈라 나왔다(DECISIONS §327 · `PLAN #51` 이 적어 둔 선) |
 | `tools/check_crashes.py` | **도구가 역추적으로 죽지 않나** — `__main__` 이 맨몸이면 뜻밖의 예외가 말 없이 나간다. 2026-09-30 맨몸 26 에서 라쳇을 걸었다(DECISIONS §232) |
 | `tools/check_secrets.py` | **비밀값 꼴이 추적된 파일에 들어갔나**(DECISIONS §304). 접두사가 분명한 꼴 여덟과 대입 꼴만 본다 — 엔트로피는 **안 본다**(해시와 지문이 전부 운다). **값은 안 찍는다** — 찍으면 로그가 유출이 된다. 역사는 `--history` 로 손으로 본다 |
