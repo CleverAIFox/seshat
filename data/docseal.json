@@ -284,7 +284,7 @@
  "131": {
   "날짜": "2026-09-27",
   "읽음": true,
-  "지문": "3a6cd4fa9397a3db",
+  "지문": "d2fdfd4155bcd1ac",
   "파일": [
    "tests/test_gate.py",
    ".github/workflows/gpu-eval.yml"
@@ -1217,7 +1217,7 @@
  "224": {
   "날짜": "2026-09-29",
   "읽음": true,
-  "지문": "0be7806d9ed1ebc8",
+  "지문": "21088d44340f80cf",
   "파일": [
    ".github/workflows/ci.yml",
    "tools/plan_closed.py::얕은가",
@@ -1817,7 +1817,7 @@
  "280": {
   "날짜": "2026-10-02",
   "읽음": true,
-  "지문": "151671a6228d3e0a",
+  "지문": "9d21621b90620117",
   "파일": [
    "tests/test_workflows.py::test_워크플로가_가설_번호를_안_박는다",
    "tests/test_workflows.py::test_GPU_작업은_한_인터프리터로_돈다",
@@ -2192,7 +2192,7 @@
  "313": {
   "날짜": "2026-10-20",
   "읽음": true,
-  "지문": "cc8e6f06a577532b",
+  "지문": "11df7fc4d26266eb",
   "파일": [
    "SECURITY.md",
    ".github/workflows/gpu-eval.yml",
@@ -2422,7 +2422,7 @@
  "333": {
   "날짜": "2026-11-02",
   "읽음": true,
-  "지문": "4beea71001eb3423",
+  "지문": "c993b363b3c0812d",
   "파일": [
    "SECURITY.md",
    "tests/test_author.py::test_도메인_견줌은_부분_문자열을_안_받는다",
@@ -2816,7 +2816,7 @@
  "8": {
   "날짜": "2026-09-22",
   "읽음": true,
-  "지문": "ff750811aa849640",
+  "지문": "bcb40dea13854639",
   "파일": [
    ".github/workflows/ci.yml"
   ]
@@ -2982,7 +2982,7 @@
  "M10": {
   "날짜": "",
   "읽음": true,
-  "지문": "52446a4ecd4358bc",
+  "지문": "8e1e044c9a2dd51e",
   "파일": [
    ".github/workflows/gpu-eval.yml"
   ]
