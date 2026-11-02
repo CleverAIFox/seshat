@@ -71,7 +71,7 @@ ROOT = Path(__file__).resolve().parent.parent
     # ★ **2026-10-23 쪼갰다**(DECISIONS §325). 대장 절이 들어와 804 가 됐고 이 라쳇이 울었다.
     #   수를 올리는 것은 **이 표의 목적을 뒤집는 짓**이라 `PLAN #51` 이 적어 둔 선으로 갈랐다 —
     #   **가리킴 푸는 쪽**(`docseal_refs.py` · 상한 아래라 여기 안 든다)과 도장 기계.
-    "tools/docseal.py": 648,
+    "tools/docseal.py": 638,
     "tools/labels.py": 1064,
     "tests/test_labels.py": 925,
     "seshat/evaluate.py": 828,

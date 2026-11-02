@@ -104,6 +104,9 @@ step crashes            uv run python tools/check_crashes.py
 step secrets            uv run python tools/check_secrets.py
 # ★ 실제 작성자는 커밋 직전 훅이 본다 — CI 에는 git 신원이 없을 수 있어 여기서는 판별식만 잰다(DECISIONS §329)
 step author             uv run python tools/check_author.py --selftest
+# ★ **워크플로가 기대는 GitHub 설정**(DECISIONS §331). 선언 전수는 망이 없어도 되니 CI 도 돈다 —
+#   쓰임(`gh pr create` …)에 선언이 없으면 운다.
+step gh_declared        uv run python tools/check_gh.py --static
 step scope              uv run python tools/check_scope.py
 step dead               uv run python tools/check_dead.py
 step deadchecks         uv run python tools/check_deadchecks.py
@@ -129,6 +132,11 @@ if [ "${CI:-}" = "true" ]; then NAMES+=("lake"); MARKS+=("CI 밖 — SSD 는 이
 else step lake          uv run python tools/lake.py check; fi
 # ★ **이 기계가 초록인 것과 CI 가 초록인 것은 다른 말이다**(DECISIONS §170). 훅을 만들고 나서
 #   진짜 강제자를 안 보게 됐다 — 네 판을 빨간 채로 밀었다
+# ★ **실제 값은 CI 밖이다 — 권한이다**(DECISIONS §331). `actions/permissions/workflow` 는 admin 을
+#   요구하고 `GITHUB_TOKEN` 은 admin 이 아니다 : 거기서는 **영원히 3(못 쟀다)** 이다. 초록으로 보이게
+#   만들지 않고 「CI 밖」 이라고 적는다. 이 기계에서 못 재면(3) 이 걸음은 **실패다**.
+if [ "${CI:-}" = "true" ]; then NAMES+=("gh_settings"); MARKS+=("CI 밖 — 권한이다(GITHUB_TOKEN 은 admin 이 아니다)")
+else step gh_settings   uv run python tools/check_gh.py; fi
 if [ "${CI:-}" = "true" ]; then NAMES+=("ci"); MARKS+=("CI 안 — 이 판이 그 판이다")
 else step ci            uv run python tools/ci_status.py; fi
 # ★ **밀린 가지가 PR 없이 떠 있으면 아무도 안 아프다**(DECISIONS §315). 2026-10-19 에

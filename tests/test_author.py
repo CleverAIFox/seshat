@@ -2,6 +2,7 @@
 import importlib.util
 import os
 import pathlib
+import re
 import subprocess
 import sys
 
@@ -37,10 +38,32 @@ def _돌린다(메일: str) -> subprocess.CompletedProcess:
                           cwd=ROOT, env=env, capture_output=True, text=True)
 
 
+def _보고된_도메인(출력: str) -> str | None:
+    """도구가 찍은 줄에서 도메인 낱말 하나를 **뜬다**. 줄 전체가 그 꼴이 아니면 None."""
+    m = re.fullmatch(r"\s*작성자 메일 (\S+) 도메인 — 꼴이 맞다\s*", 출력)
+    return m.group(1) if m else None
+
+
+def _같은_도메인(보고: str | None, 기대: str) -> bool:
+    """★ **부분 문자열로 견주지 않는다**(CodeQL `py/incomplete-url-substring-sanitization`).
+    `"example.com" in 보고` 는 `evil-example.com.attacker.io` 를 통과시킨다 — 뜬 낱말을 통째로 견준다."""
+    return (보고 or "").lower() == 기대
+
+
 def test_도구는_가짜면_1_보통이면_0():
     assert _돌린다("c@x").returncode == 1
     r = _돌린다("who@example.com")
-    assert r.returncode == 0 and "example.com" in r.stdout
+    assert r.returncode == 0 and _같은_도메인(_보고된_도메인(r.stdout), "example.com")
+
+
+def test_도메인_견줌은_부분_문자열을_안_받는다():
+    """판별식을 돌연변이로 문다 — `==` 를 `in` 으로 되돌리면 아래 셋이 울어야 한다."""
+    assert not _같은_도메인("evil-example.com.attacker.io", "example.com")
+    assert not _같은_도메인("notexample.com", "example.com")
+    assert not _같은_도메인(None, "example.com")
+    assert _같은_도메인("Example.COM", "example.com")
+    r = _돌린다("who@evil-example.com.attacker.io")
+    assert r.returncode == 0 and not _같은_도메인(_보고된_도메인(r.stdout), "example.com")
 
 
 def test_git_이_없으면_고장_2():
