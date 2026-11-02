@@ -507,3 +507,27 @@ def test_집_규약과_워크플로_규약이_다르다는_것을_적어_둔다(
     옵션 = [l for l in sh.split("\n") if l.startswith("set -")]
     assert 옵션 == ["set -uo pipefail"], f"쉘 규약이 바뀌었다 : {옵션}"
     assert "실패해도 끝까지 돈다" in sh, "`-e` 를 뺀 까닭이 머리말에서 사라졌다"
+
+
+# ───────── papers 가 죽으면 저장소 안에서 말한다(DECISIONS §332) ─────────
+
+def _papers() -> str:
+    return (ROOT / ".github/workflows/papers.yml").read_text(encoding="utf-8")
+
+
+def test_papers_는_죽으면_이슈로_말한다():
+    """메일에만 기대지 않는다 — 예약 실패 메일은 cron 을 마지막으로 고친 사람에게만 간다."""
+    글 = _papers()
+    assert re.search(r"^  issues: write\s*$", 글, re.M), "이슈를 열 권한이 없다"
+    # 이슈 단계는 `if: failure()` 로 돌고 PR 을 여는 단계보다 **뒤**에 있다
+    끝 = 글[글.index("죽었으면 이슈로 말한다"):]
+    assert "if: failure()" in 끝.split("run:")[0]
+    assert "gh issue create" in 끝 and "gh issue comment" in 끝
+    assert 글.index("바뀌었으면 PR 을 연다") < 글.index("죽었으면 이슈로 말한다")
+
+
+def test_papers_이슈는_같은_제목이면_댓글만_단다():
+    글 = _papers()
+    assert "select(.title == env.TITLE)" in 글 and '--limit 100' in 글
+    # 목록을 못 읽어도 새 이슈로 넘어가지 않는다 — 읽기 실패는 죽는다(set -e 아래의 파이프)
+    assert "TITLE: papers 워크플로가 실패했다" in 글

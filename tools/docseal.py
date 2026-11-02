@@ -33,6 +33,7 @@ SEAL = ROOT / "data/docseal.json"
 # ★ **가리킴을 푸는 쪽은 옆 파일이다**(DECISIONS §325 · `PLAN #51`). 이름을 여기로
 #   들여온다 — `tests` 가 `DS._문서절` 꼴로 부르고 **그 줄은 안 고친다**.
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+import docseal_grain as 낟알
 import docseal_refs as 가리킴
 from docseal_refs import (  # 함수는 안 바뀌니 이름째 들여온다
     _걸음이있나, _대장_조각, _대장절을_뺀다, _문서절, _짧게, _셸_몸, _셸걸음, _행조각,
@@ -120,8 +121,6 @@ def _봉인_줄(본문: str) -> str:
 지목 = re.compile(r"`([\w./-]+\.(?:%s))(?:::([^`\s]+))?`" % "|".join(지목확장))
 
 
-
-
 def _몸을_찾는다(나무: ast.AST, 이름: str):
     """`파일::이름` 이 가리키는 함수 · 클래스. 없으면 None."""
     끝 = 이름.split(".")[-1].split("::")[-1]
@@ -143,7 +142,7 @@ def 로직_지문(p: pathlib.Path, 이름: str = "") -> str:
     """
     글 = p.read_text(encoding="utf-8")
     if p.suffix in 주석머리:
-        return _셸_지문(글, 이름 if p.suffix == ".sh" else "", 주석머리[p.suffix])
+        return _셸_지문(낟알.접는다(글, p.suffix), 이름 if p.suffix == ".sh" else "", 주석머리[p.suffix])
     # ★ **`.md` 도 절 하나만 물 수 있다**(DECISIONS §323). 글자가 곧 내용이라 주석은 못
     #   떼지만, **절은 가를 수 있다** — 그게 이 꼴의 이름 단위다.
     if p.suffix == ".md" and 이름:
@@ -163,8 +162,6 @@ def 로직_지문(p: pathlib.Path, 이름: str = "") -> str:
     return _낱말지문(글, 0)
 
 
-
-
 #: **온줄 주석이 뜻이 아닌 것 → 그 주석 머리.** `.md` · `.toml` · `.json` 은 **글자가 곧
 #: 내용**이라 여기 안 든다 — 거기서 주석을 떼면 뜻이 준다(DECISIONS §316).
 #: ★ **`.js` · `.tf` 는 이 저장소에 없다 — 사본이 쓴다**(DECISIONS §320 · thoth §163).
@@ -173,12 +170,6 @@ def 로직_지문(p: pathlib.Path, 이름: str = "") -> str:
 #:   **목록이 좁으면 그 줄들이 조용히 안 세어진다** — `지목확장` 을 넓힌 것과 같은 까닭이고,
 #:   **여기서 넓혀도 이 저장소의 도장은 하나도 안 바뀐다**(재 봤다 — `.js` · `.tf` 가 0개).
 주석머리 = {".sh": "#", ".yml": "#", ".yaml": "#", ".js": "//", ".tf": "#"}
-
-
-
-
-
-
 
 def _셸_지문(글: str, 이름: str = "", 머리: str = "#") -> str:
     """셸 · 워크플로의 **로직** 지문. **온줄 주석과 빈 줄은 안 센다**(DECISIONS §316).
@@ -274,6 +265,7 @@ def _한_문서(글: str, 앞: str, 머리: re.Pattern, 뽑는다, 표시: str) 
         끝 = 자리[i + 1][0] if i + 1 < len(자리) else len(글)
         본문 = 글[s:끝]
         줄 = 뽑는다(본문)
+        낟알.잠금이면_죽는다(줄, 지목, f"{표시}{번호}")
         파일: list[str] = []
         안풀린것: list[str] = []
         걸음표 = _셸걸음(줄)
@@ -313,7 +305,6 @@ def 절들(글: str | None = None) -> list[dict]:
     return out
 
 
-
 # ★ **맨 뒤 절은 다음 절이 붙는 순간 한 번 무효가 된다 — 그리고 안 고친다**(DECISIONS §306).
 #   본문을 「다음 `## §` 앞까지」 로 뽑으므로, 파일 끝이던 절에 뒤가 생기면 **끝 줄바꿈 하나**가
 #   더 붙는다. 뜻은 한 글자도 안 바뀌었는데 지문이 바뀐다 — §215 가 「소음이 된 무효는 안
@@ -322,8 +313,6 @@ def 절들(글: str | None = None) -> list[dict]:
 #   320 의 지문이 바뀐다** — 한 판에 전부 무효가 되고, 그것을 무더기로 다시 찍으면 「사람이
 #   읽었다」 는 표시(§217)가 통째로 날아간다. **버그 값은 패치당 한 절이고, 고침 값은 320 절이다.**
 #   그래서 **안 고치고 적어 둔다** — 모르고 당하는 것과 알고 두는 것은 다르다(§59).
-
-
 
 
 def 지문(절: dict) -> str:
@@ -525,6 +514,7 @@ def _canary() -> None:
     if _셸_지문("// 설명\nconst a = 1;\n") == _셸_지문("const a = 1;\n"):
         print("    ★ 카나리아가 죽었다 — `#` 로 `//` 를 뗀다(꼴을 안 가른다)")
         sys.exit(2)
+    낟알._canary(지목)                      # ★ 입자 · 잠금 파일(DECISIONS §330)
     if set(주석머리) < {".sh", ".yml", ".js"}:
         print(f"    ★ 카나리아가 죽었다 — 주석 머리 표가 좁다 : {sorted(주석머리)}")
         sys.exit(2)
