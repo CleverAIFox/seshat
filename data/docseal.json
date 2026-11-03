@@ -284,7 +284,7 @@
  "131": {
   "날짜": "2026-09-27",
   "읽음": true,
-  "지문": "d2fdfd4155bcd1ac",
+  "지문": "5781bf80ac80a5eb",
   "파일": [
    "tests/test_gate.py",
    ".github/workflows/gpu-eval.yml"
@@ -757,7 +757,7 @@
  "18": {
   "날짜": "2026-09-22",
   "읽음": true,
-  "지문": "0ec3e7190d78e074",
+  "지문": "ec8694d3610c801e",
   "파일": [
    "tools/doc_fsck.py::check_tools",
    "tests/test_workflows.py"
@@ -1217,7 +1217,7 @@
  "224": {
   "날짜": "2026-09-29",
   "읽음": true,
-  "지문": "21088d44340f80cf",
+  "지문": "aae0b7e0a893ac35",
   "파일": [
    ".github/workflows/ci.yml",
    "tools/plan_closed.py::얕은가",
@@ -1326,7 +1326,7 @@
  "234": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "3f565408c698402a",
+  "지문": "5109b948bbd992f2",
   "파일": [
    "docs/DECISIONS.md",
    "docs/PLAN.md",
@@ -1405,7 +1405,7 @@
  "241": {
   "날짜": "2026-09-30",
   "읽음": true,
-  "지문": "0c11e6dc7d8960ea",
+  "지문": "6b7654cc31d1250a",
   "파일": [
    "tools/check_numbers.py",
    "docs/DECISIONS.md"
@@ -1706,7 +1706,7 @@
  "27": {
   "날짜": "2026-09-23",
   "읽음": true,
-  "지문": "f119cda71ccf8a6f",
+  "지문": "5475aafbca631cc9",
   "파일": [
    "tests/test_baselines.py",
    "tools/check_model_licenses.py",
@@ -1817,7 +1817,7 @@
  "280": {
   "날짜": "2026-10-02",
   "읽음": true,
-  "지문": "9d21621b90620117",
+  "지문": "caa7c5432687b486",
   "파일": [
    "tests/test_workflows.py::test_워크플로가_가설_번호를_안_박는다",
    "tests/test_workflows.py::test_GPU_작업은_한_인터프리터로_돈다",
@@ -1963,7 +1963,7 @@
  "291": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "29d43b8d7cb40eaf",
+  "지문": "b2efe1bb0e2bdcac",
   "파일": [
    "tests/test_workflows.py",
    ".github/workflows/papers.yml"
@@ -2077,7 +2077,7 @@
  "301": {
   "날짜": "2026-10-05",
   "읽음": true,
-  "지문": "097a0bd3797f2570",
+  "지문": "263e571c467c44ca",
   "파일": [
    "tests/test_workflows.py"
   ]
@@ -2104,7 +2104,7 @@
  "305": {
   "날짜": "2026-10-12",
   "읽음": true,
-  "지문": "8af975f81f6a04af",
+  "지문": "f888b836af7e27d2",
   "파일": [
    ".github/workflows/papers.yml",
    "tests/test_workflows.py",
@@ -2162,7 +2162,7 @@
  "310": {
   "날짜": "2026-10-20",
   "읽음": true,
-  "지문": "9c6a1ee92d70c2fa",
+  "지문": "5bceb6037b9cd3b5",
   "파일": [
    "docs/DECISIONS.md",
    "docs/MASTER.md"
@@ -2192,7 +2192,7 @@
  "313": {
   "날짜": "2026-10-20",
   "읽음": true,
-  "지문": "11df7fc4d26266eb",
+  "지문": "447dd3460a7e00d6",
   "파일": [
    "SECURITY.md",
    ".github/workflows/gpu-eval.yml",
@@ -2304,7 +2304,7 @@
  "322": {
   "날짜": "2026-10-23",
   "읽음": false,
-  "지문": "af7da1864ff6c6aa",
+  "지문": "0a3f322b724115b6",
   "파일": [
    "tools/docseal.py::_canary",
    "tools/docseal_refs.py::_셸걸음",
@@ -2377,6 +2377,26 @@
    "tests/test_hypotheses.py"
   ]
  },
+ "328": {
+  "날짜": "2026-10-26",
+  "읽음": false,
+  "지문": "eda69cd0aca0c6ef",
+  "파일": [
+   "tools/check_speech.py",
+   "tools/verify.sh::speech"
+  ]
+ },
+ "329": {
+  "날짜": "2026-10-26",
+  "읽음": false,
+  "지문": "2288af5a9a63d918",
+  "파일": [
+   "tests/test_workflows.py::test_셀프_호스티드_러너는_손으로만_깨운다",
+   "tools/verify.sh::author",
+   "tools/check_author.py",
+   "tests/test_author.py"
+  ]
+ },
  "33": {
   "날짜": "2026-09-23",
   "읽음": false,
@@ -2412,7 +2432,7 @@
  "332": {
   "날짜": "2026-11-02",
   "읽음": true,
-  "지문": "507cb9d1451cd1f7",
+  "지문": "a2d066d7ecf96ced",
   "파일": [
    ".github/workflows/papers.yml",
    "tools/check_gh.py",
@@ -2422,7 +2442,7 @@
  "333": {
   "날짜": "2026-11-02",
   "읽음": true,
-  "지문": "c993b363b3c0812d",
+  "지문": "566a3da29c3c75ee",
   "파일": [
    "SECURITY.md",
    "tests/test_author.py::test_도메인_견줌은_부분_문자열을_안_받는다",
@@ -2454,11 +2474,21 @@
  "336": {
   "날짜": "2026-11-02",
   "읽음": true,
-  "지문": "274f26c131ebf86e",
+  "지문": "5c50cb7e3d0ffdfe",
   "파일": [
    "tools/docseal_refs.py",
    "tools/docseal.py::main",
    "tests/test_docseal_grain.py"
+  ]
+ },
+ "337": {
+  "날짜": "2026-11-03",
+  "읽음": true,
+  "지문": "4359ce6965b3b1e8",
+  "파일": [
+   "tests/test_workflows.py::test_uv_판본을_세_자리로_고정한다",
+   "tests/test_workflows.py::test_uv_고정_카나리아",
+   ".github/workflows/papers.yml"
   ]
  },
  "34": {
@@ -2837,7 +2867,7 @@
  "8": {
   "날짜": "2026-09-22",
   "읽음": true,
-  "지문": "bcb40dea13854639",
+  "지문": "687c0aff03ddebe5",
   "파일": [
    ".github/workflows/ci.yml"
   ]
@@ -3003,7 +3033,7 @@
  "M10": {
   "날짜": "",
   "읽음": true,
-  "지문": "8e1e044c9a2dd51e",
+  "지문": "2706699d460069d6",
   "파일": [
    ".github/workflows/gpu-eval.yml"
   ]

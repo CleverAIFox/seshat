@@ -42,6 +42,53 @@ def 안고정된것(text: str) -> list[tuple[int, str]]:
     return bad
 
 
+# ★ **액션을 SHA 로 고정해도 그 액션이 내려받는 도구는 고정이 아니다**(DECISIONS §337 · thoth §215).
+#   `setup-uv` 에 `version` 을 안 적으면 매번 latest 다. uv 는 **추적되는 파일(`uv.lock`)을 쓰는 유일한 도구**라
+#   로컬 0.12.13 과 CI 0.13.6 이 같은 pyproject 에 다른 lock(`revision` 3 대 5)을 썼다(thoth, 2026-11-03).
+#   「안 고정한 것이 검사를 거짓말하게 했다」 — §282 의 거울상이다.
+#   **세 자리 정확한 판본만 받는다** — `latest` · `0.13` · `>=0.13.6` 은 고정이 아니다.
+UV_ACTION = re.compile(r"astral-sh/setup-uv@")
+UV_VERSION = re.compile(r"""\bversion:\s*["']?(\d+\.\d+\.\d+)["']?\s*(?:[,}]|$)""")
+
+
+def uv판_안고정(text: str) -> list[int]:
+    """`setup-uv` 걸음 중 `version:` 이 정확한 세 자리가 아닌 것의 줄 번호(thoth `unpinned_uv` 와 같은 꼴)."""
+    줄들 = text.split("\n")
+    bad = []
+    for n, line in enumerate(줄들, 1):
+        code = line.split("#", 1)[0]
+        if not (USES_ANY.match(code) and UV_ACTION.search(code)):
+            continue
+        들여 = len(line) - len(line.lstrip())
+        몸 = []
+        for 다음 in 줄들[n:]:
+            c = 다음.split("#", 1)[0]
+            if c.strip() and (len(다음) - len(다음.lstrip())) <= 들여 and not c.lstrip().startswith(("with:", "version:")):
+                break                      # 다음 걸음 · 작업이 시작됐다
+            몸.append(c)
+        if not UV_VERSION.search("\n".join(몸)):
+            bad.append(n)
+    return bad
+
+
+UV핀 = "      - uses: astral-sh/setup-uv@" + "a" * 40 + "  # v10.3.3\n"
+
+
+def test_uv_판본을_세_자리로_고정한다():
+    나쁜 = [f"{p.name}:{n}" for p in _workflows() for n in uv판_안고정(p.read_text(encoding="utf-8"))]
+    assert 나쁜 == [], '`setup-uv` 에 `with: { version: "0.13.6" }` 처럼 세 자리 판본을 적는다 — 안 적으면 매번 latest\n' + "\n".join(나쁜)
+
+
+def test_uv_고정_카나리아():
+    assert uv판_안고정(UV핀 + "      - uses: actions/setup-python@x\n") == [1]             # 판본 없음
+    assert uv판_안고정(UV핀 + '        with: { version: "0.13.6" }\n') == []              # 고정
+    for v in ('"latest"', '"0.13"', '">=0.13.6"'):                                           # 범위는 고정이 아니다
+        assert uv판_안고정(UV핀 + f"        with: {{ version: {v} }}\n") == [1], v
+    다음 = '      - uses: actions/setup-node@x\n        with: { version: "1.2.3" }\n'          # 남의 걸음의 것은 세지 않는다
+    assert uv판_안고정(UV핀 + 다음) == [1]
+    assert uv판_안고정(UV핀 + '        # with: { version: "0.13.6" }\n') == [1]            # 주석은 세지 않는다
+
+
 def test_Node_20_액션이_없다():
     bad = []
     for p in sorted((ROOT / ".github/workflows").glob("*.yml")):
